@@ -399,7 +399,7 @@ export async function listBlocked(myProfileId: string): Promise<Profile[]> {
     .select("blocked:profiles!blocked_users_blocked_profile_id_fkey(" + PROFILE_COLUMNS + ")")
     .eq("blocker_profile_id", myProfileId);
   if (error) throw error;
-  return ((data ?? []) as { blocked: Profile | Profile[] }[])
+  return ((data ?? []) as unknown as { blocked: Profile | Profile[] }[])
     .map((r) => one(r.blocked))
     .filter((p): p is Profile => Boolean(p));
 }
