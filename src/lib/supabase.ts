@@ -11,8 +11,8 @@ export const isSupabaseConfigured = Boolean(url && anonKey);
  * cheap phone with a flaky connection stays logged in between visits.
  */
 export const supabase: SupabaseClient = createClient(
-  url ?? "https://placeholder.supabase.co",
-  anonKey ?? "placeholder-anon-key",
+  url || "https://placeholder.supabase.co",
+  anonKey || "placeholder-anon-key",
   {
     auth: {
       persistSession: true,
