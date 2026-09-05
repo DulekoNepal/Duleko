@@ -2,19 +2,22 @@ import { supabase } from "./supabase";
 import type {
   AppNotification,
   AvailabilityDay,
+  CancellationReason,
   Engagement,
   EngagementStatus,
   EngagementWithParties,
+  Friendship,
   Lang,
   Profile,
   ReportReason,
   Review,
   Skill,
+  UserSkillDetail,
   WorkerCardData,
 } from "./types";
 
 const PROFILE_COLUMNS =
-  "id,user_id,full_name,about,avatar_url,province,district,municipality,ward,locality,is_available,language,rating,rating_count,created_at,updated_at";
+  "id,user_id,full_name,about,avatar_url,province,district,municipality,ward,locality,is_available,language,rating,rating_count,lat,lng,location_shared_at,created_at,updated_at";
 
 const PARTY_COLUMNS = "id,full_name,avatar_url,rating,rating_count";
 
@@ -116,25 +119,51 @@ export async function listSkills(): Promise<Skill[]> {
   );
 }
 
-export async function getUserSkills(profileId: string): Promise<Skill[]> {
+interface RawUserSkillRow {
+  skill: Skill | Skill[];
+  custom_label: string | null;
+  custom_note: string | null;
+  rate_amount: number | null;
+  rate_unit: string | null;
+}
+
+export async function getUserSkills(profileId: string): Promise<UserSkillDetail[]> {
   const { data, error } = await supabase
     .from("user_skills")
-    .select("skill:skills(id,name_en,name_ne,emoji,sort_order)")
+    .select("skill:skills(id,name_en,name_ne,emoji,sort_order),custom_label,custom_note,rate_amount,rate_unit")
     .eq("profile_id", profileId);
   if (error) throw error;
-  return ((data ?? []) as { skill: Skill | Skill[] }[])
-    .map((row) => one(row.skill))
-    .filter((s): s is Skill => Boolean(s))
+  return ((data ?? []) as unknown as RawUserSkillRow[])
+    .map((row) => {
+      const skill = one(row.skill);
+      if (!skill) return null;
+      return {
+        ...skill,
+        custom_label: row.custom_label,
+        custom_note: row.custom_note,
+        rate_amount: row.rate_amount,
+        rate_unit: row.rate_unit,
+      };
+    })
+    .filter((s): s is UserSkillDetail => Boolean(s))
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 }
 
-export async function setUserSkills(profileId: string, skillIds: string[]): Promise<void> {
+export interface UserSkillInput {
+  skill_id: string;
+  custom_label?: string | null;
+  custom_note?: string | null;
+  rate_amount?: number | null;
+  rate_unit?: string | null;
+}
+
+export async function setUserSkills(profileId: string, skills: UserSkillInput[]): Promise<void> {
   const { error: delError } = await supabase.from("user_skills").delete().eq("profile_id", profileId);
   if (delError) throw delError;
-  if (skillIds.length === 0) return;
+  if (skills.length === 0) return;
   const { error } = await supabase
     .from("user_skills")
-    .insert(skillIds.map((skill_id) => ({ profile_id: profileId, skill_id })));
+    .insert(skills.map((s) => ({ profile_id: profileId, ...s })));
   if (error) throw error;
 }
 
@@ -159,9 +188,11 @@ export interface SearchParams {
   municipality?: string | null;
   day?: string | null;
   availableOnly?: boolean;
-  sort?: "relevance" | "rating" | "newest";
+  sort?: "relevance" | "rating" | "newest" | "nearest";
   limit?: number;
   offset?: number;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 export async function searchWorkers(params: SearchParams): Promise<WorkerCardData[]> {
@@ -176,9 +207,30 @@ export async function searchWorkers(params: SearchParams): Promise<WorkerCardDat
     p_sort: params.sort ?? "relevance",
     p_limit: params.limit ?? 30,
     p_offset: params.offset ?? 0,
+    p_lat: params.lat ?? null,
+    p_lng: params.lng ?? null,
   });
   if (error) throw error;
   return (data ?? []) as WorkerCardData[];
+}
+
+// ---------------------------------------------------------------------
+// Live location (optional, one-tap snapshot)
+// ---------------------------------------------------------------------
+export async function shareLocation(profileId: string, lat: number, lng: number): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ lat, lng, location_shared_at: new Date().toISOString() })
+    .eq("id", profileId);
+  if (error) throw error;
+}
+
+export async function clearLocation(profileId: string): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ lat: null, lng: null, location_shared_at: null })
+    .eq("id", profileId);
+  if (error) throw error;
 }
 
 // ---------------------------------------------------------------------
@@ -311,6 +363,25 @@ export async function setEngagementStatus(
   if (error) throw error;
 }
 
+/** Cancelling always requires a reason — enforced here and again in the DB. */
+export async function cancelEngagement(
+  engagementId: string,
+  actorProfileId: string,
+  reason: CancellationReason,
+  note?: string | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from("work_engagements")
+    .update({
+      status: "cancelled",
+      cancelled_by: actorProfileId,
+      cancellation_reason: reason,
+      cancellation_note: note?.trim() || null,
+    })
+    .eq("id", engagementId);
+  if (error) throw error;
+}
+
 /** Pending requests waiting on me as the worker — drives the home screen badge. */
 export async function countPendingForMe(myProfileId: string): Promise<number> {
   const { count, error } = await supabase
@@ -391,45 +462,100 @@ export async function markAllRead(profileId: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------
-// Safety: blocking and reporting
+// Friends
 // ---------------------------------------------------------------------
-export async function listBlocked(myProfileId: string): Promise<Profile[]> {
+const FRIENDSHIP_SELECT = `
+  id,requester_profile_id,addressee_profile_id,status,created_at,
+  requester:profiles!friendships_requester_profile_id_fkey(${PARTY_COLUMNS}),
+  addressee:profiles!friendships_addressee_profile_id_fkey(${PARTY_COLUMNS})
+`;
+
+interface RawFriendship {
+  id: string;
+  requester_profile_id: string;
+  addressee_profile_id: string;
+  status: Friendship["status"];
+  created_at: string;
+  requester: Friendship["other"] | Friendship["other"][];
+  addressee: Friendship["other"] | Friendship["other"][];
+}
+
+function shapeFriendship(row: RawFriendship, myProfileId: string): Friendship {
+  const requester = one(row.requester)!;
+  const addressee = one(row.addressee)!;
+  return {
+    id: row.id,
+    requester_profile_id: row.requester_profile_id,
+    addressee_profile_id: row.addressee_profile_id,
+    status: row.status,
+    created_at: row.created_at,
+    other: row.requester_profile_id === myProfileId ? addressee : requester,
+  };
+}
+
+export async function sendFriendRequest(requesterId: string, addresseeId: string): Promise<void> {
+  const { error } = await supabase
+    .from("friendships")
+    .insert({ requester_profile_id: requesterId, addressee_profile_id: addresseeId });
+  if (error) throw error;
+}
+
+export async function respondFriendRequest(id: string, accept: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("friendships")
+    .update({ status: accept ? "accepted" : "declined" })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+/** Cancels a pending request or unfriends an accepted one — same operation either way. */
+export async function removeFriendship(id: string): Promise<void> {
+  const { error } = await supabase.from("friendships").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function listFriends(myProfileId: string): Promise<Friendship[]> {
   const { data, error } = await supabase
-    .from("blocked_users")
-    .select("blocked:profiles!blocked_users_blocked_profile_id_fkey(" + PROFILE_COLUMNS + ")")
-    .eq("blocker_profile_id", myProfileId);
+    .from("friendships")
+    .select(FRIENDSHIP_SELECT)
+    .eq("status", "accepted")
+    .or(`requester_profile_id.eq.${myProfileId},addressee_profile_id.eq.${myProfileId}`)
+    .order("created_at", { ascending: false });
   if (error) throw error;
-  return ((data ?? []) as unknown as { blocked: Profile | Profile[] }[])
-    .map((r) => one(r.blocked))
-    .filter((p): p is Profile => Boolean(p));
+  return ((data ?? []) as unknown as RawFriendship[]).map((row) => shapeFriendship(row, myProfileId));
 }
 
-export async function isBlockedByMe(myProfileId: string, otherProfileId: string): Promise<boolean> {
-  const { count, error } = await supabase
-    .from("blocked_users")
-    .select("blocker_profile_id", { count: "exact", head: true })
-    .eq("blocker_profile_id", myProfileId)
-    .eq("blocked_profile_id", otherProfileId);
-  if (error) return false;
-  return (count ?? 0) > 0;
-}
-
-export async function blockUser(myProfileId: string, otherProfileId: string): Promise<void> {
-  const { error } = await supabase
-    .from("blocked_users")
-    .insert({ blocker_profile_id: myProfileId, blocked_profile_id: otherProfileId });
+export async function listIncomingRequests(myProfileId: string): Promise<Friendship[]> {
+  const { data, error } = await supabase
+    .from("friendships")
+    .select(FRIENDSHIP_SELECT)
+    .eq("status", "pending")
+    .eq("addressee_profile_id", myProfileId)
+    .order("created_at", { ascending: false });
   if (error) throw error;
+  return ((data ?? []) as unknown as RawFriendship[]).map((row) => shapeFriendship(row, myProfileId));
 }
 
-export async function unblockUser(myProfileId: string, otherProfileId: string): Promise<void> {
-  const { error } = await supabase
-    .from("blocked_users")
-    .delete()
-    .eq("blocker_profile_id", myProfileId)
-    .eq("blocked_profile_id", otherProfileId);
+export async function getFriendshipWith(
+  myProfileId: string,
+  otherProfileId: string,
+): Promise<Friendship | null> {
+  const { data, error } = await supabase
+    .from("friendships")
+    .select(FRIENDSHIP_SELECT)
+    .or(
+      `and(requester_profile_id.eq.${myProfileId},addressee_profile_id.eq.${otherProfileId}),` +
+        `and(requester_profile_id.eq.${otherProfileId},addressee_profile_id.eq.${myProfileId})`,
+    )
+    .maybeSingle();
   if (error) throw error;
+  if (!data) return null;
+  return shapeFriendship(data as unknown as RawFriendship, myProfileId);
 }
 
+// ---------------------------------------------------------------------
+// Safety: reporting
+// ---------------------------------------------------------------------
 export async function reportUser(input: {
   reporter_profile_id: string;
   reported_profile_id: string;

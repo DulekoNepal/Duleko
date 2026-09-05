@@ -11,6 +11,7 @@ import { WorkerScreen } from "@/routes/WorkerScreen";
 import { WorkScreen } from "@/routes/WorkScreen";
 import { NotificationsScreen } from "@/routes/NotificationsScreen";
 import { ProfileScreen } from "@/routes/ProfileScreen";
+import { FriendsScreen } from "@/routes/FriendsScreen";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -36,7 +37,10 @@ const searchRoute = createRoute({
     day: typeof search.day === "string" ? search.day : undefined,
     available: search.available === true || search.available === "true" ? true : undefined,
     sort:
-      search.sort === "rating" || search.sort === "newest" || search.sort === "relevance"
+      search.sort === "rating" ||
+      search.sort === "newest" ||
+      search.sort === "relevance" ||
+      search.sort === "nearest"
         ? search.sort
         : undefined,
   }),
@@ -67,6 +71,12 @@ const profileRoute = createRoute({
   component: ProfileScreen,
 });
 
+const friendsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/friends",
+  component: FriendsScreen,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   searchRoute,
@@ -74,6 +84,7 @@ const routeTree = rootRoute.addChildren([
   workRoute,
   notificationsRoute,
   profileRoute,
+  friendsRoute,
 ]);
 
 export const router = createRouter({

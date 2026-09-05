@@ -20,6 +20,23 @@ export function AuthScreen() {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+
+  async function onGoogle() {
+    setGoogleBusy(true);
+    setError(null);
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
+      });
+      if (oauthError) throw oauthError;
+      // On success the browser navigates away to Google, so nothing else to do here.
+    } catch (err) {
+      setError(errorMessage(err));
+      setGoogleBusy(false);
+    }
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -103,6 +120,24 @@ export function AuthScreen() {
           </Button>
         </form>
 
+        <div className="my-4 flex items-center gap-3 text-xs uppercase text-slate-400">
+          <span className="h-px flex-1 bg-slate-200" />
+          {t("orDivider")}
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="w-full"
+          loading={googleBusy}
+          onClick={onGoogle}
+        >
+          <GoogleIcon className="h-4 w-4" aria-hidden />
+          {t("continueWithGoogle")}
+        </Button>
+
         <button
           type="button"
           className="mt-5 w-full text-center text-sm font-medium text-brand-700"
@@ -116,5 +151,28 @@ export function AuthScreen() {
         </button>
       </div>
     </div>
+  );
+}
+
+function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" {...props}>
+      <path
+        fill="#4285F4"
+        d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.82z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.07 7.94-2.9l-3.88-3.02c-1.08.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.72-4.94H1.28v3.1A12 12 0 0 0 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.29a7.2 7.2 0 0 1 0-4.58v-3.1H1.28a12 12 0 0 0 0 10.78z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.76 0 3.35.61 4.6 1.8l3.44-3.44C17.94 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.28 6.6l4 3.1C6.23 6.86 8.88 4.75 12 4.75z"
+      />
+    </svg>
   );
 }

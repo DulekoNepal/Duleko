@@ -19,6 +19,8 @@ const KIND_EMOJI: Record<string, string> = {
   completed: "🎉",
   cancelled: "⚠️",
   review: "⭐",
+  friend_request: "🧑‍🤝‍🧑",
+  friend_accepted: "🤝",
 };
 
 export function NotificationsScreen() {
@@ -103,7 +105,11 @@ export function NotificationsScreen() {
                   type="button"
                   onClick={() => {
                     if (!n.is_read) readOne.mutate(n.id);
-                    if (n.engagement_id) navigate({ to: "/work" });
+                    if (n.kind === "friend_request" || n.kind === "friend_accepted") {
+                      navigate({ to: "/friends" });
+                    } else if (n.engagement_id) {
+                      navigate({ to: "/work" });
+                    }
                   }}
                   className={cn(
                     "flex w-full gap-3 rounded-2xl border p-3.5 text-left transition-colors",

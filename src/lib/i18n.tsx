@@ -136,13 +136,71 @@ const strings = {
   notAvailable: ["Not available", "उपलब्ध छैन"],
   bookedDay: ["Booked", "बुक भइसकेको"],
   report: ["Report", "उजुरी"],
-  block: ["Block", "ब्लक गर्नुहोस्"],
-  unblock: ["Unblock", "अनब्लक"],
-  blocked: ["Blocked", "ब्लक गरिएको"],
-  blockConfirm: [
-    "Block this person? They will not see your profile and cannot request work from you.",
-    "यो व्यक्तिलाई ब्लक गर्ने? उहाँले तपाईंको प्रोफाइल देख्न वा काम माग्न सक्नुहुन्न।",
+
+  // ---- friends --------------------------------------------------------
+  addFriend: ["Add friend", "मित्र थप्नुहोस्"],
+  friendRequestPending: ["Request sent", "अनुरोध पठाइयो"],
+  cancelRequest: ["Cancel request", "अनुरोध रद्द गर्नुहोस्"],
+  acceptRequest: ["Accept", "स्वीकार गर्नुहोस्"],
+  declineRequest: ["Decline", "अस्वीकार गर्नुहोस्"],
+  friendRequestSent: ["Friend request sent.", "मित्र अनुरोध पठाइयो।"],
+  alreadyFriends: ["✓ Friends", "✓ मित्र"],
+  myFriends: ["My friends", "मेरा मित्रहरू"],
+  friendRequests: ["Friend requests", "मित्र अनुरोधहरू"],
+  noFriendsYet: ["No friends yet.", "अझै कुनै मित्र छैन।"],
+  noFriendsYetHint: [
+    "People you add as a friend show up here.",
+    "तपाईंले मित्र थपेका मानिसहरू यहाँ देखिन्छन्।",
   ],
+  noRequestsYet: ["No pending requests.", "पर्खिरहेको अनुरोध छैन।"],
+  removeFriend: ["Remove", "हटाउनुहोस्"],
+  removeFriendConfirm: ["Remove this friend?", "यो मित्रलाई हटाउने?"],
+
+  // ---- live location ----------------------------------------------------
+  shareLocation: ["Share my location", "मेरो स्थान साझा गर्नुहोस्"],
+  updateLocation: ["Update location", "स्थान अद्यावधिक गर्नुहोस्"],
+  clearLocationAction: ["Clear", "हटाउनुहोस्"],
+  locationShared: ["Shared {time} ago", "{time} अघि साझा गरियो"],
+  locationNotShared: ["Not shared yet", "अझै साझा गरिएको छैन"],
+  shareLocationHint: [
+    "Useful for drivers and delivery — lets nearby people find you. Optional.",
+    "चालक र डेलिभरीका लागि उपयोगी — नजिकैका मानिसले भेट्टाउन सक्छन्। वैकल्पिक।",
+  ],
+  locationPermissionDenied: [
+    "Could not get your location. Check your browser's location permission.",
+    "स्थान लिन सकिएन। ब्राउजरको लोकेसन अनुमति जाँच्नुहोस्।",
+  ],
+  nearestSort: ["Nearest", "सबैभन्दा नजिक"],
+  distanceAway: ["{km} km away", "{km} कि.मी. टाढा"],
+
+  // ---- cancellation reason ---------------------------------------------
+  cancelReasonTitle: ["Why are you cancelling?", "किन रद्द गर्दै हुनुहुन्छ?"],
+  cancelReasonPrompt: ["Pick a reason", "एउटा कारण छान्नुहोस्"],
+  cancelReasonScheduleConflict: ["Schedule conflict", "समय मिलेन"],
+  cancelReasonChangeOfPlans: ["Change of plans", "योजना बदलियो"],
+  cancelReasonPriceDisagreement: ["Could not agree on price", "मूल्यमा सहमति भएन"],
+  cancelReasonFoundSomeoneElse: ["Found someone else", "अरू कसैलाई भेट्टाइयो"],
+  cancelReasonNoLongerNeeded: ["No longer needed", "अब आवश्यक छैन"],
+  cancelReasonNoteRequired: ["Please describe the reason.", "कारण लेख्नुहोस्।"],
+  confirmCancel: ["Cancel job", "काम रद्द गर्नुहोस्"],
+
+  // ---- skills: Others + rate ---------------------------------------------
+  othersSkillLabel: ["Describe your skill", "आफ्नो सीप वर्णन गर्नुहोस्"],
+  othersSkillPlaceholder: ["e.g. Mehendi artist", "जस्तै: मेहेन्दी कलाकार"],
+  othersSkillNoteLabel: ["More details", "थप विवरण"],
+  othersSkillNotePlaceholder: ["A little about this work", "यो कामको बारेमा छोटकरी"],
+  rateFor: ["Rate for {skill}", "{skill} को दर"],
+  rateAmountPlaceholder: ["Amount", "रकम"],
+  rateUnitPlaceholder: ["per hour, per switch…", "प्रति घण्टा, प्रति स्विच…"],
+  rateHint: [
+    "Optional — your usual price for this skill.",
+    "वैकल्पिक — यो सीपको लागि तपाईंको सामान्य मूल्य।",
+  ],
+
+  // ---- google sign-in -----------------------------------------------
+  continueWithGoogle: ["Continue with Google", "Google बाट जारी राख्नुहोस्"],
+  orDivider: ["or", "वा"],
+
   reportTitle: ["Report this person", "यो व्यक्तिको उजुरी गर्नुहोस्"],
   reportReason: ["Reason", "कारण"],
   reportDetails: ["What happened?", "के भयो?"],
@@ -169,6 +227,7 @@ const strings = {
   requestSent: ["Request sent.", "अनुरोध पठाइयो।"],
   cannotRequestSelf: ["You cannot request work from yourself.", "आफैंसँग काम माग्न मिल्दैन।"],
   dateInPast: ["Pick today or a later date.", "आज वा पछिको मिति छान्नुहोस्।"],
+  dateUnavailable: ["That day is already booked. Pick another.", "त्यो दिन पहिले नै बुक भइसक्यो। अर्को छान्नुहोस्।"],
 
   // ---- my work -------------------------------------------------------
   myWork: ["My work", "मेरो काम"],
@@ -228,8 +287,6 @@ const strings = {
     "Turn off when you are busy. You stay searchable but marked unavailable.",
     "व्यस्त हुँदा बन्द गर्नुहोस्। खोजमा देखिनुहुन्छ तर उपलब्ध छैन भनेर देखिन्छ।",
   ],
-  blockedUsers: ["Blocked people", "ब्लक गरिएका"],
-  noBlockedUsers: ["You have not blocked anyone.", "तपाईंले कसैलाई ब्लक गर्नुभएको छैन।"],
   markCalendar: ["Mark days you are busy", "व्यस्त दिन चिन्ह लगाउनुहोस्"],
   calendarHint: [
     "Tap a day to mark it busy. Confirmed jobs are marked for you.",
@@ -239,7 +296,6 @@ const strings = {
 
   // ---- nav -----------------------------------------------------------
   navHome: ["Home", "गृह"],
-  navSearch: ["Search", "खोज"],
   navWork: ["Work", "काम"],
   navAlerts: ["Alerts", "सूचना"],
   navProfile: ["Profile", "प्रोफाइल"],

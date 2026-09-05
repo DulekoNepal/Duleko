@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { CardSkeleton, EmptyState, ErrorState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
+import { useToast } from "@/hooks/use-toast";
 import { listSkills, searchWorkers } from "@/lib/queries";
 import { ALL_DISTRICTS } from "@/lib/nepal";
 import { errorMessage } from "@/lib/supabase";
@@ -21,24 +22,48 @@ export interface SearchFilters {
   district?: string;
   day?: string;
   available?: boolean;
-  sort?: "relevance" | "rating" | "newest";
+  sort?: "relevance" | "rating" | "newest" | "nearest";
 }
 
 export function SearchScreen() {
   const { t, lang } = useI18n();
   const { profile } = useSession();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const filters = useSearch({ from: "/search" }) as SearchFilters;
   const [showFilters, setShowFilters] = useState(false);
   const [queryText, setQueryText] = useState(filters.q ?? "");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
 
   const skills = useQuery({ queryKey: ["skills"], queryFn: listSkills, staleTime: 30 * 60_000 });
 
-  // District defaults to the user's own so "nearby" means something on day one.
-  const district = filters.district ?? profile?.district ?? undefined;
+  // Search is nationwide by default, same as any real search — a district
+  // filter only applies once the user explicitly picks one.
+  const district = filters.district;
+
+  function requestNearest() {
+    if (!navigator.geolocation) {
+      toast(t("locationPermissionDenied"), "error");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+        update({ sort: "nearest" });
+      },
+      () => {
+        setLocating(false);
+        toast(t("locationPermissionDenied"), "error");
+      },
+      { enableHighAccuracy: true, timeout: 10_000 },
+    );
+  }
 
   const results = useQuery({
-    queryKey: ["workers", "search", filters, district],
+    queryKey: ["workers", "search", filters, district, filters.sort === "nearest" ? coords : null],
     queryFn: () =>
       searchWorkers({
         skill: filters.skill ?? null,
@@ -48,8 +73,10 @@ export function SearchScreen() {
         availableOnly: filters.available ?? false,
         sort: filters.sort ?? "relevance",
         limit: 50,
+        lat: filters.sort === "nearest" ? coords?.lat : null,
+        lng: filters.sort === "nearest" ? coords?.lng : null,
       }),
-    enabled: Boolean(profile),
+    enabled: Boolean(profile) && (filters.sort !== "nearest" || Boolean(coords)),
   });
 
   function update(patch: Partial<SearchFilters>) {
@@ -112,7 +139,7 @@ export function SearchScreen() {
 
             <Field label={t("district")}>
               <Select
-                value={filters.district ?? district ?? ""}
+                value={filters.district ?? ""}
                 onChange={(e) => update({ district: e.target.value || undefined })}
               >
                 <option value="">{t("anywhere")}</option>
@@ -135,11 +162,17 @@ export function SearchScreen() {
             <Field label={t("sortBy")}>
               <Select
                 value={filters.sort ?? "relevance"}
-                onChange={(e) => update({ sort: e.target.value as SearchFilters["sort"] })}
+                onChange={(e) => {
+                  const next = e.target.value as SearchFilters["sort"];
+                  if (next === "nearest") requestNearest();
+                  else update({ sort: next });
+                }}
+                disabled={locating}
               >
                 <option value="relevance">{t("sortRelevance")}</option>
                 <option value="rating">{t("sortRating")}</option>
                 <option value="newest">{t("sortNewest")}</option>
+                <option value="nearest">{t("nearestSort")}</option>
               </Select>
             </Field>
 

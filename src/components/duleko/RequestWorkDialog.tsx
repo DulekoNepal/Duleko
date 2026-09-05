@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Select, Textarea } from "@/components/ui/field";
+import { Field, Input, Textarea } from "@/components/ui/field";
+import { AvailabilityCalendar } from "./AvailabilityCalendar";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
-import { createEngagement, getUserSkills } from "@/lib/queries";
+import { createEngagement, getAvailability } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import { skillName, todayKey } from "@/lib/utils";
+import { addDays, todayKey, toDateKey } from "@/lib/utils";
 import type { Profile, WorkerCardData } from "@/lib/types";
 
 type Worker = Pick<Profile, "id" | "full_name"> & Partial<WorkerCardData>;
@@ -18,16 +19,14 @@ export function RequestWorkDialog({
   worker,
   employerProfileId,
   defaultLocation,
-  defaultSkillId,
 }: {
   open: boolean;
   onClose: () => void;
   worker: Worker;
   employerProfileId: string;
   defaultLocation?: string;
-  defaultSkillId?: string | null;
 }) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -35,28 +34,46 @@ export function RequestWorkDialog({
   const [details, setDetails] = useState("");
   const [workDate, setWorkDate] = useState(todayKey());
   const [location, setLocation] = useState(defaultLocation ?? "");
-  const [payment, setPayment] = useState("");
-  const [skillId, setSkillId] = useState(defaultSkillId ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const workerSkills = useQuery({
-    queryKey: ["user-skills", worker.id],
-    queryFn: () => getUserSkills(worker.id),
+  const availability = useQuery({
+    queryKey: ["availability", worker.id, "picker"],
+    queryFn: () => getAvailability(worker.id, todayKey(), toDateKey(addDays(new Date(), 60))),
     enabled: open,
-    initialData: worker.skills,
   });
+
+  const bookedDays = useMemo(
+    () => new Set((availability.data ?? []).filter((d) => d.status === "booked").map((d) => d.day)),
+    [availability.data],
+  );
+
+  // The default day is always "today", but today itself might already be
+  // booked — once we know, hop to the first free day so the dialog never
+  // opens pre-selected on a date the worker can't actually take.
+  useEffect(() => {
+    if (!open || !availability.data) return;
+    if (!bookedDays.has(workDate)) return;
+    let candidate = workDate;
+    for (let i = 0; i < 60; i++) {
+      candidate = toDateKey(addDays(new Date(`${candidate}T00:00:00`), 1));
+      if (!bookedDays.has(candidate)) {
+        setWorkDate(candidate);
+        return;
+      }
+    }
+  }, [open, availability.data, bookedDays, workDate]);
 
   const mutation = useMutation({
     mutationFn: () =>
       createEngagement({
         employer_profile_id: employerProfileId,
         worker_profile_id: worker.id,
-        skill_id: skillId || null,
+        skill_id: null,
         title: title.trim(),
         details: details.trim() || null,
         work_date: workDate,
         location_text: location.trim(),
-        payment_amount: payment.trim() ? Number(payment) : null,
+        payment_amount: null,
       }),
     onSuccess: () => {
       toast(t("requestSent"));
@@ -71,7 +88,6 @@ export function RequestWorkDialog({
     setTitle("");
     setDetails("");
     setWorkDate(todayKey());
-    setPayment("");
     setErrors({});
   }
 
@@ -80,6 +96,7 @@ export function RequestWorkDialog({
     if (title.trim().length < 3) next.title = t("required");
     if (location.trim().length < 2) next.location = t("required");
     if (workDate < todayKey()) next.workDate = t("dateInPast");
+    else if (bookedDays.has(workDate)) next.workDate = t("dateUnavailable");
     if (worker.id === employerProfileId) next.title = t("cannotRequestSelf");
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -116,25 +133,15 @@ export function RequestWorkDialog({
         />
       </Field>
 
-      {(workerSkills.data?.length ?? 0) > 0 && (
-        <Field label={t("skills")}>
-          <Select value={skillId} onChange={(e) => setSkillId(e.target.value)}>
-            <option value="">—</option>
-            {(workerSkills.data ?? []).map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.emoji} {skillName(s, lang)}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      )}
-
       <Field label={t("workDate")} error={errors.workDate}>
-        <Input
-          type="date"
-          value={workDate}
-          min={todayKey()}
-          onChange={(e) => setWorkDate(e.target.value)}
+        <AvailabilityCalendar
+          days={availability.data ?? []}
+          weeks={6}
+          selectedDay={workDate}
+          onSelectDay={(day) => {
+            setWorkDate(day);
+            setErrors((prev) => ({ ...prev, workDate: "" }));
+          }}
         />
       </Field>
 
@@ -144,17 +151,6 @@ export function RequestWorkDialog({
           onChange={(e) => setLocation(e.target.value)}
           placeholder={t("workLocationPlaceholder")}
           maxLength={160}
-        />
-      </Field>
-
-      <Field label={`${t("payment")} (${t("optional")})`} hint={t("paymentHint")}>
-        <Input
-          type="number"
-          inputMode="numeric"
-          min={0}
-          value={payment}
-          onChange={(e) => setPayment(e.target.value)}
-          placeholder={t("paymentPlaceholder")}
         />
       </Field>
 

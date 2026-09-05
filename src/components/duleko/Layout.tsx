@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Briefcase, Home, Search, User } from "lucide-react";
+import { Bell, Briefcase, Home, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
@@ -63,9 +63,10 @@ export function PageContainer({ children, className }: { children: React.ReactNo
   );
 }
 
+// The search bar at the top of Home/Search is enough on its own — no separate
+// bottom-nav tab for it (it's still reachable via /search, just not pinned here).
 const NAV = [
   { to: "/", key: "navHome", icon: Home },
-  { to: "/search", key: "navSearch", icon: Search },
   { to: "/work", key: "navWork", icon: Briefcase },
   { to: "/notifications", key: "navAlerts", icon: Bell },
   { to: "/profile", key: "navProfile", icon: User },

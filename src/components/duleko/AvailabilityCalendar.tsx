@@ -15,11 +15,21 @@ export function AvailabilityCalendar({
   onToggle,
   editable = false,
   weeks = 4,
+  selectedDay,
+  onSelectDay,
 }: {
   days: AvailabilityDay[];
   onToggle?: (day: string, nextStatus: "available" | "booked") => void;
   editable?: boolean;
   weeks?: number;
+  /** Currently picked day, when used as a date picker (see onSelectDay). */
+  selectedDay?: string;
+  /**
+   * Turns the strip into a date picker: tapping a free, non-past day calls
+   * this instead of toggling availability. Booked/past days stay disabled
+   * either way, so a booked day can never be picked.
+   */
+  onSelectDay?: (day: string) => void;
 }) {
   const { t, lang } = useI18n();
   const weekdays = lang === "ne" ? WEEKDAYS_NE : WEEKDAYS_EN;
@@ -57,14 +67,23 @@ export function AvailabilityCalendar({
           const lockedByJob = Boolean(record?.engagement_id);
           const past = key < todayStr;
           const isToday = key === todayStr;
-          const clickable = editable && !past && !lockedByJob;
+          const isSelected = selectedDay === key;
+          const clickable = onSelectDay ? !past && !booked : editable && !past && !lockedByJob;
+
+          function handleClick() {
+            if (onSelectDay) {
+              if (!past && !booked) onSelectDay(key);
+              return;
+            }
+            onToggle?.(key, booked ? "available" : "booked");
+          }
 
           return (
             <button
               key={key}
               type="button"
               disabled={!clickable}
-              onClick={() => onToggle?.(key, booked ? "available" : "booked")}
+              onClick={handleClick}
               title={booked ? t("bookedDay") : t("availableNow")}
               className={cn(
                 "flex aspect-square flex-col items-center justify-center rounded-lg text-sm transition-colors",
@@ -72,7 +91,8 @@ export function AvailabilityCalendar({
                 !past && !booked && "bg-brand-50 text-brand-800",
                 !past && booked && "bg-slate-200 text-slate-500 line-through",
                 lockedByJob && "bg-amber-100 text-amber-800 no-underline",
-                isToday && "ring-2 ring-brand-600 ring-offset-1",
+                isToday && !isSelected && "ring-2 ring-brand-600 ring-offset-1",
+                isSelected && "ring-2 ring-brand-700 ring-offset-1 bg-brand-600 text-white",
                 clickable && "hover:brightness-95",
               )}
             >

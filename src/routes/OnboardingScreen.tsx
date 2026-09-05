@@ -36,6 +36,8 @@ export function OnboardingScreen() {
     locality: null,
   });
   const [skillIds, setSkillIds] = useState<string[]>([]);
+  const [otherLabel, setOtherLabel] = useState("");
+  const [otherNote, setOtherNote] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const skills = useQuery({ queryKey: ["skills"], queryFn: listSkills });
@@ -65,7 +67,16 @@ export function OnboardingScreen() {
         language: lang,
       });
       await saveContact(profile.id, normalisePhone(phone));
-      if (skillIds.length > 0) await setUserSkills(profile.id, skillIds);
+      if (skillIds.length > 0) {
+        await setUserSkills(
+          profile.id,
+          skillIds.map((skill_id) => ({
+            skill_id,
+            custom_label: skill_id === "other" ? otherLabel.trim() || null : null,
+            custom_note: skill_id === "other" ? otherNote.trim() || null : null,
+          })),
+        );
+      }
       return profile;
     },
     onSuccess: async () => {
@@ -199,6 +210,27 @@ export function OnboardingScreen() {
                 setSkillIds((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]))
               }
             />
+
+            {skillIds.includes("other") && (
+              <div className="mt-4 space-y-3 rounded-xl border border-slate-200 p-3">
+                <Field label={t("othersSkillLabel")}>
+                  <Input
+                    value={otherLabel}
+                    onChange={(e) => setOtherLabel(e.target.value)}
+                    placeholder={t("othersSkillPlaceholder")}
+                    maxLength={60}
+                  />
+                </Field>
+                <Field label={t("othersSkillNoteLabel")}>
+                  <Input
+                    value={otherNote}
+                    onChange={(e) => setOtherNote(e.target.value)}
+                    placeholder={t("othersSkillNotePlaceholder")}
+                    maxLength={300}
+                  />
+                </Field>
+              </div>
+            )}
           </>
         )}
 

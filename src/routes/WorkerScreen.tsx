@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { ArrowLeft, Flag, MapPin, Phone, ShieldOff } from "lucide-react";
+import { ArrowLeft, Flag, MapPin, Phone, UserCheck, UserPlus } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
 import { RatingStars } from "@/components/duleko/Rating";
@@ -16,17 +16,18 @@ import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import {
-  blockUser,
   getAvailability,
   getContact,
+  getFriendshipWith,
   getProfile,
   getUserSkills,
-  isBlockedByMe,
   listReviewsFor,
-  unblockUser,
+  removeFriendship,
+  respondFriendRequest,
+  sendFriendRequest,
 } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import { addDays, formatNumber, locationLine, relativeTime, skillName, toDateKey, todayKey } from "@/lib/utils";
+import { addDays, formatMoney, formatNumber, locationLine, relativeTime, skillName, toDateKey, todayKey } from "@/lib/utils";
 
 export function WorkerScreen() {
   const { t, lang } = useI18n();
@@ -52,22 +53,37 @@ export function WorkerScreen() {
     staleTime: 5 * 60_000,
   });
 
-  const blocked = useQuery({
-    queryKey: ["blocked", me?.id, workerId],
-    queryFn: () => isBlockedByMe(me!.id, workerId),
+  const friendship = useQuery({
+    queryKey: ["friendship", me?.id, workerId],
+    queryFn: () => getFriendshipWith(me!.id, workerId),
     enabled: Boolean(me?.id),
   });
 
-  const toggleBlock = useMutation({
-    mutationFn: async () => {
-      if (!me) return;
-      if (blocked.data) await unblockUser(me.id, workerId);
-      else await blockUser(me.id, workerId);
-    },
+  function invalidateFriendship() {
+    queryClient.invalidateQueries({ queryKey: ["friendship"] });
+    queryClient.invalidateQueries({ queryKey: ["friends"] });
+    queryClient.invalidateQueries({ queryKey: ["friend-requests"] });
+    queryClient.invalidateQueries({ queryKey: ["unread"] });
+  }
+
+  const addFriend = useMutation({
+    mutationFn: () => sendFriendRequest(me!.id, workerId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["blocked"] });
-      queryClient.invalidateQueries({ queryKey: ["workers"] });
+      toast(t("friendRequestSent"));
+      invalidateFriendship();
     },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  const respond = useMutation({
+    mutationFn: (accept: boolean) => respondFriendRequest(friendship.data!.id, accept),
+    onSuccess: invalidateFriendship,
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  const removeFriend = useMutation({
+    mutationFn: () => removeFriendship(friendship.data!.id),
+    onSuccess: invalidateFriendship,
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
@@ -83,6 +99,8 @@ export function WorkerScreen() {
   const w = worker.data;
   const isMe = me?.id === w.id;
   const place = locationLine(w, lang);
+  const fs = friendship.data;
+  const iAmRequester = fs?.requester_profile_id === me?.id;
 
   return (
     <>
@@ -125,12 +143,17 @@ export function WorkerScreen() {
 
             {(skills.data?.length ?? 0) > 0 && (
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {(skills.data ?? []).map((s) => (
-                  <Badge key={s.id} tone="brand">
-                    <span aria-hidden>{s.emoji}</span>
-                    {skillName(s, lang)}
-                  </Badge>
-                ))}
+                {(skills.data ?? []).map((s) => {
+                  const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
+                  const rate = s.rate_amount != null ? `${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}` : null;
+                  return (
+                    <Badge key={s.id} tone="brand">
+                      <span aria-hidden>{s.emoji}</span>
+                      {label}
+                      {rate ? ` · ${rate}` : ""}
+                    </Badge>
+                  );
+                })}
               </div>
             )}
 
@@ -138,9 +161,49 @@ export function WorkerScreen() {
 
             {!isMe && (
               <div className="mt-4 flex flex-col gap-2">
-                <Button size="lg" onClick={() => setRequestOpen(true)} disabled={Boolean(blocked.data)}>
+                <Button size="lg" onClick={() => setRequestOpen(true)}>
                   {t("requestWork")}
                 </Button>
+
+                {!fs && (
+                  <Button variant="outline" loading={addFriend.isPending} onClick={() => addFriend.mutate()}>
+                    <UserPlus className="h-4 w-4" aria-hidden />
+                    {t("addFriend")}
+                  </Button>
+                )}
+                {fs?.status === "pending" && iAmRequester && (
+                  <Button variant="outline" loading={removeFriend.isPending} onClick={() => removeFriend.mutate()}>
+                    {t("friendRequestPending")} · {t("cancelRequest")}
+                  </Button>
+                )}
+                {fs?.status === "pending" && !iAmRequester && (
+                  <div className="flex gap-2">
+                    <Button className="flex-1" loading={respond.isPending} onClick={() => respond.mutate(true)}>
+                      {t("acceptRequest")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      loading={respond.isPending}
+                      onClick={() => respond.mutate(false)}
+                    >
+                      {t("declineRequest")}
+                    </Button>
+                  </div>
+                )}
+                {fs?.status === "accepted" && (
+                  <Button
+                    variant="outline"
+                    loading={removeFriend.isPending}
+                    onClick={() => {
+                      if (window.confirm(t("removeFriendConfirm"))) removeFriend.mutate();
+                    }}
+                  >
+                    <UserCheck className="h-4 w-4" aria-hidden />
+                    {t("alreadyFriends")}
+                  </Button>
+                )}
+
                 {contact.data ? (
                   <a
                     href={`tel:${contact.data}`}
@@ -197,7 +260,7 @@ export function WorkerScreen() {
         </Card>
 
         {!isMe && (
-          <div className="flex justify-center gap-4 pb-4 text-sm">
+          <div className="flex justify-center pb-4 text-sm">
             <button
               type="button"
               onClick={() => setReportOpen(true)}
@@ -205,16 +268,6 @@ export function WorkerScreen() {
             >
               <Flag className="h-4 w-4" aria-hidden />
               {t("report")}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (blocked.data || window.confirm(t("blockConfirm"))) toggleBlock.mutate();
-              }}
-              className="inline-flex items-center gap-1.5 text-slate-500 hover:text-red-600"
-            >
-              <ShieldOff className="h-4 w-4" aria-hidden />
-              {blocked.data ? t("unblock") : t("block")}
             </button>
           </div>
         )}

@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { MapPin } from "lucide-react";
+import { MapPin, Navigation } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { RatingStars } from "./Rating";
 import { useI18n } from "@/lib/i18n";
-import { locationLine, skillName } from "@/lib/utils";
+import { formatNumber, locationLine, skillName } from "@/lib/utils";
 import type { WorkerCardData } from "@/lib/types";
 
 export function WorkerCard({ worker }: { worker: WorkerCardData }) {
@@ -36,6 +36,13 @@ export function WorkerCard({ worker }: { worker: WorkerCardData }) {
             <p className="mt-1 flex items-center gap-1 truncate text-xs text-slate-500">
               <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
               {place}
+            </p>
+          )}
+
+          {worker.distance_km != null && (
+            <p className="mt-1 flex items-center gap-1 text-xs text-brand-700">
+              <Navigation className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              {t("distanceAway", { km: formatNumber(worker.distance_km, lang) })}
             </p>
           )}
 

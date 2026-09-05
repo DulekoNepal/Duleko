@@ -5,13 +5,14 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
+import { CancelReasonDialog } from "./CancelReasonDialog";
 import { ReviewDialog } from "./ReviewDialog";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
-import { getContact, setEngagementStatus } from "@/lib/queries";
+import { cancelEngagement, getContact, setEngagementStatus } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
 import { formatDate, formatMoney, skillName } from "@/lib/utils";
-import type { EngagementStatus, EngagementWithParties } from "@/lib/types";
+import type { CancellationReason, EngagementStatus, EngagementWithParties } from "@/lib/types";
 
 const STATUS_TONE: Record<EngagementStatus, "warning" | "brand" | "success" | "muted" | "danger"> = {
   pending: "warning",
@@ -42,6 +43,7 @@ export function EngagementCard({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const iAmWorker = engagement.worker_profile_id === myProfileId;
   const other = iAmWorker ? engagement.employer : engagement.worker;
@@ -60,6 +62,18 @@ export function EngagementCard({
       queryClient.invalidateQueries({ queryKey: ["engagements"] });
       queryClient.invalidateQueries({ queryKey: ["unread"] });
       queryClient.invalidateQueries({ queryKey: ["availability"] });
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  const cancel = useMutation({
+    mutationFn: ({ reason, note }: { reason: CancellationReason; note: string | null }) =>
+      cancelEngagement(engagement.id, myProfileId, reason, note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["engagements"] });
+      queryClient.invalidateQueries({ queryKey: ["unread"] });
+      queryClient.invalidateQueries({ queryKey: ["availability"] });
+      setCancelOpen(false);
     },
     onError: (error) => toast(errorMessage(error), "error"),
   });
@@ -101,9 +115,7 @@ export function EngagementCard({
         key="cancel"
         size="sm"
         variant="ghost"
-        onClick={() => {
-          if (window.confirm(t("cancelConfirm"))) change.mutate("cancelled");
-        }}
+        onClick={() => setCancelOpen(true)}
       >
         {t("cancelWork")}
       </Button>,
@@ -197,6 +209,13 @@ export function EngagementCard({
         reviewerProfileId={myProfileId}
         revieweeProfileId={other.id}
         revieweeName={other.full_name}
+      />
+
+      <CancelReasonDialog
+        open={cancelOpen}
+        onClose={() => setCancelOpen(false)}
+        loading={cancel.isPending}
+        onConfirm={(reason, note) => cancel.mutate({ reason, note })}
       />
     </Card>
   );
