@@ -1,0 +1,309 @@
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import type { Lang } from "./types";
+
+/**
+ * Every user-visible string lives here, in English and Nepali.
+ * Placeholders use {name} and are filled via t("key", { name: "..." }).
+ */
+const strings = {
+  // ---- generic -------------------------------------------------------
+  appName: ["Duleko", "दुलेको"],
+  tagline: ["Find local work. Find local workers.", "नजिकैको काम खोज्नुहोस्। नजिकैका कामदार भेट्नुहोस्।"],
+  save: ["Save", "सुरक्षित गर्नुहोस्"],
+  cancel: ["Cancel", "रद्द गर्नुहोस्"],
+  back: ["Back", "पछाडि"],
+  next: ["Next", "अर्को"],
+  done: ["Done", "भयो"],
+  close: ["Close", "बन्द गर्नुहोस्"],
+  loading: ["Loading…", "लोड हुँदै…"],
+  saving: ["Saving…", "सुरक्षित हुँदै…"],
+  retry: ["Try again", "फेरि प्रयास गर्नुहोस्"],
+  optional: ["optional", "वैकल्पिक"],
+  required: ["Required", "अनिवार्य"],
+  search: ["Search", "खोज्नुहोस्"],
+  seeAll: ["See all", "सबै हेर्नुहोस्"],
+  somethingWrong: ["Something went wrong.", "केही गडबड भयो।"],
+  noInternet: ["Check your internet connection.", "इन्टरनेट जडान जाँच्नुहोस्।"],
+  confirm: ["Confirm", "पुष्टि गर्नुहोस्"],
+  yes: ["Yes", "हो"],
+  no: ["No", "होइन"],
+
+  // ---- auth ----------------------------------------------------------
+  signIn: ["Sign in", "लगइन गर्नुहोस्"],
+  signUp: ["Create account", "खाता खोल्नुहोस्"],
+  signOut: ["Sign out", "लगआउट"],
+  email: ["Email", "इमेल"],
+  password: ["Password", "पासवर्ड"],
+  emailPlaceholder: ["you@example.com", "you@example.com"],
+  passwordHint: ["At least 6 characters", "कम्तीमा ६ अक्षर"],
+  noAccount: ["New here? Create an account", "नयाँ हुनुहुन्छ? खाता खोल्नुहोस्"],
+  haveAccount: ["Already have an account? Sign in", "पहिले नै खाता छ? लगइन गर्नुहोस्"],
+  checkEmail: [
+    "Check your email to confirm your account, then sign in.",
+    "खाता पुष्टि गर्न इमेल हेर्नुहोस्, त्यसपछि लगइन गर्नुहोस्।",
+  ],
+  authWelcome: ["Welcome to Duleko", "दुलेकोमा स्वागत छ"],
+  authBlurb: [
+    "A simple way for workers and employers in your area to find each other.",
+    "तपाईंको क्षेत्रका कामदार र काम दिने बीच सजिलो भेटघाट।",
+  ],
+
+  // ---- onboarding ----------------------------------------------------
+  onboardingTitle: ["Set up your profile", "आफ्नो प्रोफाइल बनाउनुहोस्"],
+  stepOf: ["Step {current} of {total}", "चरण {current} / {total}"],
+  yourName: ["Your name", "तपाईंको नाम"],
+  namePlaceholder: ["Ram Bahadur Thapa", "राम बहादुर थापा"],
+  phoneNumber: ["Phone number", "फोन नम्बर"],
+  phoneHint: [
+    "Hidden until you accept or confirm a job.",
+    "काम स्वीकार वा पक्का नभएसम्म लुकाइन्छ।",
+  ],
+  phoneInvalid: ["Enter a valid Nepali mobile number.", "सही नेपाली मोबाइल नम्बर लेख्नुहोस्।"],
+  aboutYou: ["About you", "तपाईंको बारेमा"],
+  aboutPlaceholder: [
+    "8 years wiring houses. I bring my own tools.",
+    "८ वर्षदेखि घरको वायरिङ। आफ्नै औजार ल्याउँछु।",
+  ],
+  whereYouAre: ["Where you are", "तपाईं कहाँ हुनुहुन्छ"],
+  province: ["Province", "प्रदेश"],
+  district: ["District", "जिल्ला"],
+  municipality: ["Municipality", "नगरपालिका / गाउँपालिका"],
+  ward: ["Ward", "वडा"],
+  locality: ["Village / tole", "गाउँ / टोल"],
+  selectProvince: ["Select province", "प्रदेश छान्नुहोस्"],
+  selectDistrict: ["Select district", "जिल्ला छान्नुहोस्"],
+  yourSkills: ["What work can you do?", "तपाईं के काम गर्न सक्नुहुन्छ?"],
+  skillsHint: [
+    "Pick one or more. You can change this later.",
+    "एक वा बढी छान्नुहोस्। पछि परिवर्तन गर्न सकिन्छ।",
+  ],
+  skillsNoneHint: [
+    "Only looking to hire? You can skip this.",
+    "काम दिन मात्र चाहनुहुन्छ? यो छाड्न सक्नुहुन्छ।",
+  ],
+  finishSetup: ["Finish", "सिद्ध्याउनुहोस्"],
+  photo: ["Photo", "फोटो"],
+  addPhoto: ["Add photo", "फोटो थप्नुहोस्"],
+  changePhoto: ["Change photo", "फोटो बदल्नुहोस्"],
+  removePhoto: ["Remove photo", "फोटो हटाउनुहोस्"],
+  photoTooBig: ["Photo must be under 2 MB.", "फोटो २ MB भन्दा सानो हुनुपर्छ।"],
+
+  // ---- home ----------------------------------------------------------
+  greeting: ["Namaste, {name}", "नमस्ते, {name}"],
+  searchPlaceholder: ["Search workers or skills", "कामदार वा सीप खोज्नुहोस्"],
+  browseSkills: ["Browse by skill", "सीप अनुसार हेर्नुहोस्"],
+  availableToday: ["Available today", "आज उपलब्ध"],
+  nearYou: ["Near you", "तपाईंको नजिक"],
+  noWorkersYet: ["No workers here yet.", "यहाँ अझै कामदार छैनन्।"],
+  noWorkersHint: [
+    "Be the first — add your skills so people can find you.",
+    "पहिलो बन्नुहोस् — सीप थप्नुहोस् ताकि मानिसले भेटून्।",
+  ],
+  yourWorkToday: ["Your work", "तपाईंको काम"],
+  pendingRequests: ["{count} waiting for you", "{count} तपाईंको जवाफ पर्खिरहेको"],
+
+  // ---- search --------------------------------------------------------
+  filters: ["Filters", "फिल्टर"],
+  allSkills: ["All skills", "सबै सीप"],
+  anywhere: ["Anywhere", "जहाँसुकै"],
+  anyDay: ["Any day", "जुनसुकै दिन"],
+  onDate: ["Free on", "यो दिन खाली"],
+  sortBy: ["Sort by", "क्रम"],
+  sortRelevance: ["Best match", "उपयुक्त"],
+  sortRating: ["Highest rated", "उच्च रेटिङ"],
+  sortNewest: ["Newest", "नयाँ"],
+  availableOnly: ["Available only", "उपलब्ध मात्र"],
+  resultsCount: ["{count} workers", "{count} कामदार"],
+  noResults: ["No workers match this search.", "यो खोजसँग मिल्ने कामदार भेटिएन।"],
+  noResultsHint: ["Try a wider area or a different skill.", "फराकिलो क्षेत्र वा अर्को सीप प्रयास गर्नुहोस्।"],
+  clearFilters: ["Clear filters", "फिल्टर हटाउनुहोस्"],
+
+  // ---- worker profile ------------------------------------------------
+  skills: ["Skills", "सीप"],
+  about: ["About", "बारेमा"],
+  availability: ["Availability", "उपलब्धता"],
+  reviews: ["Reviews", "समीक्षा"],
+  noReviewsYet: ["No reviews yet.", "अझै समीक्षा छैन।"],
+  newProfile: ["New on Duleko", "दुलेकोमा नयाँ"],
+  requestWork: ["Request work", "काम अनुरोध गर्नुहोस्"],
+  callNow: ["Call", "फोन गर्नुहोस्"],
+  phoneHidden: [
+    "Phone number appears once the worker accepts.",
+    "कामदारले स्वीकार गरेपछि फोन नम्बर देखिन्छ।",
+  ],
+  ratingSummary: ["{rating} ({count} reviews)", "{rating} ({count} समीक्षा)"],
+  availableNow: ["Available", "उपलब्ध"],
+  notAvailable: ["Not available", "उपलब्ध छैन"],
+  bookedDay: ["Booked", "बुक भइसकेको"],
+  report: ["Report", "उजुरी"],
+  block: ["Block", "ब्लक गर्नुहोस्"],
+  unblock: ["Unblock", "अनब्लक"],
+  blocked: ["Blocked", "ब्लक गरिएको"],
+  blockConfirm: [
+    "Block this person? They will not see your profile and cannot request work from you.",
+    "यो व्यक्तिलाई ब्लक गर्ने? उहाँले तपाईंको प्रोफाइल देख्न वा काम माग्न सक्नुहुन्न।",
+  ],
+  reportTitle: ["Report this person", "यो व्यक्तिको उजुरी गर्नुहोस्"],
+  reportReason: ["Reason", "कारण"],
+  reportDetails: ["What happened?", "के भयो?"],
+  reportSent: ["Thanks. We will look into it.", "धन्यवाद। हामी हेर्नेछौं।"],
+  reasonSpam: ["Spam", "स्प्याम"],
+  reasonFake: ["Fake profile", "नक्कली प्रोफाइल"],
+  reasonAbusive: ["Abusive behaviour", "दुर्व्यवहार"],
+  reasonNoShow: ["Did not show up", "काममा आएनन्"],
+  reasonUnsafe: ["Unsafe", "असुरक्षित"],
+  reasonOther: ["Other", "अन्य"],
+
+  // ---- work request --------------------------------------------------
+  requestTitle: ["Request work from {name}", "{name} सँग काम अनुरोध"],
+  jobTitle: ["What is the job?", "के काम हो?"],
+  jobTitlePlaceholder: ["Fix wiring in two rooms", "दुई कोठाको वायरिङ मर्मत"],
+  jobDetails: ["More details", "थप विवरण"],
+  workDate: ["Which day?", "कुन दिन?"],
+  workLocation: ["Where?", "कहाँ?"],
+  workLocationPlaceholder: ["Chandrauta, ward 4", "चन्द्रौटा, वडा ४"],
+  payment: ["Payment offered", "प्रस्तावित ज्याला"],
+  paymentPlaceholder: ["1500", "१५००"],
+  paymentHint: ["Leave empty to discuss later.", "पछि कुरा गर्न खाली छोड्नुहोस्।"],
+  sendRequest: ["Send request", "अनुरोध पठाउनुहोस्"],
+  requestSent: ["Request sent.", "अनुरोध पठाइयो।"],
+  cannotRequestSelf: ["You cannot request work from yourself.", "आफैंसँग काम माग्न मिल्दैन।"],
+  dateInPast: ["Pick today or a later date.", "आज वा पछिको मिति छान्नुहोस्।"],
+
+  // ---- my work -------------------------------------------------------
+  myWork: ["My work", "मेरो काम"],
+  asWorker: ["Work I do", "मैले गर्ने काम"],
+  asEmployer: ["Work I gave", "मैले दिएको काम"],
+  statusPending: ["Waiting", "पर्खाइमा"],
+  statusAccepted: ["Accepted", "स्वीकृत"],
+  statusDeclined: ["Declined", "अस्वीकृत"],
+  statusConfirmed: ["Confirmed", "पक्का"],
+  statusCompleted: ["Completed", "सम्पन्न"],
+  statusCancelled: ["Cancelled", "रद्द"],
+  accept: ["Accept", "स्वीकार गर्नुहोस्"],
+  decline: ["Decline", "अस्वीकार गर्नुहोस्"],
+  confirmWork: ["Confirm", "पक्का गर्नुहोस्"],
+  markComplete: ["Mark completed", "सम्पन्न भयो"],
+  cancelWork: ["Cancel job", "काम रद्द गर्नुहोस्"],
+  leaveReview: ["Leave review", "समीक्षा दिनुहोस्"],
+  reviewDone: ["Reviewed", "समीक्षा दिइयो"],
+  noWorkYet: ["Nothing here yet.", "यहाँ अझै केही छैन।"],
+  noWorkYetHint: [
+    "When you request work or someone requests you, it shows up here.",
+    "तपाईंले काम माग्दा वा कसैले तपाईंलाई माग्दा यहाँ देखिन्छ।",
+  ],
+  waitingOnWorker: ["Waiting for the worker to reply.", "कामदारको जवाफ पर्खँदै।"],
+  waitingOnEmployer: ["Waiting for them to confirm.", "उहाँको पुष्टि पर्खँदै।"],
+  confirmedNext: ["Confirmed. Contact each other to arrange the day.", "पक्का भयो। दिन मिलाउन सम्पर्क गर्नुहोस्।"],
+  cancelConfirm: ["Cancel this job?", "यो काम रद्द गर्ने?"],
+
+  // ---- reviews -------------------------------------------------------
+  reviewTitle: ["How did it go?", "काम कस्तो भयो?"],
+  reviewFor: ["Review for {name}", "{name} को समीक्षा"],
+  yourRating: ["Your rating", "तपाईंको रेटिङ"],
+  reviewComment: ["Add a comment", "टिप्पणी थप्नुहोस्"],
+  reviewCommentPlaceholder: ["On time and did good work.", "समयमै आए र राम्रो काम गरे।"],
+  submitReview: ["Submit review", "समीक्षा पठाउनुहोस्"],
+  reviewThanks: ["Thanks for the review.", "समीक्षाको लागि धन्यवाद।"],
+  star1: ["Poor", "नराम्रो"],
+  star2: ["Fair", "ठीकै"],
+  star3: ["Good", "राम्रो"],
+  star4: ["Very good", "धेरै राम्रो"],
+  star5: ["Excellent", "उत्कृष्ट"],
+
+  // ---- notifications -------------------------------------------------
+  notifications: ["Notifications", "सूचना"],
+  markAllRead: ["Mark all read", "सबै पढेको चिन्ह"],
+  noNotifications: ["No notifications.", "कुनै सूचना छैन।"],
+
+  // ---- profile / settings --------------------------------------------
+  myProfile: ["My profile", "मेरो प्रोफाइल"],
+  editProfile: ["Edit profile", "प्रोफाइल सम्पादन"],
+  settings: ["Settings", "सेटिङ"],
+  language: ["Language", "भाषा"],
+  english: ["English", "अंग्रेजी"],
+  nepali: ["Nepali", "नेपाली"],
+  availableForWork: ["Available for work", "काम गर्न उपलब्ध"],
+  availableForWorkHint: [
+    "Turn off when you are busy. You stay searchable but marked unavailable.",
+    "व्यस्त हुँदा बन्द गर्नुहोस्। खोजमा देखिनुहुन्छ तर उपलब्ध छैन भनेर देखिन्छ।",
+  ],
+  blockedUsers: ["Blocked people", "ब्लक गरिएका"],
+  noBlockedUsers: ["You have not blocked anyone.", "तपाईंले कसैलाई ब्लक गर्नुभएको छैन।"],
+  markCalendar: ["Mark days you are busy", "व्यस्त दिन चिन्ह लगाउनुहोस्"],
+  calendarHint: [
+    "Tap a day to mark it busy. Confirmed jobs are marked for you.",
+    "व्यस्त दिन छान्न थिच्नुहोस्। पक्का भएका काम आफैं चिन्ह लाग्छ।",
+  ],
+  profileSaved: ["Profile saved.", "प्रोफाइल सुरक्षित भयो।"],
+
+  // ---- nav -----------------------------------------------------------
+  navHome: ["Home", "गृह"],
+  navSearch: ["Search", "खोज"],
+  navWork: ["Work", "काम"],
+  navAlerts: ["Alerts", "सूचना"],
+  navProfile: ["Profile", "प्रोफाइल"],
+
+  // ---- setup screen --------------------------------------------------
+  setupNeeded: ["Supabase is not configured", "Supabase कन्फिगर भएको छैन"],
+  setupHint: [
+    "Copy .env.example to .env.local and add your Supabase URL and anon key, then restart the dev server.",
+    ".env.example लाई .env.local बनाई Supabase URL र anon key राख्नुहोस्, अनि सर्भर पुनः चलाउनुहोस्।",
+  ],
+} as const;
+
+export type StringKey = keyof typeof strings;
+
+const LANG_KEY = "duleko.lang";
+
+function detectInitialLang(): Lang {
+  if (typeof window === "undefined") return "en";
+  const stored = window.localStorage.getItem(LANG_KEY);
+  if (stored === "en" || stored === "ne") return stored;
+  return navigator.language?.toLowerCase().startsWith("ne") ? "ne" : "en";
+}
+
+interface I18nValue {
+  lang: Lang;
+  setLang: (lang: Lang) => void;
+  toggleLang: () => void;
+  t: (key: StringKey, vars?: Record<string, string | number>) => string;
+}
+
+const I18nContext = createContext<I18nValue | null>(null);
+
+export function I18nProvider({ children }: { children: React.ReactNode }) {
+  const [lang, setLangState] = useState<Lang>(detectInitialLang);
+
+  useEffect(() => {
+    window.localStorage.setItem(LANG_KEY, lang);
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  const setLang = useCallback((next: Lang) => setLangState(next), []);
+  const toggleLang = useCallback(() => setLangState((l) => (l === "en" ? "ne" : "en")), []);
+
+  const t = useCallback(
+    (key: StringKey, vars?: Record<string, string | number>) => {
+      const pair = strings[key] as readonly [string, string] | undefined;
+      let out = pair ? (lang === "ne" ? pair[1] : pair[0]) : String(key);
+      if (vars) {
+        for (const [k, v] of Object.entries(vars)) {
+          out = out.replaceAll(`{${k}}`, String(v));
+        }
+      }
+      return out;
+    },
+    [lang],
+  );
+
+  const value = useMemo<I18nValue>(() => ({ lang, setLang, toggleLang, t }), [lang, setLang, toggleLang, t]);
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+}
+
+export function useI18n(): I18nValue {
+  const ctx = useContext(I18nContext);
+  if (!ctx) throw new Error("useI18n must be used inside <I18nProvider>");
+  return ctx;
+}

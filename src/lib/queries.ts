@@ -1,0 +1,455 @@
+import { supabase } from "./supabase";
+import type {
+  AppNotification,
+  AvailabilityDay,
+  Engagement,
+  EngagementStatus,
+  EngagementWithParties,
+  Lang,
+  Profile,
+  ReportReason,
+  Review,
+  Skill,
+  WorkerCardData,
+} from "./types";
+
+const PROFILE_COLUMNS =
+  "id,user_id,full_name,about,avatar_url,province,district,municipality,ward,locality,is_available,language,rating,rating_count,created_at,updated_at";
+
+const PARTY_COLUMNS = "id,full_name,avatar_url,rating,rating_count";
+
+function unwrap<T>(res: { data: T | null; error: unknown }): T {
+  if (res.error) throw res.error;
+  return res.data as T;
+}
+
+/** Supabase embeds can come back as an object or a one-element array. */
+function one<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+// ---------------------------------------------------------------------
+// Profile
+// ---------------------------------------------------------------------
+export async function getMyProfile(userId: string): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(PROFILE_COLUMNS)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as Profile) ?? null;
+}
+
+export async function getProfile(profileId: string): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(PROFILE_COLUMNS)
+    .eq("id", profileId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as Profile) ?? null;
+}
+
+export interface ProfileInput {
+  full_name: string;
+  about?: string | null;
+  avatar_url?: string | null;
+  province?: string | null;
+  district?: string | null;
+  municipality?: string | null;
+  ward?: number | null;
+  locality?: string | null;
+  is_available?: boolean;
+  language?: Lang;
+}
+
+export async function createProfile(userId: string, input: ProfileInput): Promise<Profile> {
+  return unwrap(
+    await supabase
+      .from("profiles")
+      .insert({ user_id: userId, ...input })
+      .select(PROFILE_COLUMNS)
+      .single(),
+  );
+}
+
+export async function updateProfile(profileId: string, input: Partial<ProfileInput>): Promise<Profile> {
+  return unwrap(
+    await supabase
+      .from("profiles")
+      .update(input)
+      .eq("id", profileId)
+      .select(PROFILE_COLUMNS)
+      .single(),
+  );
+}
+
+// ---------------------------------------------------------------------
+// Phone (private)
+// ---------------------------------------------------------------------
+export async function getContact(profileId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("profile_contacts")
+    .select("phone")
+    .eq("profile_id", profileId)
+    .maybeSingle();
+  // RLS hides the row when the viewer is not allowed to see it — not an error.
+  if (error) return null;
+  return (data as { phone: string } | null)?.phone ?? null;
+}
+
+export async function saveContact(profileId: string, phone: string): Promise<void> {
+  const { error } = await supabase
+    .from("profile_contacts")
+    .upsert({ profile_id: profileId, phone }, { onConflict: "profile_id" });
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------
+// Skills
+// ---------------------------------------------------------------------
+export async function listSkills(): Promise<Skill[]> {
+  return unwrap(
+    await supabase.from("skills").select("id,name_en,name_ne,emoji,sort_order").order("sort_order"),
+  );
+}
+
+export async function getUserSkills(profileId: string): Promise<Skill[]> {
+  const { data, error } = await supabase
+    .from("user_skills")
+    .select("skill:skills(id,name_en,name_ne,emoji,sort_order)")
+    .eq("profile_id", profileId);
+  if (error) throw error;
+  return ((data ?? []) as { skill: Skill | Skill[] }[])
+    .map((row) => one(row.skill))
+    .filter((s): s is Skill => Boolean(s))
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+}
+
+export async function setUserSkills(profileId: string, skillIds: string[]): Promise<void> {
+  const { error: delError } = await supabase.from("user_skills").delete().eq("profile_id", profileId);
+  if (delError) throw delError;
+  if (skillIds.length === 0) return;
+  const { error } = await supabase
+    .from("user_skills")
+    .insert(skillIds.map((skill_id) => ({ profile_id: profileId, skill_id })));
+  if (error) throw error;
+}
+
+export async function skillCounts(district?: string | null): Promise<Record<string, number>> {
+  const { data, error } = await supabase.rpc("skill_counts", { p_district: district ?? null });
+  if (error) return {};
+  const out: Record<string, number> = {};
+  for (const row of (data ?? []) as { skill_id: string; worker_count: number }[]) {
+    out[row.skill_id] = Number(row.worker_count);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------
+// Discovery
+// ---------------------------------------------------------------------
+export interface SearchParams {
+  skill?: string | null;
+  query?: string | null;
+  province?: string | null;
+  district?: string | null;
+  municipality?: string | null;
+  day?: string | null;
+  availableOnly?: boolean;
+  sort?: "relevance" | "rating" | "newest";
+  limit?: number;
+  offset?: number;
+}
+
+export async function searchWorkers(params: SearchParams): Promise<WorkerCardData[]> {
+  const { data, error } = await supabase.rpc("search_workers", {
+    p_skill: params.skill ?? null,
+    p_query: params.query?.trim() ? params.query.trim() : null,
+    p_province: params.province ?? null,
+    p_district: params.district ?? null,
+    p_municipality: params.municipality ?? null,
+    p_day: params.day ?? null,
+    p_available_only: params.availableOnly ?? false,
+    p_sort: params.sort ?? "relevance",
+    p_limit: params.limit ?? 30,
+    p_offset: params.offset ?? 0,
+  });
+  if (error) throw error;
+  return (data ?? []) as WorkerCardData[];
+}
+
+// ---------------------------------------------------------------------
+// Availability
+// ---------------------------------------------------------------------
+export async function getAvailability(
+  profileId: string,
+  fromDay: string,
+  toDay: string,
+): Promise<AvailabilityDay[]> {
+  return unwrap(
+    await supabase
+      .from("availability")
+      .select("id,profile_id,day,status,engagement_id")
+      .eq("profile_id", profileId)
+      .gte("day", fromDay)
+      .lte("day", toDay)
+      .order("day"),
+  );
+}
+
+/** Toggling a day the user owns. Days booked by a confirmed job are not togglable. */
+export async function setDayStatus(
+  profileId: string,
+  day: string,
+  status: "available" | "booked",
+): Promise<void> {
+  if (status === "available") {
+    const { error } = await supabase
+      .from("availability")
+      .delete()
+      .eq("profile_id", profileId)
+      .eq("day", day)
+      .is("engagement_id", null);
+    if (error) throw error;
+    return;
+  }
+  const { error } = await supabase
+    .from("availability")
+    .upsert({ profile_id: profileId, day, status: "booked" }, { onConflict: "profile_id,day" });
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------
+// Engagements
+// ---------------------------------------------------------------------
+const ENGAGEMENT_SELECT = `
+  id,employer_profile_id,worker_profile_id,skill_id,title,details,work_date,location_text,
+  payment_amount,payment_note,status,cancelled_by,completed_at,created_at,updated_at,
+  employer:profiles!work_engagements_employer_profile_id_fkey(${PARTY_COLUMNS}),
+  worker:profiles!work_engagements_worker_profile_id_fkey(${PARTY_COLUMNS}),
+  skill:skills(id,name_en,name_ne,emoji),
+  reviews(id,rating,comment,reviewer_profile_id)
+`;
+
+interface RawEngagement extends Engagement {
+  employer: EngagementWithParties["employer"] | EngagementWithParties["employer"][];
+  worker: EngagementWithParties["worker"] | EngagementWithParties["worker"][];
+  skill: Skill | Skill[] | null;
+  reviews: { id: string; rating: number; comment: string | null; reviewer_profile_id: string }[];
+}
+
+function shapeEngagement(row: RawEngagement, myProfileId: string): EngagementWithParties {
+  const mine = (row.reviews ?? []).find((r) => r.reviewer_profile_id === myProfileId) ?? null;
+  return {
+    ...row,
+    employer: one(row.employer)!,
+    worker: one(row.worker)!,
+    skill: one(row.skill),
+    my_review: mine ? { id: mine.id, rating: mine.rating, comment: mine.comment } : null,
+  };
+}
+
+export async function createEngagement(input: {
+  employer_profile_id: string;
+  worker_profile_id: string;
+  skill_id: string | null;
+  title: string;
+  details?: string | null;
+  work_date: string;
+  location_text: string;
+  payment_amount?: number | null;
+}): Promise<Engagement> {
+  return unwrap(
+    await supabase
+      .from("work_engagements")
+      .insert({ ...input, status: "pending" })
+      .select("*")
+      .single(),
+  );
+}
+
+export async function listMyEngagements(
+  myProfileId: string,
+  role: "worker" | "employer",
+): Promise<EngagementWithParties[]> {
+  const column = role === "worker" ? "worker_profile_id" : "employer_profile_id";
+  const { data, error } = await supabase
+    .from("work_engagements")
+    .select(ENGAGEMENT_SELECT)
+    .eq(column, myProfileId)
+    .order("work_date", { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as unknown as RawEngagement[]).map((row) => shapeEngagement(row, myProfileId));
+}
+
+export async function getEngagement(
+  engagementId: string,
+  myProfileId: string,
+): Promise<EngagementWithParties | null> {
+  const { data, error } = await supabase
+    .from("work_engagements")
+    .select(ENGAGEMENT_SELECT)
+    .eq("id", engagementId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return shapeEngagement(data as unknown as RawEngagement, myProfileId);
+}
+
+export async function setEngagementStatus(
+  engagementId: string,
+  status: EngagementStatus,
+  actorProfileId?: string,
+): Promise<void> {
+  const patch: Record<string, unknown> = { status };
+  if (status === "cancelled" && actorProfileId) patch.cancelled_by = actorProfileId;
+  if (status === "completed") patch.completed_at = new Date().toISOString();
+  const { error } = await supabase.from("work_engagements").update(patch).eq("id", engagementId);
+  if (error) throw error;
+}
+
+/** Pending requests waiting on me as the worker — drives the home screen badge. */
+export async function countPendingForMe(myProfileId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("work_engagements")
+    .select("id", { count: "exact", head: true })
+    .eq("worker_profile_id", myProfileId)
+    .eq("status", "pending");
+  if (error) return 0;
+  return count ?? 0;
+}
+
+// ---------------------------------------------------------------------
+// Reviews
+// ---------------------------------------------------------------------
+export async function listReviewsFor(profileId: string): Promise<Review[]> {
+  const { data, error } = await supabase
+    .from("reviews")
+    .select(
+      "id,engagement_id,reviewer_profile_id,reviewee_profile_id,rating,comment,created_at," +
+        "reviewer:profiles!reviews_reviewer_profile_id_fkey(id,full_name,avatar_url)",
+    )
+    .eq("reviewee_profile_id", profileId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return ((data ?? []) as unknown as (Review & { reviewer: Review["reviewer"] | Review["reviewer"][] })[]).map(
+    (r) => ({ ...r, reviewer: one(r.reviewer) ?? undefined }),
+  );
+}
+
+export async function submitReview(input: {
+  engagement_id: string;
+  reviewer_profile_id: string;
+  reviewee_profile_id: string;
+  rating: number;
+  comment?: string | null;
+}): Promise<void> {
+  const { error } = await supabase.from("reviews").insert(input);
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------
+export async function listNotifications(profileId: string): Promise<AppNotification[]> {
+  return unwrap(
+    await supabase
+      .from("notifications")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false })
+      .limit(60),
+  );
+}
+
+export async function countUnread(profileId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profileId)
+    .eq("is_read", false);
+  if (error) return 0;
+  return count ?? 0;
+}
+
+export async function markNotificationRead(id: string): Promise<void> {
+  const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function markAllRead(profileId: string): Promise<void> {
+  const { error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("profile_id", profileId)
+    .eq("is_read", false);
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------
+// Safety: blocking and reporting
+// ---------------------------------------------------------------------
+export async function listBlocked(myProfileId: string): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from("blocked_users")
+    .select("blocked:profiles!blocked_users_blocked_profile_id_fkey(" + PROFILE_COLUMNS + ")")
+    .eq("blocker_profile_id", myProfileId);
+  if (error) throw error;
+  return ((data ?? []) as { blocked: Profile | Profile[] }[])
+    .map((r) => one(r.blocked))
+    .filter((p): p is Profile => Boolean(p));
+}
+
+export async function isBlockedByMe(myProfileId: string, otherProfileId: string): Promise<boolean> {
+  const { count, error } = await supabase
+    .from("blocked_users")
+    .select("blocker_profile_id", { count: "exact", head: true })
+    .eq("blocker_profile_id", myProfileId)
+    .eq("blocked_profile_id", otherProfileId);
+  if (error) return false;
+  return (count ?? 0) > 0;
+}
+
+export async function blockUser(myProfileId: string, otherProfileId: string): Promise<void> {
+  const { error } = await supabase
+    .from("blocked_users")
+    .insert({ blocker_profile_id: myProfileId, blocked_profile_id: otherProfileId });
+  if (error) throw error;
+}
+
+export async function unblockUser(myProfileId: string, otherProfileId: string): Promise<void> {
+  const { error } = await supabase
+    .from("blocked_users")
+    .delete()
+    .eq("blocker_profile_id", myProfileId)
+    .eq("blocked_profile_id", otherProfileId);
+  if (error) throw error;
+}
+
+export async function reportUser(input: {
+  reporter_profile_id: string;
+  reported_profile_id: string;
+  reason: ReportReason;
+  details?: string | null;
+}): Promise<void> {
+  const { error } = await supabase.from("reports").insert(input);
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------
+// Avatar upload
+// ---------------------------------------------------------------------
+export async function uploadAvatar(userId: string, file: File): Promise<string> {
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `${userId}/avatar-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("avatars")
+    .upload(path, file, { upsert: true, cacheControl: "3600", contentType: file.type });
+  if (error) throw error;
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  return data.publicUrl;
+}
