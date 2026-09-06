@@ -4,7 +4,7 @@ import { Bell, Briefcase, Home, MessageCircle, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
-import { countUnread } from "@/lib/queries";
+import { countUnread, countUnreadMessages } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { cn, formatNumber } from "@/lib/utils";
 
@@ -88,8 +88,17 @@ export function BottomNav() {
     refetchInterval: 60_000,
   });
 
+  // Message notifications drive the Chats badge instead of Alerts — kept
+  // as a separate count so the two badges never affect each other.
+  const unreadMessages = useQuery({
+    queryKey: ["unread-messages", profile?.id],
+    queryFn: () => countUnreadMessages(profile!.id),
+    enabled: Boolean(profile?.id),
+    refetchInterval: 60_000,
+  });
+
   // Live badge updates the instant a notification arrives, from anywhere in
-  // the app — not just while the Notifications screen itself is open.
+  // the app — not just while the Notifications/Chats screen itself is open.
   useEffect(() => {
     if (!profile?.id) return;
     const channel = supabase
@@ -99,6 +108,7 @@ export function BottomNav() {
         { event: "INSERT", schema: "public", table: "notifications", filter: `profile_id=eq.${profile.id}` },
         () => {
           queryClient.invalidateQueries({ queryKey: ["unread", profile.id] });
+          queryClient.invalidateQueries({ queryKey: ["unread-messages", profile.id] });
           queryClient.invalidateQueries({ queryKey: ["notifications", profile.id] });
         },
       )
@@ -119,7 +129,8 @@ export function BottomNav() {
       <div className="mx-auto flex max-w-3xl">
         {NAV.map(({ to, key, icon: Icon }) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
-          const badge = to === "/notifications" ? unread.data ?? 0 : 0;
+          const badge =
+            to === "/notifications" ? unread.data ?? 0 : to === "/chats" ? unreadMessages.data ?? 0 : 0;
           return (
             <Link
               key={to}
