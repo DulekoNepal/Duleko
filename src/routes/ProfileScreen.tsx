@@ -78,15 +78,6 @@ function SectionIcon({ icon: Icon }: { icon: React.ComponentType<{ className?: s
   );
 }
 
-function StatTile({ value, label }: { value: React.ReactNode; label: string }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center">
-      <p className="text-lg font-bold text-slate-900">{value}</p>
-      <p className="mt-0.5 text-xs text-slate-500">{label}</p>
-    </div>
-  );
-}
-
 export function ProfileScreen() {
   const { t, lang, setLang } = useI18n();
   const { profile, user, refreshProfile, signOut } = useSession();
@@ -273,78 +264,92 @@ export function ProfileScreen() {
     <>
       <AppHeader title={t("myProfile")} right={<LanguageToggle />} />
       <PageContainer>
-        {/* ---- Hero identity card --------------------------------------- */}
-        <div className="relative mb-4 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 px-5 pb-5 pt-8 text-center shadow-sm">
+        {/* ---- Identity card: one flowing hierarchy, not competing blocks - */}
+        <Card className="relative mb-5 overflow-hidden">
           {!editing && (
             <button
               type="button"
               onClick={() => setEditing(true)}
               aria-label={t("editProfile")}
-              className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition-colors hover:bg-white/25"
+              className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:border-brand-300 hover:text-brand-700"
             >
               <Pencil className="h-4 w-4" aria-hidden />
             </button>
           )}
 
-          <div className="relative mx-auto w-fit">
-            <Avatar
-              name={profile.full_name}
-              src={avatarPreview ?? profile.avatar_url}
-              size={88}
-              className="ring-4 ring-white/90"
-            />
-            <label className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow ring-1 ring-slate-200 transition-transform hover:scale-105">
-              <Camera className="h-4 w-4" aria-hidden />
-              <span className="sr-only">{t("changePhoto")}</span>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  if (file.size > 2 * 1024 * 1024) {
-                    toast(t("photoTooBig"), "error");
-                    return;
-                  }
-                  setAvatarPreview(URL.createObjectURL(file));
-                  changeAvatar.mutate(file);
-                }}
+          <div className="px-5 pb-5 pt-6 text-center">
+            <div className="relative mx-auto w-fit">
+              <Avatar
+                name={profile.full_name}
+                src={avatarPreview ?? profile.avatar_url}
+                size={88}
+                className="shadow-md ring-4 ring-white"
               />
-            </label>
-          </div>
+              <label className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow ring-1 ring-slate-200 transition-transform hover:scale-105">
+                <Camera className="h-4 w-4" aria-hidden />
+                <span className="sr-only">{t("changePhoto")}</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 2 * 1024 * 1024) {
+                      toast(t("photoTooBig"), "error");
+                      return;
+                    }
+                    setAvatarPreview(URL.createObjectURL(file));
+                    changeAvatar.mutate(file);
+                  }}
+                />
+              </label>
+            </div>
 
-          <h1 className="mt-3 truncate text-lg font-semibold text-white">{profile.full_name}</h1>
-          <div className="mt-1.5 flex justify-center">
-            <span className="inline-flex rounded-full bg-white/90 px-2.5 py-1">
+            <h1 className="mt-3 truncate text-xl font-bold text-slate-900">{profile.full_name}</h1>
+            <div className="mt-1.5 flex justify-center">
               <RatingStars value={Number(profile.rating)} count={profile.rating_count} />
-            </span>
+            </div>
           </div>
 
-          <div className="mt-4 inline-flex items-center gap-2.5 rounded-full bg-white/15 py-1.5 pl-4 pr-2 text-sm font-medium text-white backdrop-blur">
-            <span
-              className={cn(
-                "h-2 w-2 shrink-0 rounded-full",
-                profile.is_available ? "bg-emerald-400" : "bg-white/50",
-              )}
-              aria-hidden
-            />
-            {profile.is_available ? t("availableNow") : t("notAvailable")}
-            <Switch
-              checked={profile.is_available}
-              onChange={(next) => toggleAvailable.mutate(next)}
-              aria-label={t("availableForWork")}
-            />
+          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-3 text-center">
+            <div className="flex items-center justify-center gap-2.5">
+              <span
+                className={cn(
+                  "h-2 w-2 shrink-0 rounded-full",
+                  profile.is_available ? "bg-emerald-500" : "bg-slate-300",
+                )}
+                aria-hidden
+              />
+              <span className="text-sm font-medium text-slate-700">
+                {profile.is_available ? t("availableNow") : t("notAvailable")}
+              </span>
+              <Switch
+                checked={profile.is_available}
+                onChange={(next) => toggleAvailable.mutate(next)}
+                aria-label={t("availableForWork")}
+              />
+            </div>
+            <p className="mx-auto mt-1.5 max-w-xs text-xs text-slate-500">{t("availableForWorkHint")}</p>
           </div>
-          <p className="mx-auto mt-2 max-w-xs text-xs text-white/70">{t("availableForWorkHint")}</p>
-        </div>
 
-        {/* ---- Quick stats ------------------------------------------------ */}
-        <div className="mb-5 grid grid-cols-3 gap-2.5">
-          <StatTile value={formatNumber(skillList.length, lang)} label={t("skills")} />
-          <StatTile value={formatNumber(profile.rating_count, lang)} label={t("reviews")} />
-          <StatTile value={formatDate(profile.created_at.slice(0, 10), lang)} label={t("memberSince")} />
-        </div>
+          <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100">
+            <div className="px-2 py-3 text-center">
+              <p className="text-lg font-bold text-slate-900">{formatNumber(skillList.length, lang)}</p>
+              <p className="mt-0.5 text-xs text-slate-500">{t("skills")}</p>
+            </div>
+            <div className="px-2 py-3 text-center">
+              <p className="text-lg font-bold text-slate-900">{formatNumber(profile.rating_count, lang)}</p>
+              <p className="mt-0.5 text-xs text-slate-500">{t("reviews")}</p>
+            </div>
+            <div className="px-2 py-3 text-center">
+              <p className="text-lg font-bold text-slate-900">
+                {formatDate(profile.created_at.slice(0, 10), lang)}
+              </p>
+              <p className="mt-0.5 text-xs text-slate-500">{t("memberSince")}</p>
+            </div>
+          </div>
+        </Card>
 
         {editing ? (
           <>
