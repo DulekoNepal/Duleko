@@ -10,6 +10,7 @@ import { PolicyDialog } from "@/components/duleko/PolicyDialog";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { supabase, errorMessage } from "@/lib/supabase";
+import dulekoMark from "@/assets/duleko-mark.png";
 
 const schema = z.object({
   email: z.string().email(),
@@ -111,9 +112,11 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
 
       <div className="mx-auto w-full max-w-sm flex-1 px-5 pb-10">
         <div className="mb-7 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-700 text-2xl font-bold text-white shadow-sm">
-            D
-          </div>
+          <img
+            src={dulekoMark}
+            alt=""
+            className="mx-auto mb-4 h-14 w-14 rounded-2xl object-cover shadow-sm"
+          />
           <h1 className="text-2xl font-bold text-slate-900">{t("authWelcome")}</h1>
           <p className="mx-auto mt-1.5 max-w-xs text-sm text-slate-500">{t("authBlurb")}</p>
         </div>
