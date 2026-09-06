@@ -323,6 +323,13 @@ const strings = {
     "व्यस्त दिन छान्न थिच्नुहोस्। पक्का भएका काम आफैं चिन्ह लाग्छ।",
   ],
   profileSaved: ["Profile saved.", "प्रोफाइल सुरक्षित भयो।"],
+  memberSince: ["Member since", "देखि सदस्य"],
+  basicInfo: ["Basic info", "आधारभूत जानकारी"],
+  noAboutYet: [
+    "Add a short bio so people know what you do.",
+    "छोटो चिनारी थप्नुहोस् ताकि मानिसहरूले तपाईंले के काम गर्नुहुन्छ थाहा पाऊन्।",
+  ],
+  noSkillsYetProfile: ["No skills added yet.", "अझै कुनै सीप थपिएको छैन।"],
 
   // ---- nav -----------------------------------------------------------
   navHome: ["Home", "गृह"],
