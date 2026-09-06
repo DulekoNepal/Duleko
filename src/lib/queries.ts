@@ -428,12 +428,15 @@ export async function submitReview(input: {
 // ---------------------------------------------------------------------
 // Notifications
 // ---------------------------------------------------------------------
+// "message" notifications drive the Chats tab badge instead — they never
+// show up in the Alerts list or count toward its badge.
 export async function listNotifications(profileId: string): Promise<AppNotification[]> {
   return unwrap(
     await supabase
       .from("notifications")
       .select("*")
       .eq("profile_id", profileId)
+      .neq("kind", "message")
       .order("created_at", { ascending: false })
       .limit(60),
   );
@@ -444,7 +447,20 @@ export async function countUnread(profileId: string): Promise<number> {
     .from("notifications")
     .select("id", { count: "exact", head: true })
     .eq("profile_id", profileId)
-    .eq("is_read", false);
+    .eq("is_read", false)
+    .neq("kind", "message");
+  if (error) return 0;
+  return count ?? 0;
+}
+
+/** Unread count for the Chats tab badge — message notifications only. */
+export async function countUnreadMessages(profileId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profileId)
+    .eq("is_read", false)
+    .eq("kind", "message");
   if (error) return 0;
   return count ?? 0;
 }
@@ -459,6 +475,22 @@ export async function markAllRead(profileId: string): Promise<void> {
     .from("notifications")
     .update({ is_read: true })
     .eq("profile_id", profileId)
+    .eq("is_read", false)
+    .neq("kind", "message");
+  if (error) throw error;
+}
+
+/** Opening a chat thread clears the badge contribution from that sender. */
+export async function markMessageNotificationsRead(
+  myProfileId: string,
+  otherProfileId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("profile_id", myProfileId)
+    .eq("kind", "message")
+    .eq("related_profile_id", otherProfileId)
     .eq("is_read", false);
   if (error) throw error;
 }

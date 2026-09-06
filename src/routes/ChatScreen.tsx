@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { FullPageLoader } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
-import { chatPairKey, getProfile, listMessages, sendMessage } from "@/lib/queries";
+import { chatPairKey, getProfile, listMessages, markMessageNotificationsRead, sendMessage } from "@/lib/queries";
 import { supabase, errorMessage } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +56,16 @@ export function ChatScreen() {
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages.data]);
+
+  // Opening this thread clears the Chats badge contribution from this sender.
+  useEffect(() => {
+    if (!me) return;
+    markMessageNotificationsRead(me.id, otherId)
+      .then(() => queryClient.invalidateQueries({ queryKey: ["unread-messages", me.id] }))
+      .catch(() => {
+        // Best-effort — a failed read-receipt shouldn't block the chat itself.
+      });
+  }, [me, otherId, queryClient]);
 
   const send = useMutation({
     mutationFn: (body: string) => sendMessage(me!.id, otherId, body),
