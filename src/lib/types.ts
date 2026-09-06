@@ -169,3 +169,13 @@ export interface ChatMessage {
   body: string;
   created_at: string;
 }
+
+/** One row in the "all my chats" list — the other person plus their latest message. */
+export interface ConversationSummary {
+  otherProfileId: string;
+  otherName: string;
+  otherAvatarUrl: string | null;
+  lastBody: string;
+  lastCreatedAt: string;
+  lastSenderProfileId: string;
+}
