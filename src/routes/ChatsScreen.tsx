@@ -112,7 +112,7 @@ export function ChatsScreen() {
                     <span
                       className={cn(
                         "mt-0.5 block truncate text-sm",
-                        c.unread ? "font-bold text-slate-900" : "text-slate-500",
+                        c.unread ? "font-semibold text-brand-800" : "text-slate-500",
                       )}
                     >
                       {c.lastSenderProfileId === profile?.id ? t("youPrefix") : ""}
