@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Briefcase } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { EngagementCard } from "@/components/duleko/EngagementCard";
+import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { CardSkeleton, EmptyState, ErrorState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
@@ -28,6 +29,8 @@ export function WorkScreen() {
   const sorted = [...(engagements.data ?? [])].sort(
     (a, b) => ACTIVE_ORDER.indexOf(a.status) - ACTIVE_ORDER.indexOf(b.status),
   );
+
+  if (!profile) return <SignInRequiredScreen title={t("myWork")} />;
 
   return (
     <>

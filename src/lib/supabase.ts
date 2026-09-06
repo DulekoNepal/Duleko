@@ -28,7 +28,7 @@ export function errorMessage(error: unknown): string {
   if (!error) return "";
   if (typeof error === "string") return error;
   const e = error as { message?: string; error_description?: string; code?: string };
-  // Postgres unique_violation on the one-phone-one-account constraint —
+  // Postgres unique_violation on the one-phone-one-account constraint -
   // surface a friendly bilingual message instead of the raw SQL error.
   if (e.code === "23505" && e.message?.includes("profile_contacts_phone_unique")) {
     return translateStatic("phoneAlreadyRegistered");

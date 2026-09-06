@@ -10,7 +10,7 @@ export function hasSeenWalkthrough(): boolean {
   try {
     return window.localStorage.getItem(SEEN_KEY) === "1";
   } catch {
-    return true; // storage unavailable — don't nag every render
+    return true; // storage unavailable - don't nag every render
   }
 }
 
@@ -18,7 +18,7 @@ function markWalkthroughSeen(): void {
   try {
     window.localStorage.setItem(SEEN_KEY, "1");
   } catch {
-    // ignore — not worth blocking on
+    // ignore - not worth blocking on
   }
 }
 

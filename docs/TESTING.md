@@ -1,4 +1,4 @@
-# Duleko — manual test script
+# Duleko - manual test script
 
 Run this against the deployed URL, not localhost, before inviting beta users.
 You need two browsers (or one normal + one private window) so you can be two
@@ -18,7 +18,7 @@ people at once. Call them **Ram** (worker) and **Sita** (employer).
 
 - [ ] Toggle EN/नेपाली in the header. Every label switches, including skill names.
 - [ ] Numbers in ratings and dates render as Nepali digits (१२३) in Nepali mode.
-- [ ] Reload the page — the language choice is remembered.
+- [ ] Reload the page - the language choice is remembered.
 
 ## C. Search and discovery
 
@@ -45,7 +45,7 @@ people at once. Call them **Ram** (worker) and **Sita** (employer).
 ## E. Reviews and ratings
 
 - [ ] Sita leaves 5 stars + comment. Ram's profile shows 5.0 (1).
-- [ ] Sita's card for that job now shows "Reviewed" — she cannot review twice.
+- [ ] Sita's card for that job now shows "Reviewed" - she cannot review twice.
 - [ ] Ram reviews Sita. Her rating updates too.
 - [ ] Add a second completed job with a 3-star review → the average becomes 4.0 (2).
 

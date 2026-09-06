@@ -2,7 +2,7 @@
 -- Duleko MVP :: 0022 :: Fix "infinite recursion" on the bids insert policy
 -- =====================================================================
 -- bids_insert_turn's WITH CHECK queried public.bids from inside a policy
--- ON public.bids — Postgres re-applies RLS to that inner query too, which
+-- ON public.bids - Postgres re-applies RLS to that inner query too, which
 -- re-triggers the same policy, forever (error 42P17). The fix used
 -- elsewhere in this schema (current_profile_id, can_view_contact, ...):
 -- do the lookup in a SECURITY DEFINER function, which runs with the
@@ -28,6 +28,6 @@ create policy bids_insert_turn on public.bids
          and e.status = 'pending'
          and public.current_profile_id() in (e.employer_profile_id, e.worker_profile_id)
     )
-    -- Can't bid twice in a row — the other party has to respond first.
+    -- Can't bid twice in a row - the other party has to respond first.
     and public.last_bidder(bids.engagement_id) is distinct from public.current_profile_id()
   );

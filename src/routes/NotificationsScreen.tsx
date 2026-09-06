@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
+import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton, EmptyState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
@@ -11,7 +12,7 @@ import { listNotifications, markAllRead, markNotificationRead } from "@/lib/quer
 import { supabase } from "@/lib/supabase";
 import { cn, relativeTime } from "@/lib/utils";
 
-// "message" notifications never reach this list — they drive the Chats
+// "message" notifications never reach this list - they drive the Chats
 // tab badge instead (listNotifications excludes that kind entirely).
 const KIND_EMOJI: Record<string, string> = {
   request: "🙋",
@@ -80,6 +81,8 @@ export function NotificationsScreen() {
 
   const items = notifications.data ?? [];
   const hasUnread = items.some((n) => !n.is_read);
+
+  if (!profile) return <SignInRequiredScreen title={t("notifications")} />;
 
   return (
     <>

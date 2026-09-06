@@ -68,7 +68,7 @@ export function StarPicker({
             type="button"
             disabled={disabled}
             onClick={() => onChange(i)}
-            aria-label={`${i} — ${labels[i - 1]}`}
+            aria-label={`${i} - ${labels[i - 1]}`}
             aria-pressed={value === i}
             className="rounded-lg p-1 transition-transform hover:scale-110 disabled:opacity-50"
           >

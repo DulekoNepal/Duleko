@@ -37,7 +37,7 @@ export function RequestWorkDialog({
   const [offerAmount, setOfferAmount] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Shown as a reference so the hirer's opening bid is in the right ballpark —
+  // Shown as a reference so the hirer's opening bid is in the right ballpark -
   // the worker set these rates themselves (see Profile > Your skills).
   const workerRates = useQuery({
     queryKey: ["user-skills", worker.id],
@@ -58,7 +58,7 @@ export function RequestWorkDialog({
   );
 
   // The default day is always "today", but today itself might already be
-  // booked — once we know, hop to the first free day so the dialog never
+  // booked - once we know, hop to the first free day so the dialog never
   // opens pre-selected on a date the worker can't actually take.
   useEffect(() => {
     if (!open || !availability.data) return;

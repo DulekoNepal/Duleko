@@ -58,7 +58,7 @@ export function EngagementCard({
     staleTime: 5 * 60_000,
   });
 
-  // The negotiation thread — only meaningful while a request is still pending.
+  // The negotiation thread - only meaningful while a request is still pending.
   // work_engagements.payment_amount already mirrors the latest bid (synced by
   // a DB trigger), so this is only needed to know *who* made that last move.
   const bids = useQuery({
@@ -98,7 +98,7 @@ export function EngagementCard({
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
-  // Accepting a price now lives inside the NegotiationPanel below — it's the
+  // Accepting a price now lives inside the NegotiationPanel below - it's the
   // one action that both finalizes the amount and moves the job forward.
   const actions: React.ReactNode[] = [];
   if (engagement.status === "pending" && iAmWorker) {

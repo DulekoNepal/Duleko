@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** A proper toggle switch — used wherever a plain checkbox was standing in for one. */
+/** A proper toggle switch - used wherever a plain checkbox was standing in for one. */
 export function Switch({
   checked,
   onChange,

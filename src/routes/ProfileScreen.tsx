@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { AppHeader, LanguageToggle, PageContainer } from "@/components/duleko/Layout";
 import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
+import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { RatingStars } from "@/components/duleko/Rating";
 import { SkillPicker } from "@/components/duleko/SkillGrid";
 import { LocationFields, type LocationValue } from "@/components/duleko/LocationFields";
@@ -28,7 +29,6 @@ import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card"
 import { Collapsible } from "@/components/ui/collapsible";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
-import { FullPageLoader } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
@@ -118,7 +118,7 @@ export function ProfileScreen() {
     queryFn: () => listCertificates(profile!.id),
     enabled: Boolean(profile?.id),
   });
-  // A full year ahead — the "mark busy days" calendar can flip forward
+  // A full year ahead - the "mark busy days" calendar can flip forward
   // through all 12 months, so it needs the availability rows to match.
   const availability = useQuery({
     queryKey: ["availability", profile?.id],
@@ -306,7 +306,7 @@ export function ProfileScreen() {
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
-  if (!profile) return <FullPageLoader label={t("loading")} />;
+  if (!profile) return <SignInRequiredScreen title={t("myProfile")} />;
 
   const place = locationLine(profile, lang);
   const skillList = mySkills.data ?? [];
@@ -328,7 +328,7 @@ export function ProfileScreen() {
             </button>
           )}
 
-          {/* Cover photo — a work-site / professional shot behind the avatar. */}
+          {/* Cover photo - a work-site / professional shot behind the avatar. */}
           <div className="relative h-32 w-full bg-gradient-to-br from-slate-100 to-slate-200 sm:h-40">
             {(coverPreview ?? profile.cover_url) && (
               <img
@@ -364,6 +364,7 @@ export function ProfileScreen() {
                 name={profile.full_name}
                 src={avatarPreview ?? profile.avatar_url}
                 size={84}
+                online
                 className="shadow-md ring-4 ring-white"
               />
               <label className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow ring-1 ring-slate-200 transition-transform hover:scale-105">

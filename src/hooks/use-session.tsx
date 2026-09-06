@@ -2,8 +2,11 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { getMyProfile } from "@/lib/queries";
+import { getMyProfile, touchPresence } from "@/lib/queries";
+import { persistGuestMode } from "@/hooks/use-guest-mode";
 import type { Profile } from "@/lib/types";
+
+const PRESENCE_HEARTBEAT_MS = 60_000;
 
 interface SessionValue {
   session: Session | null;
@@ -58,6 +61,23 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     staleTime: 60_000,
   });
 
+  // A live "online" dot on the avatar: a quiet heartbeat while a profile is
+  // open, on its own schedule - no user action should ever wait on this.
+  const myProfileId = profileQuery.data?.id ?? null;
+  useEffect(() => {
+    if (!myProfileId) return;
+    let cancelled = false;
+    const beat = () => {
+      if (!cancelled) touchPresence(myProfileId).catch(() => {});
+    };
+    beat();
+    const interval = setInterval(beat, PRESENCE_HEARTBEAT_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [myProfileId]);
+
   const value = useMemo<SessionValue>(
     () => ({
       session,
@@ -71,6 +91,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       signOut: async () => {
         await supabase.auth.signOut();
         queryClient.clear();
+        // A deliberate sign-out should land back on the welcome choice, not
+        // silently drop them into guest browsing.
+        persistGuestMode(false);
       },
     }),
     [session, profileQuery, loadingSession, userId, queryClient],

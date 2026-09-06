@@ -2,7 +2,7 @@
 
 A simple local skills marketplace: workers list what they can do and where they
 are, people who need work find them, and both sides rate each other afterwards.
-Built for Kapilvastu first — bilingual (English / नेपाली), mobile-first, and
+Built for Kapilvastu first - bilingual (English / नेपाली), mobile-first, and
 designed to run entirely on free tiers.
 
 Stack: React 19 + Vite + TypeScript · TanStack Router & Query · Tailwind CSS v4 ·
@@ -13,8 +13,8 @@ Supabase (Postgres, Auth, Storage, Realtime) · deployed on Vercel.
 ## 1. Prerequisites
 
 - Node.js 20 or newer (`node -v`)
-- A free Supabase account — https://supabase.com
-- A free Vercel account for deployment — https://vercel.com
+- A free Supabase account - https://supabase.com
+- A free Vercel account for deployment - https://vercel.com
 
 ## 2. Install
 
@@ -24,7 +24,7 @@ npm install
 
 ## 3. Create the Supabase project
 
-1. supabase.com → **New project**. Region: **Southeast Asia (Singapore)** — closest to Nepal.
+1. supabase.com → **New project**. Region: **Southeast Asia (Singapore)** - closest to Nepal.
 2. Wait ~2 minutes for it to finish provisioning.
 3. Open **SQL Editor** and run the files in `supabase/migrations/` **in filename order**:
 
@@ -57,7 +57,7 @@ VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
 ```
 
-The anon key is meant to be public — every table is protected by RLS, not by key secrecy.
+The anon key is meant to be public - every table is protected by RLS, not by key secrecy.
 
 ## 5. Run
 
@@ -96,7 +96,7 @@ either marks done        →  completed     (both sides can review)
 ```
 
 Either side can cancel before completion; the worker can decline a pending request.
-These transitions are enforced by a database trigger, not just by the UI — the worker
+These transitions are enforced by a database trigger, not just by the UI - the worker
 is the only one who can accept, and the employer the only one who can confirm.
 
 ### Privacy
@@ -142,7 +142,7 @@ docs/TESTING.md      Manual test script for the beta
 
 ## Adding a skill
 
-Insert a row in `skills` (id, `name_en`, `name_ne`, emoji, `sort_order`) — the home grid,
+Insert a row in `skills` (id, `name_en`, `name_ne`, emoji, `sort_order`) - the home grid,
 filters and profile picker all read from that table, so nothing in the code needs changing.
 
 ## Costs

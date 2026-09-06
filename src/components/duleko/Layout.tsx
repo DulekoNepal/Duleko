@@ -68,7 +68,7 @@ export function PageContainer({ children, className }: { children: React.ReactNo
   );
 }
 
-// The search bar at the top of Home/Search is enough on its own — no separate
+// The search bar at the top of Home/Search is enough on its own - no separate
 // bottom-nav tab for it (it's still reachable via /search, just not pinned here).
 const NAV = [
   { to: "/", key: "navHome", icon: Home },
@@ -91,7 +91,7 @@ export function BottomNav() {
     refetchInterval: 60_000,
   });
 
-  // Message notifications drive the Chats badge instead of Alerts — kept
+  // Message notifications drive the Chats badge instead of Alerts - kept
   // as a separate count so the two badges never affect each other.
   const unreadMessages = useQuery({
     queryKey: ["unread-messages", profile?.id],
@@ -101,7 +101,7 @@ export function BottomNav() {
   });
 
   // Live badge updates the instant a notification arrives, from anywhere in
-  // the app — not just while the Notifications/Chats screen itself is open.
+  // the app - not just while the Notifications/Chats screen itself is open.
   useEffect(() => {
     if (!profile?.id) return;
     const channel = supabase

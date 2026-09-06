@@ -2,7 +2,7 @@
 -- Duleko MVP :: 1500 :: Friends can see contact + chat too
 -- =====================================================================
 -- can_view_contact gates both profile_contacts (the Call button) and
--- messages (the Chat button) — it originally only allowed this once a
+-- messages (the Chat button) - it originally only allowed this once a
 -- work_engagement existed between the two people. The Friends list lets
 -- you message a friend directly with no engagement in between, so widen
 -- the same gate to also allow accepted friendships.

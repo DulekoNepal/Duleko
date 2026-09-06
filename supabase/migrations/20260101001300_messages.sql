@@ -4,7 +4,7 @@
 -- One thread per profile pair, gated by the same rule as phone contacts
 -- (can_view_contact): you can only message someone once you have an
 -- accepted/confirmed/completed work_engagement with them, or it's you.
--- No group chats, no read receipts — deliberately minimal.
+-- No group chats, no read receipts - deliberately minimal.
 
 create table if not exists public.messages (
   id                uuid primary key default gen_random_uuid(),

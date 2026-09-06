@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { LanguageToggle } from "@/components/duleko/Layout";
@@ -17,7 +17,7 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-export function AuthScreen() {
+export function AuthScreen({ onBack }: { onBack?: () => void }) {
   const { t, lang } = useI18n();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [notice, setNotice] = useState<string | null>(null);
@@ -93,7 +93,19 @@ export function AuthScreen() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-cream-50">
-      <div className="flex justify-end p-4">
+      <div className="flex items-center justify-between p-4">
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            {t("back")}
+          </button>
+        ) : (
+          <span />
+        )}
         <LanguageToggle />
       </div>
 

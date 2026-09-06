@@ -73,7 +73,7 @@ export function LocationFields({
             value={value.municipality ?? ""}
             onChange={(e) => set({ municipality: e.target.value || null })}
           >
-            <option value="">—</option>
+            <option value="">-</option>
             {knownMunicipalities.map((m) => (
               <option key={m.en} value={m.en}>
                 {lang === "ne" ? m.ne : m.en}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, Clock, LayoutGrid, Search, Users } from "lucide-react";
+import { ChevronDown, ChevronRight, Clock, LayoutGrid, LogIn, Search, Users } from "lucide-react";
 import { AppHeader, LanguageToggle, PageContainer } from "@/components/duleko/Layout";
 import { SkillGrid } from "@/components/duleko/SkillGrid";
 import { WorkerCard } from "@/components/duleko/WorkerCard";
@@ -12,6 +12,8 @@ import { CardSkeleton, EmptyState } from "@/components/ui/states";
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
+import { useGuestMode } from "@/hooks/use-guest-mode";
+import { usePresence } from "@/hooks/use-presence";
 import { countPendingForMe, listSkills, searchWorkers, skillCounts } from "@/lib/queries";
 import { districtLabel } from "@/lib/nepal";
 import { cn, formatNumber, todayKey } from "@/lib/utils";
@@ -19,12 +21,13 @@ import { cn, formatNumber, todayKey } from "@/lib/utils";
 const seeAllLinkClass =
   "inline-flex items-center gap-0.5 text-sm font-medium text-brand-700 hover:text-brand-800";
 
-// A glanceable preview, not the full directory — "See all" is what surfaces the rest.
+// A glanceable preview, not the full directory - "See all" is what surfaces the rest.
 const SKILL_PREVIEW_COUNT = 8;
 
 export function HomeScreen() {
   const { t, lang } = useI18n();
   const { profile } = useSession();
+  const { isGuest, requestSignIn } = useGuestMode();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [showAllSkills, setShowAllSkills] = useState(false);
@@ -32,12 +35,9 @@ export function HomeScreen() {
   const skills = useQuery({ queryKey: ["skills"], queryFn: listSkills, staleTime: 30 * 60_000 });
 
   // Total workers per skill across the whole database, not just this district
-  // — a district filter only makes sense once someone actually opens the list.
-  const counts = useQuery({
-    queryKey: ["skill-counts"],
-    queryFn: () => skillCounts(null),
-    enabled: Boolean(profile),
-  });
+  // - a district filter only makes sense once someone actually opens the list.
+  // Available to guests too - browsing the directory needs no account.
+  const counts = useQuery({ queryKey: ["skill-counts"], queryFn: () => skillCounts(null) });
 
   const nearby = useQuery({
     queryKey: ["workers", "home", profile?.district, profile?.municipality],
@@ -50,8 +50,9 @@ export function HomeScreen() {
         sort: "relevance",
         limit: 6,
       }),
-    enabled: Boolean(profile),
   });
+
+  const online = usePresence((nearby.data ?? []).map((w) => w.id));
 
   const pending = useQuery({
     queryKey: ["pending-for-me", profile?.id],
@@ -65,14 +66,23 @@ export function HomeScreen() {
   return (
     <>
       <AppHeader
-        title={t("greeting", { name: firstName })}
+        title={profile ? t("greeting", { name: firstName }) : t("appName")}
         subtitle={districtLabel(profile?.district, lang) || t("tagline")}
         leading={
-          profile && (
+          profile ? (
             <Link to="/profile" aria-label={t("myProfile")} className="shrink-0">
               <Avatar name={profile.full_name} src={profile.avatar_url} size={40} />
             </Link>
-          )
+          ) : isGuest ? (
+            <button
+              type="button"
+              onClick={requestSignIn}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-800 hover:bg-brand-100"
+            >
+              <LogIn className="h-3.5 w-3.5" aria-hidden />
+              {t("signUpOrLogIn")}
+            </button>
+          ) : undefined
         }
         right={<LanguageToggle />}
       />
@@ -178,7 +188,7 @@ export function HomeScreen() {
           ) : (
             <div className="space-y-3">
               {(nearby.data ?? []).map((worker) => (
-                <WorkerCard key={worker.id} worker={worker} />
+                <WorkerCard key={worker.id} worker={worker} online={online[worker.id]} />
               ))}
             </div>
           )}

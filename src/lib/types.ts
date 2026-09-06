@@ -203,7 +203,7 @@ export interface ChatMessage {
   message_reactions: MessageReaction[];
 }
 
-/** One row in the "all my chats" list — the other person plus their latest message. */
+/** One row in the "all my chats" list - the other person plus their latest message. */
 export interface ConversationSummary {
   otherProfileId: string;
   otherName: string;
