@@ -42,6 +42,14 @@ const strings = {
     "Check your email to confirm your account, then sign in.",
     "खाता पुष्टि गर्न इमेल हेर्नुहोस्, त्यसपछि लगइन गर्नुहोस्।",
   ],
+  phoneAlreadyRegistered: [
+    "This phone number is already linked to another account.",
+    "यो फोन नम्बर पहिले नै अर्को खातासँग जोडिएको छ।",
+  ],
+  emailAlreadyRegistered: [
+    "An account already exists for this email. Try signing in instead, including with \"Continue with Google\".",
+    "यो इमेलको लागि खाता पहिले नै छ। बरु लगइन गर्नुहोस्, \"Google बाट जारी राख्नुहोस्\" पनि प्रयोग गर्न सक्नुहुन्छ।",
+  ],
   authWelcome: ["Welcome to Duleko", "दुलेकोमा स्वागत छ"],
   authBlurb: [
     "A simple way for workers and employers in your area to find each other.",
@@ -131,6 +139,14 @@ const strings = {
     "Phone number appears once the worker accepts.",
     "कामदारले स्वीकार गरेपछि फोन नम्बर देखिन्छ।",
   ],
+  chat: ["Chat", "कुराकानी"],
+  chatHidden: [
+    "Chat opens once the worker accepts.",
+    "कामदारले स्वीकार गरेपछि कुराकानी खुल्छ।",
+  ],
+  chatPlaceholder: ["Type a message", "सन्देश लेख्नुहोस्"],
+  chatEmpty: ["No messages yet. Say hello.", "अहिलेसम्म सन्देश छैन। नमस्ते भन्नुहोस्।"],
+  send: ["Send", "पठाउनुहोस्"],
   ratingSummary: ["{rating} ({count} reviews)", "{rating} ({count} समीक्षा)"],
   availableNow: ["Available", "उपलब्ध"],
   notAvailable: ["Not available", "उपलब्ध छैन"],
@@ -317,6 +333,18 @@ function detectInitialLang(): Lang {
   const stored = window.localStorage.getItem(LANG_KEY);
   if (stored === "en" || stored === "ne") return stored;
   return navigator.language?.toLowerCase().startsWith("ne") ? "ne" : "en";
+}
+
+/**
+ * Translate a key outside of React (e.g. from a plain helper like
+ * errorMessage() that can't call the useI18n hook). Reads the same
+ * persisted language preference the provider uses.
+ */
+export function translateStatic(key: StringKey): string {
+  const lang = detectInitialLang();
+  const pair = strings[key] as readonly [string, string] | undefined;
+  if (!pair) return key;
+  return lang === "ne" ? pair[1] : pair[0];
 }
 
 interface I18nValue {

@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { translateStatic } from "./i18n";
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -26,6 +27,19 @@ export const supabase: SupabaseClient = createClient(
 export function errorMessage(error: unknown): string {
   if (!error) return "";
   if (typeof error === "string") return error;
-  const e = error as { message?: string; error_description?: string };
+  const e = error as { message?: string; error_description?: string; code?: string };
+  // Postgres unique_violation on the one-phone-one-account constraint —
+  // surface a friendly bilingual message instead of the raw SQL error.
+  if (e.code === "23505" && e.message?.includes("profile_contacts_phone_unique")) {
+    return translateStatic("phoneAlreadyRegistered");
+  }
+  // Supabase Auth's one-account-per-email guard (password signup on an
+  // email that already has an account, Google or otherwise).
+  if (
+    e.code === "user_already_exists" ||
+    /already registered|already exists/i.test(e.message || "")
+  ) {
+    return translateStatic("emailAlreadyRegistered");
+  }
   return e.error_description || e.message || "Something went wrong. Please try again.";
 }

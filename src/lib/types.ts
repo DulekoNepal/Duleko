@@ -156,3 +156,13 @@ export interface Friendship {
   /** Whichever side of the row isn't "me". */
   other: Pick<Profile, "id" | "full_name" | "avatar_url" | "rating" | "rating_count">;
 }
+
+/** A single direct message between two profiles. */
+export interface ChatMessage {
+  id: string;
+  profile_a: string;
+  profile_b: string;
+  sender_profile_id: string;
+  body: string;
+  created_at: string;
+}
