@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, Flag, MapPin, MessageCircle, Phone, UserCheck, UserPlus } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
-import { ChatDialog } from "@/components/duleko/ChatDialog";
 import { RatingStars } from "@/components/duleko/Rating";
 import { RequestWorkDialog } from "@/components/duleko/RequestWorkDialog";
 import { ReportDialog } from "@/components/duleko/ReportDialog";
@@ -35,10 +34,10 @@ export function WorkerScreen() {
   const { profile: me } = useSession();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { workerId } = useParams({ from: "/worker/$workerId" });
   const [requestOpen, setRequestOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
 
   const worker = useQuery({ queryKey: ["profile", workerId], queryFn: () => getProfile(workerId) });
   const skills = useQuery({ queryKey: ["user-skills", workerId], queryFn: () => getUserSkills(workerId) });
@@ -217,7 +216,7 @@ export function WorkerScreen() {
                     </a>
                     <button
                       type="button"
-                      onClick={() => setChatOpen(true)}
+                      onClick={() => navigate({ to: "/chat/$otherId", params: { otherId: w.id } })}
                       className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-50 px-4 text-sm font-medium text-brand-800"
                     >
                       <MessageCircle className="h-4 w-4" aria-hidden />
@@ -300,15 +299,6 @@ export function WorkerScreen() {
             reporterProfileId={me.id}
             reportedProfileId={w.id}
           />
-          {contact.data && (
-            <ChatDialog
-              open={chatOpen}
-              onClose={() => setChatOpen(false)}
-              myProfileId={me.id}
-              otherProfileId={w.id}
-              otherName={w.full_name}
-            />
-          )}
         </>
       )}
     </>

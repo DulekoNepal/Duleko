@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Bell, Briefcase, Home, User } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { countUnread } from "@/lib/queries";
+import { supabase } from "@/lib/supabase";
 import { cn, formatNumber } from "@/lib/utils";
 
 export function LanguageToggle({ className }: { className?: string }) {
@@ -76,6 +78,7 @@ export function BottomNav() {
   const { t, lang } = useI18n();
   const { profile } = useSession();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const queryClient = useQueryClient();
 
   const unread = useQuery({
     queryKey: ["unread", profile?.id],
@@ -83,6 +86,29 @@ export function BottomNav() {
     enabled: Boolean(profile?.id),
     refetchInterval: 60_000,
   });
+
+  // Live badge updates the instant a notification arrives, from anywhere in
+  // the app — not just while the Notifications screen itself is open.
+  useEffect(() => {
+    if (!profile?.id) return;
+    const channel = supabase
+      .channel(`notifications-badge:${profile.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `profile_id=eq.${profile.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["unread", profile.id] });
+          queryClient.invalidateQueries({ queryKey: ["notifications", profile.id] });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id, queryClient]);
+
+  // A full-screen chat thread hides the tab bar, like a normal chat app.
+  if (pathname.startsWith("/chat/")) return null;
 
   return (
     <nav
