@@ -155,6 +155,7 @@ const strings = {
     "Message someone from their profile to start a chat.",
     "कुराकानी सुरु गर्न कसैको प्रोफाइलबाट सन्देश पठाउनुहोस्।",
   ],
+  chatNow: ["Chat now", "अहिले कुरा गर्नुहोस्"],
   ratingSummary: ["{rating} ({count} reviews)", "{rating} ({count} समीक्षा)"],
   availableNow: ["Available", "उपलब्ध"],
   notAvailable: ["Not available", "उपलब्ध छैन"],
