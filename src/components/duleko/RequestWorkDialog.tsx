@@ -6,9 +6,9 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { AvailabilityCalendar } from "./AvailabilityCalendar";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
-import { createEngagement, getAvailability } from "@/lib/queries";
+import { createEngagement, getAvailability, getUserSkills } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import { addDays, todayKey, toDateKey } from "@/lib/utils";
+import { addDays, formatMoney, todayKey, toDateKey } from "@/lib/utils";
 import type { Profile, WorkerCardData } from "@/lib/types";
 
 type Worker = Pick<Profile, "id" | "full_name"> & Partial<WorkerCardData>;
@@ -26,7 +26,7 @@ export function RequestWorkDialog({
   employerProfileId: string;
   defaultLocation?: string;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -34,7 +34,17 @@ export function RequestWorkDialog({
   const [details, setDetails] = useState("");
   const [workDate, setWorkDate] = useState(todayKey());
   const [location, setLocation] = useState(defaultLocation ?? "");
+  const [offerAmount, setOfferAmount] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Shown as a reference so the hirer's opening bid is in the right ballpark —
+  // the worker set these rates themselves (see Profile > Your skills).
+  const workerRates = useQuery({
+    queryKey: ["user-skills", worker.id],
+    queryFn: () => getUserSkills(worker.id),
+    enabled: open,
+  });
+  const ratedSkills = (workerRates.data ?? []).filter((s) => s.rate_amount != null);
 
   const availability = useQuery({
     queryKey: ["availability", worker.id, "picker"],
@@ -73,7 +83,7 @@ export function RequestWorkDialog({
         details: details.trim() || null,
         work_date: workDate,
         location_text: location.trim(),
-        payment_amount: null,
+        payment_amount: Number(offerAmount),
       }),
     onSuccess: () => {
       toast(t("requestSent"));
@@ -88,6 +98,7 @@ export function RequestWorkDialog({
     setTitle("");
     setDetails("");
     setWorkDate(todayKey());
+    setOfferAmount("");
     setErrors({});
   }
 
@@ -97,6 +108,7 @@ export function RequestWorkDialog({
     if (location.trim().length < 2) next.location = t("required");
     if (workDate < todayKey()) next.workDate = t("dateInPast");
     else if (bookedDays.has(workDate)) next.workDate = t("dateUnavailable");
+    if (!offerAmount.trim() || Number(offerAmount) <= 0) next.offerAmount = t("required");
     if (worker.id === employerProfileId) next.title = t("cannotRequestSelf");
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -152,6 +164,35 @@ export function RequestWorkDialog({
           placeholder={t("workLocationPlaceholder")}
           maxLength={160}
         />
+      </Field>
+
+      <Field
+        label={t("yourOffer")}
+        error={errors.offerAmount}
+        hint={
+          ratedSkills.length > 0
+            ? t("workerRateHint", {
+                rates: ratedSkills
+                  .map((s) => `${s.emoji} ${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}`)
+                  .join(" · "),
+              })
+            : undefined
+        }
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-slate-500">{lang === "ne" ? "रु" : "Rs"}</span>
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={offerAmount}
+            onChange={(e) => {
+              setOfferAmount(e.target.value);
+              setErrors((prev) => ({ ...prev, offerAmount: "" }));
+            }}
+            placeholder={t("rateAmountPlaceholder")}
+          />
+        </div>
       </Field>
 
       <Field label={`${t("jobDetails")} (${t("optional")})`}>

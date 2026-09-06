@@ -115,6 +115,16 @@ export interface EngagementWithParties extends Engagement {
   my_review: { id: string; rating: number; comment: string | null } | null;
 }
 
+/** One offer in a back-and-forth price negotiation on a pending engagement. */
+export interface Bid {
+  id: string;
+  engagement_id: string;
+  bidder_profile_id: string;
+  amount: number;
+  note: string | null;
+  created_at: string;
+}
+
 export interface Review {
   id: string;
   engagement_id: string;

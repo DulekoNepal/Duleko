@@ -2,6 +2,7 @@ import { supabase } from "./supabase";
 import type {
   AppNotification,
   AvailabilityDay,
+  Bid,
   CancellationReason,
   Certificate,
   ChatMessage,
@@ -328,7 +329,8 @@ export async function createEngagement(input: {
   details?: string | null;
   work_date: string;
   location_text: string;
-  payment_amount?: number | null;
+  /** The employer's opening offer — becomes bid #1 in the negotiation (see trg_engagements_seed_bid). */
+  payment_amount: number;
 }): Promise<Engagement> {
   return unwrap(
     await supabase
@@ -407,6 +409,39 @@ export async function countPendingForMe(myProfileId: string): Promise<number> {
     .eq("status", "pending");
   if (error) return 0;
   return count ?? 0;
+}
+
+// ---------------------------------------------------------------------
+// Bidding — a back-and-forth price negotiation on a pending engagement.
+// The employer's opening payment_amount becomes bid #1 automatically
+// (see the seed_initial_bid trigger); everything after that is a client
+// call to submitBid. Whoever did NOT make the latest bid can counter or
+// accept it — accepting is just the existing setEngagementStatus("accepted").
+// ---------------------------------------------------------------------
+export async function listBids(engagementId: string): Promise<Bid[]> {
+  return unwrap(
+    await supabase
+      .from("bids")
+      .select("id,engagement_id,bidder_profile_id,amount,note,created_at")
+      .eq("engagement_id", engagementId)
+      .order("created_at", { ascending: true }),
+  );
+}
+
+/** Submit a counter-offer. The DB rejects this if it isn't your turn (see bids_insert_turn). */
+export async function submitBid(
+  engagementId: string,
+  bidderProfileId: string,
+  amount: number,
+  note?: string | null,
+): Promise<Bid> {
+  return unwrap(
+    await supabase
+      .from("bids")
+      .insert({ engagement_id: engagementId, bidder_profile_id: bidderProfileId, amount, note: note?.trim() || null })
+      .select("id,engagement_id,bidder_profile_id,amount,note,created_at")
+      .single(),
+  );
 }
 
 // ---------------------------------------------------------------------

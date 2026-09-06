@@ -5,11 +5,12 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
+import { Input } from "@/components/ui/field";
 import { CancelReasonDialog } from "./CancelReasonDialog";
 import { ReviewDialog } from "./ReviewDialog";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
-import { cancelEngagement, getContact, setEngagementStatus } from "@/lib/queries";
+import { cancelEngagement, getContact, listBids, setEngagementStatus, submitBid } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
 import { formatDate, formatMoney, skillName } from "@/lib/utils";
 import type { CancellationReason, EngagementStatus, EngagementWithParties } from "@/lib/types";
@@ -44,16 +45,41 @@ export function EngagementCard({
   const queryClient = useQueryClient();
   const [reviewOpen, setReviewOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [countering, setCountering] = useState(false);
+  const [counterAmount, setCounterAmount] = useState("");
 
   const iAmWorker = engagement.worker_profile_id === myProfileId;
   const other = iAmWorker ? engagement.employer : engagement.worker;
   const contactVisible = ["accepted", "confirmed", "completed"].includes(engagement.status);
+  const isPending = engagement.status === "pending";
 
   const contact = useQuery({
     queryKey: ["contact", other.id],
     queryFn: () => getContact(other.id),
     enabled: contactVisible,
     staleTime: 5 * 60_000,
+  });
+
+  // The negotiation thread — only meaningful while a request is still pending.
+  // work_engagements.payment_amount already mirrors the latest bid (synced by
+  // a DB trigger), so this is only needed to know *who* made that last move.
+  const bids = useQuery({
+    queryKey: ["bids", engagement.id],
+    queryFn: () => listBids(engagement.id),
+    enabled: isPending,
+  });
+  const latestBid = bids.data?.[bids.data.length - 1];
+  const latestBidIsMine = latestBid?.bidder_profile_id === myProfileId;
+
+  const bid = useMutation({
+    mutationFn: (amount: number) => submitBid(engagement.id, myProfileId, amount),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bids", engagement.id] });
+      queryClient.invalidateQueries({ queryKey: ["engagements"] });
+      setCountering(false);
+      setCounterAmount("");
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
   });
 
   const change = useMutation({
@@ -82,7 +108,7 @@ export function EngagementCard({
   if (engagement.status === "pending" && iAmWorker) {
     actions.push(
       <Button key="accept" size="sm" loading={change.isPending} onClick={() => change.mutate("accepted")}>
-        {t("accept")}
+        {t("acceptAtPrice", { amount: formatMoney(engagement.payment_amount, lang) })}
       </Button>,
       <Button
         key="decline"
@@ -137,9 +163,7 @@ export function EngagementCard({
 
   const waitingHint =
     engagement.status === "pending"
-      ? iAmWorker
-        ? null
-        : t("waitingOnWorker")
+      ? null // superseded by the negotiation block below, which is more specific
       : engagement.status === "accepted"
         ? iAmWorker
           ? t("waitingOnEmployer")
@@ -182,6 +206,61 @@ export function EngagementCard({
 
         {engagement.details && (
           <p className="mt-2 whitespace-pre-line text-sm text-slate-600">{engagement.details}</p>
+        )}
+
+        {isPending && (
+          <div className="mt-3 rounded-xl bg-slate-50 px-3.5 py-3">
+            <p className="text-sm text-slate-700">
+              {latestBid == null
+                ? null
+                : latestBidIsMine
+                  ? t("waitingForCounter", { name: other.full_name, amount: formatMoney(engagement.payment_amount, lang) })
+                  : t("offerFromParty", { name: other.full_name, amount: formatMoney(engagement.payment_amount, lang) })}
+            </p>
+            {countering ? (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="text-sm text-slate-500">{lang === "ne" ? "रु" : "Rs"}</span>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  className="w-24 shrink-0"
+                  value={counterAmount}
+                  onChange={(e) => setCounterAmount(e.target.value)}
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    loading={bid.isPending}
+                    onClick={() => {
+                      const amount = Number(counterAmount);
+                      if (amount > 0) bid.mutate(amount);
+                    }}
+                  >
+                    {t("submitCounter")}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setCountering(false)}>
+                    {t("cancel")}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              !latestBidIsMine && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2"
+                  onClick={() => {
+                    setCounterAmount(String(engagement.payment_amount ?? ""));
+                    setCountering(true);
+                  }}
+                >
+                  {t("counterOffer")}
+                </Button>
+              )
+            )}
+          </div>
         )}
 
         {contactVisible &&

@@ -396,6 +396,18 @@ const strings = {
     "List your skills with an optional rate, and mark the days you're busy on a full year calendar.",
     "आफ्ना सिपहरू र वैकल्पिक मूल्य राख्नुहोस्, र पूरै वर्षको पात्रोमा व्यस्त दिनहरू चिन्ह लगाउनुहोस्।",
   ],
+
+  // ---- price negotiation (bidding) --------------------------------------
+  yourOffer: ["Your offer", "तपाईंको प्रस्ताव"],
+  workerRateHint: ["Their listed rate: {rates}", "तिनको दर: {rates}"],
+  acceptAtPrice: ["Accept — {amount}", "स्वीकार — {amount}"],
+  waitingForCounter: [
+    "Waiting for {name} to respond to your offer of {amount}.",
+    "{name} ले तपाईंको {amount} प्रस्तावको जवाफ दिन पर्खँदै।",
+  ],
+  offerFromParty: ["{name} offered {amount}.", "{name} ले {amount} प्रस्ताव गर्नुभयो।"],
+  counterOffer: ["Counter-offer", "जवाफी प्रस्ताव"],
+  submitCounter: ["Send offer", "प्रस्ताव पठाउनुहोस्"],
 } as const;
 
 export type StringKey = keyof typeof strings;
