@@ -19,6 +19,7 @@ import {
 import { AppHeader, LanguageToggle, PageContainer } from "@/components/duleko/Layout";
 import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
+import { LocationConsentDialog } from "@/components/duleko/LocationConsentDialog";
 import { RatingStars } from "@/components/duleko/Rating";
 import { SkillPicker } from "@/components/duleko/SkillGrid";
 import { LocationFields, type LocationValue } from "@/components/duleko/LocationFields";
@@ -82,6 +83,7 @@ export function ProfileScreen() {
   const queryClient = useQueryClient();
 
   const [editing, setEditing] = useState(false);
+  const [locationConsentOpen, setLocationConsentOpen] = useState(false);
   const [fullName, setFullName] = useState("");
   const [about, setAbout] = useState("");
   const [bio, setBio] = useState("");
@@ -664,7 +666,12 @@ export function ProfileScreen() {
                       variant="outline"
                       className="flex-1"
                       loading={shareLoc.isPending}
-                      onClick={() => shareLoc.mutate()}
+                      onClick={() => {
+                        // Ask with our own explanation the first time - after
+                        // that, they've already consented once.
+                        if (profile.location_shared_at) shareLoc.mutate();
+                        else setLocationConsentOpen(true);
+                      }}
                     >
                       <Navigation className="h-4 w-4" aria-hidden />
                       {profile.location_shared_at ? t("updateLocation") : t("shareLocation")}
@@ -808,6 +815,12 @@ export function ProfileScreen() {
           </CardBody>
         </Card>
       </PageContainer>
+
+      <LocationConsentDialog
+        open={locationConsentOpen}
+        onClose={() => setLocationConsentOpen(false)}
+        onAllow={() => shareLoc.mutate()}
+      />
     </>
   );
 }

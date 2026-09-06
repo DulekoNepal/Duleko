@@ -3,7 +3,7 @@ import { LanguageToggle } from "./Layout";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import dulekoMark from "@/assets/duleko-mark.png";
 
-// Same four ideas as the in-app WelcomeWalkthrough — reusing that copy here
+// Same four ideas as the in-app WelcomeWalkthrough - reusing that copy here
 // means a first-time visitor and a first-time member see the same story.
 const FEATURES: { icon: typeof MapPin; titleKey: StringKey; bodyKey: StringKey }[] = [
   { icon: MapPin, titleKey: "walkthroughTitle1", bodyKey: "walkthroughBody1" },
@@ -14,7 +14,7 @@ const FEATURES: { icon: typeof MapPin; titleKey: StringKey; bodyKey: StringKey }
 
 /**
  * The very first screen anyone sees: a proper landing page (what Duleko is,
- * what you can do on it) ending in the one real decision — look around
+ * what you can do on it) ending in the one real decision - look around
  * first, or go straight to an account. "Explore" drops them into the real
  * home screen as a guest, not a demo; signing in only comes up later, the
  * moment they try to do something that needs an account.
@@ -73,7 +73,7 @@ export function WelcomeChoiceScreen({
           ))}
         </div>
 
-        {/* ---- The one decision this screen exists for — primary + secondary, both always available ---- */}
+        {/* ---- The one decision this screen exists for - primary + secondary, both always available ---- */}
         <div className="mt-7 space-y-2.5">
           <button
             type="button"
