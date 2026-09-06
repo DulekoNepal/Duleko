@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Briefcase, Home, User } from "lucide-react";
+import { Bell, Briefcase, Home, MessageCircle, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
@@ -71,6 +71,7 @@ const NAV = [
   { to: "/", key: "navHome", icon: Home },
   { to: "/work", key: "navWork", icon: Briefcase },
   { to: "/notifications", key: "navAlerts", icon: Bell },
+  { to: "/chats", key: "navChats", icon: MessageCircle },
   { to: "/profile", key: "navProfile", icon: User },
 ] as const;
 

@@ -4,6 +4,7 @@ import type {
   AvailabilityDay,
   CancellationReason,
   ChatMessage,
+  ConversationSummary,
   Engagement,
   EngagementStatus,
   EngagementWithParties,
@@ -617,4 +618,48 @@ export async function sendMessage(
       .select("id,profile_a,profile_b,sender_profile_id,body,created_at")
       .single(),
   );
+}
+
+interface ConversationRow {
+  profile_a: string;
+  profile_b: string;
+  sender_profile_id: string;
+  body: string;
+  created_at: string;
+  a: { id: string; full_name: string; avatar_url: string | null } | { id: string; full_name: string; avatar_url: string | null }[] | null;
+  b: { id: string; full_name: string; avatar_url: string | null } | { id: string; full_name: string; avatar_url: string | null }[] | null;
+}
+
+/** All of "my" chats, one row per conversation, newest message first. */
+export async function listConversations(myProfileId: string): Promise<ConversationSummary[]> {
+  const { data, error } = await supabase
+    .from("messages")
+    .select(
+      "profile_a,profile_b,sender_profile_id,body,created_at," +
+        "a:profiles!messages_profile_a_fkey(id,full_name,avatar_url)," +
+        "b:profiles!messages_profile_b_fkey(id,full_name,avatar_url)",
+    )
+    .or(`profile_a.eq.${myProfileId},profile_b.eq.${myProfileId}`)
+    .order("created_at", { ascending: false })
+    .limit(300);
+  if (error) throw error;
+
+  const seen = new Set<string>();
+  const out: ConversationSummary[] = [];
+  for (const row of (data ?? []) as unknown as ConversationRow[]) {
+    const iAmA = row.profile_a === myProfileId;
+    const other = one(iAmA ? row.b : row.a);
+    const otherProfileId = iAmA ? row.profile_b : row.profile_a;
+    if (!other || seen.has(otherProfileId)) continue;
+    seen.add(otherProfileId);
+    out.push({
+      otherProfileId,
+      otherName: other.full_name,
+      otherAvatarUrl: other.avatar_url,
+      lastBody: row.body,
+      lastCreatedAt: row.created_at,
+      lastSenderProfileId: row.sender_profile_id,
+    });
+  }
+  return out;
 }
