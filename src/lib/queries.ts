@@ -622,18 +622,61 @@ export function chatPairKey(profileIdA: string, profileIdB: string): string {
   return profileIdA < profileIdB ? `${profileIdA}:${profileIdB}` : `${profileIdB}:${profileIdA}`;
 }
 
+const MESSAGE_COLUMNS =
+  "id,profile_a,profile_b,sender_profile_id,body,created_at,read_at,deleted_at,message_reactions(profile_id,emoji)";
+
 export async function listMessages(myProfileId: string, otherProfileId: string): Promise<ChatMessage[]> {
   const [profile_a, profile_b] =
     myProfileId < otherProfileId ? [myProfileId, otherProfileId] : [otherProfileId, myProfileId];
   const { data, error } = await supabase
     .from("messages")
-    .select("id,profile_a,profile_b,sender_profile_id,body,created_at")
+    .select(MESSAGE_COLUMNS)
     .eq("profile_a", profile_a)
     .eq("profile_b", profile_b)
     .order("created_at", { ascending: true })
     .limit(200);
   if (error) throw error;
-  return (data as ChatMessage[]) ?? [];
+  return (data as unknown as ChatMessage[]) ?? [];
+}
+
+/** Opening a thread marks the other person's messages as seen. */
+export async function markThreadRead(myProfileId: string, otherProfileId: string): Promise<void> {
+  const [profile_a, profile_b] =
+    myProfileId < otherProfileId ? [myProfileId, otherProfileId] : [otherProfileId, myProfileId];
+  const { error } = await supabase
+    .from("messages")
+    .update({ read_at: new Date().toISOString() })
+    .eq("profile_a", profile_a)
+    .eq("profile_b", profile_b)
+    .neq("sender_profile_id", myProfileId)
+    .is("read_at", null);
+  if (error) throw error;
+}
+
+/** Unsend — wipes the body server-side too, not just what the UI shows. */
+export async function unsendMessage(messageId: string): Promise<void> {
+  const { error } = await supabase
+    .from("messages")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", messageId);
+  if (error) throw error;
+}
+
+/** One reaction per person per message — setting a new emoji replaces theirs. */
+export async function setReaction(messageId: string, profileId: string, emoji: string): Promise<void> {
+  const { error } = await supabase
+    .from("message_reactions")
+    .upsert({ message_id: messageId, profile_id: profileId, emoji }, { onConflict: "message_id,profile_id" });
+  if (error) throw error;
+}
+
+export async function removeReaction(messageId: string, profileId: string): Promise<void> {
+  const { error } = await supabase
+    .from("message_reactions")
+    .delete()
+    .eq("message_id", messageId)
+    .eq("profile_id", profileId);
+  if (error) throw error;
 }
 
 export async function sendMessage(
@@ -647,7 +690,7 @@ export async function sendMessage(
     await supabase
       .from("messages")
       .insert({ profile_a, profile_b, sender_profile_id: myProfileId, body })
-      .select("id,profile_a,profile_b,sender_profile_id,body,created_at")
+      .select(MESSAGE_COLUMNS)
       .single(),
   );
 }

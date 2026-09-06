@@ -160,6 +160,12 @@ export interface Friendship {
   other: Pick<Profile, "id" | "full_name" | "avatar_url" | "rating" | "rating_count">;
 }
 
+/** One person's reaction to a message. */
+export interface MessageReaction {
+  profile_id: string;
+  emoji: string;
+}
+
 /** A single direct message between two profiles. */
 export interface ChatMessage {
   id: string;
@@ -168,6 +174,9 @@ export interface ChatMessage {
   sender_profile_id: string;
   body: string;
   created_at: string;
+  read_at: string | null;
+  deleted_at: string | null;
+  message_reactions: MessageReaction[];
 }
 
 /** One row in the "all my chats" list — the other person plus their latest message. */
