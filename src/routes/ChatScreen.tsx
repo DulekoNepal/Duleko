@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { ArrowLeft, Send } from "lucide-react";
 import { AppHeader } from "@/components/duleko/Layout";
+import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FullPageLoader } from "@/components/ui/states";
@@ -32,7 +33,7 @@ const TYPING_STOP_AFTER_MS = 3000;
  * A full-page direct-message thread with one other profile. Deliberately
  * scoped to a handful of Messenger-style basics: a live typing indicator,
  * a "Seen" read receipt on your last message, tap-to-react emoji, and
- * unsend for your own messages — no calling, groups, or media.
+ * unsend for your own messages - no calling, groups, or media.
  */
 export function ChatScreen() {
   const { t, lang } = useI18n();
@@ -103,12 +104,12 @@ export function ChatScreen() {
       .then(() => {
         queryClient.invalidateQueries({ queryKey: ["unread-messages", me.id] });
         queryClient.invalidateQueries({ queryKey: ["messages", pairKey] });
-        // The Chats list's unread bolding is stale otherwise — it isn't
+        // The Chats list's unread bolding is stale otherwise - it isn't
         // watching this thread directly.
         queryClient.invalidateQueries({ queryKey: ["conversations", me.id] });
       })
       .catch(() => {
-        // Best-effort — a failed read-receipt shouldn't block the chat itself.
+        // Best-effort - a failed read-receipt shouldn't block the chat itself.
       });
     // Only re-run when the thread identity changes, not on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -174,7 +175,8 @@ export function ChatScreen() {
     return [...byEmoji.entries()];
   }
 
-  if (!me || other.isLoading) return <FullPageLoader label={t("loading")} />;
+  if (!me) return <SignInRequiredScreen title={other.data?.full_name ?? t("chat")} />;
+  if (other.isLoading) return <FullPageLoader label={t("loading")} />;
 
   const items = messages.data ?? [];
   const lastMessage = items[items.length - 1];
@@ -278,7 +280,7 @@ export function ChatScreen() {
                   </div>
                 )}
 
-                {/* In-app confirmation — no native browser confirm() dialog. */}
+                {/* In-app confirmation - no native browser confirm() dialog. */}
                 {active && confirmUnsendId === m.id && (
                   <div className="mt-1 flex flex-wrap items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-2 shadow-sm">
                     <span className="text-xs text-red-800">{t("unsendConfirm")}</span>

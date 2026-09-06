@@ -4,7 +4,7 @@
 -- Both sides can go back and forth on price while a request is still
 -- 'pending': the employer opens with an offer, the worker can counter or
 -- accept, the employer can counter back, and so on. Whoever did NOT make
--- the most recent offer is the one who can accept it or counter it —
+-- the most recent offer is the one who can accept it or counter it -
 -- enforced below so the same person can't bid twice in a row.
 --
 -- work_engagements.payment_amount always mirrors the latest offer, so the
@@ -47,7 +47,7 @@ create policy bids_insert_turn on public.bids
          and e.status = 'pending'
          and public.current_profile_id() in (e.employer_profile_id, e.worker_profile_id)
     )
-    -- Can't bid twice in a row — the other party has to respond first.
+    -- Can't bid twice in a row - the other party has to respond first.
     and not exists (
       select 1 from (
         select b2.bidder_profile_id

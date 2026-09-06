@@ -16,7 +16,7 @@ on conflict (id) do update
 
 -- "Others" lets someone describe a skill we don't have a chip for yet.
 -- Every skill can optionally carry the worker's own expected rate, e.g.
--- "Rs. 100 / switch" — entirely optional, shown on the worker's profile.
+-- "Rs. 100 / switch" - entirely optional, shown on the worker's profile.
 alter table public.user_skills
   add column if not exists custom_label text check (char_length(custom_label) <= 60),
   add column if not exists custom_note  text check (char_length(custom_note)  <= 300),

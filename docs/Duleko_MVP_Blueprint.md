@@ -15,24 +15,24 @@
 - **i18n**: Custom i18n lib (keep current ✓)
 
 ### **Backend**
-- **Database**: Supabase (PostgreSQL) — **FREE TIER: 500MB storage, unlimited API calls**
-- **Auth**: Supabase Auth — **built-in, FREE**
-- **File Storage**: Supabase Storage (avatars) — **FREE: 1GB**
-- **Real-time**: Supabase Realtime subscriptions — **FREE**
-- **Server Functions**: Supabase Edge Functions — **FREE TIER: 500k invocations/month**
+- **Database**: Supabase (PostgreSQL) - **FREE TIER: 500MB storage, unlimited API calls**
+- **Auth**: Supabase Auth - **built-in, FREE**
+- **File Storage**: Supabase Storage (avatars) - **FREE: 1GB**
+- **Real-time**: Supabase Realtime subscriptions - **FREE**
+- **Server Functions**: Supabase Edge Functions - **FREE TIER: 500k invocations/month**
 
 ### **Deployment**
-- **Frontend**: Vercel — **FREE: Unlimited deployments, custom domain**
-- **Alternative**: Netlify — **FREE: Same features**
-- **Database**: Supabase Hosted — **FREE: All features included**
+- **Frontend**: Vercel - **FREE: Unlimited deployments, custom domain**
+- **Alternative**: Netlify - **FREE: Same features**
+- **Database**: Supabase Hosted - **FREE: All features included**
 
 ### **Monitoring & Errors**
 - **Error Tracking**: Sentry (free plan) OR Supabase Logs
 - **Analytics**: Vercel Analytics (free) OR Plausible (privacy-first, ~$9/mo)
 
 ### **SMS/Phone Verification** (when needed)
-- **Option 1**: Twilio — $0.0075/SMS (pay-as-you-go, FREE trial credits)
-- **Option 2**: Vonage/Nexmo — similar pricing
+- **Option 1**: Twilio - $0.0075/SMS (pay-as-you-go, FREE trial credits)
+- **Option 2**: Vonage/Nexmo - similar pricing
 - **For MVP**: Start with manual verification or OTP via email
 
 ### **Maps** (location features)
@@ -314,7 +314,7 @@ name_ne: "बिजुली मिस्त्री"
 full_name: (single field, user enters name)
 ```
 
-No changes needed—already bilingual! Just ensure:
+No changes needed-already bilingual! Just ensure:
 - [ ] All UI strings in `i18n.tsx`
 - [ ] Skills have both `name_en` + `name_ne`
 - [ ] Notifications respect user's language preference

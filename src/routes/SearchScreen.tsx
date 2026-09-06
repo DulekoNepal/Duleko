@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { CardSkeleton, EmptyState, ErrorState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
+import { usePresence } from "@/hooks/use-presence";
 import { useToast } from "@/hooks/use-toast";
 import { listSkills, searchWorkers } from "@/lib/queries";
 import { ALL_DISTRICTS } from "@/lib/nepal";
@@ -38,7 +39,7 @@ export function SearchScreen() {
 
   const skills = useQuery({ queryKey: ["skills"], queryFn: listSkills, staleTime: 30 * 60_000 });
 
-  // Search is nationwide by default, same as any real search — a district
+  // Search is nationwide by default, same as any real search - a district
   // filter only applies once the user explicitly picks one.
   const district = filters.district;
 
@@ -93,8 +94,10 @@ export function SearchScreen() {
         lat: filters.sort === "nearest" ? coords?.lat : null,
         lng: filters.sort === "nearest" ? coords?.lng : null,
       }),
-    enabled: Boolean(profile) && (filters.sort !== "nearest" || Boolean(coords)),
+    enabled: filters.sort !== "nearest" || Boolean(coords),
   });
+
+  const online = usePresence((results.data ?? []).map((w) => w.id));
 
   function update(patch: Partial<SearchFilters>) {
     navigate({ to: "/search", search: { ...filters, ...patch } as SearchFilters });
@@ -249,7 +252,7 @@ export function SearchScreen() {
             </p>
             <div className="space-y-3">
               {(results.data ?? []).map((worker) => (
-                <WorkerCard key={worker.id} worker={worker} />
+                <WorkerCard key={worker.id} worker={worker} online={online[worker.id]} />
               ))}
             </div>
           </>

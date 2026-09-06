@@ -10,8 +10,8 @@ import type { Bid } from "@/lib/types";
 
 /**
  * The price-negotiation thread on a pending work request: current offer,
- * a short trail of how it got there, and — for whoever didn't make the
- * latest move — the choice to counter it or (worker only) accept it.
+ * a short trail of how it got there, and - for whoever didn't make the
+ * latest move - the choice to counter it or (worker only) accept it.
  */
 export function NegotiationPanel({
   bids,

@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { FriendsPanel } from "@/components/duleko/FriendsPanel";
+import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { Avatar } from "@/components/ui/avatar";
 import { CardSkeleton, EmptyState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
@@ -15,8 +16,8 @@ import { cn, relativeTime } from "@/lib/utils";
 type Division = "chats" | "friends";
 
 /**
- * The Chat tab: two separate divisions in one screen — Chats (all your
- * conversations, Messenger-style) and Friends (requests + friends list) —
+ * The Chat tab: two separate divisions in one screen - Chats (all your
+ * conversations, Messenger-style) and Friends (requests + friends list) -
  * switchable but never mixed into one combined list.
  */
 export function ChatsScreen() {
@@ -55,6 +56,8 @@ export function ChatsScreen() {
   }, [profile?.id, queryClient]);
 
   const items = conversations.data ?? [];
+
+  if (!profile) return <SignInRequiredScreen title={t("chatsTitle")} />;
 
   return (
     <>

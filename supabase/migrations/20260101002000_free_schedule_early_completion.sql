@@ -3,7 +3,7 @@
 -- =====================================================================
 -- A confirmed job books the worker's whole day (public.sync_availability).
 -- If the work actually wraps up before 10 AM Nepal time, that's most of
--- the day still free — re-open the day so the worker can be booked again,
+-- the day still free - re-open the day so the worker can be booked again,
 -- rather than staying locked out until midnight over one morning job.
 create or replace function public.sync_availability()
 returns trigger language plpgsql security definer set search_path = public as $$

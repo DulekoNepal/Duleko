@@ -12,7 +12,7 @@ export function skillName(skill: Skill | null | undefined, lang: Lang): string {
   return lang === "ne" ? skill.name_ne : skill.name_en;
 }
 
-/** "Ward 4, Chandrauta, Kapilvastu" — skips whatever is missing. */
+/** "Ward 4, Chandrauta, Kapilvastu" - skips whatever is missing. */
 export function locationLine(
   p: Pick<Profile, "province" | "district" | "municipality" | "ward" | "locality">,
   lang: Lang = "en",
@@ -36,7 +36,7 @@ export function initials(name: string): string {
     .join("");
 }
 
-/** Local (not UTC) YYYY-MM-DD — important, since a work date is a calendar day. */
+/** Local (not UTC) YYYY-MM-DD - important, since a work date is a calendar day. */
 export function toDateKey(d: Date): string {
   const m = `${d.getMonth() + 1}`.padStart(2, "0");
   const day = `${d.getDate()}`.padStart(2, "0");

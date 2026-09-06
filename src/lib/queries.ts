@@ -111,7 +111,7 @@ export async function getContact(profileId: string): Promise<Contact | null> {
     .select("phone,alt_phone")
     .eq("profile_id", profileId)
     .maybeSingle();
-  // RLS hides the row when the viewer is not allowed to see it — not an error.
+  // RLS hides the row when the viewer is not allowed to see it - not an error.
   if (error) return null;
   return (data as Contact | null) ?? null;
 }
@@ -329,7 +329,7 @@ export async function createEngagement(input: {
   details?: string | null;
   work_date: string;
   location_text: string;
-  /** The employer's opening offer — becomes bid #1 in the negotiation (see trg_engagements_seed_bid). */
+  /** The employer's opening offer - becomes bid #1 in the negotiation (see trg_engagements_seed_bid). */
   payment_amount: number;
 }): Promise<Engagement> {
   return unwrap(
@@ -381,7 +381,7 @@ export async function setEngagementStatus(
   if (error) throw error;
 }
 
-/** Cancelling always requires a reason — enforced here and again in the DB. */
+/** Cancelling always requires a reason - enforced here and again in the DB. */
 export async function cancelEngagement(
   engagementId: string,
   actorProfileId: string,
@@ -400,7 +400,7 @@ export async function cancelEngagement(
   if (error) throw error;
 }
 
-/** Pending requests waiting on me as the worker — drives the home screen badge. */
+/** Pending requests waiting on me as the worker - drives the home screen badge. */
 export async function countPendingForMe(myProfileId: string): Promise<number> {
   const { count, error } = await supabase
     .from("work_engagements")
@@ -412,11 +412,11 @@ export async function countPendingForMe(myProfileId: string): Promise<number> {
 }
 
 // ---------------------------------------------------------------------
-// Bidding — a back-and-forth price negotiation on a pending engagement.
+// Bidding - a back-and-forth price negotiation on a pending engagement.
 // The employer's opening payment_amount becomes bid #1 automatically
 // (see the seed_initial_bid trigger); everything after that is a client
 // call to submitBid. Whoever did NOT make the latest bid can counter or
-// accept it — accepting is just the existing setEngagementStatus("accepted").
+// accept it - accepting is just the existing setEngagementStatus("accepted").
 // ---------------------------------------------------------------------
 export async function listBids(engagementId: string): Promise<Bid[]> {
   return unwrap(
@@ -477,7 +477,7 @@ export async function submitReview(input: {
 // ---------------------------------------------------------------------
 // Notifications
 // ---------------------------------------------------------------------
-// "message" notifications drive the Chats tab badge instead — they never
+// "message" notifications drive the Chats tab badge instead - they never
 // show up in the Alerts list or count toward its badge.
 export async function listNotifications(profileId: string): Promise<AppNotification[]> {
   return unwrap(
@@ -502,7 +502,7 @@ export async function countUnread(profileId: string): Promise<number> {
   return count ?? 0;
 }
 
-/** Unread count for the Chats tab badge — message notifications only. */
+/** Unread count for the Chats tab badge - message notifications only. */
 export async function countUnreadMessages(profileId: string): Promise<number> {
   const { count, error } = await supabase
     .from("notifications")
@@ -591,7 +591,7 @@ export async function respondFriendRequest(id: string, accept: boolean): Promise
   if (error) throw error;
 }
 
-/** Cancels a pending request or unfriends an accepted one — same operation either way. */
+/** Cancels a pending request or unfriends an accepted one - same operation either way. */
 export async function removeFriendship(id: string): Promise<void> {
   const { error } = await supabase.from("friendships").delete().eq("id", id);
   if (error) throw error;
@@ -650,6 +650,33 @@ export async function reportUser(input: {
 }
 
 // ---------------------------------------------------------------------
+// Presence - "has the app open right now", separate from is_available
+// ("open to accept new work"). Shown as a small dot on the avatar.
+// ---------------------------------------------------------------------
+const ONLINE_WINDOW_MS = 3 * 60_000;
+
+export async function touchPresence(profileId: string): Promise<void> {
+  const { error } = await supabase
+    .from("presence")
+    .upsert({ profile_id: profileId, last_seen_at: new Date().toISOString() }, { onConflict: "profile_id" });
+  if (error) throw error;
+}
+
+/** Batched online check for a set of profiles - a card grid does one query, not N. */
+export async function getOnlineMap(profileIds: string[]): Promise<Record<string, boolean>> {
+  const ids = [...new Set(profileIds)].filter(Boolean);
+  if (ids.length === 0) return {};
+  const { data, error } = await supabase.from("presence").select("profile_id,last_seen_at").in("profile_id", ids);
+  if (error) return {};
+  const cutoff = Date.now() - ONLINE_WINDOW_MS;
+  const out: Record<string, boolean> = {};
+  for (const row of (data ?? []) as { profile_id: string; last_seen_at: string }[]) {
+    out[row.profile_id] = new Date(row.last_seen_at).getTime() >= cutoff;
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------
 // Avatar upload
 // ---------------------------------------------------------------------
 export async function uploadAvatar(userId: string, file: File): Promise<string> {
@@ -663,7 +690,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
   return data.publicUrl;
 }
 
-/** Cover photo shown behind the avatar — workers use it to show a work-site photo. */
+/** Cover photo shown behind the avatar - workers use it to show a work-site photo. */
 export async function uploadCover(userId: string, file: File): Promise<string> {
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   const path = `${userId}/cover-${Date.now()}.${ext}`;
@@ -754,7 +781,7 @@ export async function markThreadRead(myProfileId: string, otherProfileId: string
   if (error) throw error;
 }
 
-/** Unsend — wipes the body server-side too, not just what the UI shows. */
+/** Unsend - wipes the body server-side too, not just what the UI shows. */
 export async function unsendMessage(messageId: string): Promise<void> {
   const { error } = await supabase
     .from("messages")
@@ -763,7 +790,7 @@ export async function unsendMessage(messageId: string): Promise<void> {
   if (error) throw error;
 }
 
-/** One reaction per person per message — setting a new emoji replaces theirs. */
+/** One reaction per person per message - setting a new emoji replaces theirs. */
 export async function setReaction(messageId: string, profileId: string, emoji: string): Promise<void> {
   const { error } = await supabase
     .from("message_reactions")

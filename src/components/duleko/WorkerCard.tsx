@@ -7,7 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { formatNumber, locationLine, skillName } from "@/lib/utils";
 import type { WorkerCardData } from "@/lib/types";
 
-export function WorkerCard({ worker }: { worker: WorkerCardData }) {
+export function WorkerCard({ worker, online }: { worker: WorkerCardData; online?: boolean }) {
   const { t, lang } = useI18n();
   const place = locationLine(worker, lang);
   const skills = worker.skills ?? [];
@@ -19,7 +19,7 @@ export function WorkerCard({ worker }: { worker: WorkerCardData }) {
       className="block rounded-2xl border border-slate-200 bg-white p-4 transition-colors hover:border-brand-300 hover:bg-brand-50/40"
     >
       <div className="flex gap-3">
-        <Avatar name={worker.full_name} src={worker.avatar_url} size={52} />
+        <Avatar name={worker.full_name} src={worker.avatar_url} size={52} online={online} />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h3 className="truncate font-semibold text-slate-900">{worker.full_name}</h3>

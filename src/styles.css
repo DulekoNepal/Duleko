@@ -4,23 +4,23 @@
   --font-sans: "Noto Sans", "Noto Sans Devanagari", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, sans-serif;
 
-  /* Duleko Green — opportunity, work, growth, availability. The brand color. */
+  /* Duleko Green - opportunity, work, growth, availability. The brand color. */
   --color-brand-50: #f0fdf4;
   --color-brand-100: #dcfce7;
   --color-brand-200: #bbf7d0;
   --color-brand-300: #86efac;
   --color-brand-400: #4ade80;
-  --color-brand-500: #22c55e; /* Light Green — active/available states, positive actions */
+  --color-brand-500: #22c55e; /* Light Green - active/available states, positive actions */
   --color-brand-600: #16a34a;
   --color-brand-700: #15803d; /* Duleko Green */
   --color-brand-800: #166534;
   --color-brand-900: #14532d;
 
-  /* Deep Teal — trust and professionalism, used for headings/navigation. */
+  /* Deep Teal - trust and professionalism, used for headings/navigation. */
   --color-teal-700: #0f4c5c;
   --color-teal-800: #0c3c48;
 
-  /* Warm Yellow — opportunity, ratings, badges, small highlights. */
+  /* Warm Yellow - opportunity, ratings, badges, small highlights. */
   --color-sun-400: #fbbf24;
   --color-sun-500: #f59e0b;
 

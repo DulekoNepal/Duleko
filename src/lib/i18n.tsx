@@ -55,6 +55,30 @@ const strings = {
     "तपाईंको क्षेत्रका कामदार र काम दिने बीच सजिलो भेटघाट।",
   ],
 
+  // ---- guest browsing --------------------------------------------------
+  exploreDuleko: ["Explore Duleko", "दुलेको हेर्नुहोस्"],
+  exploreDulekoHint: [
+    "Look around first - browse workers and skills, no account needed.",
+    "पहिले हेर्नुहोस् - कामदार र सीपहरू खाता बिना नै हेर्न सकिन्छ।",
+  ],
+  signUpOrLogIn: ["Sign up / Log in", "खाता खोल्नुहोस् / लगइन"],
+  signUpOrLogInHint: [
+    "Create work requests, chat, and build your own profile.",
+    "काम अनुरोध, कुराकानी, र आफ्नो प्रोफाइल बनाउनुहोस्।",
+  ],
+  howDulekoWorks: ["How Duleko works", "दुलेको कसरी काम गर्छ"],
+  landingFreeNote: [
+    "Free to join. Free to browse.",
+    "जोडिन निःशुल्क। हेर्न निःशुल्क।",
+  ],
+  signInRequiredTitle: ["Sign in to continue", "जारी राख्न लगइन गर्नुहोस्"],
+  signInRequiredBody: [
+    "You'll need a free Duleko account for this. It only takes a minute.",
+    "यसको लागि दुलेकोको निःशुल्क खाता चाहिन्छ। एक मिनेटमै बन्छ।",
+  ],
+  notNow: ["Not now", "अहिले होइन"],
+  keepExploring: ["Keep exploring", "हेर्न जारी राख्नुहोस्"],
+
   // ---- onboarding ----------------------------------------------------
   onboardingTitle: ["Set up your profile", "आफ्नो प्रोफाइल बनाउनुहोस्"],
   stepOf: ["Step {current} of {total}", "चरण {current} / {total}"],
@@ -104,8 +128,8 @@ const strings = {
   nearYou: ["Near you", "तपाईंको नजिक"],
   noWorkersYet: ["No workers here yet.", "यहाँ अझै कामदार छैनन्।"],
   noWorkersHint: [
-    "Be the first — add your skills so people can find you.",
-    "पहिलो बन्नुहोस् — सीप थप्नुहोस् ताकि मानिसले भेटून्।",
+    "Be the first - add your skills so people can find you.",
+    "पहिलो बन्नुहोस् - सीप थप्नुहोस् ताकि मानिसले भेटून्।",
   ],
   yourWorkToday: ["Your work", "तपाईंको काम"],
   pendingRequests: ["{count} waiting for you", "{count} तपाईंको जवाफ पर्खिरहेको"],
@@ -165,6 +189,11 @@ const strings = {
   availableNow: ["Available", "उपलब्ध"],
   notAvailable: ["Not available", "उपलब्ध छैन"],
   bookedDay: ["Booked", "बुक भइसकेको"],
+  // "Free" on the calendar means "not booked that day" - a different idea
+  // from availableNow above (open to accept work at all), so it gets its
+  // own word instead of reusing "Available" for two different meanings.
+  freeDay: ["Free", "खाली"],
+  online: ["Online", "अनलाइन"],
   report: ["Report", "उजुरी"],
 
   // ---- friends --------------------------------------------------------
@@ -193,8 +222,8 @@ const strings = {
   locationShared: ["Shared {time} ago", "{time} अघि साझा गरियो"],
   locationNotShared: ["Not shared yet", "अझै साझा गरिएको छैन"],
   shareLocationHint: [
-    "Useful for drivers and delivery — lets nearby people find you. Optional.",
-    "चालक र डेलिभरीका लागि उपयोगी — नजिकैका मानिसले भेट्टाउन सक्छन्। वैकल्पिक।",
+    "Useful for drivers and delivery - lets nearby people find you. Optional.",
+    "चालक र डेलिभरीका लागि उपयोगी - नजिकैका मानिसले भेट्टाउन सक्छन्। वैकल्पिक।",
   ],
   locationPermissionDenied: [
     "Could not get your location. Check your browser's location permission.",
@@ -223,8 +252,8 @@ const strings = {
   rateAmountPlaceholder: ["Amount", "रकम"],
   rateUnitPlaceholder: ["per hour, per switch…", "प्रति घण्टा, प्रति स्विच…"],
   rateHint: [
-    "Optional — your usual price for this skill.",
-    "वैकल्पिक — यो सीपको लागि तपाईंको सामान्य मूल्य।",
+    "Optional - your usual price for this skill.",
+    "वैकल्पिक - यो सीपको लागि तपाईंको सामान्य मूल्य।",
   ],
 
   // ---- google sign-in -----------------------------------------------
@@ -379,12 +408,12 @@ const strings = {
   walkthroughTitle1: ["Find skilled people nearby", "नजिकैका सिपालु मानिस भेट्टाउनुहोस्"],
   walkthroughBody1: [
     "Browse by skill or search to find workers near you, sorted by distance.",
-    "सिप अनुसार हेर्नुहोस् वा खोज्नुहोस् — दूरी अनुसार क्रमबद्ध नजिकैका कामदार भेट्टाउनुहोस्।",
+    "सिप अनुसार हेर्नुहोस् वा खोज्नुहोस् - दूरी अनुसार क्रमबद्ध नजिकैका कामदार भेट्टाउनुहोस्।",
   ],
   walkthroughTitle2: ["Request work in a tap", "एक ट्यापमा काम अनुरोध गर्नुहोस्"],
   walkthroughBody2: [
-    "Describe the job, pick a free date, and send a request — no need to pick a specific skill.",
-    "कामको विवरण दिनुहोस्, खाली मिति छान्नुहोस्, र अनुरोध पठाउनुहोस् — कुनै खास सिप छान्नु पर्दैन।",
+    "Describe the job, pick a free date, and send a request - no need to pick a specific skill.",
+    "कामको विवरण दिनुहोस्, खाली मिति छान्नुहोस्, र अनुरोध पठाउनुहोस् - कुनै खास सिप छान्नु पर्दैन।",
   ],
   walkthroughTitle3: ["Add friends, stay connected", "साथी थप्नुहोस्, जोडिइरहनुहोस्"],
   walkthroughBody3: [
@@ -400,7 +429,7 @@ const strings = {
   // ---- price negotiation (bidding) --------------------------------------
   yourOffer: ["Your offer", "तपाईंको प्रस्ताव"],
   workerRateHint: ["Their listed rate: {rates}", "तिनको दर: {rates}"],
-  acceptAtPrice: ["Accept — {amount}", "स्वीकार — {amount}"],
+  acceptAtPrice: ["Accept - {amount}", "स्वीकार - {amount}"],
   counterOffer: ["Counter-offer", "जवाफी प्रस्ताव"],
   submitCounter: ["Send offer", "प्रस्ताव पठाउनुहोस्"],
   negotiation: ["Negotiation", "मोलमोलाई"],

@@ -65,7 +65,7 @@ export function OnboardingScreen() {
         }
       }
       // If a previous attempt got this far but failed on the phone step
-      // below (a duplicate number, say), the profile row already exists —
+      // below (a duplicate number, say), the profile row already exists -
       // update it instead of trying to insert a second one for this user
       // and hitting the one-profile-per-account constraint.
       const existing = await getMyProfile(user.id);
@@ -152,7 +152,7 @@ export function OnboardingScreen() {
           <LanguageToggle />
         </div>
 
-        {/* Step dots — a clearer sense of progress and what's left than a bare bar. */}
+        {/* Step dots - a clearer sense of progress and what's left than a bare bar. */}
         <div className="mx-auto flex max-w-lg items-center gap-1.5 px-4 pb-3">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
             const n = i + 1;

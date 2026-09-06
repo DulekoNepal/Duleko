@@ -2,12 +2,12 @@
 -- Duleko MVP :: 1600 :: Read receipts, unsend, and reactions for chat
 -- =====================================================================
 -- Typing indicators are realtime broadcast only (no rows), so nothing
--- here for those — this migration covers the three that need storage.
+-- here for those - this migration covers the three that need storage.
 
 alter table public.messages add column if not exists read_at timestamptz;
 alter table public.messages add column if not exists deleted_at timestamptz;
 
--- An unsent message wipes its own body — "removed", not just hidden —
+-- An unsent message wipes its own body - "removed", not just hidden -
 -- so the length check has to allow empty once deleted_at is set.
 alter table public.messages drop constraint if exists messages_body_check;
 alter table public.messages add constraint messages_body_check
@@ -15,7 +15,7 @@ alter table public.messages add constraint messages_body_check
 
 -- ---------------------------------------------------------------------
 -- Guard: read_at can only be set once by the recipient, deleted_at can
--- only be set once by the sender (and wipes the body when it is) —
+-- only be set once by the sender (and wipes the body when it is) -
 -- everything else about a message is immutable after insert.
 -- ---------------------------------------------------------------------
 create or replace function public.guard_message_update()
@@ -64,7 +64,7 @@ create policy messages_update_party on public.messages
   with check (public.current_profile_id() in (profile_a, profile_b));
 
 -- ---------------------------------------------------------------------
--- message_reactions — one reaction per person per message, single emoji.
+-- message_reactions - one reaction per person per message, single emoji.
 -- ---------------------------------------------------------------------
 create table if not exists public.message_reactions (
   message_id uuid not null references public.messages(id) on delete cascade,

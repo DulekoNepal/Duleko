@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * A collapsed-by-default section inside a Card. Used to keep the profile
- * screen compact — tap the header to expand, tap again to collapse.
+ * screen compact - tap the header to expand, tap again to collapse.
  */
 export function Collapsible({
   title,

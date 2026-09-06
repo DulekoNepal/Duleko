@@ -15,7 +15,7 @@ create index if not exists certificates_profile_idx on public.certificates (prof
 
 alter table public.certificates enable row level security;
 
--- Shown on the public profile, same visibility as skills — anyone signed
+-- Shown on the public profile, same visibility as skills - anyone signed
 -- in can see what training someone claims to have.
 drop policy if exists certificates_read on public.certificates;
 create policy certificates_read on public.certificates

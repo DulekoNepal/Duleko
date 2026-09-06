@@ -2,7 +2,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { useI18n } from "@/lib/i18n";
 
 /**
- * Placeholder Terms of Service / Privacy Policy text — enough to satisfy
+ * Placeholder Terms of Service / Privacy Policy text - enough to satisfy
  * "ask new users to agree before signing up". Swap for the real legal copy
  * whenever it's ready; the checkbox + gate in AuthScreen don't need to change.
  */
@@ -31,7 +31,7 @@ export function PolicyDialog({
             arrangement is agreed directly between the two of you.
           </p>
           <p>
-            Misuse — spam, fake profiles, harassment, or unsafe behaviour — may lead to your
+            Misuse - spam, fake profiles, harassment, or unsafe behaviour - may lead to your
             account being restricted. You can report a user from their profile at any time.
           </p>
         </div>

@@ -28,6 +28,8 @@ import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card"
 import { EmptyState, FullPageLoader } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
+import { useGuestMode } from "@/hooks/use-guest-mode";
+import { usePresence } from "@/hooks/use-presence";
 import { useToast } from "@/hooks/use-toast";
 import {
   getContact,
@@ -43,19 +45,31 @@ import {
 import { errorMessage } from "@/lib/supabase";
 import { cn, formatMoney, formatNumber, locationLine, relativeTime, skillName } from "@/lib/utils";
 
-/** Matches the Call/Chat buttons' look — a native `<a href="tel:">` can't use the <Button> component. */
+/** Matches the Call/Chat buttons' look - a native `<a href="tel:">` can't use the <Button> component. */
 const secondaryActionClass =
   "inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-50 px-4 text-sm font-medium text-brand-800 transition-colors hover:bg-brand-100";
 
 export function WorkerScreen() {
   const { t, lang } = useI18n();
   const { profile: me } = useSession();
+  const { requestSignIn } = useGuestMode();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { workerId } = useParams({ from: "/worker/$workerId" });
   const [requestOpen, setRequestOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+
+  /** Every action below needs an account - a guest gets the sign-in prompt instead. */
+  function withAuth(action: () => void) {
+    if (!me) {
+      requestSignIn();
+      return;
+    }
+    action();
+  }
+
+  const online = usePresence([workerId])[workerId];
 
   const worker = useQuery({ queryKey: ["profile", workerId], queryFn: () => getProfile(workerId) });
   const skills = useQuery({ queryKey: ["user-skills", workerId], queryFn: () => getUserSkills(workerId) });
@@ -154,7 +168,13 @@ export function WorkerScreen() {
 
           <div className="px-5 pb-5">
             <div className="relative z-10 -mt-14 inline-block">
-              <Avatar name={w.full_name} src={w.avatar_url} size={84} className="shadow-md ring-4 ring-white" />
+              <Avatar
+                name={w.full_name}
+                src={w.avatar_url}
+                size={84}
+                online={online}
+                className="shadow-md ring-4 ring-white"
+              />
             </div>
 
             <div className="mt-3 flex items-start justify-between gap-3">
@@ -179,7 +199,7 @@ export function WorkerScreen() {
         </Card>
 
         {/* ---- Actions: Request Work + Friend side by side, Call + Chat side
-             by side below — same 4 buttons for everyone, friends or not. - */}
+             by side below - same 4 buttons for everyone, friends or not. - */}
         {!isMe && (
           <div className="mb-4 space-y-2">
             {fs?.status === "pending" && !iAmRequester ? (
@@ -196,12 +216,17 @@ export function WorkerScreen() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2">
-                <Button size="lg" onClick={() => setRequestOpen(true)}>
+                <Button size="lg" onClick={() => withAuth(() => setRequestOpen(true))}>
                   {t("requestWork")}
                 </Button>
 
                 {!fs && (
-                  <Button size="lg" variant="outline" loading={addFriend.isPending} onClick={() => addFriend.mutate()}>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    loading={addFriend.isPending}
+                    onClick={() => withAuth(() => addFriend.mutate())}
+                  >
                     <UserPlus className="h-4 w-4" aria-hidden />
                     {t("addFriend")}
                   </Button>
@@ -236,7 +261,7 @@ export function WorkerScreen() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => toast(t("phoneHidden"))}
+                  onClick={() => (me ? toast(t("phoneHidden")) : requestSignIn())}
                   className={cn(secondaryActionClass, "opacity-60")}
                 >
                   <Lock className="h-4 w-4" aria-hidden />
@@ -255,7 +280,7 @@ export function WorkerScreen() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => toast(t("phoneHidden"))}
+                  onClick={() => (me ? toast(t("phoneHidden")) : requestSignIn())}
                   className={cn(secondaryActionClass, "opacity-60")}
                 >
                   <Lock className="h-4 w-4" aria-hidden />
@@ -400,7 +425,7 @@ export function WorkerScreen() {
           <div className="flex justify-center pb-4 text-sm">
             <button
               type="button"
-              onClick={() => setReportOpen(true)}
+              onClick={() => withAuth(() => setReportOpen(true))}
               className="inline-flex items-center gap-1.5 text-slate-500 hover:text-red-600"
             >
               <Flag className="h-4 w-4" aria-hidden />
