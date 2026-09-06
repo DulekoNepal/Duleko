@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { UserCheck, Users, X } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { MessageCircle, UserCheck, Users } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, SectionTitle } from "@/components/ui/card";
@@ -7,7 +8,7 @@ import { CardSkeleton, EmptyState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
-import { listFriends, listIncomingRequests, removeFriendship, respondFriendRequest } from "@/lib/queries";
+import { listFriends, listIncomingRequests, respondFriendRequest } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
 
 /**
@@ -20,6 +21,7 @@ export function FriendsPanel() {
   const { profile } = useSession();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const requests = useQuery({
     queryKey: ["friend-requests", profile?.id],
@@ -42,12 +44,6 @@ export function FriendsPanel() {
 
   const respond = useMutation({
     mutationFn: ({ id, accept }: { id: string; accept: boolean }) => respondFriendRequest(id, accept),
-    onSuccess: invalidateAll,
-    onError: (error) => toast(errorMessage(error), "error"),
-  });
-
-  const remove = useMutation({
-    mutationFn: (id: string) => removeFriendship(id),
     onSuccess: invalidateAll,
     onError: (error) => toast(errorMessage(error), "error"),
   });
@@ -102,20 +98,24 @@ export function FriendsPanel() {
             <ul className="divide-y divide-slate-100">
               {(friends.data ?? []).map((f) => (
                 <li key={f.id} className="flex items-center gap-3 py-2.5">
-                  <Avatar name={f.other.full_name} src={f.other.avatar_url} size={40} />
-                  <span className="flex flex-1 items-center gap-1.5 truncate text-sm font-medium text-slate-800">
-                    <UserCheck className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
-                    {f.other.full_name}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => navigate({ to: "/worker/$workerId", params: { workerId: f.other.id } })}
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                  >
+                    <Avatar name={f.other.full_name} src={f.other.avatar_url} size={40} />
+                    <span className="flex min-w-0 items-center gap-1.5 truncate text-sm font-medium text-slate-800">
+                      <UserCheck className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+                      <span className="truncate">{f.other.full_name}</span>
+                    </span>
+                  </button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => {
-                      if (window.confirm(t("removeFriendConfirm"))) remove.mutate(f.id);
-                    }}
+                    onClick={() => navigate({ to: "/chat/$otherId", params: { otherId: f.other.id } })}
                   >
-                    <X className="h-4 w-4" aria-hidden />
-                    {t("removeFriend")}
+                    <MessageCircle className="h-4 w-4" aria-hidden />
+                    {t("chatNow")}
                   </Button>
                 </li>
               ))}
