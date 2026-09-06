@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Search as SearchIcon, SlidersHorizontal, Users } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { WorkerCard } from "@/components/duleko/WorkerCard";
+import { LocationConsentDialog } from "@/components/duleko/LocationConsentDialog";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,7 @@ export function SearchScreen() {
   const [queryText, setQueryText] = useState(filters.q ?? "");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
+  const [locationConsentOpen, setLocationConsentOpen] = useState(false);
 
   const skills = useQuery({ queryKey: ["skills"], queryFn: listSkills, staleTime: 30 * 60_000 });
 
@@ -184,7 +186,9 @@ export function SearchScreen() {
                 value={filters.sort ?? "relevance"}
                 onChange={(e) => {
                   const next = e.target.value as SearchFilters["sort"];
-                  if (next === "nearest") requestNearest();
+                  // Duleko's own explanation first - the browser's native
+                  // prompt follows only after someone taps "Allow Location".
+                  if (next === "nearest") setLocationConsentOpen(true);
                   else update({ sort: next });
                 }}
                 disabled={locating}
@@ -258,6 +262,12 @@ export function SearchScreen() {
           </>
         )}
       </PageContainer>
+
+      <LocationConsentDialog
+        open={locationConsentOpen}
+        onClose={() => setLocationConsentOpen(false)}
+        onAllow={() => requestNearest()}
+      />
     </>
   );
 }

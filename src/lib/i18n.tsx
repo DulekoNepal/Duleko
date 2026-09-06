@@ -393,13 +393,68 @@ const strings = {
   nextMonth: ["Next month", "अर्को महिना"],
 
   // ---- sign-up policy agreement -----------------------------------------
-  iAgreeToThe: ["I agree to Duleko's", "म दुलेकोको"],
-  termsOfService: ["Terms of Service", "सेवाका सर्तहरू"],
+  createYourAccount: ["Create your Duleko account", "आफ्नो दुलेको खाता बनाउनुहोस्"],
+  byCreatingAccountNotice: [
+    "By creating an account, you agree to Duleko's Terms of Use and acknowledge the Privacy Policy.",
+    "खाता बनाएर, तपाईं दुलेकोको प्रयोगका सर्तहरूमा सहमत हुनुहुन्छ र गोपनीयता नीति स्वीकार गर्नुहुन्छ।",
+  ],
+  iAgreeToThe: ["I agree to the", "म"],
+  // Nepali puts the verb after the noun phrase, so it lands after both links
+  // instead of up front the way the English sentence reads.
+  agreeToPoliciesSuffix: ["", "मा सहमत छु"],
+  termsOfService: ["Terms of Use", "प्रयोगका सर्तहरू"],
   privacyPolicy: ["Privacy Policy", "गोपनीयता नीति"],
   mustAgreeToPolicies: [
-    "Please agree to the Terms of Service and Privacy Policy to continue.",
-    "जारी राख्न कृपया सेवाका सर्तहरू र गोपनीयता नीतिमा सहमत हुनुहोस्।",
+    "Please agree to the Terms of Use and Privacy Policy to continue.",
+    "जारी राख्न कृपया प्रयोगका सर्तहरू र गोपनीयता नीतिमा सहमत हुनुहोस्।",
   ],
+  policyQuickSummary: ["Quick summary", "छोटो सारांश"],
+  policyFullTerms: ["Read the full Terms of Use", "पूरा प्रयोगका सर्तहरू पढ्नुहोस्"],
+  policySummary1: [
+    "Provide genuine information about yourself, your skills, and your location. Do not impersonate anyone or use fake certificates.",
+    "आफ्नो बारेमा, सीप, र स्थानको बारेमा सही जानकारी दिनुहोस्। कसैको नक्कल नगर्नुहोस् वा नक्कली प्रमाणपत्र प्रयोग नगर्नुहोस्।",
+  ],
+  policySummary2: [
+    "A verified phone number is required. Do not create multiple accounts to mislead or defraud others.",
+    "प्रमाणित फोन नम्बर आवश्यक छ। अरूलाई भ्रमित वा ठग्न धेरै खाता नबनाउनुहोस्।",
+  ],
+  policySummary3: [
+    "Use Duleko responsibly. It must not be used for scams, harassment, discrimination, or illegal activity.",
+    "दुलेको जिम्मेवारीपूर्वक प्रयोग गर्नुहोस्। यो ठगी, दुर्व्यवहार, भेदभाव, वा गैरकानूनी गतिविधिको लागि प्रयोग हुनु हुँदैन।",
+  ],
+  policySummary4: [
+    "Only list skills you can reasonably perform. Listing a skill does not by itself mean Duleko has verified it.",
+    "तपाईं वास्तवमै गर्न सक्ने सीपहरू मात्र राख्नुहोस्। सीप राख्नुले मात्र दुलेकोले त्यो प्रमाणित गरेको जनाउँदैन।",
+  ],
+  policySummary5: [
+    "Be respectful and truthful in requests, communication, cancellations, payments, and reviews.",
+    "अनुरोध, संवाद, रद्द, भुक्तानी, र समीक्षामा सम्मानजनक र सत्य हुनुहोस्।",
+  ],
+  policySummary6: [
+    "Sensitive information such as your phone number and exact live location is only shared according to your privacy and contact settings.",
+    "फोन नम्बर र सटीक लाइभ स्थान जस्ता संवेदनशील जानकारी तपाईंको गोपनीयता र सम्पर्क सेटिङ अनुसार मात्र साझा गरिन्छ।",
+  ],
+  policySummary7: [
+    "Duleko helps people connect. It does not guarantee the quality, safety, completion, price, or payment of any work arranged between users.",
+    "दुलेकोले मानिसहरूलाई जोड्न मद्दत गर्छ। यसले प्रयोगकर्ताहरू बीच मिलेको कामको गुणस्तर, सुरक्षा, पूरा हुने, मूल्य, वा भुक्तानीकोग्यारेन्टी दिँदैन।",
+  ],
+  policySummary8: [
+    "Use reasonable judgment before meeting, hiring, or working with someone. Report suspicious or unsafe behaviour.",
+    "कसैलाई भेट्नु, काममा राख्नु, वा सँगै काम गर्नुअघि उचित सतर्कता अपनाउनुहोस्। शंकास्पद वा असुरक्षित व्यवहार जानकारी दिनुहोस्।",
+  ],
+  policySummary9: [
+    "Accounts involved in fraud, fake credentials, or repeated harmful behaviour may be restricted or suspended.",
+    "ठगी, नक्कली प्रमाणपत्र, वा बारम्बार हानिकारक व्यवहारमा संलग्न खाताहरू रोक्न वा निलम्बन गर्न सकिन्छ।",
+  ],
+
+  // ---- location permission prompt (asked only when a feature needs it) --
+  locationConsentTitle: ["Allow Duleko to use your location?", "दुलेकोलाई तपाईंको स्थान प्रयोग गर्न दिनुहुन्छ?"],
+  locationConsentBody: [
+    "Your location helps Duleko show relevant people and opportunities nearby. Your precise or live location will not be publicly displayed unless you choose to share it.",
+    "तपाईंको स्थानले दुलेकोलाई नजिकैका सान्दर्भिक मानिस र अवसरहरू देखाउन मद्दत गर्छ। तपाईंले साझा गर्ने नछानेसम्म तपाईंको सटीक वा लाइभ स्थान सार्वजनिक रूपमा देखिँदैन।",
+  ],
+  allowLocation: ["Allow Location", "स्थान अनुमति दिनुहोस्"],
+  continueAction: ["Continue", "जारी राख्नुहोस्"],
 
   // ---- welcome walkthrough ----------------------------------------------
   skip: ["Skip", "छोड्नुहोस्"],

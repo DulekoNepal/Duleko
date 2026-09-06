@@ -201,6 +201,10 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
             )}
 
             {mode === "signup" && (
+              <p className="mb-3 text-xs leading-relaxed text-slate-500">{t("byCreatingAccountNotice")}</p>
+            )}
+
+            {mode === "signup" && (
               <label className="mb-4 flex items-start gap-2.5 text-sm text-slate-600">
                 <input
                   type="checkbox"
@@ -228,7 +232,7 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
                   >
                     {t("privacyPolicy")}
                   </button>
-                  .
+                  {t("agreeToPoliciesSuffix")}.
                 </span>
               </label>
             )}
