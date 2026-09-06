@@ -3,6 +3,7 @@ import type {
   AppNotification,
   AvailabilityDay,
   CancellationReason,
+  ChatMessage,
   Engagement,
   EngagementStatus,
   EngagementWithParties,
@@ -578,4 +579,42 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
   if (error) throw error;
   const { data } = supabase.storage.from("avatars").getPublicUrl(path);
   return data.publicUrl;
+}
+
+// ---------------------------------------------------------------------
+// Chat (simple direct messages, gated the same as phone contacts)
+// ---------------------------------------------------------------------
+/** messages.profile_a/profile_b are always stored with a < b. */
+export function chatPairKey(profileIdA: string, profileIdB: string): string {
+  return profileIdA < profileIdB ? `${profileIdA}:${profileIdB}` : `${profileIdB}:${profileIdA}`;
+}
+
+export async function listMessages(myProfileId: string, otherProfileId: string): Promise<ChatMessage[]> {
+  const [profile_a, profile_b] =
+    myProfileId < otherProfileId ? [myProfileId, otherProfileId] : [otherProfileId, myProfileId];
+  const { data, error } = await supabase
+    .from("messages")
+    .select("id,profile_a,profile_b,sender_profile_id,body,created_at")
+    .eq("profile_a", profile_a)
+    .eq("profile_b", profile_b)
+    .order("created_at", { ascending: true })
+    .limit(200);
+  if (error) throw error;
+  return (data as ChatMessage[]) ?? [];
+}
+
+export async function sendMessage(
+  myProfileId: string,
+  otherProfileId: string,
+  body: string,
+): Promise<ChatMessage> {
+  const [profile_a, profile_b] =
+    myProfileId < otherProfileId ? [myProfileId, otherProfileId] : [otherProfileId, myProfileId];
+  return unwrap(
+    await supabase
+      .from("messages")
+      .insert({ profile_a, profile_b, sender_profile_id: myProfileId, body })
+      .select("id,profile_a,profile_b,sender_profile_id,body,created_at")
+      .single(),
+  );
 }
