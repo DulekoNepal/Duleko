@@ -401,13 +401,13 @@ const strings = {
   yourOffer: ["Your offer", "तपाईंको प्रस्ताव"],
   workerRateHint: ["Their listed rate: {rates}", "तिनको दर: {rates}"],
   acceptAtPrice: ["Accept — {amount}", "स्वीकार — {amount}"],
-  waitingForCounter: [
-    "Waiting for {name} to respond to your offer of {amount}.",
-    "{name} ले तपाईंको {amount} प्रस्तावको जवाफ दिन पर्खँदै।",
-  ],
-  offerFromParty: ["{name} offered {amount}.", "{name} ले {amount} प्रस्ताव गर्नुभयो।"],
   counterOffer: ["Counter-offer", "जवाफी प्रस्ताव"],
   submitCounter: ["Send offer", "प्रस्ताव पठाउनुहोस्"],
+  negotiation: ["Negotiation", "मोलमोलाई"],
+  yourTurn: ["Your turn", "तपाईंको पालो"],
+  theirTurn: ["Waiting", "पर्खाइमा"],
+  offerFrom: ["Offer from {name}", "{name}को प्रस्ताव"],
+  waitingForResponse: ["Waiting for {name} to respond.", "{name}को जवाफको पर्खाइमा।"],
 } as const;
 
 export type StringKey = keyof typeof strings;
