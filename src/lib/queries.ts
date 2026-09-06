@@ -701,6 +701,7 @@ interface ConversationRow {
   sender_profile_id: string;
   body: string;
   created_at: string;
+  read_at: string | null;
   a: { id: string; full_name: string; avatar_url: string | null } | { id: string; full_name: string; avatar_url: string | null }[] | null;
   b: { id: string; full_name: string; avatar_url: string | null } | { id: string; full_name: string; avatar_url: string | null }[] | null;
 }
@@ -710,7 +711,7 @@ export async function listConversations(myProfileId: string): Promise<Conversati
   const { data, error } = await supabase
     .from("messages")
     .select(
-      "profile_a,profile_b,sender_profile_id,body,created_at," +
+      "profile_a,profile_b,sender_profile_id,body,created_at,read_at," +
         "a:profiles!messages_profile_a_fkey(id,full_name,avatar_url)," +
         "b:profiles!messages_profile_b_fkey(id,full_name,avatar_url)",
     )
@@ -734,6 +735,7 @@ export async function listConversations(myProfileId: string): Promise<Conversati
       lastBody: row.body,
       lastCreatedAt: row.created_at,
       lastSenderProfileId: row.sender_profile_id,
+      unread: row.sender_profile_id !== myProfileId && !row.read_at,
     });
   }
   return out;
