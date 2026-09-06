@@ -1,7 +1,19 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Camera, ChevronRight, LogOut, Navigation, Pencil, Users } from "lucide-react";
+import {
+  Briefcase,
+  Calendar,
+  Camera,
+  ChevronRight,
+  Info,
+  LogOut,
+  MapPin,
+  Navigation,
+  Pencil,
+  Settings as SettingsIcon,
+  Users,
+} from "lucide-react";
 import { AppHeader, LanguageToggle, PageContainer } from "@/components/duleko/Layout";
 import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
 import { RatingStars } from "@/components/duleko/Rating";
@@ -13,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, SectionTitle } from "@/components/ui/card";
 import { Collapsible } from "@/components/ui/collapsible";
 import { Field, Input, Textarea } from "@/components/ui/field";
+import { Switch } from "@/components/ui/switch";
 import { FullPageLoader } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
@@ -32,7 +45,20 @@ import {
   type UserSkillInput,
 } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import { addDays, formatMoney, isValidNepaliPhone, locationLine, normalisePhone, relativeTime, skillName, toDateKey, todayKey } from "@/lib/utils";
+import {
+  addDays,
+  cn,
+  formatDate,
+  formatMoney,
+  formatNumber,
+  isValidNepaliPhone,
+  locationLine,
+  normalisePhone,
+  relativeTime,
+  skillName,
+  toDateKey,
+  todayKey,
+} from "@/lib/utils";
 
 interface SkillDraft {
   rate_amount: string;
@@ -42,6 +68,24 @@ interface SkillDraft {
 }
 
 const emptyDraft: SkillDraft = { rate_amount: "", rate_unit: "", custom_label: "", custom_note: "" };
+
+/** A small labelled icon badge used to give every section a consistent, scannable identity. */
+function SectionIcon({ icon: Icon }: { icon: React.ComponentType<{ className?: string }> }) {
+  return (
+    <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+      <Icon className="h-4 w-4" aria-hidden />
+    </span>
+  );
+}
+
+function StatTile({ value, label }: { value: React.ReactNode; label: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center">
+      <p className="text-lg font-bold text-slate-900">{value}</p>
+      <p className="mt-0.5 text-xs text-slate-500">{label}</p>
+    </div>
+  );
+}
 
 export function ProfileScreen() {
   const { t, lang, setLang } = useI18n();
@@ -229,159 +273,233 @@ export function ProfileScreen() {
     <>
       <AppHeader title={t("myProfile")} right={<LanguageToggle />} />
       <PageContainer>
-        <Card className="mb-4">
-          <CardBody>
-            <div className="flex items-center gap-4">
-              <Avatar name={profile.full_name} src={avatarPreview ?? profile.avatar_url} size={64} />
-              <div className="min-w-0 flex-1">
-                <h2 className="truncate font-semibold text-slate-900">{profile.full_name}</h2>
-                <RatingStars value={Number(profile.rating)} count={profile.rating_count} />
-              </div>
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700">
-                <Camera className="h-4 w-4" aria-hidden />
-                <span className="hidden sm:inline">{t("changePhoto")}</span>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    if (file.size > 2 * 1024 * 1024) {
-                      toast(t("photoTooBig"), "error");
-                      return;
-                    }
-                    setAvatarPreview(URL.createObjectURL(file));
-                    changeAvatar.mutate(file);
-                  }}
-                />
-              </label>
-            </div>
+        {/* ---- Hero identity card --------------------------------------- */}
+        <div className="relative mb-4 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 px-5 pb-5 pt-8 text-center shadow-sm">
+          {!editing && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              aria-label={t("editProfile")}
+              className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition-colors hover:bg-white/25"
+            >
+              <Pencil className="h-4 w-4" aria-hidden />
+            </button>
+          )}
 
-            <label className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3.5 py-3">
-              <span>
-                <span className="block text-sm font-medium text-slate-800">{t("availableForWork")}</span>
-                <span className="block text-xs text-slate-500">{t("availableForWorkHint")}</span>
-              </span>
+          <div className="relative mx-auto w-fit">
+            <Avatar
+              name={profile.full_name}
+              src={avatarPreview ?? profile.avatar_url}
+              size={88}
+              className="ring-4 ring-white/90"
+            />
+            <label className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow ring-1 ring-slate-200 transition-transform hover:scale-105">
+              <Camera className="h-4 w-4" aria-hidden />
+              <span className="sr-only">{t("changePhoto")}</span>
               <input
-                type="checkbox"
-                className="h-6 w-6 shrink-0 rounded accent-teal-700"
-                checked={profile.is_available}
-                onChange={(e) => toggleAvailable.mutate(e.target.checked)}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 2 * 1024 * 1024) {
+                    toast(t("photoTooBig"), "error");
+                    return;
+                  }
+                  setAvatarPreview(URL.createObjectURL(file));
+                  changeAvatar.mutate(file);
+                }}
               />
             </label>
+          </div>
 
-            {!editing && (
-              <Button variant="outline" className="mt-4 w-full" onClick={() => setEditing(true)}>
-                <Pencil className="h-4 w-4" aria-hidden />
-                {t("editProfile")}
-              </Button>
-            )}
-          </CardBody>
-        </Card>
+          <h1 className="mt-3 truncate text-lg font-semibold text-white">{profile.full_name}</h1>
+          <div className="mt-1.5 flex justify-center">
+            <span className="inline-flex rounded-full bg-white/90 px-2.5 py-1">
+              <RatingStars value={Number(profile.rating)} count={profile.rating_count} />
+            </span>
+          </div>
+
+          <div className="mt-4 inline-flex items-center gap-2.5 rounded-full bg-white/15 py-1.5 pl-4 pr-2 text-sm font-medium text-white backdrop-blur">
+            <span
+              className={cn(
+                "h-2 w-2 shrink-0 rounded-full",
+                profile.is_available ? "bg-emerald-400" : "bg-white/50",
+              )}
+              aria-hidden
+            />
+            {profile.is_available ? t("availableNow") : t("notAvailable")}
+            <Switch
+              checked={profile.is_available}
+              onChange={(next) => toggleAvailable.mutate(next)}
+              aria-label={t("availableForWork")}
+            />
+          </div>
+          <p className="mx-auto mt-2 max-w-xs text-xs text-white/70">{t("availableForWorkHint")}</p>
+        </div>
+
+        {/* ---- Quick stats ------------------------------------------------ */}
+        <div className="mb-5 grid grid-cols-3 gap-2.5">
+          <StatTile value={formatNumber(skillList.length, lang)} label={t("skills")} />
+          <StatTile value={formatNumber(profile.rating_count, lang)} label={t("reviews")} />
+          <StatTile value={formatDate(profile.created_at.slice(0, 10), lang)} label={t("memberSince")} />
+        </div>
 
         {editing ? (
-          <Card className="mb-4">
-            <CardBody>
-              <SectionTitle>{t("editProfile")}</SectionTitle>
-              <Field label={t("yourName")}>
-                <Input value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={80} />
-              </Field>
-              <Field label={t("phoneNumber")} hint={t("phoneHint")}>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" />
-              </Field>
-              <Field label={t("aboutYou")}>
-                <Textarea value={about} onChange={(e) => setAbout(e.target.value)} rows={3} maxLength={600} />
-              </Field>
-              <LocationFields value={location} onChange={setLocation} />
+          <>
+            <Card className="mb-4">
+              <CardBody>
+                <SectionTitle>
+                  <span className="inline-flex items-center gap-2">
+                    <SectionIcon icon={Info} />
+                    {t("basicInfo")}
+                  </span>
+                </SectionTitle>
+                <Field label={t("yourName")}>
+                  <Input value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={80} />
+                </Field>
+                <Field label={t("phoneNumber")} hint={t("phoneHint")}>
+                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" />
+                </Field>
+                <Field label={t("aboutYou")}>
+                  <Textarea value={about} onChange={(e) => setAbout(e.target.value)} rows={3} maxLength={600} />
+                </Field>
+              </CardBody>
+            </Card>
 
-              <p className="mb-2 text-sm font-medium text-slate-700">{t("yourSkills")}</p>
-              <SkillPicker skills={allSkills.data ?? []} selected={skillIds} onToggle={toggleSkill} />
+            <Card className="mb-4">
+              <CardBody>
+                <SectionTitle>
+                  <span className="inline-flex items-center gap-2">
+                    <SectionIcon icon={MapPin} />
+                    {t("whereYouAre")}
+                  </span>
+                </SectionTitle>
+                <LocationFields value={location} onChange={setLocation} />
+              </CardBody>
+            </Card>
 
-              {skillIds.length > 0 && (
-                <div className="mt-4 space-y-3">
-                  {skillIds.map((id) => {
-                    const skill = (allSkills.data ?? []).find((s) => s.id === id);
-                    if (!skill) return null;
-                    const d = draftFor(id);
-                    return (
-                      <div key={id} className="rounded-xl border border-slate-200 p-3">
-                        <p className="mb-2 text-sm font-medium text-slate-800">
-                          <span aria-hidden>{skill.emoji}</span> {skillName(skill, lang)}
-                        </p>
-                        {id === "other" && (
-                          <>
-                            <Field label={t("othersSkillLabel")}>
-                              <Input
-                                value={d.custom_label}
-                                onChange={(e) => setDraft(id, { custom_label: e.target.value })}
-                                placeholder={t("othersSkillPlaceholder")}
-                                maxLength={60}
-                              />
-                            </Field>
-                            <Field label={t("othersSkillNoteLabel")}>
-                              <Input
-                                value={d.custom_note}
-                                onChange={(e) => setDraft(id, { custom_note: e.target.value })}
-                                placeholder={t("othersSkillNotePlaceholder")}
-                                maxLength={300}
-                              />
-                            </Field>
-                          </>
-                        )}
-                        <p className="mb-1.5 text-xs text-slate-500">{t("rateHint")}</p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-slate-500">{lang === "ne" ? "रु" : "Rs"}</span>
-                          <Input
-                            type="number"
-                            inputMode="numeric"
-                            min={0}
-                            className="w-24"
-                            value={d.rate_amount}
-                            onChange={(e) => setDraft(id, { rate_amount: e.target.value })}
-                            placeholder={t("rateAmountPlaceholder")}
-                          />
-                          <span className="text-sm text-slate-500">/</span>
-                          <Input
-                            className="flex-1"
-                            value={d.rate_unit}
-                            onChange={(e) => setDraft(id, { rate_unit: e.target.value })}
-                            placeholder={t("rateUnitPlaceholder")}
-                            maxLength={30}
-                          />
+            <Card className="mb-4">
+              <CardBody>
+                <SectionTitle>
+                  <span className="inline-flex items-center gap-2">
+                    <SectionIcon icon={Briefcase} />
+                    {t("yourSkills")}
+                  </span>
+                </SectionTitle>
+                <SkillPicker skills={allSkills.data ?? []} selected={skillIds} onToggle={toggleSkill} />
+
+                {skillIds.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    {skillIds.map((id) => {
+                      const skill = (allSkills.data ?? []).find((s) => s.id === id);
+                      if (!skill) return null;
+                      const d = draftFor(id);
+                      return (
+                        <div key={id} className="rounded-xl border border-slate-200 p-3">
+                          <p className="mb-2 text-sm font-medium text-slate-800">
+                            <span aria-hidden>{skill.emoji}</span> {skillName(skill, lang)}
+                          </p>
+                          {id === "other" && (
+                            <>
+                              <Field label={t("othersSkillLabel")}>
+                                <Input
+                                  value={d.custom_label}
+                                  onChange={(e) => setDraft(id, { custom_label: e.target.value })}
+                                  placeholder={t("othersSkillPlaceholder")}
+                                  maxLength={60}
+                                />
+                              </Field>
+                              <Field label={t("othersSkillNoteLabel")}>
+                                <Input
+                                  value={d.custom_note}
+                                  onChange={(e) => setDraft(id, { custom_note: e.target.value })}
+                                  placeholder={t("othersSkillNotePlaceholder")}
+                                  maxLength={300}
+                                />
+                              </Field>
+                            </>
+                          )}
+                          <p className="mb-1.5 text-xs text-slate-500">{t("rateHint")}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-slate-500">{lang === "ne" ? "रु" : "Rs"}</span>
+                            <Input
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              className="w-24"
+                              value={d.rate_amount}
+                              onChange={(e) => setDraft(id, { rate_amount: e.target.value })}
+                              placeholder={t("rateAmountPlaceholder")}
+                            />
+                            <span className="text-sm text-slate-500">/</span>
+                            <Input
+                              className="flex-1"
+                              value={d.rate_unit}
+                              onChange={(e) => setDraft(id, { rate_unit: e.target.value })}
+                              placeholder={t("rateUnitPlaceholder")}
+                              maxLength={30}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                )}
+              </CardBody>
+            </Card>
 
-              <div className="mt-5 flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => setEditing(false)}>
-                  {t("cancel")}
-                </Button>
-                <Button className="flex-1" loading={save.isPending} onClick={() => save.mutate()}>
-                  {t("save")}
-                </Button>
-              </div>
-            </CardBody>
-          </Card>
+            <div className="mb-4 flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setEditing(false)}>
+                {t("cancel")}
+              </Button>
+              <Button className="flex-1" loading={save.isPending} onClick={() => save.mutate()}>
+                {t("save")}
+              </Button>
+            </div>
+          </>
         ) : (
           <>
             <Card className="mb-4">
               <CardBody>
-                <Collapsible title={t("aboutYou")} defaultOpen>
-                  <p className="text-sm text-slate-700">{profile.about || "—"}</p>
-                  {place && <p className="mt-2 text-sm text-slate-500">{place}</p>}
+                <Collapsible
+                  title={
+                    <span className="inline-flex items-center gap-2">
+                      <SectionIcon icon={Info} />
+                      {t("aboutYou")}
+                    </span>
+                  }
+                  defaultOpen
+                >
+                  {profile.about ? (
+                    <p className="text-sm leading-relaxed text-slate-700">{profile.about}</p>
+                  ) : (
+                    <p className="text-sm italic text-slate-400">{t("noAboutYet")}</p>
+                  )}
+                  {place && (
+                    <p className="mt-2.5 flex items-center gap-1.5 text-sm text-slate-500">
+                      <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      {place}
+                    </p>
+                  )}
                 </Collapsible>
               </CardBody>
             </Card>
 
             <Card className="mb-4">
               <CardBody>
-                <Collapsible title={t("yourSkills")} defaultOpen>
+                <Collapsible
+                  title={
+                    <span className="inline-flex items-center gap-2">
+                      <SectionIcon icon={Briefcase} />
+                      {t("yourSkills")}
+                    </span>
+                  }
+                  defaultOpen
+                >
                   {skillList.length === 0 ? (
-                    <p className="text-sm text-slate-500">—</p>
+                    <p className="text-sm italic text-slate-400">{t("noSkillsYetProfile")}</p>
                   ) : (
                     <div className="flex flex-wrap gap-1.5">
                       {skillList.map((s) => {
@@ -406,7 +524,14 @@ export function ProfileScreen() {
 
             <Card className="mb-4">
               <CardBody>
-                <Collapsible title={t("shareLocation")}>
+                <Collapsible
+                  title={
+                    <span className="inline-flex items-center gap-2">
+                      <SectionIcon icon={Navigation} />
+                      {t("shareLocation")}
+                    </span>
+                  }
+                >
                   <p className="mb-3 text-sm text-slate-500">{t("shareLocationHint")}</p>
                   <p className="mb-3 text-sm text-slate-700">
                     {profile.location_shared_at
@@ -437,7 +562,15 @@ export function ProfileScreen() {
 
         <Card className="mb-4">
           <CardBody>
-            <Collapsible title={t("markCalendar")} defaultOpen>
+            <Collapsible
+              title={
+                <span className="inline-flex items-center gap-2">
+                  <SectionIcon icon={Calendar} />
+                  {t("markCalendar")}
+                </span>
+              }
+              defaultOpen
+            >
               <p className="mb-3 text-sm text-slate-500">{t("calendarHint")}</p>
               <AvailabilityCalendar
                 days={availability.data ?? []}
@@ -450,30 +583,17 @@ export function ProfileScreen() {
 
         <Card className="mb-4">
           <CardBody>
-            <Collapsible title={t("settings")}>
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <span className="text-sm text-slate-700">{t("language")}</span>
-                <div className="inline-flex gap-2">
-                  <Button
-                    size="sm"
-                    variant={lang === "en" ? "primary" : "outline"}
-                    onClick={() => setLang("en")}
-                  >
-                    {t("english")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={lang === "ne" ? "primary" : "outline"}
-                    onClick={() => setLang("ne")}
-                  >
-                    {t("nepali")}
-                  </Button>
-                </div>
-              </div>
-
+            <Collapsible
+              title={
+                <span className="inline-flex items-center gap-2">
+                  <SectionIcon icon={SettingsIcon} />
+                  {t("settings")}
+                </span>
+              }
+            >
               <Link
                 to="/friends"
-                className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3.5 py-3 text-sm font-medium text-slate-800"
+                className="mb-2 flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3.5 py-3 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-100"
               >
                 <span className="inline-flex items-center gap-2">
                   <Users className="h-4 w-4 text-slate-500" aria-hidden />

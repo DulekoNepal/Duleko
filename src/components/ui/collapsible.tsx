@@ -12,7 +12,7 @@ export function Collapsible({
   action,
   children,
 }: {
-  title: string;
+  title: React.ReactNode;
   defaultOpen?: boolean;
   action?: React.ReactNode;
   children: React.ReactNode;
@@ -21,12 +21,12 @@ export function Collapsible({
 
   return (
     <div>
-      <div className="flex items-center gap-2">
+      <div className="-mx-1.5 flex items-center gap-2">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex flex-1 items-center justify-between gap-3 py-1 text-left"
+          className="flex flex-1 items-center justify-between gap-3 rounded-xl px-1.5 py-1.5 text-left transition-colors hover:bg-slate-50"
         >
           <span className="text-base font-semibold text-slate-900">{title}</span>
           <ChevronDown
