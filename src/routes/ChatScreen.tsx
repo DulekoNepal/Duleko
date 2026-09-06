@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { FullPageLoader } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
+import { useToast } from "@/hooks/use-toast";
 import { chatPairKey, getProfile, listMessages, markMessageNotificationsRead, sendMessage } from "@/lib/queries";
 import { supabase, errorMessage } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ export function ChatScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { profile: me } = useSession();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const { otherId } = useParams({ from: "/chat/$otherId" });
   const [draft, setDraft] = useState("");
@@ -73,7 +75,7 @@ export function ChatScreen() {
       setDraft("");
       queryClient.invalidateQueries({ queryKey: ["messages", pairKey] });
     },
-    onError: (error) => alert(errorMessage(error)),
+    onError: (error) => toast(errorMessage(error), "error"),
   });
 
   function submit() {
