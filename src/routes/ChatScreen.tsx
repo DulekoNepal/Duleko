@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { ArrowLeft, Send } from "lucide-react";
 import { AppHeader } from "@/components/duleko/Layout";
 import { Avatar } from "@/components/ui/avatar";
@@ -36,7 +36,6 @@ const TYPING_STOP_AFTER_MS = 3000;
  */
 export function ChatScreen() {
   const { t, lang } = useI18n();
-  const navigate = useNavigate();
   const { profile: me } = useSession();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -186,7 +185,7 @@ export function ChatScreen() {
         back={
           <button
             type="button"
-            onClick={() => navigate({ to: "/worker/$workerId", params: { workerId: otherId } })}
+            onClick={() => window.history.back()}
             className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
             aria-label={t("back")}
           >
