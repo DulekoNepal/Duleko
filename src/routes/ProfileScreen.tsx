@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
+  Award,
   Briefcase,
   Calendar,
   Camera,
@@ -12,6 +13,7 @@ import {
   Navigation,
   Pencil,
   Settings as SettingsIcon,
+  Trash2,
   Users,
 } from "lucide-react";
 import { AppHeader, LanguageToggle, PageContainer } from "@/components/duleko/Layout";
@@ -31,10 +33,13 @@ import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import {
+  addCertificate,
   clearLocation,
   getAvailability,
   getContact,
+  listCertificates,
   listSkills,
+  removeCertificate,
   saveContact,
   setDayStatus,
   setUserSkills,
@@ -79,7 +84,12 @@ export function ProfileScreen() {
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState("");
   const [about, setAbout] = useState("");
+  const [bio, setBio] = useState("");
+  const [age, setAge] = useState("");
+  const [education, setEducation] = useState("");
   const [phone, setPhone] = useState("");
+  const [altPhone, setAltPhone] = useState("");
+  const [certTitle, setCertTitle] = useState("");
   const [location, setLocation] = useState<LocationValue>({
     province: null,
     district: null,
@@ -103,9 +113,16 @@ export function ProfileScreen() {
     queryFn: () => getContact(profile!.id),
     enabled: Boolean(profile?.id),
   });
+  const myCertificates = useQuery({
+    queryKey: ["certificates", profile?.id],
+    queryFn: () => listCertificates(profile!.id),
+    enabled: Boolean(profile?.id),
+  });
+  // A full year ahead — the "mark busy days" calendar can flip forward
+  // through all 12 months, so it needs the availability rows to match.
   const availability = useQuery({
     queryKey: ["availability", profile?.id],
-    queryFn: () => getAvailability(profile!.id, todayKey(), toDateKey(addDays(new Date(), 35))),
+    queryFn: () => getAvailability(profile!.id, todayKey(), toDateKey(addDays(new Date(), 365))),
     enabled: Boolean(profile?.id),
   });
 
@@ -114,6 +131,9 @@ export function ProfileScreen() {
     if (!profile) return;
     setFullName(profile.full_name);
     setAbout(profile.about ?? "");
+    setBio(profile.bio ?? "");
+    setAge(profile.age != null ? String(profile.age) : "");
+    setEducation(profile.education ?? "");
     setLocation({
       province: profile.province,
       district: profile.district,
@@ -139,7 +159,9 @@ export function ProfileScreen() {
   }, [mySkills.data]);
 
   useEffect(() => {
-    if (myPhone.data) setPhone(myPhone.data);
+    if (!myPhone.data) return;
+    setPhone(myPhone.data.phone);
+    setAltPhone(myPhone.data.alt_phone ?? "");
   }, [myPhone.data]);
 
   function toggleSkill(id: string) {
@@ -159,9 +181,13 @@ export function ProfileScreen() {
     mutationFn: async () => {
       if (!profile) return;
       if (phone && !isValidNepaliPhone(phone)) throw new Error(t("phoneInvalid"));
+      if (altPhone && !isValidNepaliPhone(altPhone)) throw new Error(t("phoneInvalid"));
       await updateProfile(profile.id, {
         full_name: fullName.trim(),
         about: about.trim() || null,
+        bio: bio.trim() || null,
+        age: age.trim() ? Number(age) : null,
+        education: education.trim() || null,
         province: location.province,
         district: location.district,
         municipality: location.municipality,
@@ -169,7 +195,7 @@ export function ProfileScreen() {
         locality: location.locality,
         language: lang,
       });
-      if (phone) await saveContact(profile.id, normalisePhone(phone));
+      if (phone) await saveContact(profile.id, normalisePhone(phone), altPhone ? normalisePhone(altPhone) : null);
       const entries: UserSkillInput[] = skillIds.map((id) => {
         const d = draftFor(id);
         return {
@@ -230,6 +256,25 @@ export function ProfileScreen() {
       await refreshProfile();
       toast(t("profileSaved"));
     },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  const addCert = useMutation({
+    mutationFn: async ({ title, file }: { title: string; file: File }) => {
+      if (!user || !profile) return;
+      await addCertificate(user.id, profile.id, title, file);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["certificates", profile?.id] });
+      setCertTitle("");
+      toast(t("profileSaved"));
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  const deleteCert = useMutation({
+    mutationFn: (id: string) => removeCertificate(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["certificates", profile?.id] }),
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
@@ -353,7 +398,7 @@ export function ProfileScreen() {
               <span
                 className={cn(
                   "h-2 w-2 shrink-0 rounded-full",
-                  profile.is_available ? "bg-emerald-500" : "bg-slate-300",
+                  profile.is_available ? "bg-green-500" : "bg-slate-300",
                 )}
                 aria-hidden
               />
@@ -402,6 +447,27 @@ export function ProfileScreen() {
                 <Field label={t("phoneNumber")} hint={t("phoneHint")}>
                   <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" />
                 </Field>
+                <Field label={`${t("altPhone")} (${t("optional")})`}>
+                  <Input value={altPhone} onChange={(e) => setAltPhone(e.target.value)} inputMode="tel" />
+                </Field>
+                <Field label={`${t("bio")} (${t("optional")})`} hint={t("bioHint")}>
+                  <Input value={bio} onChange={(e) => setBio(e.target.value)} maxLength={100} />
+                </Field>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label={`${t("age")} (${t("optional")})`}>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={14}
+                      max={100}
+                      value={age}
+                      onChange={(e) => setAge(e.target.value)}
+                    />
+                  </Field>
+                  <Field label={`${t("highestEducation")} (${t("optional")})`}>
+                    <Input value={education} onChange={(e) => setEducation(e.target.value)} maxLength={100} />
+                  </Field>
+                </div>
                 <Field label={t("aboutYou")}>
                   <Textarea value={about} onChange={(e) => setAbout(e.target.value)} rows={3} maxLength={600} />
                 </Field>
@@ -512,15 +578,29 @@ export function ProfileScreen() {
                   }
                   defaultOpen
                 >
+                  {profile.bio && <p className="mb-2 text-sm font-medium text-slate-800">{profile.bio}</p>}
                   {profile.about ? (
                     <p className="text-sm leading-relaxed text-slate-700">{profile.about}</p>
                   ) : (
                     <p className="text-sm italic text-slate-400">{t("noAboutYet")}</p>
                   )}
+                  {(profile.age != null || profile.education) && (
+                    <div className="mt-2.5 flex flex-wrap gap-3 text-sm text-slate-600">
+                      {profile.age != null && (
+                        <span>{t("yearsOld", { count: formatNumber(profile.age, lang) })}</span>
+                      )}
+                      {profile.education && <span>{profile.education}</span>}
+                    </div>
+                  )}
                   {place && (
                     <p className="mt-2.5 flex items-center gap-1.5 text-sm text-slate-500">
                       <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
                       {place}
+                    </p>
+                  )}
+                  {myPhone.data?.alt_phone && (
+                    <p className="mt-2.5 text-sm text-slate-500">
+                      {t("altPhone")}: {myPhone.data.alt_phone}
                     </p>
                   )}
                 </Collapsible>
@@ -615,8 +695,85 @@ export function ProfileScreen() {
               <AvailabilityCalendar
                 days={availability.data ?? []}
                 editable
+                monthView
                 onToggle={(day, status) => changeDay.mutate({ day, status })}
               />
+            </Collapsible>
+          </CardBody>
+        </Card>
+
+        <Card className="mb-4">
+          <CardBody>
+            <Collapsible
+              title={
+                <span className="inline-flex items-center gap-2">
+                  <SectionIcon icon={Award} />
+                  {t("certificates")}
+                </span>
+              }
+            >
+              <p className="mb-3 text-sm text-slate-500">{t("certificatesHint")}</p>
+              {(myCertificates.data?.length ?? 0) > 0 && (
+                <ul className="mb-3 space-y-2">
+                  {(myCertificates.data ?? []).map((c) => (
+                    <li
+                      key={c.id}
+                      className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm"
+                    >
+                      <Award className="h-4 w-4 shrink-0 text-brand-700" aria-hidden />
+                      <a
+                        href={c.file_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="min-w-0 flex-1 truncate font-medium text-slate-800 hover:underline"
+                      >
+                        {c.title}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => deleteCert.mutate(c.id)}
+                        aria-label={t("delete")}
+                        className="shrink-0 text-slate-400 hover:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex items-center gap-2">
+                <Input
+                  value={certTitle}
+                  onChange={(e) => setCertTitle(e.target.value)}
+                  placeholder={t("certificateTitlePlaceholder")}
+                  maxLength={100}
+                  className="flex-1"
+                />
+                <label
+                  className={cn(
+                    "inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50",
+                    (!certTitle.trim() || addCert.isPending) && "pointer-events-none opacity-50",
+                  )}
+                >
+                  {t("upload")}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    className="hidden"
+                    disabled={!certTitle.trim() || addCert.isPending}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file || !certTitle.trim()) return;
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast(t("photoTooBig"), "error");
+                        return;
+                      }
+                      addCert.mutate({ title: certTitle.trim(), file });
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
             </Collapsible>
           </CardBody>
         </Card>

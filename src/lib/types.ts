@@ -29,6 +29,9 @@ export interface Profile {
   user_id: string;
   full_name: string;
   about: string | null;
+  bio: string | null;
+  age: number | null;
+  education: string | null;
   avatar_url: string | null;
   cover_url: string | null;
   province: string | null;
@@ -45,6 +48,16 @@ export interface Profile {
   location_shared_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/** A training/skill certificate a worker has chosen to show on their profile. */
+export interface Certificate {
+  id: string;
+  profile_id: string;
+  title: string;
+  file_url: string;
+  file_type: string | null;
+  created_at: string;
 }
 
 /** Row shape returned by the search_workers RPC. */

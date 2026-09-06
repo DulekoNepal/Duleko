@@ -2,11 +2,14 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
+  Award,
   ArrowLeft,
   Briefcase,
-  Calendar,
+  Cake,
   Flag,
+  GraduationCap,
   Info,
+  Lock,
   MapPin,
   MessageCircle,
   Phone,
@@ -15,7 +18,6 @@ import {
   UserPlus,
 } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
-import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
 import { RatingStars } from "@/components/duleko/Rating";
 import { RequestWorkDialog } from "@/components/duleko/RequestWorkDialog";
 import { ReportDialog } from "@/components/duleko/ReportDialog";
@@ -28,18 +30,18 @@ import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import {
-  getAvailability,
   getContact,
   getFriendshipWith,
   getProfile,
   getUserSkills,
+  listCertificates,
   listReviewsFor,
   removeFriendship,
   respondFriendRequest,
   sendFriendRequest,
 } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import { addDays, formatMoney, formatNumber, locationLine, relativeTime, skillName, toDateKey, todayKey } from "@/lib/utils";
+import { cn, formatMoney, formatNumber, locationLine, relativeTime, skillName } from "@/lib/utils";
 
 /** Matches the Call/Chat buttons' look — a native `<a href="tel:">` can't use the <Button> component. */
 const secondaryActionClass =
@@ -59,16 +61,21 @@ export function WorkerScreen() {
   const skills = useQuery({ queryKey: ["user-skills", workerId], queryFn: () => getUserSkills(workerId) });
   const reviews = useQuery({ queryKey: ["reviews", workerId], queryFn: () => listReviewsFor(workerId) });
 
-  const availability = useQuery({
-    queryKey: ["availability", workerId],
-    queryFn: () => getAvailability(workerId, todayKey(), toDateKey(addDays(new Date(), 35))),
-  });
-
   const contact = useQuery({
     queryKey: ["contact", workerId],
     queryFn: () => getContact(workerId),
     staleTime: 5 * 60_000,
   });
+
+  const certificates = useQuery({
+    queryKey: ["certificates", workerId],
+    queryFn: () => listCertificates(workerId),
+  });
+
+  // Chat and phone-call are unlocked by the exact same rule the server uses
+  // (can_view_contact): an accepted/confirmed/completed work request, or an
+  // accepted friendship. getContact already comes back null when it isn't.
+  const unlocked = Boolean(contact.data);
 
   const friendship = useQuery({
     queryKey: ["friendship", me?.id, workerId],
@@ -171,59 +178,72 @@ export function WorkerScreen() {
           </div>
         </Card>
 
-        {/* ---- Actions: one primary CTA, then friend + contact as secondary rows - */}
+        {/* ---- Actions: Request Work + Friend side by side, Call + Chat side
+             by side below — same 4 buttons for everyone, friends or not. - */}
         {!isMe && (
           <div className="mb-4 space-y-2">
-            <Button size="lg" className="w-full" onClick={() => setRequestOpen(true)}>
-              {t("requestWork")}
-            </Button>
-
-            {!fs && (
-              <Button variant="outline" className="w-full" loading={addFriend.isPending} onClick={() => addFriend.mutate()}>
-                <UserPlus className="h-4 w-4" aria-hidden />
-                {t("addFriend")}
-              </Button>
-            )}
-            {fs?.status === "pending" && iAmRequester && (
-              <Button variant="outline" className="w-full" loading={removeFriend.isPending} onClick={() => removeFriend.mutate()}>
-                {t("friendRequestPending")} · {t("cancelRequest")}
-              </Button>
-            )}
-            {fs?.status === "pending" && !iAmRequester && (
-              <div className="flex gap-2">
-                <Button className="flex-1" loading={respond.isPending} onClick={() => respond.mutate(true)}>
+            {fs?.status === "pending" && !iAmRequester ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Button size="lg" className="col-span-2" onClick={() => setRequestOpen(true)}>
+                  {t("requestWork")}
+                </Button>
+                <Button loading={respond.isPending} onClick={() => respond.mutate(true)}>
                   {t("acceptRequest")}
                 </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  loading={respond.isPending}
-                  onClick={() => respond.mutate(false)}
-                >
+                <Button variant="outline" loading={respond.isPending} onClick={() => respond.mutate(false)}>
                   {t("declineRequest")}
                 </Button>
               </div>
-            )}
-            {fs?.status === "accepted" && (
-              <Button
-                variant="outline"
-                className="w-full"
-                loading={removeFriend.isPending}
-                onClick={() => {
-                  if (window.confirm(t("removeFriendConfirm"))) removeFriend.mutate();
-                }}
-              >
-                <UserCheck className="h-4 w-4" aria-hidden />
-                {t("alreadyFriends")}
-              </Button>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Button size="lg" onClick={() => setRequestOpen(true)}>
+                  {t("requestWork")}
+                </Button>
+
+                {!fs && (
+                  <Button size="lg" variant="outline" loading={addFriend.isPending} onClick={() => addFriend.mutate()}>
+                    <UserPlus className="h-4 w-4" aria-hidden />
+                    {t("addFriend")}
+                  </Button>
+                )}
+                {fs?.status === "pending" && iAmRequester && (
+                  <Button size="lg" variant="outline" loading={removeFriend.isPending} onClick={() => removeFriend.mutate()}>
+                    {t("cancelRequest")}
+                  </Button>
+                )}
+                {fs?.status === "accepted" && (
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    loading={removeFriend.isPending}
+                    onClick={() => {
+                      if (window.confirm(t("removeFriendConfirm"))) removeFriend.mutate();
+                    }}
+                  >
+                    <UserCheck className="h-4 w-4" aria-hidden />
+                    {t("alreadyFriends")}
+                  </Button>
+                )}
+              </div>
             )}
 
-            {contact.data ? (
-              <div className="flex gap-2">
-                <a href={`tel:${contact.data}`} className={secondaryActionClass}>
+            <div className="grid grid-cols-2 gap-2">
+              {unlocked ? (
+                <a href={`tel:${contact.data!.phone}`} className={secondaryActionClass}>
                   <Phone className="h-4 w-4" aria-hidden />
                   {t("callNow")}
                 </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => toast(t("phoneHidden"))}
+                  className={cn(secondaryActionClass, "opacity-60")}
+                >
+                  <Lock className="h-4 w-4" aria-hidden />
+                  {t("callNow")}
+                </button>
+              )}
+              {unlocked ? (
                 <button
                   type="button"
                   onClick={() => navigate({ to: "/chat/$otherId", params: { otherId: w.id } })}
@@ -232,10 +252,17 @@ export function WorkerScreen() {
                   <MessageCircle className="h-4 w-4" aria-hidden />
                   {t("chat")}
                 </button>
-              </div>
-            ) : (
-              <p className="text-center text-xs text-slate-500">{t("phoneHidden")}</p>
-            )}
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => toast(t("phoneHidden"))}
+                  className={cn(secondaryActionClass, "opacity-60")}
+                >
+                  <Lock className="h-4 w-4" aria-hidden />
+                  {t("chat")}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -247,13 +274,64 @@ export function WorkerScreen() {
                 {t("about")}
               </span>
             </SectionTitle>
+            {w.bio && <p className="mb-2 text-sm font-medium text-slate-800">{w.bio}</p>}
             {w.about ? (
               <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">{w.about}</p>
             ) : (
               <p className="text-sm italic text-slate-400">{t("noAboutYetOther")}</p>
             )}
+            {(w.age != null || w.education) && (
+              <div className="mt-3 flex flex-wrap gap-3 text-sm text-slate-600">
+                {w.age != null && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Cake className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                    {t("yearsOld", { count: formatNumber(w.age, lang) })}
+                  </span>
+                )}
+                {w.education && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <GraduationCap className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                    {w.education}
+                  </span>
+                )}
+              </div>
+            )}
+            {unlocked && contact.data?.alt_phone && (
+              <p className="mt-3 flex items-center gap-1.5 text-sm text-slate-600">
+                <Phone className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                {t("altPhone")}: {contact.data.alt_phone}
+              </p>
+            )}
           </CardBody>
         </Card>
+
+        {(certificates.data?.length ?? 0) > 0 && (
+          <Card className="mb-4">
+            <CardBody>
+              <SectionTitle>
+                <span className="inline-flex items-center gap-2">
+                  <SectionIcon icon={Award} />
+                  {t("certificates")}
+                </span>
+              </SectionTitle>
+              <ul className="space-y-2">
+                {(certificates.data ?? []).map((c) => (
+                  <li key={c.id}>
+                    <a
+                      href={c.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-100"
+                    >
+                      <Award className="h-4 w-4 shrink-0 text-brand-700" aria-hidden />
+                      <span className="truncate">{c.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </CardBody>
+          </Card>
+        )}
 
         <Card className="mb-4">
           <CardBody>
@@ -280,18 +358,6 @@ export function WorkerScreen() {
                 })}
               </div>
             )}
-          </CardBody>
-        </Card>
-
-        <Card className="mb-4">
-          <CardBody>
-            <SectionTitle>
-              <span className="inline-flex items-center gap-2">
-                <SectionIcon icon={Calendar} />
-                {t("availability")}
-              </span>
-            </SectionTitle>
-            <AvailabilityCalendar days={availability.data ?? []} weeks={4} />
           </CardBody>
         </Card>
 

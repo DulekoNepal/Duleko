@@ -31,9 +31,11 @@ export function HomeScreen() {
 
   const skills = useQuery({ queryKey: ["skills"], queryFn: listSkills, staleTime: 30 * 60_000 });
 
+  // Total workers per skill across the whole database, not just this district
+  // — a district filter only makes sense once someone actually opens the list.
   const counts = useQuery({
-    queryKey: ["skill-counts", profile?.district],
-    queryFn: () => skillCounts(profile?.district),
+    queryKey: ["skill-counts"],
+    queryFn: () => skillCounts(null),
     enabled: Boolean(profile),
   });
 

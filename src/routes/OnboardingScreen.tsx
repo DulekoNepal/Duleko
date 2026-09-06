@@ -11,7 +11,15 @@ import { SkillPicker } from "@/components/duleko/SkillGrid";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
-import { createProfile, listSkills, saveContact, setUserSkills, uploadAvatar } from "@/lib/queries";
+import {
+  createProfile,
+  getMyProfile,
+  listSkills,
+  saveContact,
+  setUserSkills,
+  updateProfile,
+  uploadAvatar,
+} from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
 import { cn, isValidNepaliPhone, normalisePhone } from "@/lib/utils";
 
@@ -56,18 +64,27 @@ export function OnboardingScreen() {
           avatarUrl = null;
         }
       }
-      const profile = await createProfile(user.id, {
+      // If a previous attempt got this far but failed on the phone step
+      // below (a duplicate number, say), the profile row already exists —
+      // update it instead of trying to insert a second one for this user
+      // and hitting the one-profile-per-account constraint.
+      const existing = await getMyProfile(user.id);
+      const profileInput = {
         full_name: fullName.trim(),
         about: about.trim() || null,
-        avatar_url: avatarUrl,
+        // Don't overwrite a photo a previous attempt already uploaded just
+        // because this retry didn't re-pick one.
+        avatar_url: avatarUrl ?? existing?.avatar_url ?? null,
         province: location.province,
         district: location.district,
         municipality: location.municipality,
         ward: location.ward,
         locality: location.locality,
-        is_available: true,
         language: lang,
-      });
+      };
+      const profile = existing
+        ? await updateProfile(existing.id, profileInput)
+        : await createProfile(user.id, { ...profileInput, is_available: true });
       await saveContact(profile.id, normalisePhone(phone));
       if (skillIds.length > 0) {
         await setUserSkills(
@@ -113,7 +130,7 @@ export function OnboardingScreen() {
   }
 
   return (
-    <div className="min-h-dvh bg-slate-50">
+    <div className="min-h-dvh bg-cream-50">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
           {step > 1 && (

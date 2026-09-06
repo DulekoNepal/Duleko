@@ -187,11 +187,11 @@ export function EngagementCard({
         {contactVisible &&
           (contact.data ? (
             <a
-              href={`tel:${contact.data}`}
+              href={`tel:${contact.data.phone}`}
               className="mt-3 inline-flex items-center gap-2 rounded-xl bg-brand-50 px-3 py-2 text-sm font-medium text-brand-800"
             >
               <Phone className="h-4 w-4" aria-hidden />
-              {contact.data}
+              {contact.data.phone}
             </a>
           ) : (
             <p className="mt-3 text-xs text-slate-400">{t("phoneHidden")}</p>

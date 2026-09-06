@@ -3,6 +3,7 @@ import type {
   AppNotification,
   AvailabilityDay,
   CancellationReason,
+  Certificate,
   ChatMessage,
   ConversationSummary,
   Engagement,
@@ -19,7 +20,7 @@ import type {
 } from "./types";
 
 const PROFILE_COLUMNS =
-  "id,user_id,full_name,about,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,language,rating,rating_count,lat,lng,location_shared_at,created_at,updated_at";
+  "id,user_id,full_name,about,bio,age,education,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,language,rating,rating_count,lat,lng,location_shared_at,created_at,updated_at";
 
 const PARTY_COLUMNS = "id,full_name,avatar_url,rating,rating_count";
 
@@ -60,6 +61,9 @@ export async function getProfile(profileId: string): Promise<Profile | null> {
 export interface ProfileInput {
   full_name: string;
   about?: string | null;
+  bio?: string | null;
+  age?: number | null;
+  education?: string | null;
   avatar_url?: string | null;
   cover_url?: string | null;
   province?: string | null;
@@ -95,21 +99,30 @@ export async function updateProfile(profileId: string, input: Partial<ProfileInp
 // ---------------------------------------------------------------------
 // Phone (private)
 // ---------------------------------------------------------------------
-export async function getContact(profileId: string): Promise<string | null> {
+export interface Contact {
+  phone: string;
+  alt_phone: string | null;
+}
+
+export async function getContact(profileId: string): Promise<Contact | null> {
   const { data, error } = await supabase
     .from("profile_contacts")
-    .select("phone")
+    .select("phone,alt_phone")
     .eq("profile_id", profileId)
     .maybeSingle();
   // RLS hides the row when the viewer is not allowed to see it — not an error.
   if (error) return null;
-  return (data as { phone: string } | null)?.phone ?? null;
+  return (data as Contact | null) ?? null;
 }
 
-export async function saveContact(profileId: string, phone: string): Promise<void> {
+export async function saveContact(
+  profileId: string,
+  phone: string,
+  altPhone?: string | null,
+): Promise<void> {
   const { error } = await supabase
     .from("profile_contacts")
-    .upsert({ profile_id: profileId, phone }, { onConflict: "profile_id" });
+    .upsert({ profile_id: profileId, phone, alt_phone: altPhone?.trim() || null }, { onConflict: "profile_id" });
   if (error) throw error;
 }
 
@@ -625,6 +638,46 @@ export async function uploadCover(userId: string, file: File): Promise<string> {
   if (error) throw error;
   const { data } = supabase.storage.from("covers").getPublicUrl(path);
   return data.publicUrl;
+}
+
+// ---------------------------------------------------------------------
+// Certificates (optional proof of training, shown on the profile)
+// ---------------------------------------------------------------------
+export async function listCertificates(profileId: string): Promise<Certificate[]> {
+  return unwrap(
+    await supabase
+      .from("certificates")
+      .select("id,profile_id,title,file_url,file_type,created_at")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false }),
+  );
+}
+
+export async function addCertificate(
+  userId: string,
+  profileId: string,
+  title: string,
+  file: File,
+): Promise<Certificate> {
+  const ext = (file.name.split(".").pop() || "pdf").toLowerCase();
+  const path = `${userId}/cert-${Date.now()}.${ext}`;
+  const { error: uploadError } = await supabase.storage
+    .from("certificates")
+    .upload(path, file, { upsert: true, cacheControl: "3600", contentType: file.type });
+  if (uploadError) throw uploadError;
+  const { data: pub } = supabase.storage.from("certificates").getPublicUrl(path);
+  return unwrap(
+    await supabase
+      .from("certificates")
+      .insert({ profile_id: profileId, title: title.trim(), file_url: pub.publicUrl, file_type: file.type })
+      .select("id,profile_id,title,file_url,file_type,created_at")
+      .single(),
+  );
+}
+
+export async function removeCertificate(id: string): Promise<void> {
+  const { error } = await supabase.from("certificates").delete().eq("id", id);
+  if (error) throw error;
 }
 
 // ---------------------------------------------------------------------

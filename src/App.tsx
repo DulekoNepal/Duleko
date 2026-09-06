@@ -1,10 +1,13 @@
+import { useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { useSession } from "@/hooks/use-session";
+import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { AuthScreen } from "@/routes/AuthScreen";
 import { OnboardingScreen } from "@/routes/OnboardingScreen";
 import { BottomNav } from "@/components/duleko/Layout";
+import { WelcomeWalkthrough, hasSeenWalkthrough } from "@/components/duleko/WelcomeWalkthrough";
 import { FullPageLoader } from "@/components/ui/states";
 
 /** Shown when .env.local has not been filled in yet — the most common first-run trip-up. */
@@ -27,9 +30,33 @@ VITE_SUPABASE_ANON_KEY=eyJhbGci...`}
  * Auth gate. Three states: signed out, signed in without a profile, signed in
  * with a profile — the last one is the app proper.
  */
+const WELCOMED_THIS_SESSION_KEY = "duleko_welcomed_this_session";
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
+  const { toast } = useToast();
   const { session, profile, loadingSession, loadingProfile } = useSession();
+  const [showWalkthrough, setShowWalkthrough] = useState(false);
+
+  // A "Welcome back" toast once per app session (not on every screen change
+  // within it), plus a one-time feature walkthrough for brand-new devices.
+  useEffect(() => {
+    if (!profile) return;
+    if (!hasSeenWalkthrough()) {
+      setShowWalkthrough(true);
+      return;
+    }
+    try {
+      if (window.sessionStorage.getItem(WELCOMED_THIS_SESSION_KEY)) return;
+      window.sessionStorage.setItem(WELCOMED_THIS_SESSION_KEY, "1");
+    } catch {
+      // No storage — just skip the once-per-session guard silently.
+    }
+    const firstName = profile.full_name?.split(/\s+/)[0] ?? "";
+    toast(t("welcomeBack", { name: firstName }), "info");
+    // Only meant to fire once, right when a profile first becomes available.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [Boolean(profile)]);
 
   if (!isSupabaseConfigured) return <SetupScreen />;
   if (loadingSession) return <FullPageLoader label={t("loading")} />;
@@ -41,6 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-dvh">
       {children}
       <BottomNav />
+      {showWalkthrough && <WelcomeWalkthrough onDone={() => setShowWalkthrough(false)} />}
     </div>
   );
 }

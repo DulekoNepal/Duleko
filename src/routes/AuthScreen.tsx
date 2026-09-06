@@ -6,6 +6,7 @@ import { AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { LanguageToggle } from "@/components/duleko/Layout";
+import { PolicyDialog } from "@/components/duleko/PolicyDialog";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { supabase, errorMessage } from "@/lib/supabase";
@@ -17,15 +18,21 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export function AuthScreen() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [policyOpen, setPolicyOpen] = useState<"terms" | "privacy" | null>(null);
 
   async function onGoogle() {
+    if (mode === "signup" && !agreed) {
+      setError(t("mustAgreeToPolicies"));
+      return;
+    }
     setGoogleBusy(true);
     setError(null);
     try {
@@ -47,6 +54,10 @@ export function AuthScreen() {
   });
 
   async function onSubmit(values: FormValues) {
+    if (mode === "signup" && !agreed) {
+      setError(t("mustAgreeToPolicies"));
+      return;
+    }
     setBusy(true);
     setError(null);
     setNotice(null);
@@ -81,7 +92,7 @@ export function AuthScreen() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50">
+    <div className="flex min-h-dvh flex-col bg-cream-50">
       <div className="flex justify-end p-4">
         <LanguageToggle />
       </div>
@@ -174,6 +185,39 @@ export function AuthScreen() {
               </p>
             )}
 
+            {mode === "signup" && (
+              <label className="mb-4 flex items-start gap-2.5 text-sm text-slate-600">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 accent-brand-700"
+                  checked={agreed}
+                  onChange={(e) => {
+                    setAgreed(e.target.checked);
+                    if (e.target.checked) setError(null);
+                  }}
+                />
+                <span>
+                  {t("iAgreeToThe")}{" "}
+                  <button
+                    type="button"
+                    onClick={() => setPolicyOpen("terms")}
+                    className="font-medium text-brand-700 underline underline-offset-2"
+                  >
+                    {t("termsOfService")}
+                  </button>{" "}
+                  {lang === "ne" ? "र" : "and"}{" "}
+                  <button
+                    type="button"
+                    onClick={() => setPolicyOpen("privacy")}
+                    className="font-medium text-brand-700 underline underline-offset-2"
+                  >
+                    {t("privacyPolicy")}
+                  </button>
+                  .
+                </span>
+              </label>
+            )}
+
             <Button type="submit" size="lg" className="w-full" loading={busy}>
               {mode === "signin" ? t("signIn") : t("signUp")}
             </Button>
@@ -198,6 +242,9 @@ export function AuthScreen() {
           </Button>
         </div>
       </div>
+
+      <PolicyDialog open={policyOpen === "terms"} onClose={() => setPolicyOpen(null)} kind="terms" />
+      <PolicyDialog open={policyOpen === "privacy"} onClose={() => setPolicyOpen(null)} kind="privacy" />
     </div>
   );
 }

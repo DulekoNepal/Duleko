@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Search as SearchIcon, SlidersHorizontal, Users } from "lucide-react";
@@ -42,9 +42,9 @@ export function SearchScreen() {
   // filter only applies once the user explicitly picks one.
   const district = filters.district;
 
-  function requestNearest() {
+  function requestNearest(silent = false) {
     if (!navigator.geolocation) {
-      toast(t("locationPermissionDenied"), "error");
+      if (!silent) toast(t("locationPermissionDenied"), "error");
       return;
     }
     setLocating(true);
@@ -56,11 +56,28 @@ export function SearchScreen() {
       },
       () => {
         setLocating(false);
-        toast(t("locationPermissionDenied"), "error");
+        // A silent attempt (arriving from a skill tile) should quietly fall
+        // back to relevance rather than nag with an error toast.
+        if (!silent) toast(t("locationPermissionDenied"), "error");
       },
       { enableHighAccuracy: true, timeout: 10_000 },
     );
   }
+
+  // Coming in from "browse by skill" on Home: try to sort nearest-first
+  // automatically, using an already-shared location or a quiet GPS prompt.
+  // If neither works out, results just stay in relevance order.
+  useEffect(() => {
+    if (!filters.skill || filters.sort) return;
+    if (profile?.lat != null && profile?.lng != null) {
+      setCoords({ lat: profile.lat, lng: profile.lng });
+      update({ sort: "nearest" });
+      return;
+    }
+    requestNearest(true);
+    // Only meant to run once, right when a skill-only link is opened.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.skill]);
 
   const results = useQuery({
     queryKey: ["workers", "search", filters, district, filters.sort === "nearest" ? coords : null],

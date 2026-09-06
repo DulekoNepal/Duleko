@@ -42,8 +42,8 @@ const strings = {
     "खाता पुष्टि गर्न इमेल हेर्नुहोस्, त्यसपछि लगइन गर्नुहोस्।",
   ],
   phoneAlreadyRegistered: [
-    "This phone number is already linked to another account.",
-    "यो फोन नम्बर पहिले नै अर्को खातासँग जोडिएको छ।",
+    "This phone number is already linked to another account. Please use a different number.",
+    "यो फोन नम्बर पहिले नै अर्को खातासँग जोडिएको छ। कृपया फरक नम्बर प्रयोग गर्नुहोस्।",
   ],
   emailAlreadyRegistered: [
     "An account already exists for this email. Try signing in instead, including with \"Continue with Google\".",
@@ -339,6 +339,62 @@ const strings = {
   setupHint: [
     "Copy .env.example to .env.local and add your Supabase URL and anon key, then restart the dev server.",
     ".env.example लाई .env.local बनाई Supabase URL र anon key राख्नुहोस्, अनि सर्भर पुनः चलाउनुहोस्।",
+  ],
+
+  // ---- profile extras (age / education / bio / alt phone) ------------
+  altPhone: ["Alternative phone", "वैकल्पिक फोन"],
+  bio: ["Short bio", "छोटो चिनारी"],
+  bioHint: ["A one-line headline, under 100 characters.", "१०० अक्षर भन्दा कम, एक लाइनको चिनारी।"],
+  age: ["Age", "उमेर"],
+  highestEducation: ["Highest education", "उच्च शिक्षा"],
+  yearsOld: ["{count} years old", "{count} वर्ष"],
+  upload: ["Upload", "अपलोड गर्नुहोस्"],
+  delete: ["Delete", "मेट्नुहोस्"],
+
+  // ---- certificates ----------------------------------------------------
+  certificates: ["Certificates", "प्रमाणपत्रहरू"],
+  certificatesHint: [
+    "Show proof of any training you've completed. Optional.",
+    "तपाईंले लिनुभएको तालिमको प्रमाण देखाउनुहोस्। वैकल्पिक।",
+  ],
+  certificateTitlePlaceholder: ["Certificate name", "प्रमाणपत्रको नाम"],
+
+  // ---- month calendar navigation ---------------------------------------
+  previousMonth: ["Previous month", "अघिल्लो महिना"],
+  nextMonth: ["Next month", "अर्को महिना"],
+
+  // ---- sign-up policy agreement -----------------------------------------
+  iAgreeToThe: ["I agree to Duleko's", "म दुलेकोको"],
+  termsOfService: ["Terms of Service", "सेवाका सर्तहरू"],
+  privacyPolicy: ["Privacy Policy", "गोपनीयता नीति"],
+  mustAgreeToPolicies: [
+    "Please agree to the Terms of Service and Privacy Policy to continue.",
+    "जारी राख्न कृपया सेवाका सर्तहरू र गोपनीयता नीतिमा सहमत हुनुहोस्।",
+  ],
+
+  // ---- welcome walkthrough ----------------------------------------------
+  skip: ["Skip", "छोड्नुहोस्"],
+  getStarted: ["Get started", "सुरु गर्नुहोस्"],
+  welcomeBack: ["Welcome back, {name}!", "फेरि स्वागत छ, {name}!"],
+  walkthroughTitle1: ["Find skilled people nearby", "नजिकैका सिपालु मानिस भेट्टाउनुहोस्"],
+  walkthroughBody1: [
+    "Browse by skill or search to find workers near you, sorted by distance.",
+    "सिप अनुसार हेर्नुहोस् वा खोज्नुहोस् — दूरी अनुसार क्रमबद्ध नजिकैका कामदार भेट्टाउनुहोस्।",
+  ],
+  walkthroughTitle2: ["Request work in a tap", "एक ट्यापमा काम अनुरोध गर्नुहोस्"],
+  walkthroughBody2: [
+    "Describe the job, pick a free date, and send a request — no need to pick a specific skill.",
+    "कामको विवरण दिनुहोस्, खाली मिति छान्नुहोस्, र अनुरोध पठाउनुहोस् — कुनै खास सिप छान्नु पर्दैन।",
+  ],
+  walkthroughTitle3: ["Add friends, stay connected", "साथी थप्नुहोस्, जोडिइरहनुहोस्"],
+  walkthroughBody3: [
+    "Add people you know as friends to chat and call them anytime, work or no work.",
+    "चिनेका मानिसलाई साथी बनाउनुहोस् र जुनसुकै बेला कुराकानी वा फोन गर्नुहोस्।",
+  ],
+  walkthroughTitle4: ["Set your rate and schedule", "आफ्नो मूल्य र समय तालिका मिलाउनुहोस्"],
+  walkthroughBody4: [
+    "List your skills with an optional rate, and mark the days you're busy on a full year calendar.",
+    "आफ्ना सिपहरू र वैकल्पिक मूल्य राख्नुहोस्, र पूरै वर्षको पात्रोमा व्यस्त दिनहरू चिन्ह लगाउनुहोस्।",
   ],
 } as const;
 
