@@ -12,6 +12,7 @@ import { WorkScreen } from "@/routes/WorkScreen";
 import { NotificationsScreen } from "@/routes/NotificationsScreen";
 import { ProfileScreen } from "@/routes/ProfileScreen";
 import { FriendsScreen } from "@/routes/FriendsScreen";
+import { ChatScreen } from "@/routes/ChatScreen";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -77,6 +78,12 @@ const friendsRoute = createRoute({
   component: FriendsScreen,
 });
 
+const chatRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/chat/$otherId",
+  component: ChatScreen,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   searchRoute,
@@ -85,6 +92,7 @@ const routeTree = rootRoute.addChildren([
   notificationsRoute,
   profileRoute,
   friendsRoute,
+  chatRoute,
 ]);
 
 export const router = createRouter({

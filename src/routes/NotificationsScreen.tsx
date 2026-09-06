@@ -21,6 +21,7 @@ const KIND_EMOJI: Record<string, string> = {
   review: "⭐",
   friend_request: "🧑‍🤝‍🧑",
   friend_accepted: "🤝",
+  message: "💬",
 };
 
 export function NotificationsScreen() {
@@ -107,6 +108,8 @@ export function NotificationsScreen() {
                     if (!n.is_read) readOne.mutate(n.id);
                     if (n.kind === "friend_request" || n.kind === "friend_accepted") {
                       navigate({ to: "/friends" });
+                    } else if (n.kind === "message" && n.related_profile_id) {
+                      navigate({ to: "/chat/$otherId", params: { otherId: n.related_profile_id } });
                     } else if (n.engagement_id) {
                       navigate({ to: "/work" });
                     }

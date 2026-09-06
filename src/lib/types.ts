@@ -124,12 +124,15 @@ export interface AppNotification {
     | "cancelled"
     | "review"
     | "friend_request"
-    | "friend_accepted";
+    | "friend_accepted"
+    | "message";
   title_en: string;
   title_ne: string;
   body_en: string | null;
   body_ne: string | null;
   engagement_id: string | null;
+  /** Set for kinds like "message" that link to a profile rather than an engagement. */
+  related_profile_id: string | null;
   actor_name: string | null;
   is_read: boolean;
   created_at: string;
