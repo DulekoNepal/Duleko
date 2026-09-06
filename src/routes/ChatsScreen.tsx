@@ -1,22 +1,30 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
+import { FriendsPanel } from "@/components/duleko/FriendsPanel";
 import { Avatar } from "@/components/ui/avatar";
 import { CardSkeleton, EmptyState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { listConversations } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
-import { relativeTime } from "@/lib/utils";
+import { cn, relativeTime } from "@/lib/utils";
 
-/** The "all my chats" list — a plain, simple inbox, like Messenger's home tab. */
+type Division = "chats" | "friends";
+
+/**
+ * The Chat tab: two separate divisions in one screen — Chats (all your
+ * conversations, Messenger-style) and Friends (requests + friends list) —
+ * switchable but never mixed into one combined list.
+ */
 export function ChatsScreen() {
   const { t, lang } = useI18n();
   const { profile } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [division, setDivision] = useState<Division>("chats");
 
   const conversations = useQuery({
     queryKey: ["conversations", profile?.id],
@@ -52,7 +60,30 @@ export function ChatsScreen() {
     <>
       <AppHeader title={t("chatsTitle")} />
       <PageContainer>
-        {conversations.isLoading ? (
+        <div
+          className="mb-4 inline-flex w-full rounded-full bg-slate-100 p-0.5 text-sm font-medium"
+          role="group"
+          aria-label={t("chatsTitle")}
+        >
+          {(["chats", "friends"] as const).map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setDivision(d)}
+              aria-pressed={division === d}
+              className={cn(
+                "flex-1 rounded-full py-2 transition-colors",
+                division === d ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
+              )}
+            >
+              {d === "chats" ? t("navChats") : t("myFriends")}
+            </button>
+          ))}
+        </div>
+
+        {division === "friends" ? (
+          <FriendsPanel />
+        ) : conversations.isLoading ? (
           <CardSkeleton count={4} />
         ) : items.length === 0 ? (
           <EmptyState icon={<MessageCircle className="h-8 w-8" />} title={t("noChatsYet")} hint={t("noChatsYetHint")} />
