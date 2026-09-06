@@ -1,6 +1,7 @@
 import { Briefcase, Calendar, Compass, LogIn, MapPin, Users } from "lucide-react";
 import { LanguageToggle } from "./Layout";
 import { useI18n, type StringKey } from "@/lib/i18n";
+import dulekoMark from "@/assets/duleko-mark.png";
 
 // Same four ideas as the in-app WelcomeWalkthrough — reusing that copy here
 // means a first-time visitor and a first-time member see the same story.
@@ -45,9 +46,11 @@ export function WelcomeChoiceScreen({
         </div>
 
         <div className="relative mx-auto mt-5 max-w-sm px-7 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-3xl font-bold text-brand-700 shadow-lg">
-            D
-          </div>
+          <img
+            src={dulekoMark}
+            alt=""
+            className="mx-auto mb-4 h-16 w-16 rounded-2xl object-cover shadow-lg"
+          />
           <h1 className="text-2xl font-bold text-white">{t("authWelcome")}</h1>
           <p className="mx-auto mt-2 max-w-xs text-sm text-brand-50/90">{t("authBlurb")}</p>
         </div>
