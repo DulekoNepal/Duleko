@@ -22,6 +22,7 @@ const strings = {
   required: ["Required", "अनिवार्य"],
   search: ["Search", "खोज्नुहोस्"],
   seeAll: ["See all", "सबै हेर्नुहोस्"],
+  showLess: ["Show less", "कम देखाउनुहोस्"],
   somethingWrong: ["Something went wrong.", "केही गडबड भयो।"],
   noInternet: ["Check your internet connection.", "इन्टरनेट जडान जाँच्नुहोस्।"],
   confirm: ["Confirm", "पुष्टि गर्नुहोस्"],
@@ -36,8 +37,6 @@ const strings = {
   password: ["Password", "पासवर्ड"],
   emailPlaceholder: ["you@example.com", "you@example.com"],
   passwordHint: ["At least 6 characters", "कम्तीमा ६ अक्षर"],
-  noAccount: ["New here? Create an account", "नयाँ हुनुहुन्छ? खाता खोल्नुहोस्"],
-  haveAccount: ["Already have an account? Sign in", "पहिले नै खाता छ? लगइन गर्नुहोस्"],
   checkEmail: [
     "Check your email to confirm your account, then sign in.",
     "खाता पुष्टि गर्न इमेल हेर्नुहोस्, त्यसपछि लगइन गर्नुहोस्।",
@@ -94,6 +93,7 @@ const strings = {
   addPhoto: ["Add photo", "फोटो थप्नुहोस्"],
   changePhoto: ["Change photo", "फोटो बदल्नुहोस्"],
   removePhoto: ["Remove photo", "फोटो हटाउनुहोस्"],
+  changeCover: ["Change cover photo", "कभर फोटो बदल्नुहोस्"],
   photoTooBig: ["Photo must be under 2 MB.", "फोटो २ MB भन्दा सानो हुनुपर्छ।"],
 
   // ---- home ----------------------------------------------------------
@@ -313,10 +313,6 @@ const strings = {
   english: ["English", "अंग्रेजी"],
   nepali: ["Nepali", "नेपाली"],
   availableForWork: ["Available for work", "काम गर्न उपलब्ध"],
-  availableForWorkHint: [
-    "Turn off when you are busy. You stay searchable but marked unavailable.",
-    "व्यस्त हुँदा बन्द गर्नुहोस्। खोजमा देखिनुहुन्छ तर उपलब्ध छैन भनेर देखिन्छ।",
-  ],
   markCalendar: ["Mark days you are busy", "व्यस्त दिन चिन्ह लगाउनुहोस्"],
   calendarHint: [
     "Tap a day to mark it busy. Confirmed jobs are marked for you.",
@@ -330,6 +326,7 @@ const strings = {
     "छोटो चिनारी थप्नुहोस् ताकि मानिसहरूले तपाईंले के काम गर्नुहुन्छ थाहा पाऊन्।",
   ],
   noSkillsYetProfile: ["No skills added yet.", "अझै कुनै सीप थपिएको छैन।"],
+  noAboutYetOther: ["Hasn't added a bio yet.", "अझै चिनारी थपेका छैनन्।"],
 
   // ---- nav -----------------------------------------------------------
   navHome: ["Home", "गृह"],

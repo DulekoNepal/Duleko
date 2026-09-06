@@ -1,7 +1,19 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Flag, MapPin, MessageCircle, Phone, UserCheck, UserPlus } from "lucide-react";
+import {
+  ArrowLeft,
+  Briefcase,
+  Calendar,
+  Flag,
+  Info,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Star,
+  UserCheck,
+  UserPlus,
+} from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
 import { RatingStars } from "@/components/duleko/Rating";
@@ -10,7 +22,7 @@ import { ReportDialog } from "@/components/duleko/ReportDialog";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardBody, SectionTitle } from "@/components/ui/card";
+import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card";
 import { EmptyState, FullPageLoader } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
@@ -28,6 +40,10 @@ import {
 } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
 import { addDays, formatMoney, formatNumber, locationLine, relativeTime, skillName, toDateKey, todayKey } from "@/lib/utils";
+
+/** Matches the Call/Chat buttons' look — a native `<a href="tel:">` can't use the <Button> component. */
+const secondaryActionClass =
+  "inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-50 px-4 text-sm font-medium text-brand-800 transition-colors hover:bg-brand-100";
 
 export function WorkerScreen() {
   const { t, lang } = useI18n();
@@ -121,29 +137,136 @@ export function WorkerScreen() {
       />
 
       <PageContainer>
-        <Card className="mb-4">
-          <CardBody>
-            <div className="flex gap-4">
-              <Avatar name={w.full_name} src={w.avatar_url} size={72} />
-              <div className="min-w-0 flex-1">
-                <h2 className="text-lg font-semibold text-slate-900">{w.full_name}</h2>
-                <RatingStars value={Number(w.rating)} count={w.rating_count} size={16} />
-                {place && (
-                  <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
-                    <MapPin className="h-4 w-4" aria-hidden />
-                    {place}
-                  </p>
-                )}
-                <div className="mt-2">
-                  <Badge tone={w.is_available ? "success" : "muted"}>
-                    {w.is_available ? t("availableNow") : t("notAvailable")}
-                  </Badge>
-                </div>
-              </div>
+        {/* ---- Identity card: cover photo behind an overlapping avatar, one flowing hierarchy - */}
+        <Card className="mb-4 overflow-hidden">
+          <div className="relative h-28 w-full bg-gradient-to-br from-slate-100 to-slate-200 sm:h-36">
+            {w.cover_url && (
+              <img src={w.cover_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            )}
+          </div>
+
+          <div className="px-5 pb-5">
+            <div className="relative z-10 -mt-14 inline-block">
+              <Avatar name={w.full_name} src={w.avatar_url} size={84} className="shadow-md ring-4 ring-white" />
             </div>
 
-            {(skills.data?.length ?? 0) > 0 && (
-              <div className="mt-4 flex flex-wrap gap-1.5">
+            <div className="mt-3 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="truncate text-xl font-bold text-slate-900">{w.full_name}</h1>
+                <div className="mt-1">
+                  <RatingStars value={Number(w.rating)} count={w.rating_count} />
+                </div>
+              </div>
+              <Badge tone={w.is_available ? "success" : "muted"} className="shrink-0">
+                {w.is_available ? t("availableNow") : t("notAvailable")}
+              </Badge>
+            </div>
+
+            {place && (
+              <p className="mt-2.5 flex items-center gap-1.5 text-sm text-slate-500">
+                <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+                {place}
+              </p>
+            )}
+          </div>
+        </Card>
+
+        {/* ---- Actions: one primary CTA, then friend + contact as secondary rows - */}
+        {!isMe && (
+          <div className="mb-4 space-y-2">
+            <Button size="lg" className="w-full" onClick={() => setRequestOpen(true)}>
+              {t("requestWork")}
+            </Button>
+
+            {!fs && (
+              <Button variant="outline" className="w-full" loading={addFriend.isPending} onClick={() => addFriend.mutate()}>
+                <UserPlus className="h-4 w-4" aria-hidden />
+                {t("addFriend")}
+              </Button>
+            )}
+            {fs?.status === "pending" && iAmRequester && (
+              <Button variant="outline" className="w-full" loading={removeFriend.isPending} onClick={() => removeFriend.mutate()}>
+                {t("friendRequestPending")} · {t("cancelRequest")}
+              </Button>
+            )}
+            {fs?.status === "pending" && !iAmRequester && (
+              <div className="flex gap-2">
+                <Button className="flex-1" loading={respond.isPending} onClick={() => respond.mutate(true)}>
+                  {t("acceptRequest")}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  loading={respond.isPending}
+                  onClick={() => respond.mutate(false)}
+                >
+                  {t("declineRequest")}
+                </Button>
+              </div>
+            )}
+            {fs?.status === "accepted" && (
+              <Button
+                variant="outline"
+                className="w-full"
+                loading={removeFriend.isPending}
+                onClick={() => {
+                  if (window.confirm(t("removeFriendConfirm"))) removeFriend.mutate();
+                }}
+              >
+                <UserCheck className="h-4 w-4" aria-hidden />
+                {t("alreadyFriends")}
+              </Button>
+            )}
+
+            {contact.data ? (
+              <div className="flex gap-2">
+                <a href={`tel:${contact.data}`} className={secondaryActionClass}>
+                  <Phone className="h-4 w-4" aria-hidden />
+                  {t("callNow")}
+                </a>
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: "/chat/$otherId", params: { otherId: w.id } })}
+                  className={secondaryActionClass}
+                >
+                  <MessageCircle className="h-4 w-4" aria-hidden />
+                  {t("chat")}
+                </button>
+              </div>
+            ) : (
+              <p className="text-center text-xs text-slate-500">{t("phoneHidden")}</p>
+            )}
+          </div>
+        )}
+
+        <Card className="mb-4">
+          <CardBody>
+            <SectionTitle>
+              <span className="inline-flex items-center gap-2">
+                <SectionIcon icon={Info} />
+                {t("about")}
+              </span>
+            </SectionTitle>
+            {w.about ? (
+              <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">{w.about}</p>
+            ) : (
+              <p className="text-sm italic text-slate-400">{t("noAboutYetOther")}</p>
+            )}
+          </CardBody>
+        </Card>
+
+        <Card className="mb-4">
+          <CardBody>
+            <SectionTitle>
+              <span className="inline-flex items-center gap-2">
+                <SectionIcon icon={Briefcase} />
+                {t("skills")}
+              </span>
+            </SectionTitle>
+            {(skills.data?.length ?? 0) === 0 ? (
+              <p className="text-sm italic text-slate-400">{t("noSkillsYetProfile")}</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
                 {(skills.data ?? []).map((s) => {
                   const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
                   const rate = s.rate_amount != null ? `${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}` : null;
@@ -157,83 +280,17 @@ export function WorkerScreen() {
                 })}
               </div>
             )}
-
-            {w.about && <p className="mt-4 whitespace-pre-line text-sm text-slate-700">{w.about}</p>}
-
-            {!isMe && (
-              <div className="mt-4 flex flex-col gap-2">
-                <Button size="lg" onClick={() => setRequestOpen(true)}>
-                  {t("requestWork")}
-                </Button>
-
-                {!fs && (
-                  <Button variant="outline" loading={addFriend.isPending} onClick={() => addFriend.mutate()}>
-                    <UserPlus className="h-4 w-4" aria-hidden />
-                    {t("addFriend")}
-                  </Button>
-                )}
-                {fs?.status === "pending" && iAmRequester && (
-                  <Button variant="outline" loading={removeFriend.isPending} onClick={() => removeFriend.mutate()}>
-                    {t("friendRequestPending")} · {t("cancelRequest")}
-                  </Button>
-                )}
-                {fs?.status === "pending" && !iAmRequester && (
-                  <div className="flex gap-2">
-                    <Button className="flex-1" loading={respond.isPending} onClick={() => respond.mutate(true)}>
-                      {t("acceptRequest")}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      loading={respond.isPending}
-                      onClick={() => respond.mutate(false)}
-                    >
-                      {t("declineRequest")}
-                    </Button>
-                  </div>
-                )}
-                {fs?.status === "accepted" && (
-                  <Button
-                    variant="outline"
-                    loading={removeFriend.isPending}
-                    onClick={() => {
-                      if (window.confirm(t("removeFriendConfirm"))) removeFriend.mutate();
-                    }}
-                  >
-                    <UserCheck className="h-4 w-4" aria-hidden />
-                    {t("alreadyFriends")}
-                  </Button>
-                )}
-
-                {contact.data ? (
-                  <div className="flex gap-2">
-                    <a
-                      href={`tel:${contact.data}`}
-                      className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-50 px-4 text-sm font-medium text-brand-800"
-                    >
-                      <Phone className="h-4 w-4" aria-hidden />
-                      {t("callNow")}
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => navigate({ to: "/chat/$otherId", params: { otherId: w.id } })}
-                      className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-50 px-4 text-sm font-medium text-brand-800"
-                    >
-                      <MessageCircle className="h-4 w-4" aria-hidden />
-                      {t("chat")}
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-center text-xs text-slate-500">{t("phoneHidden")}</p>
-                )}
-              </div>
-            )}
           </CardBody>
         </Card>
 
         <Card className="mb-4">
           <CardBody>
-            <SectionTitle>{t("availability")}</SectionTitle>
+            <SectionTitle>
+              <span className="inline-flex items-center gap-2">
+                <SectionIcon icon={Calendar} />
+                {t("availability")}
+              </span>
+            </SectionTitle>
             <AvailabilityCalendar days={availability.data ?? []} weeks={4} />
           </CardBody>
         </Card>
@@ -241,8 +298,11 @@ export function WorkerScreen() {
         <Card className="mb-4">
           <CardBody>
             <SectionTitle>
-              {t("reviews")}
-              {w.rating_count > 0 ? ` (${formatNumber(w.rating_count, lang)})` : ""}
+              <span className="inline-flex items-center gap-2">
+                <SectionIcon icon={Star} />
+                {t("reviews")}
+                {w.rating_count > 0 ? ` (${formatNumber(w.rating_count, lang)})` : ""}
+              </span>
             </SectionTitle>
             {(reviews.data?.length ?? 0) === 0 ? (
               <p className="py-3 text-sm text-slate-500">{t("noReviewsYet")}</p>

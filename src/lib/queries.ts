@@ -19,7 +19,7 @@ import type {
 } from "./types";
 
 const PROFILE_COLUMNS =
-  "id,user_id,full_name,about,avatar_url,province,district,municipality,ward,locality,is_available,language,rating,rating_count,lat,lng,location_shared_at,created_at,updated_at";
+  "id,user_id,full_name,about,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,language,rating,rating_count,lat,lng,location_shared_at,created_at,updated_at";
 
 const PARTY_COLUMNS = "id,full_name,avatar_url,rating,rating_count";
 
@@ -61,6 +61,7 @@ export interface ProfileInput {
   full_name: string;
   about?: string | null;
   avatar_url?: string | null;
+  cover_url?: string | null;
   province?: string | null;
   district?: string | null;
   municipality?: string | null;
@@ -611,6 +612,18 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
     .upload(path, file, { upsert: true, cacheControl: "3600", contentType: file.type });
   if (error) throw error;
   const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+/** Cover photo shown behind the avatar — workers use it to show a work-site photo. */
+export async function uploadCover(userId: string, file: File): Promise<string> {
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `${userId}/cover-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("covers")
+    .upload(path, file, { upsert: true, cacheControl: "3600", contentType: file.type });
+  if (error) throw error;
+  const { data } = supabase.storage.from("covers").getPublicUrl(path);
   return data.publicUrl;
 }
 

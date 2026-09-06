@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { cn, initials } from "@/lib/utils";
 
 export function Avatar({
@@ -12,13 +13,18 @@ export function Avatar({
   className?: string;
 }) {
   const dimension = { width: size, height: size };
-  if (src) {
+  // A dead or deleted photo URL should fall back to initials, not a broken-image icon.
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+
+  if (src && !failed) {
     return (
       <img
         src={src}
         alt=""
         loading="lazy"
         style={dimension}
+        onError={() => setFailed(true)}
         className={cn("shrink-0 rounded-full object-cover ring-1 ring-slate-200", className)}
       />
     );

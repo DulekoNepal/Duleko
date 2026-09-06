@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { LanguageToggle } from "@/components/duleko/Layout";
+import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { supabase, errorMessage } from "@/lib/supabase";
 
@@ -21,6 +23,7 @@ export function AuthScreen() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function onGoogle() {
     setGoogleBusy(true);
@@ -70,85 +73,130 @@ export function AuthScreen() {
     }
   }
 
+  function switchMode(next: "signin" | "signup") {
+    if (next === mode) return;
+    setMode(next);
+    setError(null);
+    setNotice(null);
+  }
+
   return (
-    <div className="flex min-h-dvh flex-col bg-gradient-to-b from-brand-50 to-slate-50">
+    <div className="flex min-h-dvh flex-col bg-slate-50">
       <div className="flex justify-end p-4">
         <LanguageToggle />
       </div>
 
-      <div className="mx-auto w-full max-w-sm px-5 pb-16 pt-4">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-700 text-2xl font-bold text-white">
+      <div className="mx-auto w-full max-w-sm flex-1 px-5 pb-10">
+        <div className="mb-7 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-700 text-2xl font-bold text-white shadow-sm">
             D
           </div>
           <h1 className="text-2xl font-bold text-slate-900">{t("authWelcome")}</h1>
-          <p className="mt-1 text-sm text-slate-600">{t("authBlurb")}</p>
+          <p className="mx-auto mt-1.5 max-w-xs text-sm text-slate-500">{t("authBlurb")}</p>
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-          <Field label={t("email")} error={form.formState.errors.email && t("required")}>
-            <Input
-              type="email"
-              autoComplete="email"
-              inputMode="email"
-              placeholder={t("emailPlaceholder")}
-              {...form.register("email")}
-            />
-          </Field>
-
-          <Field
-            label={t("password")}
-            hint={t("passwordHint")}
-            error={form.formState.errors.password && t("passwordHint")}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <div
+            className="mb-5 grid grid-cols-2 rounded-xl bg-slate-100 p-1 text-sm font-medium"
+            role="tablist"
+            aria-label="Sign in or create account"
           >
-            <Input
-              type="password"
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              {...form.register("password")}
-            />
-          </Field>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "signin"}
+              onClick={() => switchMode("signin")}
+              className={cn(
+                "rounded-lg py-2 transition-colors",
+                mode === "signin" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
+              )}
+            >
+              {t("signIn")}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "signup"}
+              onClick={() => switchMode("signup")}
+              className={cn(
+                "rounded-lg py-2 transition-colors",
+                mode === "signup" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
+              )}
+            >
+              {t("signUp")}
+            </button>
+          </div>
 
-          {error && (
-            <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-          )}
-          {notice && (
-            <p className="mb-3 rounded-xl bg-brand-50 px-3 py-2 text-sm text-brand-800">{notice}</p>
-          )}
+          <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+            <Field label={t("email")} error={form.formState.errors.email && t("required")}>
+              <Input
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                placeholder={t("emailPlaceholder")}
+                {...form.register("email")}
+              />
+            </Field>
 
-          <Button type="submit" size="lg" className="w-full" loading={busy}>
-            {mode === "signin" ? t("signIn") : t("signUp")}
+            <Field
+              label={t("password")}
+              hint={mode === "signup" ? t("passwordHint") : undefined}
+              error={form.formState.errors.password && t("passwordHint")}
+            >
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                  className="pr-11"
+                  {...form.register("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+                </button>
+              </div>
+            </Field>
+
+            {error && (
+              <p className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-700">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                {error}
+              </p>
+            )}
+            {notice && (
+              <p className="mb-4 flex items-start gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-sm text-brand-800">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                {notice}
+              </p>
+            )}
+
+            <Button type="submit" size="lg" className="w-full" loading={busy}>
+              {mode === "signin" ? t("signIn") : t("signUp")}
+            </Button>
+          </form>
+
+          <div className="my-5 flex items-center gap-3 text-xs uppercase text-slate-400">
+            <span className="h-px flex-1 bg-slate-200" />
+            {t("orDivider")}
+            <span className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="w-full"
+            loading={googleBusy}
+            onClick={onGoogle}
+          >
+            <GoogleIcon className="h-4 w-4" aria-hidden />
+            {t("continueWithGoogle")}
           </Button>
-        </form>
-
-        <div className="my-4 flex items-center gap-3 text-xs uppercase text-slate-400">
-          <span className="h-px flex-1 bg-slate-200" />
-          {t("orDivider")}
-          <span className="h-px flex-1 bg-slate-200" />
         </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          className="w-full"
-          loading={googleBusy}
-          onClick={onGoogle}
-        >
-          <GoogleIcon className="h-4 w-4" aria-hidden />
-          {t("continueWithGoogle")}
-        </Button>
-
-        <button
-          type="button"
-          className="mt-5 w-full text-center text-sm font-medium text-brand-700"
-          onClick={() => {
-            setMode(mode === "signin" ? "signup" : "signin");
-            setError(null);
-            setNotice(null);
-          }}
-        >
-          {mode === "signin" ? t("noAccount") : t("haveAccount")}
-        </button>
       </div>
     </div>
   );

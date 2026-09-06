@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Camera } from "lucide-react";
+import { ArrowLeft, Briefcase, Camera, Check, MapPin, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardBody, SectionIcon } from "@/components/ui/card";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Avatar } from "@/components/ui/avatar";
 import { LanguageToggle } from "@/components/duleko/Layout";
@@ -12,9 +13,10 @@ import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import { createProfile, listSkills, saveContact, setUserSkills, uploadAvatar } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import { isValidNepaliPhone, normalisePhone } from "@/lib/utils";
+import { cn, isValidNepaliPhone, normalisePhone } from "@/lib/utils";
 
 const TOTAL_STEPS = 3;
+const STEP_ICONS = [User, MapPin, Briefcase] as const;
 
 export function OnboardingScreen() {
   const { t, lang } = useI18n();
@@ -132,109 +134,132 @@ export function OnboardingScreen() {
           </div>
           <LanguageToggle />
         </div>
-        <div className="h-1 bg-slate-100">
-          <div
-            className="h-1 bg-brand-600 transition-all"
-            style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
-          />
+
+        {/* Step dots — a clearer sense of progress and what's left than a bare bar. */}
+        <div className="mx-auto flex max-w-lg items-center gap-1.5 px-4 pb-3">
+          {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
+            const n = i + 1;
+            const state = n < step ? "done" : n === step ? "current" : "upcoming";
+            return (
+              <span
+                key={n}
+                aria-hidden
+                className={cn(
+                  "h-1.5 flex-1 rounded-full transition-colors",
+                  state === "upcoming" ? "bg-slate-100" : "bg-brand-600",
+                )}
+              />
+            );
+          })}
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-lg px-4 py-5">
-        {step === 1 && (
-          <>
-            <div className="mb-5 flex items-center gap-4">
-              <Avatar name={fullName || "?"} src={avatarPreview} size={72} />
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-700">
-                <Camera className="h-4 w-4" aria-hidden />
-                {avatarPreview ? t("changePhoto") : t("addPhoto")}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={(e) => onPickPhoto(e.target.files?.[0])}
-                />
-              </label>
+        <Card>
+          <CardBody>
+            <div className="mb-5 flex items-center gap-2">
+              <SectionIcon icon={STEP_ICONS[step - 1]} />
+              <h2 className="text-base font-semibold text-slate-900">
+                {step === 1 ? t("basicInfo") : step === 2 ? t("whereYouAre") : t("yourSkills")}
+              </h2>
             </div>
 
-            <Field label={t("yourName")} error={errors.fullName}>
-              <Input
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder={t("namePlaceholder")}
-                autoComplete="name"
-                maxLength={80}
-              />
-            </Field>
+            {step === 1 && (
+              <>
+                <div className="mb-6 flex justify-center">
+                  <div className="relative">
+                    <Avatar name={fullName || "?"} src={avatarPreview} size={88} className="shadow-md ring-4 ring-white" />
+                    <label className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow ring-1 ring-slate-200 transition-transform hover:scale-105">
+                      <Camera className="h-4 w-4" aria-hidden />
+                      <span className="sr-only">{avatarPreview ? t("changePhoto") : t("addPhoto")}</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={(e) => onPickPhoto(e.target.files?.[0])}
+                      />
+                    </label>
+                  </div>
+                </div>
 
-            <Field label={t("phoneNumber")} hint={t("phoneHint")} error={errors.phone}>
-              <Input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="98XXXXXXXX"
-                inputMode="tel"
-                autoComplete="tel"
-              />
-            </Field>
-
-            <Field label={`${t("aboutYou")} (${t("optional")})`}>
-              <Textarea
-                value={about}
-                onChange={(e) => setAbout(e.target.value)}
-                placeholder={t("aboutPlaceholder")}
-                maxLength={600}
-                rows={3}
-              />
-            </Field>
-          </>
-        )}
-
-        {step === 2 && (
-          <>
-            <p className="mb-4 text-sm text-slate-600">{t("whereYouAre")}</p>
-            <LocationFields value={location} onChange={setLocation} />
-            {errors.district && <p className="-mt-2 mb-3 text-sm text-red-600">{errors.district}</p>}
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <h2 className="text-base font-semibold text-slate-900">{t("yourSkills")}</h2>
-            <p className="mb-4 mt-1 text-sm text-slate-500">
-              {t("skillsHint")} {t("skillsNoneHint")}
-            </p>
-            <SkillPicker
-              skills={skills.data ?? []}
-              selected={skillIds}
-              onToggle={(id) =>
-                setSkillIds((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]))
-              }
-            />
-
-            {skillIds.includes("other") && (
-              <div className="mt-4 space-y-3 rounded-xl border border-slate-200 p-3">
-                <Field label={t("othersSkillLabel")}>
+                <Field label={t("yourName")} error={errors.fullName}>
                   <Input
-                    value={otherLabel}
-                    onChange={(e) => setOtherLabel(e.target.value)}
-                    placeholder={t("othersSkillPlaceholder")}
-                    maxLength={60}
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder={t("namePlaceholder")}
+                    autoComplete="name"
+                    maxLength={80}
                   />
                 </Field>
-                <Field label={t("othersSkillNoteLabel")}>
+
+                <Field label={t("phoneNumber")} hint={t("phoneHint")} error={errors.phone}>
                   <Input
-                    value={otherNote}
-                    onChange={(e) => setOtherNote(e.target.value)}
-                    placeholder={t("othersSkillNotePlaceholder")}
-                    maxLength={300}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="98XXXXXXXX"
+                    inputMode="tel"
+                    autoComplete="tel"
                   />
                 </Field>
-              </div>
+
+                <Field label={`${t("aboutYou")} (${t("optional")})`} className="mb-0">
+                  <Textarea
+                    value={about}
+                    onChange={(e) => setAbout(e.target.value)}
+                    placeholder={t("aboutPlaceholder")}
+                    maxLength={600}
+                    rows={3}
+                  />
+                </Field>
+              </>
             )}
-          </>
-        )}
 
-        <div className="mt-6">
+            {step === 2 && (
+              <>
+                <LocationFields value={location} onChange={setLocation} />
+                {errors.district && <p className="-mt-2 mb-3 text-sm text-red-600">{errors.district}</p>}
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <p className="-mt-2 mb-4 text-sm text-slate-500">
+                  {t("skillsHint")} {t("skillsNoneHint")}
+                </p>
+                <SkillPicker
+                  skills={skills.data ?? []}
+                  selected={skillIds}
+                  onToggle={(id) =>
+                    setSkillIds((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]))
+                  }
+                />
+
+                {skillIds.includes("other") && (
+                  <div className="mt-4 space-y-3 rounded-xl border border-slate-200 p-3">
+                    <Field label={t("othersSkillLabel")}>
+                      <Input
+                        value={otherLabel}
+                        onChange={(e) => setOtherLabel(e.target.value)}
+                        placeholder={t("othersSkillPlaceholder")}
+                        maxLength={60}
+                      />
+                    </Field>
+                    <Field label={t("othersSkillNoteLabel")} className="mb-0">
+                      <Input
+                        value={otherNote}
+                        onChange={(e) => setOtherNote(e.target.value)}
+                        placeholder={t("othersSkillNotePlaceholder")}
+                        maxLength={300}
+                      />
+                    </Field>
+                  </div>
+                )}
+              </>
+            )}
+          </CardBody>
+        </Card>
+
+        <div className="mt-5">
           {step < TOTAL_STEPS ? (
             <Button
               size="lg"
@@ -247,6 +272,7 @@ export function OnboardingScreen() {
             </Button>
           ) : (
             <Button size="lg" className="w-full" loading={save.isPending} onClick={() => save.mutate()}>
+              <Check className="h-4 w-4" aria-hidden />
               {t("finishSetup")}
             </Button>
           )}

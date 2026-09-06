@@ -39,16 +39,19 @@ export function AppHeader({
   subtitle,
   right,
   back,
+  leading,
 }: {
   title: string;
   subtitle?: string;
   right?: React.ReactNode;
   back?: React.ReactNode;
+  leading?: React.ReactNode;
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
         {back}
+        {leading}
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-lg font-semibold text-slate-900">{title}</h1>
           {subtitle && <p className="truncate text-xs text-slate-500">{subtitle}</p>}

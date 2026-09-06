@@ -22,7 +22,7 @@ import { LocationFields, type LocationValue } from "@/components/duleko/Location
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardBody, SectionTitle } from "@/components/ui/card";
+import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card";
 import { Collapsible } from "@/components/ui/collapsible";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
@@ -41,6 +41,7 @@ import {
   shareLocation,
   updateProfile,
   uploadAvatar,
+  uploadCover,
   getUserSkills,
   type UserSkillInput,
 } from "@/lib/queries";
@@ -69,15 +70,6 @@ interface SkillDraft {
 
 const emptyDraft: SkillDraft = { rate_amount: "", rate_unit: "", custom_label: "", custom_note: "" };
 
-/** A small labelled icon badge used to give every section a consistent, scannable identity. */
-function SectionIcon({ icon: Icon }: { icon: React.ComponentType<{ className?: string }> }) {
-  return (
-    <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-      <Icon className="h-4 w-4" aria-hidden />
-    </span>
-  );
-}
-
 export function ProfileScreen() {
   const { t, lang, setLang } = useI18n();
   const { profile, user, refreshProfile, signOut } = useSession();
@@ -98,6 +90,7 @@ export function ProfileScreen() {
   const [skillIds, setSkillIds] = useState<string[]>([]);
   const [skillDrafts, setSkillDrafts] = useState<Record<string, SkillDraft>>({});
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
   const allSkills = useQuery({ queryKey: ["skills"], queryFn: listSkills, staleTime: 30 * 60_000 });
   const mySkills = useQuery({
@@ -227,6 +220,19 @@ export function ProfileScreen() {
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
+  const changeCover = useMutation({
+    mutationFn: async (file: File) => {
+      if (!user || !profile) return;
+      const url = await uploadCover(user.id, file);
+      await updateProfile(profile.id, { cover_url: url });
+    },
+    onSuccess: async () => {
+      await refreshProfile();
+      toast(t("profileSaved"));
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
   const shareLoc = useMutation({
     mutationFn: () =>
       new Promise<void>((resolve, reject) => {
@@ -271,18 +277,48 @@ export function ProfileScreen() {
               type="button"
               onClick={() => setEditing(true)}
               aria-label={t("editProfile")}
-              className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:border-brand-300 hover:text-brand-700"
+              className="absolute right-3 top-3 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:border-brand-300 hover:text-brand-700"
             >
               <Pencil className="h-4 w-4" aria-hidden />
             </button>
           )}
 
-          <div className="px-5 pb-5 pt-6 text-center">
-            <div className="relative mx-auto w-fit">
+          {/* Cover photo — a work-site / professional shot behind the avatar. */}
+          <div className="relative h-32 w-full bg-gradient-to-br from-slate-100 to-slate-200 sm:h-40">
+            {(coverPreview ?? profile.cover_url) && (
+              <img
+                src={coverPreview ?? profile.cover_url ?? undefined}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )}
+            <label className="absolute bottom-2.5 right-2.5 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-slate-700 shadow ring-1 ring-slate-200 backdrop-blur transition-transform hover:scale-105">
+              <Camera className="h-4 w-4" aria-hidden />
+              <span className="sr-only">{t("changeCover")}</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 4 * 1024 * 1024) {
+                    toast(t("photoTooBig"), "error");
+                    return;
+                  }
+                  setCoverPreview(URL.createObjectURL(file));
+                  changeCover.mutate(file);
+                }}
+              />
+            </label>
+          </div>
+
+          <div className="px-5 pb-5">
+            <div className="relative z-10 -mt-14 inline-block">
               <Avatar
                 name={profile.full_name}
                 src={avatarPreview ?? profile.avatar_url}
-                size={88}
+                size={84}
                 className="shadow-md ring-4 ring-white"
               />
               <label className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow ring-1 ring-slate-200 transition-transform hover:scale-105">
@@ -307,13 +343,13 @@ export function ProfileScreen() {
             </div>
 
             <h1 className="mt-3 truncate text-xl font-bold text-slate-900">{profile.full_name}</h1>
-            <div className="mt-1.5 flex justify-center">
+            <div className="mt-1.5">
               <RatingStars value={Number(profile.rating)} count={profile.rating_count} />
             </div>
           </div>
 
-          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-3 text-center">
-            <div className="flex items-center justify-center gap-2.5">
+          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-3">
+            <div className="flex items-center gap-2.5">
               <span
                 className={cn(
                   "h-2 w-2 shrink-0 rounded-full",
@@ -330,7 +366,6 @@ export function ProfileScreen() {
                 aria-label={t("availableForWork")}
               />
             </div>
-            <p className="mx-auto mt-1.5 max-w-xs text-xs text-slate-500">{t("availableForWorkHint")}</p>
           </div>
 
           <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100">
