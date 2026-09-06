@@ -103,6 +103,9 @@ export function ChatScreen() {
       .then(() => {
         queryClient.invalidateQueries({ queryKey: ["unread-messages", me.id] });
         queryClient.invalidateQueries({ queryKey: ["messages", pairKey] });
+        // The Chats list's unread bolding is stale otherwise — it isn't
+        // watching this thread directly.
+        queryClient.invalidateQueries({ queryKey: ["conversations", me.id] });
       })
       .catch(() => {
         // Best-effort — a failed read-receipt shouldn't block the chat itself.

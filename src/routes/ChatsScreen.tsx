@@ -94,21 +94,32 @@ export function ChatsScreen() {
                 <button
                   type="button"
                   onClick={() => navigate({ to: "/chat/$otherId", params: { otherId: c.otherProfileId } })}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50"
+                  className={cn(
+                    "flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50",
+                    c.unread && "bg-brand-50/60",
+                  )}
                 >
                   <Avatar name={c.otherName} src={c.otherAvatarUrl} size={44} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
-                      <span className="truncate font-medium text-slate-900">{c.otherName}</span>
+                      <span className={cn("truncate", c.unread ? "font-bold text-slate-950" : "font-medium text-slate-900")}>
+                        {c.otherName}
+                      </span>
                       <span className="shrink-0 text-xs text-slate-400">
                         {relativeTime(c.lastCreatedAt, lang)}
                       </span>
                     </span>
-                    <span className="mt-0.5 block truncate text-sm text-slate-500">
+                    <span
+                      className={cn(
+                        "mt-0.5 block truncate text-sm",
+                        c.unread ? "font-bold text-slate-900" : "text-slate-500",
+                      )}
+                    >
                       {c.lastSenderProfileId === profile?.id ? t("youPrefix") : ""}
                       {c.lastBody}
                     </span>
                   </span>
+                  {c.unread && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-600" aria-hidden />}
                 </button>
               </li>
             ))}

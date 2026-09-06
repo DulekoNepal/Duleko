@@ -187,4 +187,6 @@ export interface ConversationSummary {
   lastBody: string;
   lastCreatedAt: string;
   lastSenderProfileId: string;
+  /** True when the other person sent the last message and I haven't opened the thread since. */
+  unread: boolean;
 }
