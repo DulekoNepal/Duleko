@@ -43,6 +43,7 @@ export function ChatScreen() {
   const { otherId } = useParams({ from: "/chat/$otherId" });
   const [draft, setDraft] = useState("");
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
+  const [confirmUnsendId, setConfirmUnsendId] = useState<string | null>(null);
   const [otherTyping, setOtherTyping] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -133,7 +134,10 @@ export function ChatScreen() {
     mutationFn: (messageId: string) => unsendMessage(messageId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["messages", pairKey] }),
     onError: (error) => toast(errorMessage(error), "error"),
-    onSettled: () => setActiveMessageId(null),
+    onSettled: () => {
+      setActiveMessageId(null);
+      setConfirmUnsendId(null);
+    },
   });
 
   function broadcastTyping(typing: boolean) {
@@ -208,7 +212,10 @@ export function ChatScreen() {
                 <button
                   type="button"
                   disabled={removed}
-                  onClick={() => setActiveMessageId(active ? null : m.id)}
+                  onClick={() => {
+                    setActiveMessageId(active ? null : m.id);
+                    setConfirmUnsendId(null);
+                  }}
                   className={cn(
                     "max-w-[80%] rounded-2xl px-3.5 py-2 text-left text-sm",
                     removed
@@ -239,7 +246,7 @@ export function ChatScreen() {
                   </div>
                 )}
 
-                {active && !removed && (
+                {active && !removed && confirmUnsendId !== m.id && (
                   <div className="mt-1 flex flex-wrap items-center gap-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
                     {REACTION_EMOJIS.map((emoji) => (
                       <button
@@ -260,15 +267,34 @@ export function ChatScreen() {
                     {mine && (
                       <button
                         type="button"
-                        disabled={unsend.isPending}
-                        onClick={() => {
-                          if (window.confirm(t("unsendConfirm"))) unsend.mutate(m.id);
-                        }}
-                        className="ml-1 rounded-lg px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        onClick={() => setConfirmUnsendId(m.id)}
+                        className="ml-1 rounded-lg px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
                       >
                         {t("unsend")}
                       </button>
                     )}
+                  </div>
+                )}
+
+                {/* In-app confirmation — no native browser confirm() dialog. */}
+                {active && confirmUnsendId === m.id && (
+                  <div className="mt-1 flex flex-wrap items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-2 shadow-sm">
+                    <span className="text-xs text-red-800">{t("unsendConfirm")}</span>
+                    <button
+                      type="button"
+                      disabled={unsend.isPending}
+                      onClick={() => unsend.mutate(m.id)}
+                      className="rounded-lg bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {t("unsend")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmUnsendId(null)}
+                      className="rounded-lg px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                    >
+                      {t("cancel")}
+                    </button>
                   </div>
                 )}
               </div>
@@ -294,6 +320,12 @@ export function ChatScreen() {
             autoFocus
             value={draft}
             onChange={(e) => onDraftChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submit();
+              }
+            }}
             placeholder={t("chatPlaceholder")}
             maxLength={1000}
             className="h-11 flex-1 rounded-xl border border-slate-300 bg-white px-3.5 text-slate-900 placeholder:text-slate-400 focus:border-brand-600 focus:outline focus:outline-2 focus:outline-offset-0 focus:outline-brand-600/30"
