@@ -395,7 +395,13 @@ export function WorkerScreen() {
                 {t("skills")}
               </span>
             </SectionTitle>
-            {(skills.data?.length ?? 0) === 0 ? (
+            {/* These can only be fetched once the handle in the URL has
+                resolved to a profile, so there is a real gap before they
+                arrive - say "loading" rather than claiming there is
+                nothing here. */}
+            {skills.isPending ? (
+              <p className="text-sm text-slate-400">{t("loading")}</p>
+            ) : (skills.data?.length ?? 0) === 0 ? (
               <p className="text-sm italic text-slate-400">{t("noSkillsYetProfile")}</p>
             ) : (
               <div className="flex flex-wrap gap-1.5">
@@ -424,7 +430,9 @@ export function WorkerScreen() {
                 {w.rating_count > 0 ? ` (${formatNumber(w.rating_count, lang)})` : ""}
               </span>
             </SectionTitle>
-            {(reviews.data?.length ?? 0) === 0 ? (
+            {reviews.isPending ? (
+              <p className="py-3 text-sm text-slate-400">{t("loading")}</p>
+            ) : (reviews.data?.length ?? 0) === 0 ? (
               <p className="py-3 text-sm text-slate-500">{t("noReviewsYet")}</p>
             ) : (
               <ul className="divide-y divide-slate-100">
