@@ -18,6 +18,7 @@ export function NegotiationPanel({
   myProfileId,
   otherName,
   otherAvatarUrl,
+  otherProfileId,
   currentAmount,
   canAccept,
   onAccept,
@@ -29,6 +30,7 @@ export function NegotiationPanel({
   myProfileId: string;
   otherName: string;
   otherAvatarUrl: string | null;
+  otherProfileId: string;
   currentAmount: number | null;
   /** Only the worker can finalize a job by accepting a price. */
   canAccept: boolean;
@@ -74,7 +76,7 @@ export function NegotiationPanel({
 
       <div className="px-3.5 py-3">
         <div className="flex items-center gap-3">
-          <Avatar name={otherName} src={otherAvatarUrl} size={32} />
+          <Avatar name={otherName} src={otherAvatarUrl} size={32} profileId={otherProfileId} />
           <div className="min-w-0">
             <p className="truncate text-xs text-slate-500">
               {latestIsMine ? t("yourOffer") : t("offerFrom", { name: otherName })}

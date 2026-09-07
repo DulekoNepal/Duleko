@@ -61,7 +61,7 @@ export function FriendsPanel() {
             <ul className="divide-y divide-slate-100">
               {(requests.data ?? []).map((r) => (
                 <li key={r.id} className="flex items-center gap-3 py-2.5">
-                  <Avatar name={r.other.full_name} src={r.other.avatar_url} size={40} />
+                  <Avatar name={r.other.full_name} src={r.other.avatar_url} size={40} profileId={r.other.id} />
                   <span className="flex-1 truncate text-sm font-medium text-slate-800">
                     {r.other.full_name}
                   </span>

@@ -394,7 +394,12 @@ export function WorkerScreen() {
                 {(reviews.data ?? []).map((r) => (
                   <li key={r.id} className="py-3">
                     <div className="flex items-center gap-2">
-                      <Avatar name={r.reviewer?.full_name ?? "?"} src={r.reviewer?.avatar_url} size={28} />
+                      <Avatar
+                        name={r.reviewer?.full_name ?? "?"}
+                        src={r.reviewer?.avatar_url}
+                        size={28}
+                        profileId={r.reviewer?.id}
+                      />
                       <span className="text-sm font-medium text-slate-800">
                         {r.reviewer?.full_name ?? ""}
                       </span>

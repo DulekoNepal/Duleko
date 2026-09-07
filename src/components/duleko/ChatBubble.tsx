@@ -27,6 +27,8 @@ interface ChatBubbleProps {
   myProfileId: string;
   otherName: string;
   otherAvatarUrl: string | null;
+  /** Whose profile the avatar beside their messages opens. */
+  otherProfileId: string;
   /** First of a run from this sender - gets the full top corner. */
   firstInRun: boolean;
   /** Last of a run - gets the timestamp, and their avatar. */
@@ -61,6 +63,7 @@ export function ChatBubble({
   myProfileId,
   otherName,
   otherAvatarUrl,
+  otherProfileId,
   firstInRun,
   lastInRun,
   panel,
@@ -224,7 +227,7 @@ export function ChatBubble({
             Messenger; earlier bubbles keep the same indent with a spacer. */}
         {!mine &&
           (lastInRun ? (
-            <Avatar name={otherName} src={otherAvatarUrl} size={28} />
+            <Avatar name={otherName} src={otherAvatarUrl} size={28} profileId={otherProfileId} />
           ) : (
             <span className="h-7 w-7 shrink-0" aria-hidden />
           ))}
