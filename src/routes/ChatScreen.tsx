@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { ArrowLeft, Check, CornerUpLeft, Pencil, Send, X } from "lucide-react";
+import { ArrowLeft, ArrowDown, Check, CornerUpLeft, Pencil, Send, X } from "lucide-react";
 import { AppHeader } from "@/components/duleko/Layout";
 import { ChatBubble, type BubblePanel } from "@/components/duleko/ChatBubble";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
@@ -24,13 +24,16 @@ import {
   setReaction,
   unsendMessage,
 } from "@/lib/queries";
+import { usePresence } from "@/hooks/use-presence";
 import { supabase, errorMessage } from "@/lib/supabase";
-import { cn, relativeTime } from "@/lib/utils";
+import { cn, formatDayLabel, relativeTime, sameMinuteWindow, toDateKey } from "@/lib/utils";
 import type { ChatMessage } from "@/lib/types";
 
 const TYPING_BROADCAST_THROTTLE_MS = 1500;
 const TYPING_STOP_AFTER_MS = 3000;
 const HIGHLIGHT_MS = 1600;
+/** Within this many pixels of the end counts as "reading the latest". */
+const NEAR_BOTTOM_PX = 80;
 
 /**
  * A full-page direct-message thread with one other profile: live typing,
@@ -49,16 +52,21 @@ export function ChatScreen() {
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [editing, setEditing] = useState<ChatMessage | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [atBottom, setAtBottom] = useState(true);
+  const [unreadBelow, setUnreadBelow] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastTypingSentAt = useRef(0);
   const typingStopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const landedOn = useRef<string | null>(null);
+  const seenCount = useRef(0);
 
   const other = useQuery({ queryKey: ["profile", otherId], queryFn: () => getProfile(otherId) });
 
   const typingFrom = useTypingFrom(me?.id);
   const otherTyping = typingFrom.has(otherId);
   const notifyTyping = useTypingSender(me?.id, otherId);
+  const onlineMap = usePresence([otherId]);
 
   const pairKey = me ? chatPairKey(me.id, otherId) : null;
 
@@ -90,9 +98,45 @@ export function ChatScreen() {
     };
   }, [pairKey, queryClient]);
 
+  function scrollToEnd(behavior: ScrollBehavior = "auto") {
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior });
+    setUnreadBelow(false);
+  }
+
+  // Opening a thread lands on the newest message, before the browser
+  // paints, so there is no visible jump from the top. The second pass on
+  // the next frame catches late layout - fonts, and the reply stubs that
+  // change a bubble's height once they render.
+  useLayoutEffect(() => {
+    if (!pairKey || !messages.data || landedOn.current === pairKey) return;
+    landedOn.current = pairKey;
+    seenCount.current = messages.data.length;
+    scrollToEnd("auto");
+    requestAnimationFrame(() => scrollToEnd("auto"));
+  }, [pairKey, messages.data]);
+
+  // Afterwards, only follow new messages when the person is already at the
+  // end - otherwise scrolling back through history would keep yanking them
+  // down. Anything that arrives while they are up there raises the pill.
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
-  }, [messages.data]);
+    const items = messages.data;
+    if (!items || landedOn.current !== pairKey) return;
+    if (items.length <= seenCount.current) {
+      seenCount.current = items.length;
+      return;
+    }
+    const mineArrived = items[items.length - 1]?.sender_profile_id === me?.id;
+    seenCount.current = items.length;
+    if (atBottom || mineArrived) scrollToEnd("smooth");
+    else setUnreadBelow(true);
+  }, [messages.data, pairKey, atBottom, me?.id]);
+
+  // Keep the typing bubble in view too, when it appears at the end.
+  useEffect(() => {
+    if (otherTyping && atBottom) scrollToEnd("smooth");
+  }, [otherTyping, atBottom]);
 
   // Opening this thread marks the other person's messages seen, and clears
   // this sender's contribution to the Chats badge.
@@ -161,6 +205,25 @@ export function ChatScreen() {
     setActivePanel(null);
   }
 
+  // With no ⋯ button to toggle, tapping anywhere else (or pressing Escape)
+  // is the only way out of an open message menu.
+  useEffect(() => {
+    if (!activePanel) return;
+    function onPointerDownAnywhere(e: PointerEvent) {
+      if ((e.target as HTMLElement | null)?.closest("[data-chat-popover]")) return;
+      closePanels();
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") closePanels();
+    }
+    document.addEventListener("pointerdown", onPointerDownAnywhere, true);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDownAnywhere, true);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [activePanel]);
+
   function onDraftChange(value: string) {
     setDraft(value);
     // Editing an old message shouldn't read as "typing" to the other side.
@@ -225,75 +288,160 @@ export function ChatScreen() {
   const items = messages.data ?? [];
   const lastMessage = items[items.length - 1];
   const showSeen = lastMessage && lastMessage.sender_profile_id === me.id && Boolean(lastMessage.read_at);
+  const otherName = other.data?.full_name ?? "";
+  const isOnline = Boolean(onlineMap[otherId]);
+
+  // A run is consecutive messages from one person within a few minutes:
+  // they stack tightly and share a single timestamp and avatar.
+  const rows = items.map((m, i) => {
+    const prev = items[i - 1];
+    const next = items[i + 1];
+    const newDay = !prev || toDateKey(new Date(prev.created_at)) !== toDateKey(new Date(m.created_at));
+    // A reply always starts its own run: grouped against the message above,
+    // its quote stub would look like it belonged to that one instead.
+    const joinsPrev =
+      !newDay &&
+      !m.reply_to_id &&
+      prev?.sender_profile_id === m.sender_profile_id &&
+      sameMinuteWindow(prev.created_at, m.created_at);
+    const joinsNext =
+      next &&
+      !next.reply_to_id &&
+      toDateKey(new Date(next.created_at)) === toDateKey(new Date(m.created_at)) &&
+      next.sender_profile_id === m.sender_profile_id &&
+      sameMinuteWindow(m.created_at, next.created_at);
+    return { m, newDay, firstInRun: !joinsPrev, lastInRun: !joinsNext };
+  });
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    // h-dvh, not min-h-dvh: the thread itself has to be the scroller, and a
+    // wrapper that can grow past the viewport would hand scrolling to the
+    // page instead - which silently breaks opening on the newest message.
+    // The tab bar hides itself on /chat/, so the full height is ours.
+    <div className="flex h-dvh flex-col overflow-hidden bg-white">
       <AppHeader
-        title={other.data?.full_name ?? ""}
+        title={otherName}
         subtitle={
-          otherTyping
-            ? `${other.data?.full_name ?? ""} ${t("typingIndicator")}`
-            : other.data?.is_official
-              ? `✓ ${t("officialAccount")}`
-              : undefined
+          otherTyping ? (
+            <span className="text-brand-700">{t("typingIndicator")}</span>
+          ) : isOnline ? (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden />
+              {t("online")}
+            </span>
+          ) : other.data?.is_official ? (
+            `✓ ${t("officialAccount")}`
+          ) : undefined
         }
         back={
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+            className="rounded-lg p-1.5 text-slate-500 transition-colors duration-200 hover:bg-slate-100"
             aria-label={t("back")}
           >
             <ArrowLeft className="h-5 w-5" aria-hidden />
           </button>
         }
-        right={<Avatar name={other.data?.full_name ?? "?"} src={other.data?.avatar_url} size={32} />}
+        leading={<Avatar name={otherName || "?"} src={other.data?.avatar_url} size={36} />}
       />
 
-      <div ref={listRef} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-1 overflow-y-auto px-4 py-4">
+      <div
+        ref={listRef}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          const near = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX;
+          setAtBottom(near);
+          if (near) setUnreadBelow(false);
+        }}
+        // min-h-0 lets this flex child shrink below its content height;
+        // without it the default min-height:auto keeps it as tall as the
+        // thread and overflow-y-auto never engages.
+        className="mx-auto flex w-full min-h-0 max-w-3xl flex-1 flex-col overflow-y-auto overflow-x-hidden px-4 py-4"
+      >
         {messages.isLoading ? (
           <p className="py-6 text-center text-sm text-slate-500">{t("loading")}</p>
         ) : items.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-500">{t("chatEmpty")}</p>
         ) : (
-          items.map((m) => (
-            <ChatBubble
-              key={m.id}
-              message={m}
-              mine={m.sender_profile_id === me.id}
-              myProfileId={me.id}
-              otherName={other.data?.full_name ?? ""}
-              panel={activeMessageId === m.id ? activePanel : null}
-              onPanel={(panel) => {
-                setActiveMessageId(panel ? m.id : null);
-                setActivePanel(panel);
-              }}
-              onReply={startReply}
-              onEdit={startEdit}
-              onUnsend={(msg) => unsend.mutate(msg.id)}
-              onReact={(msg, emoji) =>
-                react.mutate({
-                  messageId: msg.id,
-                  emoji,
-                  mine: msg.message_reactions.some((r) => r.profile_id === me.id && r.emoji === emoji),
-                })
-              }
-              onJumpTo={jumpTo}
-              highlighted={highlightId === m.id}
-            />
+          rows.map(({ m, newDay, firstInRun, lastInRun }) => (
+            <div key={m.id}>
+              {newDay && (
+                <div className="my-3 flex justify-center">
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-500">
+                    {formatDayLabel(m.created_at, lang)}
+                  </span>
+                </div>
+              )}
+              <ChatBubble
+                message={m}
+                mine={m.sender_profile_id === me.id}
+                myProfileId={me.id}
+                otherName={otherName}
+                otherAvatarUrl={other.data?.avatar_url ?? null}
+                firstInRun={firstInRun}
+                lastInRun={lastInRun}
+                panel={activeMessageId === m.id ? activePanel : null}
+                onPanel={(panel) => {
+                  setActiveMessageId(panel ? m.id : null);
+                  setActivePanel(panel);
+                }}
+                onReply={startReply}
+                onEdit={startEdit}
+                onUnsend={(msg) => unsend.mutate(msg.id)}
+                onReact={(msg, emoji) =>
+                  react.mutate({
+                    messageId: msg.id,
+                    emoji,
+                    mine: msg.message_reactions.some((r) => r.profile_id === me.id && r.emoji === emoji),
+                  })
+                }
+                onJumpTo={jumpTo}
+                highlighted={highlightId === m.id}
+              />
+            </div>
           ))
         )}
+
         {showSeen && (
-          <p className="pt-1 text-right text-xs text-slate-400">
+          <p className="pt-0.5 text-right text-[11px] text-slate-400">
             {t("seenLabel")} · {relativeTime(lastMessage.read_at!, lang)}
           </p>
         )}
+
         {otherTyping && (
-          <p className="pt-1 text-left text-xs italic text-slate-400">
-            {other.data?.full_name} {t("typingIndicator")}
-          </p>
+          <div className="mt-1 flex items-end gap-1.5">
+            <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={28} />
+            <span className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-slate-100 px-3.5 py-3">
+              {[0, 150, 300].map((delay) => (
+                <span
+                  key={delay}
+                  className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
+                  style={{ animationDelay: `${delay}ms` }}
+                />
+              ))}
+              <span className="sr-only">
+                {otherName} {t("typingIndicator")}
+              </span>
+            </span>
+          </div>
         )}
       </div>
+
+      {/* Reading history shouldn't be interrupted, so new messages raise
+          this instead of dragging the thread down under the finger. */}
+      {unreadBelow && (
+        <div className="pointer-events-none sticky bottom-2 z-20 flex justify-center">
+          <button
+            type="button"
+            onClick={() => scrollToEnd("smooth")}
+            className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-3.5 py-2 text-xs font-medium text-white shadow-lg transition-colors duration-200 hover:bg-brand-800"
+          >
+            <ArrowDown className="h-3.5 w-3.5" aria-hidden />
+            {t("newMessages")}
+          </button>
+        </div>
+      )}
 
       <form
         className="sticky bottom-0 border-t border-slate-200 bg-white p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
@@ -335,9 +483,11 @@ export function ChatScreen() {
           )}
 
           <div className="flex gap-2">
+            {/* Deliberately not autofocused: on a phone the keyboard would
+                spring up and resize the viewport just as the thread is
+                settling on its newest message. */}
             <input
               ref={inputRef}
-              autoFocus
               value={draft}
               onChange={(e) => onDraftChange(e.target.value)}
               onKeyDown={(e) => {

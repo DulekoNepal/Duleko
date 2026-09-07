@@ -74,6 +74,31 @@ export function formatDate(iso: string, lang: Lang): string {
   return lang === "ne" ? formatNumber(out, lang) : out;
 }
 
+/** "9:41 am" - the clock time printed under a run of chat messages. */
+export function formatClockTime(iso: string, lang: Lang): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const out = d
+    .toLocaleTimeString("en-GB", { hour: "numeric", minute: "2-digit", hour12: true })
+    .toLowerCase();
+  return lang === "ne" ? formatNumber(out, lang) : out;
+}
+
+/** "Today" / "Yesterday" / "12 Sep 2026" - the divider between days of chat. */
+export function formatDayLabel(iso: string, lang: Lang): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const key = toDateKey(d);
+  if (key === todayKey()) return lang === "ne" ? "आज" : "Today";
+  if (key === toDateKey(addDays(new Date(), -1))) return lang === "ne" ? "हिजो" : "Yesterday";
+  return formatDate(key, lang);
+}
+
+/** True when two messages are far enough apart to break a visual run. */
+export function sameMinuteWindow(a: string, b: string, minutes = 5): boolean {
+  return Math.abs(new Date(a).getTime() - new Date(b).getTime()) < minutes * 60_000;
+}
+
 export function relativeTime(iso: string, lang: Lang): string {
   const then = new Date(iso).getTime();
   const mins = Math.max(0, Math.round((Date.now() - then) / 60000));
