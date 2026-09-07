@@ -103,12 +103,32 @@ people at once. Call them **Ram** (worker) and **Sita** (employer).
 
 ## K. Chat (needs two accounts, ideally two phones)
 
-- [ ] Tap ⋯ on your own recent message: React, Reply, Edit, Unsend. On theirs: React, Reply only.
-- [ ] Tap ⋯ on a message you unsent: no menu at all.
+- [ ] Open a thread with a long history: it lands on the newest message with no visible jump,
+      and the thread scrolls inside itself while the header and composer stay put.
+- [ ] Scroll well up into the history and have the other account send something: the thread does
+      **not** move, and a "New messages" pill appears. Tapping it drops you to the end.
+- [ ] Send a message while scrolled up: your own message always pulls you back to the end.
+- [ ] Consecutive messages from one person stack together with one timestamp and one avatar at
+      the bottom of the run; a new day starts with a Today / Yesterday divider.
+- [ ] Open a reaction picker on the message nearest the top: it flips below instead of being
+      clipped, and it draws over the messages around it, not under them.
+- [ ] Long-press a message on a phone: the menu opens (with a short buzz) and the browser's own
+      text-selection and context menus stay away. A normal tap opens nothing.
+- [ ] Right-click a message on a desktop: the same menu, instead of the browser's.
+- [ ] Tap anywhere else, or press Escape: the menu closes.
+- [ ] The menu on your own recent message: React, Reply, Copy, Edit, Unsend. On theirs:
+      React, Reply, Copy. On one you unsent: nothing opens at all.
+- [ ] Copy puts the message text on the clipboard (bubble text is not hand-selectable by design,
+      because long-press belongs to the menu).
 - [ ] React → the six quick emoji, then **+** → the full grid (48) scrolls. Picking from either
       applies; picking the same one again removes it.
 - [ ] Reply to a message: the quote bar appears above the composer, the sent message shows the
       quoted stub, and tapping the stub scrolls to the original and rings it.
+- [ ] The stub sits on the message that **carries the reply**, never on the one being quoted, and
+      shows only the quoted text - no name, no icon. It is tinted like the message it echoes: grey
+      when quoting them, green when quoting you, whichever side the reply itself is on.
+- [ ] A reply always starts its own group, even between two of your own messages, so it is never
+      ambiguous which message the quote belongs to.
 - [ ] Edit one of your messages: the text changes for both sides and picks up "· edited".
 - [ ] Wait 15 minutes, then open ⋯ on that same message: Edit is gone. (The database refuses it
       even if you force the request.)

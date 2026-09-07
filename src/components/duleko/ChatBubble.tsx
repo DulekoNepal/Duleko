@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
-import { CornerUpLeft, MoreHorizontal, Pencil, SmilePlus, Trash2 } from "lucide-react";
+import { Copy, CornerUpLeft, Pencil, SmilePlus, Trash2 } from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
 import { useI18n } from "@/lib/i18n";
 import { withinEditWindow } from "@/lib/queries";
-import { cn, relativeTime } from "@/lib/utils";
+import { cn, formatClockTime } from "@/lib/utils";
 import type { ChatMessage } from "@/lib/types";
 
 /** The row shown first - the six people actually reach for. */
@@ -25,7 +26,11 @@ interface ChatBubbleProps {
   mine: boolean;
   myProfileId: string;
   otherName: string;
-  /** Which popover is open on this message, if any. */
+  otherAvatarUrl: string | null;
+  /** First of a run from this sender - gets the full top corner. */
+  firstInRun: boolean;
+  /** Last of a run - gets the timestamp, and their avatar. */
+  lastInRun: boolean;
   panel: BubblePanel | null;
   onPanel: (panel: BubblePanel | null) => void;
   onReply: (message: ChatMessage) => void;
@@ -42,12 +47,22 @@ const SWIPE_TRIGGER_PX = 48;
 const SWIPE_MAX_PX = 76;
 // Below this the gesture is still ambiguous, so vertical scrolling wins.
 const SWIPE_DECIDE_PX = 8;
+const LONG_PRESS_MS = 450;
+// A long press that already opened the menu shouldn't be re-toggled by the
+// contextmenu event the same gesture fires afterwards.
+const SUPPRESS_CONTEXT_MS = 900;
+// Popovers open upward unless the message is this close to the top of the
+// thread, where there would be nowhere to draw them.
+const FLIP_BELOW_PX = 210;
 
 export function ChatBubble({
   message: m,
   mine,
   myProfileId,
   otherName,
+  otherAvatarUrl,
+  firstInRun,
+  lastInRun,
   panel,
   onPanel,
   onReply,
@@ -60,8 +75,14 @@ export function ChatBubble({
   const { t, lang } = useI18n();
   const [dragX, setDragX] = useState(0);
   const [showAllEmojis, setShowAllEmojis] = useState(false);
+  const [placement, setPlacement] = useState<"above" | "below">("above");
+  const rowRef = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
   const axis = useRef<"undecided" | "horizontal" | "vertical">("undecided");
+  const longPress = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Android fires contextmenu at the end of a long press too; without this
+  // the press would open the menu and the contextmenu would shut it again.
+  const openedAt = useRef(0);
 
   const removed = Boolean(m.deleted_at);
   const canEdit = mine && !removed && withinEditWindow(m.created_at);
@@ -70,10 +91,41 @@ export function ChatBubble({
   // right - both toward the middle of the screen.
   const swipeSign = mine ? -1 : 1;
 
+  /** Open a popover on the side where there is actually room for it. */
+  function openPanel(next: BubblePanel | null) {
+    if (next) {
+      const top = rowRef.current?.getBoundingClientRect().top ?? 0;
+      setPlacement(top < FLIP_BELOW_PX ? "below" : "above");
+      openedAt.current = Date.now();
+    } else {
+      setShowAllEmojis(false);
+    }
+    onPanel(next);
+  }
+
+  /** Right-click on a mouse, press-and-hold on a phone - no button needed. */
+  function onContextMenu(e: React.MouseEvent) {
+    e.preventDefault();
+    if (removed) return;
+    if (Date.now() - openedAt.current < SUPPRESS_CONTEXT_MS) return;
+    openPanel(panel ? null : "menu");
+  }
+
+  function cancelLongPress() {
+    if (longPress.current) clearTimeout(longPress.current);
+    longPress.current = null;
+  }
+
   function onPointerDown(e: React.PointerEvent) {
     if (removed || e.pointerType === "mouse") return;
     start.current = { x: e.clientX, y: e.clientY };
     axis.current = "undecided";
+    // Press and hold is how you reach the menu on a phone.
+    cancelLongPress();
+    longPress.current = setTimeout(() => {
+      navigator.vibrate?.(8);
+      openPanel("menu");
+    }, LONG_PRESS_MS);
   }
 
   function onPointerMove(e: React.PointerEvent) {
@@ -83,6 +135,7 @@ export function ChatBubble({
 
     if (axis.current === "undecided") {
       if (Math.abs(dx) < SWIPE_DECIDE_PX && Math.abs(dy) < SWIPE_DECIDE_PX) return;
+      cancelLongPress();
       // Let the list scroll if the finger is mostly going up or down.
       axis.current = Math.abs(dx) > Math.abs(dy) ? "horizontal" : "vertical";
     }
@@ -94,49 +147,68 @@ export function ChatBubble({
   }
 
   function onPointerUp() {
+    cancelLongPress();
     if (Math.abs(dragX) >= SWIPE_TRIGGER_PX) onReply(m);
     start.current = null;
     axis.current = "undecided";
     setDragX(0);
   }
 
-  function closePanels() {
-    setShowAllEmojis(false);
-    onPanel(null);
-  }
-
   function react(emoji: string) {
     onReact(m, emoji);
-    closePanels();
+    openPanel(null);
   }
 
   const reactions = groupReactions(m, myProfileId);
   const quoted = m.reply_to;
+  const panelSide = cn(
+    "absolute z-20",
+    placement === "above" ? "bottom-full mb-1" : "top-full mt-1",
+    mine ? "right-0" : "left-0",
+  );
 
   return (
-    <div className={cn("flex flex-col", mine ? "items-end" : "items-start")}>
+    <div
+      className={cn(
+        "group relative flex flex-col",
+        mine ? "items-end" : "items-start",
+        lastInRun ? "mb-1.5" : "mb-0.5",
+        // Lift the whole row while its popover is open, so the popover sits
+        // above neighbouring messages rather than under them.
+        panel && "z-30",
+      )}
+    >
       {quoted && (
+        // A faded echo of the message being quoted, so it carries *that*
+        // message's colour rather than the colour of the reply sitting on
+        // top of it. Which side it hangs on still follows the reply. The
+        // negative margin tucks it under the bubble so they read as one.
         <button
           type="button"
           onClick={() => onJumpTo(quoted.id)}
           className={cn(
-            "mb-0.5 max-w-[78%] truncate rounded-t-xl border-l-2 border-slate-300 bg-slate-50 px-2.5 py-1 text-left text-xs text-slate-500",
-            mine && "border-l-0 border-r-2 text-right",
+            "-mb-2 max-w-[70%] truncate rounded-t-xl px-3 pb-3.5 pt-1.5 text-left text-xs",
+            // Inset 8px from the bubble's own edge on both sides: theirs
+            // also clears the 28px avatar and its 6px gap.
+            mine ? "mr-2" : "ml-[2.625rem]",
+            quoted.sender_profile_id === myProfileId
+              ? "bg-brand-100 text-brand-900/70"
+              : "bg-slate-200/80 text-slate-600",
           )}
         >
-          <span className="font-medium text-slate-600">
-            {quoted.sender_profile_id === myProfileId ? t("youLabel") : otherName}
-          </span>
-          {" · "}
           {quoted.deleted_at ? t("messageRemoved") : quoted.body}
         </button>
       )}
 
       <div
-        className="relative flex w-full items-center gap-1"
+        ref={rowRef}
+        className="relative flex w-full items-end gap-1.5"
         style={{
           justifyContent: mine ? "flex-end" : "flex-start",
-          transform: `translateX(${dragX}px)`,
+          // Only while actually dragging: any transform makes this row a
+          // stacking context, which would trap an open popover behind the
+          // messages below it.
+          transform: dragX === 0 ? undefined : `translateX(${dragX}px)`,
           transition: dragX === 0 ? "transform 160ms ease-out" : undefined,
           touchAction: "pan-y",
         }}
@@ -144,145 +216,150 @@ export function ChatBubble({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onContextMenu={onContextMenu}
       >
+        {/* Their avatar sits against the last bubble of each run, like
+            Messenger; earlier bubbles keep the same indent with a spacer. */}
+        {!mine &&
+          (lastInRun ? (
+            <Avatar name={otherName} src={otherAvatarUrl} size={28} />
+          ) : (
+            <span className="h-7 w-7 shrink-0" aria-hidden />
+          ))}
+
         {/* The arrow that slides in from behind as the bubble is dragged. */}
         {Math.abs(dragX) > 4 && (
           <CornerUpLeft
-            className={cn(
-              "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400",
-              mine ? "right-0" : "left-0",
-            )}
+            className={cn("absolute top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400", mine ? "right-0" : "left-0")}
             style={{ opacity: Math.min(Math.abs(dragX) / SWIPE_TRIGGER_PX, 1) }}
             aria-hidden
           />
         )}
 
-        {mine && !removed && <MenuButton onClick={() => onPanel(panel ? null : "menu")} label={t("messageActions")} />}
-
         <div
           id={`msg-${m.id}`}
           className={cn(
-            "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words",
+            // Long press is the menu gesture, so text selection has to stay
+            // out of its way - Copy in the menu covers what that takes away.
+            "max-w-[76%] select-none whitespace-pre-wrap break-words px-3.5 py-2 text-sm",
+            // Rounded on the outside, tightened where a run joins up.
+            mine
+              ? cn("rounded-2xl", !firstInRun && "rounded-tr-md", !lastInRun && "rounded-br-md")
+              : cn("rounded-2xl", !firstInRun && "rounded-tl-md", !lastInRun && "rounded-bl-md"),
             removed
-              ? "bg-slate-50 italic text-slate-400"
+              ? "border border-slate-200 bg-white italic text-slate-400"
               : mine
                 ? "bg-brand-700 text-white"
                 : "bg-slate-100 text-slate-900",
-            highlighted && "ring-2 ring-brand-400 ring-offset-1",
+            highlighted && "ring-2 ring-brand-400 ring-offset-2",
           )}
         >
           {removed ? t("messageRemoved") : m.body}
         </div>
 
-        {!mine && !removed && <MenuButton onClick={() => onPanel(panel ? null : "menu")} label={t("messageActions")} />}
+        {panel === "menu" && (
+          <div data-chat-popover className={cn(panelSide, "flex items-center gap-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-lg")}>
+            <MenuItem icon={SmilePlus} label={t("react")} onClick={() => openPanel("emoji")} />
+            <MenuItem icon={CornerUpLeft} label={t("reply")} onClick={() => { onReply(m); openPanel(null); }} />
+            <MenuItem
+              icon={Copy}
+              label={t("copy")}
+              onClick={() => {
+                void navigator.clipboard?.writeText(m.body);
+                openPanel(null);
+              }}
+            />
+            {canEdit && <MenuItem icon={Pencil} label={t("edit")} onClick={() => { onEdit(m); openPanel(null); }} />}
+            {mine && <MenuItem icon={Trash2} label={t("unsend")} destructive onClick={() => openPanel("unsend")} />}
+          </div>
+        )}
+
+        {panel === "emoji" && (
+          <div data-chat-popover className={cn(panelSide, "w-[min(19rem,84vw)] rounded-2xl border border-slate-200 bg-white p-1.5 shadow-lg")}>
+            <div className="flex items-center gap-0.5">
+              {QUICK_REACTIONS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => react(emoji)}
+                  className="rounded-lg px-1.5 py-1 text-lg transition-transform duration-150 hover:scale-125"
+                >
+                  {emoji}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setShowAllEmojis((v) => !v)}
+                aria-expanded={showAllEmojis}
+                aria-label={t("react")}
+                className="ml-auto rounded-full bg-slate-100 px-2 py-1 text-sm font-medium text-slate-500 transition-colors duration-200 hover:bg-slate-200"
+              >
+                {showAllEmojis ? "−" : "+"}
+              </button>
+            </div>
+            {showAllEmojis && (
+              <div className="mt-1.5 grid max-h-44 grid-cols-8 gap-0.5 overflow-y-auto border-t border-slate-100 pt-1.5">
+                {ALL_REACTIONS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => react(emoji)}
+                    className="rounded-lg py-1 text-lg transition-transform duration-150 hover:scale-125"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {panel === "unsend" && (
+          <div data-chat-popover className={cn(panelSide, "flex w-max max-w-[min(20rem,86vw)] flex-wrap items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-2 shadow-lg")}>
+            <span className="text-xs text-red-800">{t("unsendConfirm")}</span>
+            <button
+              type="button"
+              onClick={() => onUnsend(m)}
+              className="rounded-lg bg-red-600 px-2 py-1 text-xs font-medium text-white transition-colors duration-200 hover:bg-red-700"
+            >
+              {t("unsend")}
+            </button>
+            <button
+              type="button"
+              onClick={() => openPanel(null)}
+              className="rounded-lg px-2 py-1 text-xs font-medium text-slate-600 transition-colors duration-200 hover:bg-white"
+            >
+              {t("cancel")}
+            </button>
+          </div>
+        )}
       </div>
 
-      <p className={cn("mt-0.5 px-1 text-[10px] text-slate-400", mine ? "text-right" : "text-left")}>
-        {relativeTime(m.created_at, lang)}
-        {m.edited_at && !removed && ` · ${t("edited")}`}
-      </p>
-
       {reactions.length > 0 && (
-        <div className="-mt-0.5 mb-1 flex flex-wrap gap-1">
+        <div className={cn("-mt-2 flex flex-wrap gap-1", mine ? "mr-2" : "ml-11")}>
           {reactions.map(([emoji, { count, mine: myReaction }]) => (
             <button
               key={emoji}
               type="button"
               onClick={() => onReact(m, emoji)}
               className={cn(
-                "rounded-full border px-1.5 py-0.5 text-xs transition-colors duration-200",
-                myReaction ? "border-brand-300 bg-brand-50" : "border-slate-200 bg-white",
+                "rounded-full border bg-white px-1.5 py-0.5 text-xs shadow-sm ring-2 ring-white transition-colors duration-200",
+                myReaction ? "border-brand-300 bg-brand-50" : "border-slate-200",
               )}
             >
-              {emoji} {count}
+              {emoji} {count > 1 ? count : ""}
             </button>
           ))}
         </div>
       )}
 
-      {panel === "menu" && (
-        <div className="mb-1 flex flex-wrap items-center gap-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
-          <MenuItem icon={SmilePlus} label={t("react")} onClick={() => onPanel("emoji")} />
-          <MenuItem icon={CornerUpLeft} label={t("reply")} onClick={() => { onReply(m); closePanels(); }} />
-          {canEdit && <MenuItem icon={Pencil} label={t("edit")} onClick={() => { onEdit(m); closePanels(); }} />}
-          {mine && (
-            <MenuItem icon={Trash2} label={t("unsend")} destructive onClick={() => onPanel("unsend")} />
-          )}
-        </div>
-      )}
-
-      {panel === "emoji" && (
-        <div className="mb-1 w-[min(20rem,85vw)] rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
-          <div className="flex items-center gap-0.5">
-            {QUICK_REACTIONS.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                onClick={() => react(emoji)}
-                className="rounded-lg px-1.5 py-1 text-lg transition-colors duration-200 hover:bg-slate-100"
-              >
-                {emoji}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setShowAllEmojis((v) => !v)}
-              aria-expanded={showAllEmojis}
-              className="ml-auto rounded-lg px-2 py-1 text-sm font-medium text-slate-500 transition-colors duration-200 hover:bg-slate-100"
-            >
-              {showAllEmojis ? "−" : "+"}
-            </button>
-          </div>
-          {showAllEmojis && (
-            <div className="mt-1 grid max-h-44 grid-cols-8 gap-0.5 overflow-y-auto border-t border-slate-100 pt-1.5">
-              {ALL_REACTIONS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => react(emoji)}
-                  className="rounded-lg py-1 text-lg transition-colors duration-200 hover:bg-slate-100"
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {panel === "unsend" && (
-        <div className="mb-1 flex flex-wrap items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-2 shadow-sm">
-          <span className="text-xs text-red-800">{t("unsendConfirm")}</span>
-          <button
-            type="button"
-            onClick={() => onUnsend(m)}
-            className="rounded-lg bg-red-600 px-2 py-1 text-xs font-medium text-white transition-colors duration-200 hover:bg-red-700"
-          >
-            {t("unsend")}
-          </button>
-          <button
-            type="button"
-            onClick={closePanels}
-            className="rounded-lg px-2 py-1 text-xs font-medium text-slate-600 transition-colors duration-200 hover:bg-slate-100"
-          >
-            {t("cancel")}
-          </button>
-        </div>
+      {lastInRun && (
+        <p className={cn("mt-1 px-1 text-[11px] text-slate-400", mine ? "text-right" : "ml-9")}>
+          {formatClockTime(m.created_at, lang)}
+          {m.edited_at && !removed && ` · ${t("edited")}`}
+        </p>
       )}
     </div>
-  );
-}
-
-function MenuButton({ onClick, label }: { onClick: () => void; label: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className="shrink-0 rounded-full p-1 text-slate-400 opacity-60 transition-opacity duration-200 hover:bg-slate-100 hover:opacity-100 focus-visible:opacity-100"
-    >
-      <MoreHorizontal className="h-4 w-4" aria-hidden />
-    </button>
   );
 }
 
@@ -302,7 +379,7 @@ function MenuItem({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors duration-200",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors duration-200",
         destructive ? "text-red-600 hover:bg-red-50" : "text-slate-700 hover:bg-slate-100",
       )}
     >

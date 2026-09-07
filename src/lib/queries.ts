@@ -777,17 +777,33 @@ export function chatPairKey(profileIdA: string, profileIdB: string): string {
   return profileIdA < profileIdB ? `${profileIdA}:${profileIdB}` : `${profileIdB}:${profileIdA}`;
 }
 
+// No `reply_to:messages!reply_to_id(...)` embed here on purpose. That is a
+// self-join, and a column hint does not pin its direction - PostgREST can
+// resolve it the other way round, hanging the quote off the message that
+// was replied TO instead of off the reply itself. The quoted message is
+// almost always already in this same thread fetch, so it is cheaper and
+// completely unambiguous to stitch the two together below.
 const MESSAGE_COLUMNS =
   "id,profile_a,profile_b,sender_profile_id,body,created_at,read_at,deleted_at,edited_at,reply_to_id," +
-  "message_reactions(profile_id,emoji)," +
-  // Self-join: PostgREST wants the column as the hint here, not the
-  // constraint name it accepts for ordinary foreign keys.
-  "reply_to:messages!reply_to_id(id,body,sender_profile_id,deleted_at)";
+  "message_reactions(profile_id,emoji)";
 
-/** The self-join embed arrives as an object or a one-element array depending on the planner. */
 function shapeMessage(row: unknown): ChatMessage {
-  const m = row as ChatMessage & { reply_to: RepliedMessage | RepliedMessage[] | null };
-  return { ...m, reply_to: one(m.reply_to), message_reactions: m.message_reactions ?? [] };
+  const m = row as ChatMessage;
+  return { ...m, reply_to: null, message_reactions: m.message_reactions ?? [] };
+}
+
+/** Hang each reply's quoted message off it, by id, within the thread. */
+export function attachReplies(items: ChatMessage[]): ChatMessage[] {
+  const byId = new Map<string, RepliedMessage>(
+    items.map((m) => [
+      m.id,
+      { id: m.id, body: m.body, sender_profile_id: m.sender_profile_id, deleted_at: m.deleted_at },
+    ]),
+  );
+  return items.map((m) =>
+    // A quote older than the fetch window stays null and simply isn't drawn.
+    m.reply_to_id ? { ...m, reply_to: byId.get(m.reply_to_id) ?? null } : m,
+  );
 }
 
 export async function listMessages(myProfileId: string, otherProfileId: string): Promise<ChatMessage[]> {
@@ -801,7 +817,7 @@ export async function listMessages(myProfileId: string, otherProfileId: string):
     .order("created_at", { ascending: true })
     .limit(200);
   if (error) throw error;
-  return (data ?? []).map(shapeMessage);
+  return attachReplies((data ?? []).map(shapeMessage));
 }
 
 /** Opening a thread marks the other person's messages as seen. */
