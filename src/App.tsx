@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { AlertTriangle } from "lucide-react";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
@@ -57,6 +58,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [guestMode, setGuestMode] = useState(readGuestMode);
   const [authIntent, setAuthIntent] = useState(false);
 
+  // Routes someone can be sent straight to from outside the app.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isSharedProfileLink = pathname.startsWith("/worker/");
+
   function enterGuest() {
     setGuestMode(true);
     persistGuestMode(true);
@@ -88,7 +93,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (!session) {
     if (authIntent) return <AuthScreen onBack={() => setAuthIntent(false)} />;
-    if (!guestMode) return <WelcomeChoiceScreen onExplore={enterGuest} onSignIn={() => setAuthIntent(true)} />;
+    // A shared profile link has to land on the profile. Showing a
+    // first-time visitor the sign-up choice instead throws away the deep
+    // link and makes every shared link look like a wall.
+    if (!guestMode && !isSharedProfileLink) {
+      return <WelcomeChoiceScreen onExplore={enterGuest} onSignIn={() => setAuthIntent(true)} />;
+    }
     // Explored, hasn't signed in: the real app, read-only until they try
     // something that needs an account - see useGuestMode().requestSignIn.
     return (

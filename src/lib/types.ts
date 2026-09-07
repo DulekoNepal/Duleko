@@ -42,6 +42,8 @@ export interface Profile {
   is_available: boolean;
   /** The one Duleko account the automatic welcome message is sent from. */
   is_official: boolean;
+  /** Opaque handle used in shared links, so they never carry the row id. */
+  public_slug: string;
   language: Lang;
   rating: number;
   rating_count: number;

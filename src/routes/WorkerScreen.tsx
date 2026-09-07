@@ -58,7 +58,10 @@ export function WorkerScreen() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { workerId } = useParams({ from: "/worker/$workerId" });
+  // The URL carries a handle - an opaque public_slug on a shared link, or
+  // the row id on older links and internal navigation. Everything below
+  // keys off the resolved profile id, never off the URL.
+  const { workerId: handle } = useParams({ from: "/worker/$workerId" });
   const [requestOpen, setRequestOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
 
@@ -71,21 +74,34 @@ export function WorkerScreen() {
     action();
   }
 
+  const worker = useQuery({ queryKey: ["profile", handle], queryFn: () => getProfile(handle) });
+  const workerId = worker.data?.id ?? "";
+  const ready = Boolean(workerId);
+
   const online = usePresence([workerId])[workerId];
 
-  const worker = useQuery({ queryKey: ["profile", workerId], queryFn: () => getProfile(workerId) });
-  const skills = useQuery({ queryKey: ["user-skills", workerId], queryFn: () => getUserSkills(workerId) });
-  const reviews = useQuery({ queryKey: ["reviews", workerId], queryFn: () => listReviewsFor(workerId) });
+  const skills = useQuery({
+    queryKey: ["user-skills", workerId],
+    queryFn: () => getUserSkills(workerId),
+    enabled: ready,
+  });
+  const reviews = useQuery({
+    queryKey: ["reviews", workerId],
+    queryFn: () => listReviewsFor(workerId),
+    enabled: ready,
+  });
 
   const contact = useQuery({
     queryKey: ["contact", workerId],
     queryFn: () => getContact(workerId),
+    enabled: ready,
     staleTime: 5 * 60_000,
   });
 
   const certificates = useQuery({
     queryKey: ["certificates", workerId],
     queryFn: () => listCertificates(workerId),
+    enabled: ready,
   });
 
   // Chat is open to anyone signed in. Calling needs the other person to
@@ -96,7 +112,7 @@ export function WorkerScreen() {
   const friendship = useQuery({
     queryKey: ["friendship", me?.id, workerId],
     queryFn: () => getFriendshipWith(me!.id, workerId),
-    enabled: Boolean(me?.id),
+    enabled: Boolean(me?.id) && ready,
   });
 
   function invalidateFriendship() {
@@ -108,7 +124,7 @@ export function WorkerScreen() {
 
   const share = useMutation({
     mutationFn: () =>
-      shareProfile(workerId, worker.data!.full_name, t("shareProfileText", { name: worker.data!.full_name })),
+      shareProfile(worker.data!.public_slug, worker.data!.full_name, t("shareProfileText", { name: worker.data!.full_name })),
     onSuccess: (result) => {
       if (result === "copied") toast(t("linkCopied"));
       else if (result === "failed") toast(t("copyFailed"), "error");

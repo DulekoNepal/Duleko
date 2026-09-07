@@ -24,7 +24,7 @@ import type {
 } from "./types";
 
 const PROFILE_COLUMNS =
-  "id,user_id,full_name,about,bio,age,education,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,is_official,language,rating,rating_count,lat,lng,location_shared_at,created_at,updated_at";
+  "id,user_id,full_name,about,bio,age,education,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,is_official,public_slug,language,rating,rating_count,lat,lng,location_shared_at,created_at,updated_at";
 
 const PARTY_COLUMNS = "id,full_name,avatar_url,rating,rating_count";
 
@@ -52,11 +52,19 @@ export async function getMyProfile(userId: string): Promise<Profile | null> {
   return (data as Profile) ?? null;
 }
 
-export async function getProfile(profileId: string): Promise<Profile | null> {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Looks a profile up by whatever is in the URL. Shared links carry the
+ * opaque public_slug; older links and internal navigation carry the row
+ * id, and both have to keep working.
+ */
+export async function getProfile(handle: string): Promise<Profile | null> {
+  const column = UUID_RE.test(handle) ? "id" : "public_slug";
   const { data, error } = await supabase
     .from("profiles")
     .select(PROFILE_COLUMNS)
-    .eq("id", profileId)
+    .eq(column, handle)
     .maybeSingle();
   if (error) throw error;
   return (data as Profile) ?? null;
