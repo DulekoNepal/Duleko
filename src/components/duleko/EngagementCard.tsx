@@ -170,7 +170,7 @@ export function EngagementCard({
       <CardBody>
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 gap-3">
-            <Avatar name={other.full_name} src={other.avatar_url} size={44} />
+            <Avatar name={other.full_name} src={other.avatar_url} size={44} profileId={other.id} />
             <div className="min-w-0">
               <h3 className="truncate font-semibold text-slate-900">{engagement.title}</h3>
               <p className="truncate text-sm text-slate-500">
@@ -207,6 +207,7 @@ export function EngagementCard({
             myProfileId={myProfileId}
             otherName={other.full_name}
             otherAvatarUrl={other.avatar_url}
+            otherProfileId={other.id}
             currentAmount={engagement.payment_amount}
             canAccept={iAmWorker}
             onAccept={() => change.mutate("accepted")}

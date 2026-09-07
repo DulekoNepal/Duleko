@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { cn, initials } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 
@@ -25,6 +26,7 @@ export function Avatar({
   size = 48,
   online,
   className,
+  profileId,
 }: {
   name: string;
   src?: string | null;
@@ -32,6 +34,12 @@ export function Avatar({
   /** Shows a small green "online now" dot - presence, not work availability. */
   online?: boolean;
   className?: string;
+  /**
+   * Makes the avatar a tappable link to that person's profile. Leave it
+   * off where the avatar already sits inside something clickable - an
+   * anchor nested in a button is invalid, and both would fire at once.
+   */
+  profileId?: string | null;
 }) {
   const { t } = useI18n();
   const dimension = { width: size, height: size };
@@ -62,13 +70,29 @@ export function Avatar({
       </div>
     );
 
-  if (!online) return inner;
-
-  return (
+  const content = online ? (
     <span className="relative inline-flex shrink-0" style={dimension}>
       {inner}
       <span className="sr-only">, {t("online")}</span>
       <OnlineDot size={size} />
     </span>
+  ) : (
+    inner
+  );
+
+  if (!profileId) return content;
+
+  return (
+    <Link
+      to="/worker/$workerId"
+      params={{ workerId: profileId }}
+      aria-label={name}
+      // stopPropagation so tapping the face opens the profile rather than
+      // whatever row or card the avatar happens to be sitting in.
+      onClick={(e) => e.stopPropagation()}
+      className="shrink-0 rounded-full transition-opacity duration-200 hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+    >
+      {content}
+    </Link>
   );
 }

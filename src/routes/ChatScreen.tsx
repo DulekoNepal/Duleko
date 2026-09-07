@@ -343,7 +343,7 @@ export function ChatScreen() {
             <ArrowLeft className="h-5 w-5" aria-hidden />
           </button>
         }
-        leading={<Avatar name={otherName || "?"} src={other.data?.avatar_url} size={36} />}
+        leading={<Avatar name={otherName || "?"} src={other.data?.avatar_url} size={36} profileId={otherId} />}
       />
 
       <div
@@ -379,6 +379,7 @@ export function ChatScreen() {
                 myProfileId={me.id}
                 otherName={otherName}
                 otherAvatarUrl={other.data?.avatar_url ?? null}
+                otherProfileId={otherId}
                 firstInRun={firstInRun}
                 lastInRun={lastInRun}
                 panel={activeMessageId === m.id ? activePanel : null}
@@ -411,7 +412,7 @@ export function ChatScreen() {
 
         {otherTyping && (
           <div className="mt-1 flex items-end gap-1.5">
-            <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={28} />
+            <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={28} profileId={otherId} />
             <span className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-slate-100 px-3.5 py-3">
               {[0, 150, 300].map((delay) => (
                 <span

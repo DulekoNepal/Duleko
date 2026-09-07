@@ -100,18 +100,25 @@ export function ChatsScreen() {
         ) : items.length === 0 ? (
           <EmptyState icon={<MessageCircle className="h-8 w-8" />} title={t("noChatsYet")} hint={t("noChatsYetHint")} />
         ) : (
+          // In each row the avatar is a sibling of the button, not inside
+          // it: the face opens that person's profile while the rest of the
+          // row opens the thread, and a link nested in a button would be
+          // invalid markup with both firing at once.
           <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
             {items.map((c) => (
-              <li key={c.otherProfileId}>
+              <li
+                key={c.otherProfileId}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 transition-colors duration-200 hover:bg-slate-50",
+                  c.unread && "bg-brand-50/60",
+                )}
+              >
+                <Avatar name={c.otherName} src={c.otherAvatarUrl} size={44} profileId={c.otherProfileId} />
                 <button
                   type="button"
                   onClick={() => navigate({ to: "/chat/$otherId", params: { otherId: c.otherProfileId } })}
-                  className={cn(
-                    "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-200 hover:bg-slate-50",
-                    c.unread && "bg-brand-50/60",
-                  )}
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
                 >
-                  <Avatar name={c.otherName} src={c.otherAvatarUrl} size={44} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
                       <span className="flex min-w-0 items-center gap-1.5">
