@@ -8,9 +8,15 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { AuthScreen } from "@/routes/AuthScreen";
 import { OnboardingScreen } from "@/routes/OnboardingScreen";
 import { WelcomeChoiceScreen } from "@/components/duleko/WelcomeChoiceScreen";
-import { BottomNav } from "@/components/duleko/Layout";
+import {
+  BottomNav,
+  DesktopSidebar,
+  SIDEBAR_WIDTH_CLASS,
+  useNotificationsBadgeSync,
+} from "@/components/duleko/Layout";
 import { WelcomeWalkthrough, hasSeenWalkthrough } from "@/components/duleko/WelcomeWalkthrough";
 import { FullPageLoader } from "@/components/ui/states";
+import { cn } from "@/lib/utils";
 
 /** Shown when .env.local has not been filled in yet - the most common first-run trip-up. */
 function SetupScreen() {
@@ -39,6 +45,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const { session, profile, loadingSession, loadingProfile } = useSession();
   const [showWalkthrough, setShowWalkthrough] = useState(false);
+
+  // One realtime subscription for the whole app, regardless of how many nav
+  // components (bottom bar, desktop sidebar) are mounted at once.
+  useNotificationsBadgeSync();
 
   // Pre-account browsing: "Explore" persists across a refresh; "sign in
   // now" (from the choice screen, or from any gated action while browsing
@@ -83,7 +93,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     // something that needs an account - see useGuestMode().requestSignIn.
     return (
       <GuestModeProvider value={{ isGuest: true, requestSignIn: () => setAuthIntent(true) }}>
-        <div className="min-h-dvh">
+        <div className={cn("min-h-dvh", SIDEBAR_WIDTH_CLASS)}>
+          <DesktopSidebar />
           {children}
           <BottomNav />
         </div>
@@ -95,7 +106,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (!profile) return <OnboardingScreen />;
 
   return (
-    <div className="min-h-dvh">
+    <div className={cn("min-h-dvh", SIDEBAR_WIDTH_CLASS)}>
+      <DesktopSidebar />
       {children}
       <BottomNav />
       {showWalkthrough && <WelcomeWalkthrough onDone={() => setShowWalkthrough(false)} />}

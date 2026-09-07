@@ -26,11 +26,11 @@ export function Collapsible({
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex flex-1 items-center justify-between gap-3 rounded-xl px-1.5 py-1.5 text-left transition-colors hover:bg-slate-50"
+          className="flex flex-1 items-center justify-between gap-3 rounded-xl px-1.5 py-1.5 text-left transition-colors duration-200 hover:bg-slate-50"
         >
           <span className="text-base font-semibold text-slate-900">{title}</span>
           <ChevronDown
-            className={cn("h-5 w-5 shrink-0 text-slate-400 transition-transform", open && "rotate-180")}
+            className={cn("h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200", open && "rotate-180")}
             aria-hidden
           />
         </button>

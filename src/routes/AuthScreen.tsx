@@ -133,7 +133,7 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
               aria-selected={mode === "signin"}
               onClick={() => switchMode("signin")}
               className={cn(
-                "rounded-lg py-2 transition-colors",
+                "rounded-lg py-2 transition-colors duration-200",
                 mode === "signin" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
               )}
             >
@@ -145,7 +145,7 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
               aria-selected={mode === "signup"}
               onClick={() => switchMode("signup")}
               className={cn(
-                "rounded-lg py-2 transition-colors",
+                "rounded-lg py-2 transition-colors duration-200",
                 mode === "signup" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
               )}
             >

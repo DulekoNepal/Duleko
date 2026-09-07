@@ -133,6 +133,9 @@ const strings = {
   ],
   yourWorkToday: ["Your work", "तपाईंको काम"],
   pendingRequests: ["{count} waiting for you", "{count} तपाईंको जवाफ पर्खिरहेको"],
+  addYourSkills: ["Add your skills", "आफ्ना सीपहरू थप्नुहोस्"],
+  browseWorkers: ["Browse workers", "कामदारहरू हेर्नुहोस्"],
+  popularSkills: ["Popular", "लोकप्रिय"],
 
   // ---- search --------------------------------------------------------
   filters: ["Filters", "फिल्टर"],
@@ -355,7 +358,19 @@ const strings = {
     "छोटो चिनारी थप्नुहोस् ताकि मानिसहरूले तपाईंले के काम गर्नुहुन्छ थाहा पाऊन्।",
   ],
   noSkillsYetProfile: ["No skills added yet.", "अझै कुनै सीप थपिएको छैन।"],
+  noSkillsYetProfileHint: [
+    "Add skills so employers can find and hire you.",
+    "काम दिनेहरूले तपाईंलाई भेट्टाउन र काम दिन सक्ने गरी सीप थप्नुहोस्।",
+  ],
   noAboutYetOther: ["Hasn't added a bio yet.", "अझै चिनारी थपेका छैनन्।"],
+  editingProfile: ["Editing your profile", "तपाईंको प्रोफाइल सम्पादन गर्दै"],
+  daysMarkedBusy: ["{count} days marked busy", "{count} दिन व्यस्त चिन्ह लागेको"],
+  noCertificatesYet: ["No certificates yet", "अझै कुनै प्रमाणपत्र छैन"],
+  noCertificatesYetHint: [
+    "Add training or licenses to build trust with employers.",
+    "काम दिनेहरूको विश्वास जित्न तालिम वा लाइसेन्स थप्नुहोस्।",
+  ],
+  uploadCertificateHint: ["PNG, JPG, or PDF up to 5 MB", "PNG, JPG, वा PDF (५ MB सम्म)"],
 
   // ---- nav -----------------------------------------------------------
   navHome: ["Home", "गृह"],

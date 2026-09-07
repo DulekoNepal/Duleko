@@ -44,7 +44,7 @@ export function WorkScreen() {
               aria-selected={role === r}
               onClick={() => setRole(r)}
               className={cn(
-                "flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200",
                 role === r ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
               )}
             >
@@ -72,7 +72,7 @@ export function WorkScreen() {
             <p className="mb-3 text-sm text-slate-500">
               {formatNumber(sorted.length, lang)} · {role === "worker" ? t("asWorker") : t("asEmployer")}
             </p>
-            <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2">
               {sorted.map((e) => (
                 <EngagementCard key={e.id} engagement={e} myProfileId={profile!.id} />
               ))}

@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card";
 import { Collapsible } from "@/components/ui/collapsible";
 import { Field, Input, Textarea } from "@/components/ui/field";
+import { EmptyState } from "@/components/ui/states";
 import { Switch } from "@/components/ui/switch";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
@@ -312,24 +313,17 @@ export function ProfileScreen() {
 
   const place = locationLine(profile, lang);
   const skillList = mySkills.data ?? [];
+  // Every day is open by default - only "booked" is ever an explicit row -
+  // so a busy-days count is the one number this data can honestly show;
+  // "days available" would just restate the calendar's default state.
+  const busyDaysCount = (availability.data ?? []).filter((d) => d.status === "booked").length;
 
   return (
     <>
       <AppHeader title={t("myProfile")} right={<LanguageToggle />} />
-      <PageContainer>
+      <PageContainer className="max-w-2xl">
         {/* ---- Identity card: one flowing hierarchy, not competing blocks - */}
-        <Card className="relative mb-5 overflow-hidden">
-          {!editing && (
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              aria-label={t("editProfile")}
-              className="absolute right-3 top-3 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:border-brand-300 hover:text-brand-700"
-            >
-              <Pencil className="h-4 w-4" aria-hidden />
-            </button>
-          )}
-
+        <Card className="mb-5 overflow-hidden">
           {/* Cover photo - a work-site / professional shot behind the avatar. */}
           <div className="relative h-32 w-full bg-gradient-to-br from-slate-100 to-slate-200 sm:h-40">
             {(coverPreview ?? profile.cover_url) && (
@@ -361,42 +355,61 @@ export function ProfileScreen() {
           </div>
 
           <div className="px-5 pb-5">
-            <div className="relative z-10 -mt-14 inline-block">
-              <Avatar
-                name={profile.full_name}
-                src={avatarPreview ?? profile.avatar_url}
-                size={84}
-                online
-                className="shadow-md ring-4 ring-white"
-              />
-              <label className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow ring-1 ring-slate-200 transition-transform hover:scale-105">
-                <Camera className="h-4 w-4" aria-hidden />
-                <span className="sr-only">{t("changePhoto")}</span>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    if (file.size > 2 * 1024 * 1024) {
-                      toast(t("photoTooBig"), "error");
-                      return;
-                    }
-                    setAvatarPreview(URL.createObjectURL(file));
-                    changeAvatar.mutate(file);
-                  }}
+            <div className="flex items-start justify-between gap-3">
+              <div className="relative z-10 -mt-14 inline-block">
+                <Avatar
+                  name={profile.full_name}
+                  src={avatarPreview ?? profile.avatar_url}
+                  size={96}
+                  online
+                  className="shadow-md ring-4 ring-white"
                 />
-              </label>
+                <label className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow ring-1 ring-slate-200 transition-transform hover:scale-105">
+                  <Camera className="h-4 w-4" aria-hidden />
+                  <span className="sr-only">{t("changePhoto")}</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 2 * 1024 * 1024) {
+                        toast(t("photoTooBig"), "error");
+                        return;
+                      }
+                      setAvatarPreview(URL.createObjectURL(file));
+                      changeAvatar.mutate(file);
+                    }}
+                  />
+                </label>
+              </div>
+
+              {!editing && (
+                <Button variant="outline" size="sm" className="mt-3 shrink-0" onClick={() => setEditing(true)}>
+                  <Pencil className="h-4 w-4" aria-hidden />
+                  {t("editProfile")}
+                </Button>
+              )}
             </div>
 
-            <h1 className="mt-3 truncate text-xl font-bold text-slate-900">{profile.full_name}</h1>
-            <div className="mt-1.5">
+            {/* h2, not h1 - AppHeader already owns this page's single h1. */}
+            <h2 className="mt-3 truncate text-xl font-bold text-slate-900">{profile.full_name}</h2>
+            {profile.bio && <p className="mt-1 text-sm text-slate-600">{profile.bio}</p>}
+
+            <div className="mt-2">
               <RatingStars value={Number(profile.rating)} count={profile.rating_count} />
             </div>
+
+            {place && (
+              <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
+                <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                {place}
+              </p>
+            )}
           </div>
 
-          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-3">
+          <div className="border-t border-slate-100 bg-gradient-to-r from-slate-50 to-transparent px-5 py-3">
             <div className="flex items-center gap-2.5">
               <span
                 className={cn(
@@ -417,15 +430,15 @@ export function ProfileScreen() {
           </div>
 
           <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100">
-            <div className="px-2 py-3 text-center">
+            <div className="px-2 py-3 text-center transition-colors duration-200 hover:bg-slate-50">
               <p className="text-lg font-bold text-slate-900">{formatNumber(skillList.length, lang)}</p>
               <p className="mt-0.5 text-xs text-slate-500">{t("skills")}</p>
             </div>
-            <div className="px-2 py-3 text-center">
+            <div className="px-2 py-3 text-center transition-colors duration-200 hover:bg-slate-50">
               <p className="text-lg font-bold text-slate-900">{formatNumber(profile.rating_count, lang)}</p>
               <p className="mt-0.5 text-xs text-slate-500">{t("reviews")}</p>
             </div>
-            <div className="px-2 py-3 text-center">
+            <div className="px-2 py-3 text-center transition-colors duration-200 hover:bg-slate-50">
               <p className="text-lg font-bold text-slate-900">
                 {formatDate(profile.created_at.slice(0, 10), lang)}
               </p>
@@ -436,6 +449,16 @@ export function ProfileScreen() {
 
         {editing ? (
           <>
+            <div className="animate-in-up mb-4 flex items-center justify-between gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-brand-900">
+                <Pencil className="h-4 w-4" aria-hidden />
+                {t("editingProfile")}
+              </span>
+              <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
+                {t("done")}
+              </Button>
+            </div>
+
             <Card className="mb-4">
               <CardBody>
                 <SectionTitle>
@@ -559,7 +582,7 @@ export function ProfileScreen() {
               </CardBody>
             </Card>
 
-            <div className="mb-4 flex gap-2">
+            <div className="mb-4 flex gap-2 border-t border-slate-200 pt-4 md:sticky md:bottom-4 md:z-10 md:rounded-xl md:border md:bg-white/95 md:p-3 md:shadow-lg md:backdrop-blur">
               <Button variant="outline" className="flex-1" onClick={() => setEditing(false)}>
                 {t("cancel")}
               </Button>
@@ -581,25 +604,28 @@ export function ProfileScreen() {
                   }
                   defaultOpen
                 >
-                  {profile.bio && <p className="mb-2 text-sm font-medium text-slate-800">{profile.bio}</p>}
                   {profile.about ? (
                     <p className="text-sm leading-relaxed text-slate-700">{profile.about}</p>
                   ) : (
                     <p className="text-sm italic text-slate-400">{t("noAboutYet")}</p>
                   )}
                   {(profile.age != null || profile.education) && (
-                    <div className="mt-2.5 flex flex-wrap gap-3 text-sm text-slate-600">
+                    <div className="mt-3 grid grid-cols-2 gap-3 border-t border-slate-100 pt-3">
                       {profile.age != null && (
-                        <span>{t("yearsOld", { count: formatNumber(profile.age, lang) })}</span>
+                        <div>
+                          <p className="text-xs font-medium text-slate-500">{t("age")}</p>
+                          <p className="mt-0.5 text-sm font-semibold text-slate-800">
+                            {t("yearsOld", { count: formatNumber(profile.age, lang) })}
+                          </p>
+                        </div>
                       )}
-                      {profile.education && <span>{profile.education}</span>}
+                      {profile.education && (
+                        <div>
+                          <p className="text-xs font-medium text-slate-500">{t("highestEducation")}</p>
+                          <p className="mt-0.5 text-sm font-semibold text-slate-800">{profile.education}</p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {place && (
-                    <p className="mt-2.5 flex items-center gap-1.5 text-sm text-slate-500">
-                      <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                      {place}
-                    </p>
                   )}
                   {myPhone.data?.alt_phone && (
                     <p className="mt-2.5 text-sm text-slate-500">
@@ -617,14 +643,24 @@ export function ProfileScreen() {
                     <span className="inline-flex items-center gap-2">
                       <SectionIcon icon={Briefcase} />
                       {t("yourSkills")}
+                      {skillList.length > 0 && <Badge tone="neutral">{formatNumber(skillList.length, lang)}</Badge>}
                     </span>
                   }
                   defaultOpen
                 >
                   {skillList.length === 0 ? (
-                    <p className="text-sm italic text-slate-400">{t("noSkillsYetProfile")}</p>
+                    <EmptyState
+                      icon={<Briefcase className="h-7 w-7" />}
+                      title={t("noSkillsYetProfile")}
+                      hint={t("noSkillsYetProfileHint")}
+                      action={
+                        <Button size="sm" onClick={() => setEditing(true)}>
+                          {t("addYourSkills")}
+                        </Button>
+                      }
+                    />
                   ) : (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="space-y-2">
                       {skillList.map((s) => {
                         const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
                         const rate =
@@ -632,11 +668,21 @@ export function ProfileScreen() {
                             ? `${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}`
                             : null;
                         return (
-                          <Badge key={s.id} tone="brand">
-                            <span aria-hidden>{s.emoji}</span>
-                            {label}
-                            {rate ? ` · ${rate}` : ""}
-                          </Badge>
+                          <div
+                            key={s.id}
+                            className="flex items-center justify-between gap-3 rounded-xl border border-brand-100 bg-gradient-to-r from-brand-50 to-transparent px-4 py-3 transition-colors duration-200 hover:bg-brand-50"
+                          >
+                            <div className="min-w-0">
+                              <p className="flex items-center gap-2 font-semibold text-slate-900">
+                                <span aria-hidden>{s.emoji}</span>
+                                <span className="truncate">{label}</span>
+                              </p>
+                              {s.custom_note && (
+                                <p className="mt-0.5 truncate text-xs text-slate-600">{s.custom_note}</p>
+                              )}
+                            </div>
+                            {rate && <p className="shrink-0 font-semibold text-slate-900">{rate}</p>}
+                          </div>
                         );
                       })}
                     </div>
@@ -688,24 +734,29 @@ export function ProfileScreen() {
           </>
         )}
 
-        <Card className="mb-4">
+        <Card tone="primary" className="mb-4">
           <CardBody>
             <Collapsible
               title={
                 <span className="inline-flex items-center gap-2">
                   <SectionIcon icon={Calendar} />
                   {t("markCalendar")}
+                  {busyDaysCount > 0 && (
+                    <Badge tone="warning">{t("daysMarkedBusy", { count: formatNumber(busyDaysCount, lang) })}</Badge>
+                  )}
                 </span>
               }
               defaultOpen
             >
               <p className="mb-3 text-sm text-slate-500">{t("calendarHint")}</p>
-              <AvailabilityCalendar
-                days={availability.data ?? []}
-                editable
-                monthView
-                onToggle={(day, status) => changeDay.mutate({ day, status })}
-              />
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <AvailabilityCalendar
+                  days={availability.data ?? []}
+                  editable
+                  monthView
+                  onToggle={(day, status) => changeDay.mutate({ day, status })}
+                />
+              </div>
             </Collapsible>
           </CardBody>
         </Card>
@@ -717,38 +768,52 @@ export function ProfileScreen() {
                 <span className="inline-flex items-center gap-2">
                   <SectionIcon icon={Award} />
                   {t("certificates")}
+                  {(myCertificates.data?.length ?? 0) > 0 && (
+                    <Badge tone="neutral">{formatNumber(myCertificates.data!.length, lang)}</Badge>
+                  )}
                 </span>
               }
             >
               <p className="mb-3 text-sm text-slate-500">{t("certificatesHint")}</p>
-              {(myCertificates.data?.length ?? 0) > 0 && (
-                <ul className="mb-3 space-y-2">
+
+              {(myCertificates.data?.length ?? 0) > 0 ? (
+                <ul className="mb-4 space-y-2">
                   {(myCertificates.data ?? []).map((c) => (
                     <li
                       key={c.id}
-                      className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm"
+                      className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm transition-colors duration-200 hover:bg-slate-100"
                     >
                       <Award className="h-4 w-4 shrink-0 text-brand-700" aria-hidden />
-                      <a
-                        href={c.file_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="min-w-0 flex-1 truncate font-medium text-slate-800 hover:underline"
-                      >
-                        {c.title}
-                      </a>
+                      <div className="min-w-0 flex-1">
+                        <a
+                          href={c.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block truncate font-medium text-slate-800 hover:text-brand-700 hover:underline"
+                        >
+                          {c.title}
+                        </a>
+                        <p className="text-xs text-slate-500">{formatDate(c.created_at.slice(0, 10), lang)}</p>
+                      </div>
                       <button
                         type="button"
                         onClick={() => deleteCert.mutate(c.id)}
                         aria-label={t("delete")}
-                        className="shrink-0 text-slate-400 hover:text-red-600"
+                        className="shrink-0 p-1 text-slate-400 transition-colors duration-200 hover:text-red-600"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden />
                       </button>
                     </li>
                   ))}
                 </ul>
+              ) : (
+                <div className="mb-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 px-4 py-6 text-center">
+                  <Award className="mx-auto h-7 w-7 text-slate-300" aria-hidden />
+                  <p className="mt-2 text-sm font-medium text-slate-600">{t("noCertificatesYet")}</p>
+                  <p className="mt-1 text-xs text-slate-500">{t("noCertificatesYetHint")}</p>
+                </div>
               )}
+
               <div className="flex items-center gap-2">
                 <Input
                   value={certTitle}
@@ -759,7 +824,7 @@ export function ProfileScreen() {
                 />
                 <label
                   className={cn(
-                    "inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50",
+                    "inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-800 transition-colors duration-200 hover:bg-slate-50",
                     (!certTitle.trim() || addCert.isPending) && "pointer-events-none opacity-50",
                   )}
                 >
@@ -782,6 +847,7 @@ export function ProfileScreen() {
                   />
                 </label>
               </div>
+              <p className="mt-1.5 text-xs text-slate-400">{t("uploadCertificateHint")}</p>
             </Collapsible>
           </CardBody>
         </Card>
@@ -798,7 +864,7 @@ export function ProfileScreen() {
             >
               <Link
                 to="/friends"
-                className="mb-2 flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3.5 py-3 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-100"
+                className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3.5 py-3 text-sm font-medium text-slate-800 transition-colors duration-200 hover:bg-slate-100"
               >
                 <span className="inline-flex items-center gap-2">
                   <Users className="h-4 w-4 text-slate-500" aria-hidden />
@@ -807,10 +873,16 @@ export function ProfileScreen() {
                 <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden />
               </Link>
 
-              <Button variant="outline" className="w-full" onClick={() => void signOut()}>
-                <LogOut className="h-4 w-4" aria-hidden />
-                {t("signOut")}
-              </Button>
+              <div className="mt-4 border-t border-slate-100 pt-4">
+                <Button
+                  variant="outline"
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                  onClick={() => void signOut()}
+                >
+                  <LogOut className="h-4 w-4" aria-hidden />
+                  {t("signOut")}
+                </Button>
+              </div>
             </Collapsible>
           </CardBody>
         </Card>

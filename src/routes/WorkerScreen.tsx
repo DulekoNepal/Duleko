@@ -47,7 +47,7 @@ import { cn, formatMoney, formatNumber, locationLine, relativeTime, skillName } 
 
 /** Matches the Call/Chat buttons' look - a native `<a href="tel:">` can't use the <Button> component. */
 const secondaryActionClass =
-  "inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-50 px-4 text-sm font-medium text-brand-800 transition-colors hover:bg-brand-100";
+  "inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-50 px-4 text-sm font-medium text-brand-800 transition-colors duration-200 hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2";
 
 export function WorkerScreen() {
   const { t, lang } = useI18n();
@@ -157,7 +157,7 @@ export function WorkerScreen() {
         }
       />
 
-      <PageContainer>
+      <PageContainer className="max-w-2xl">
         {/* ---- Identity card: cover photo behind an overlapping avatar, one flowing hierarchy - */}
         <Card className="mb-4 overflow-hidden">
           <div className="relative h-28 w-full bg-gradient-to-br from-slate-100 to-slate-200 sm:h-36">
@@ -179,7 +179,8 @@ export function WorkerScreen() {
 
             <div className="mt-3 flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h1 className="truncate text-xl font-bold text-slate-900">{w.full_name}</h1>
+                {/* h2, not h1 - AppHeader already carries this name as the page h1. */}
+                <h2 className="truncate text-xl font-bold text-slate-900">{w.full_name}</h2>
                 <div className="mt-1">
                   <RatingStars value={Number(w.rating)} count={w.rating_count} />
                 </div>
@@ -346,7 +347,7 @@ export function WorkerScreen() {
                       href={c.file_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-100"
+                      className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-800 transition-colors duration-200 hover:bg-slate-100"
                     >
                       <Award className="h-4 w-4 shrink-0 text-brand-700" aria-hidden />
                       <span className="truncate">{c.title}</span>

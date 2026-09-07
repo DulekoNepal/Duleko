@@ -162,7 +162,7 @@ export function OnboardingScreen() {
                 key={n}
                 aria-hidden
                 className={cn(
-                  "h-1.5 flex-1 rounded-full transition-colors",
+                  "h-1.5 flex-1 rounded-full transition-colors duration-200",
                   state === "upcoming" ? "bg-slate-100" : "bg-brand-600",
                 )}
               />

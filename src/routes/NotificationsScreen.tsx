@@ -117,7 +117,7 @@ export function NotificationsScreen() {
                     }
                   }}
                   className={cn(
-                    "flex w-full gap-3 rounded-2xl border p-3.5 text-left transition-colors",
+                    "flex w-full gap-3 rounded-2xl border p-3.5 text-left transition-colors duration-200",
                     n.is_read
                       ? "border-slate-200 bg-white"
                       : "border-brand-200 bg-brand-50/60 hover:bg-brand-50",

@@ -67,5 +67,38 @@ textarea {
 }
 
 .skeleton {
-  @apply animate-pulse rounded-md bg-slate-200;
+  @apply relative overflow-hidden rounded-md bg-slate-200;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* A gentle entrance for above-the-fold content - staggered per section via
+   the --delay custom property so the page doesn't pop in all at once. */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+  animation-delay: var(--delay, 0ms);
 }

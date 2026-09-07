@@ -75,7 +75,7 @@ export function ChatsScreen() {
               onClick={() => setDivision(d)}
               aria-pressed={division === d}
               className={cn(
-                "flex-1 rounded-full py-2 transition-colors",
+                "flex-1 rounded-full py-2 transition-colors duration-200",
                 division === d ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
               )}
             >
@@ -98,7 +98,7 @@ export function ChatsScreen() {
                   type="button"
                   onClick={() => navigate({ to: "/chat/$otherId", params: { otherId: c.otherProfileId } })}
                   className={cn(
-                    "flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50",
+                    "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-200 hover:bg-slate-50",
                     c.unread && "bg-brand-50/60",
                   )}
                 >

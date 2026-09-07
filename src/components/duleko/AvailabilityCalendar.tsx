@@ -145,7 +145,7 @@ export function AvailabilityCalendar({
               onClick={handleClick}
               title={booked ? t("bookedDay") : t("freeDay")}
               className={cn(
-                "flex aspect-square flex-col items-center justify-center rounded-lg text-sm transition-colors",
+                "flex aspect-square flex-col items-center justify-center rounded-lg text-sm transition-colors duration-200",
                 outsideMonth && "opacity-30",
                 past && "cursor-default text-slate-300",
                 !past && !booked && "bg-brand-50 text-brand-800",
