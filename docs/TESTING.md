@@ -101,6 +101,29 @@ people at once. Call them **Ram** (worker) and **Sita** (employer).
 - [ ] Break a secret on purpose (e.g. a bad `RESEND_API_KEY`): the row lands in `failed`
       after three tries, with the provider's message in `last_error`, and nothing else stalls.
 
+## K. Chat (needs two accounts, ideally two phones)
+
+- [ ] Tap ⋯ on your own recent message: React, Reply, Edit, Unsend. On theirs: React, Reply only.
+- [ ] Tap ⋯ on a message you unsent: no menu at all.
+- [ ] React → the six quick emoji, then **+** → the full grid (48) scrolls. Picking from either
+      applies; picking the same one again removes it.
+- [ ] Reply to a message: the quote bar appears above the composer, the sent message shows the
+      quoted stub, and tapping the stub scrolls to the original and rings it.
+- [ ] Edit one of your messages: the text changes for both sides and picks up "· edited".
+- [ ] Wait 15 minutes, then open ⋯ on that same message: Edit is gone. (The database refuses it
+      even if you force the request.)
+- [ ] On a phone, swipe **left** on your own message and **right** on theirs → both open a reply.
+      Swiping the other way does nothing, and vertical swipes still scroll the thread.
+- [ ] From the other account, try to edit a message you did not send (via a crafted request):
+      rejected, "Only the sender can edit this message".
+
+## L. Chat list, without opening a thread
+
+- [ ] While they type, their row shows "typing…" and stops on its own a few seconds after they do.
+- [ ] Your own last message shows a single tick, turning into a double tick once they open it.
+- [ ] React to a message from the other account: the emoji appears at the end of that row.
+- [ ] Unsend the last message: the row preview switches to "This message was removed."
+
 ## After the run
 
 Check Supabase → Logs for errors, and Vercel → Deployments → Functions for build warnings.

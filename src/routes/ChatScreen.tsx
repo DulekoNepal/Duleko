@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Check, CornerUpLeft, Pencil, Send, X } from "lucide-react";
 import { AppHeader } from "@/components/duleko/Layout";
+import { ChatBubble, type BubblePanel } from "@/components/duleko/ChatBubble";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -10,8 +11,10 @@ import { FullPageLoader } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
+import { useTypingFrom, useTypingSender } from "@/hooks/use-typing";
 import {
   chatPairKey,
+  editMessage,
   getProfile,
   listMessages,
   markMessageNotificationsRead,
@@ -25,15 +28,14 @@ import { supabase, errorMessage } from "@/lib/supabase";
 import { cn, relativeTime } from "@/lib/utils";
 import type { ChatMessage } from "@/lib/types";
 
-const REACTION_EMOJIS = ["❤️", "👍", "😂", "😮", "😢", "🙏"];
 const TYPING_BROADCAST_THROTTLE_MS = 1500;
 const TYPING_STOP_AFTER_MS = 3000;
+const HIGHLIGHT_MS = 1600;
 
 /**
- * A full-page direct-message thread with one other profile. Deliberately
- * scoped to a handful of Messenger-style basics: a live typing indicator,
- * a "Seen" read receipt on your last message, tap-to-react emoji, and
- * unsend for your own messages - no calling, groups, or media.
+ * A full-page direct-message thread with one other profile: live typing,
+ * a "Seen" receipt, emoji reactions, quoted replies, edit and unsend, and
+ * swipe-to-reply on touch. No calling, groups, or media.
  */
 export function ChatScreen() {
   const { t, lang } = useI18n();
@@ -43,15 +45,20 @@ export function ChatScreen() {
   const { otherId } = useParams({ from: "/chat/$otherId" });
   const [draft, setDraft] = useState("");
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
-  const [confirmUnsendId, setConfirmUnsendId] = useState<string | null>(null);
-  const [otherTyping, setOtherTyping] = useState(false);
+  const [activePanel, setActivePanel] = useState<BubblePanel | null>(null);
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [editing, setEditing] = useState<ChatMessage | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const lastTypingSentAt = useRef(0);
   const typingStopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const otherTypingClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const other = useQuery({ queryKey: ["profile", otherId], queryFn: () => getProfile(otherId) });
+
+  const typingFrom = useTypingFrom(me?.id);
+  const otherTyping = typingFrom.has(otherId);
+  const notifyTyping = useTypingSender(me?.id, otherId);
 
   const pairKey = me ? chatPairKey(me.id, otherId) : null;
 
@@ -61,12 +68,13 @@ export function ChatScreen() {
     enabled: Boolean(me && pairKey),
   });
 
-  // One channel per thread: live new messages, live read/unsend/reaction
-  // updates, and a typing broadcast that never touches the database.
+  // One channel per thread for live message and reaction changes. Typing
+  // rides a separate per-person channel (see use-typing) so the Chats list
+  // can show it too without opening a channel per conversation.
   useEffect(() => {
     if (!pairKey) return;
     const channel = supabase
-      .channel(`messages:${pairKey}`, { config: { broadcast: { self: false } } })
+      .channel(`messages:${pairKey}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "messages", filter: `pair_key=eq.${pairKey}` },
@@ -75,20 +83,10 @@ export function ChatScreen() {
       .on("postgres_changes", { event: "*", schema: "public", table: "message_reactions" }, () =>
         queryClient.invalidateQueries({ queryKey: ["messages", pairKey] }),
       )
-      .on("broadcast", { event: "typing" }, ({ payload }) => {
-        setOtherTyping(Boolean((payload as { typing?: boolean })?.typing));
-        if (otherTypingClearTimer.current) clearTimeout(otherTypingClearTimer.current);
-        if (payload?.typing) {
-          otherTypingClearTimer.current = setTimeout(() => setOtherTyping(false), TYPING_STOP_AFTER_MS + 1000);
-        }
-      })
       .subscribe();
-    channelRef.current = channel;
     return () => {
       supabase.removeChannel(channel);
-      channelRef.current = null;
       if (typingStopTimer.current) clearTimeout(typingStopTimer.current);
-      if (otherTypingClearTimer.current) clearTimeout(otherTypingClearTimer.current);
     };
   }, [pairKey, queryClient]);
 
@@ -115,12 +113,30 @@ export function ChatScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me?.id, otherId]);
 
+  const refreshThread = () => {
+    queryClient.invalidateQueries({ queryKey: ["messages", pairKey] });
+    if (me) queryClient.invalidateQueries({ queryKey: ["conversations", me.id] });
+  };
+
   const send = useMutation({
-    mutationFn: (body: string) => sendMessage(me!.id, otherId, body),
+    mutationFn: ({ body, replyToId }: { body: string; replyToId: string | null }) =>
+      sendMessage(me!.id, otherId, body, replyToId),
     onSuccess: () => {
       setDraft("");
-      broadcastTyping(false);
-      queryClient.invalidateQueries({ queryKey: ["messages", pairKey] });
+      setReplyTo(null);
+      notifyTyping(false);
+      refreshThread();
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  const saveEdit = useMutation({
+    mutationFn: ({ messageId, body }: { messageId: string; body: string }) =>
+      editMessage(messageId, body),
+    onSuccess: () => {
+      setDraft("");
+      setEditing(null);
+      refreshThread();
     },
     onError: (error) => toast(errorMessage(error), "error"),
   });
@@ -128,51 +144,79 @@ export function ChatScreen() {
   const react = useMutation({
     mutationFn: ({ messageId, emoji, mine }: { messageId: string; emoji: string; mine: boolean }) =>
       mine ? removeReaction(messageId, me!.id) : setReaction(messageId, me!.id, emoji),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["messages", pairKey] }),
+    onSuccess: refreshThread,
     onError: (error) => toast(errorMessage(error), "error"),
-    onSettled: () => setActiveMessageId(null),
+    onSettled: closePanels,
   });
 
   const unsend = useMutation({
     mutationFn: (messageId: string) => unsendMessage(messageId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["messages", pairKey] }),
+    onSuccess: refreshThread,
     onError: (error) => toast(errorMessage(error), "error"),
-    onSettled: () => {
-      setActiveMessageId(null);
-      setConfirmUnsendId(null);
-    },
+    onSettled: closePanels,
   });
 
-  function broadcastTyping(typing: boolean) {
-    channelRef.current?.send({ type: "broadcast", event: "typing", payload: { typing } });
+  function closePanels() {
+    setActiveMessageId(null);
+    setActivePanel(null);
   }
 
   function onDraftChange(value: string) {
     setDraft(value);
+    // Editing an old message shouldn't read as "typing" to the other side.
+    if (editing) return;
     const now = Date.now();
     if (value.trim() && now - lastTypingSentAt.current > TYPING_BROADCAST_THROTTLE_MS) {
       lastTypingSentAt.current = now;
-      broadcastTyping(true);
+      notifyTyping(true);
     }
     if (typingStopTimer.current) clearTimeout(typingStopTimer.current);
-    typingStopTimer.current = setTimeout(() => broadcastTyping(false), TYPING_STOP_AFTER_MS);
+    typingStopTimer.current = setTimeout(() => notifyTyping(false), TYPING_STOP_AFTER_MS);
   }
 
   function submit() {
     const body = draft.trim();
-    if (!body || send.isPending) return;
-    send.mutate(body);
+    if (!body) return;
+    if (editing) {
+      if (saveEdit.isPending) return;
+      if (body === editing.body) {
+        setEditing(null);
+        setDraft("");
+        return;
+      }
+      saveEdit.mutate({ messageId: editing.id, body });
+      return;
+    }
+    if (send.isPending) return;
+    send.mutate({ body, replyToId: replyTo?.id ?? null });
   }
 
-  function reactionCounts(m: ChatMessage) {
-    const byEmoji = new Map<string, { count: number; mine: boolean }>();
-    for (const r of m.message_reactions) {
-      const entry = byEmoji.get(r.emoji) ?? { count: 0, mine: false };
-      entry.count += 1;
-      if (r.profile_id === me?.id) entry.mine = true;
-      byEmoji.set(r.emoji, entry);
-    }
-    return [...byEmoji.entries()];
+  function startReply(m: ChatMessage) {
+    setEditing(null);
+    setReplyTo(m);
+    setDraft("");
+    closePanels();
+    inputRef.current?.focus();
+  }
+
+  function startEdit(m: ChatMessage) {
+    setReplyTo(null);
+    setEditing(m);
+    setDraft(m.body);
+    inputRef.current?.focus();
+  }
+
+  function cancelComposer() {
+    setReplyTo(null);
+    setEditing(null);
+    setDraft("");
+  }
+
+  /** Scroll a quoted message into view and ring it briefly. */
+  function jumpTo(messageId: string) {
+    document.getElementById(`msg-${messageId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightId(messageId);
+    window.setTimeout(() => setHighlightId((id) => (id === messageId ? null : id)), HIGHLIGHT_MS);
   }
 
   if (!me) return <SignInRequiredScreen title={other.data?.full_name ?? t("chat")} />;
@@ -212,108 +256,41 @@ export function ChatScreen() {
         ) : items.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-500">{t("chatEmpty")}</p>
         ) : (
-          items.map((m) => {
-            const mine = m.sender_profile_id === me.id;
-            const removed = Boolean(m.deleted_at);
-            const active = activeMessageId === m.id;
-            const counts = reactionCounts(m);
-            return (
-              <div key={m.id} className={cn("flex flex-col", mine ? "items-end" : "items-start")}>
-                <button
-                  type="button"
-                  disabled={removed}
-                  onClick={() => {
-                    setActiveMessageId(active ? null : m.id);
-                    setConfirmUnsendId(null);
-                  }}
-                  className={cn(
-                    "max-w-[80%] rounded-2xl px-3.5 py-2 text-left text-sm",
-                    removed
-                      ? "italic text-slate-400 bg-slate-50"
-                      : mine
-                        ? "bg-brand-700 text-white"
-                        : "bg-slate-100 text-slate-900",
-                  )}
-                >
-                  {removed ? t("messageRemoved") : m.body}
-                </button>
-
-                {counts.length > 0 && (
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {counts.map(([emoji, { count, mine: myReaction }]) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => react.mutate({ messageId: m.id, emoji, mine: myReaction })}
-                        className={cn(
-                          "rounded-full border px-1.5 py-0.5 text-xs",
-                          myReaction ? "border-brand-300 bg-brand-50" : "border-slate-200 bg-white",
-                        )}
-                      >
-                        {emoji} {count}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {active && !removed && confirmUnsendId !== m.id && (
-                  <div className="mt-1 flex flex-wrap items-center gap-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
-                    {REACTION_EMOJIS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() =>
-                          react.mutate({
-                            messageId: m.id,
-                            emoji,
-                            mine: m.message_reactions.some((r) => r.profile_id === me.id && r.emoji === emoji),
-                          })
-                        }
-                        className="rounded-lg px-1.5 py-1 text-base hover:bg-slate-100"
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                    {mine && (
-                      <button
-                        type="button"
-                        onClick={() => setConfirmUnsendId(m.id)}
-                        className="ml-1 rounded-lg px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-                      >
-                        {t("unsend")}
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* In-app confirmation - no native browser confirm() dialog. */}
-                {active && confirmUnsendId === m.id && (
-                  <div className="mt-1 flex flex-wrap items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-2 shadow-sm">
-                    <span className="text-xs text-red-800">{t("unsendConfirm")}</span>
-                    <button
-                      type="button"
-                      disabled={unsend.isPending}
-                      onClick={() => unsend.mutate(m.id)}
-                      className="rounded-lg bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
-                    >
-                      {t("unsend")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmUnsendId(null)}
-                      className="rounded-lg px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
-                    >
-                      {t("cancel")}
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })
+          items.map((m) => (
+            <ChatBubble
+              key={m.id}
+              message={m}
+              mine={m.sender_profile_id === me.id}
+              myProfileId={me.id}
+              otherName={other.data?.full_name ?? ""}
+              panel={activeMessageId === m.id ? activePanel : null}
+              onPanel={(panel) => {
+                setActiveMessageId(panel ? m.id : null);
+                setActivePanel(panel);
+              }}
+              onReply={startReply}
+              onEdit={startEdit}
+              onUnsend={(msg) => unsend.mutate(msg.id)}
+              onReact={(msg, emoji) =>
+                react.mutate({
+                  messageId: msg.id,
+                  emoji,
+                  mine: msg.message_reactions.some((r) => r.profile_id === me.id && r.emoji === emoji),
+                })
+              }
+              onJumpTo={jumpTo}
+              highlighted={highlightId === m.id}
+            />
+          ))
         )}
         {showSeen && (
           <p className="pt-1 text-right text-xs text-slate-400">
             {t("seenLabel")} · {relativeTime(lastMessage.read_at!, lang)}
+          </p>
+        )}
+        {otherTyping && (
+          <p className="pt-1 text-left text-xs italic text-slate-400">
+            {other.data?.full_name} {t("typingIndicator")}
           </p>
         )}
       </div>
@@ -325,24 +302,66 @@ export function ChatScreen() {
           submit();
         }}
       >
-        <div className="mx-auto flex w-full max-w-3xl gap-2">
-          <input
-            autoFocus
-            value={draft}
-            onChange={(e) => onDraftChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                submit();
-              }
-            }}
-            placeholder={t("chatPlaceholder")}
-            maxLength={1000}
-            className="h-11 flex-1 rounded-xl border border-slate-300 bg-white px-3.5 text-slate-900 placeholder:text-slate-400 focus:border-brand-600 focus:outline focus:outline-2 focus:outline-offset-0 focus:outline-brand-600/30"
-          />
-          <Button type="submit" size="icon" loading={send.isPending} disabled={!draft.trim()} aria-label={t("send")}>
-            <Send className="h-4 w-4" aria-hidden />
-          </Button>
+        <div className="mx-auto w-full max-w-3xl">
+          {(replyTo || editing) && (
+            <div className="mb-2 flex items-start gap-2 rounded-xl border-l-2 border-brand-500 bg-brand-50/70 px-3 py-2">
+              <span className="mt-0.5 shrink-0 text-brand-700" aria-hidden>
+                {editing ? <Pencil className="h-3.5 w-3.5" /> : <CornerUpLeft className="h-3.5 w-3.5" />}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs font-medium text-brand-900">
+                  {editing
+                    ? t("editingMessage")
+                    : t("replyingTo", {
+                        name:
+                          replyTo!.sender_profile_id === me.id
+                            ? t("youLabel")
+                            : (other.data?.full_name ?? ""),
+                      })}
+                </span>
+                <span className="mt-0.5 block truncate text-xs text-slate-500">
+                  {(editing ?? replyTo)!.body}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={cancelComposer}
+                aria-label={t("cancel")}
+                className="shrink-0 rounded-lg p-1 text-slate-400 transition-colors duration-200 hover:bg-white hover:text-slate-600"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <input
+              ref={inputRef}
+              autoFocus
+              value={draft}
+              onChange={(e) => onDraftChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  submit();
+                } else if (e.key === "Escape" && (replyTo || editing)) {
+                  cancelComposer();
+                }
+              }}
+              placeholder={editing ? t("editMessagePlaceholder") : t("chatPlaceholder")}
+              maxLength={1000}
+              className="h-11 flex-1 rounded-xl border border-slate-300 bg-white px-3.5 text-slate-900 placeholder:text-slate-400 focus:border-brand-600 focus:outline focus:outline-2 focus:outline-offset-0 focus:outline-brand-600/30"
+            />
+            <Button
+              type="submit"
+              size="icon"
+              loading={send.isPending || saveEdit.isPending}
+              disabled={!draft.trim()}
+              aria-label={editing ? t("save") : t("send")}
+            >
+              {editing ? <Check className="h-4 w-4" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
+            </Button>
+          </div>
         </div>
       </form>
     </div>
