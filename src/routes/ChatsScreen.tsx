@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { MessageCircle } from "lucide-react";
+import { BadgeCheck, MessageCircle } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { FriendsPanel } from "@/components/duleko/FriendsPanel";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
@@ -105,8 +105,13 @@ export function ChatsScreen() {
                   <Avatar name={c.otherName} src={c.otherAvatarUrl} size={44} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
-                      <span className={cn("truncate", c.unread ? "font-bold text-slate-950" : "font-medium text-slate-900")}>
-                        {c.otherName}
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <span className={cn("truncate", c.unread ? "font-bold text-slate-950" : "font-medium text-slate-900")}>
+                          {c.otherName}
+                        </span>
+                        {c.otherIsOfficial && (
+                          <BadgeCheck className="h-4 w-4 shrink-0 text-brand-600" aria-label={t("officialAccount")} />
+                        )}
                       </span>
                       <span className="shrink-0 text-xs text-slate-400">
                         {relativeTime(c.lastCreatedAt, lang)}

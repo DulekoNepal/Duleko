@@ -336,6 +336,21 @@ const strings = {
   notifications: ["Notifications", "सूचना"],
   markAllRead: ["Mark all read", "सबै पढेको चिन्ह"],
   noNotifications: ["No notifications.", "कुनै सूचना छैन।"],
+  officialAccount: ["Official", "आधिकारिक"],
+
+  // ---- alerts outside the app ----------------------------------------
+  alertsOutsideApp: ["Email & SMS alerts", "इमेल र एसएमएस सूचना"],
+  emailAlerts: ["Email me", "मलाई इमेल पठाउनुहोस्"],
+  emailAlertsHint: [
+    "Work requests, friend requests, and chats you miss while you are away.",
+    "कामको अनुरोध, मित्र अनुरोध, र तपाईं नभएको बेला आएका च्याट।",
+  ],
+  smsAlerts: ["Text me (SMS)", "मलाई एसएमएस पठाउनुहोस्"],
+  smsAlertsHint: [
+    "Only the important ones - work requests and friend requests. Needs a phone number saved.",
+    "महत्त्वपूर्ण कुरा मात्र - कामको अनुरोध र मित्र अनुरोध। फोन नम्बर सुरक्षित गरिएको हुनुपर्छ।",
+  ],
+  alertPrefsSaved: ["Alert settings saved.", "सूचना सेटिङ सुरक्षित भयो।"],
 
   // ---- profile / settings --------------------------------------------
   myProfile: ["My profile", "मेरो प्रोफाइल"],

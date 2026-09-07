@@ -12,6 +12,7 @@ import type {
   EngagementWithParties,
   Friendship,
   Lang,
+  NotificationPrefs,
   Profile,
   ReportReason,
   Review,
@@ -21,7 +22,7 @@ import type {
 } from "./types";
 
 const PROFILE_COLUMNS =
-  "id,user_id,full_name,about,bio,age,education,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,language,rating,rating_count,lat,lng,location_shared_at,created_at,updated_at";
+  "id,user_id,full_name,about,bio,age,education,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,is_official,language,rating,rating_count,lat,lng,location_shared_at,created_at,updated_at";
 
 const PARTY_COLUMNS = "id,full_name,avatar_url,rating,rating_count";
 
@@ -529,6 +530,30 @@ export async function markAllRead(profileId: string): Promise<void> {
   if (error) throw error;
 }
 
+// ---------------------------------------------------------------------
+// Email / SMS delivery preferences
+// ---------------------------------------------------------------------
+/** No row yet means "never touched the toggles" - email on, SMS off. */
+export async function getNotificationPrefs(profileId: string): Promise<NotificationPrefs> {
+  const { data, error } = await supabase
+    .from("notification_prefs")
+    .select("email_enabled,sms_enabled")
+    .eq("profile_id", profileId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as NotificationPrefs | null) ?? { email_enabled: true, sms_enabled: false };
+}
+
+export async function saveNotificationPrefs(
+  profileId: string,
+  prefs: NotificationPrefs,
+): Promise<void> {
+  const { error } = await supabase
+    .from("notification_prefs")
+    .upsert({ profile_id: profileId, ...prefs }, { onConflict: "profile_id" });
+  if (error) throw error;
+}
+
 /** Opening a chat thread clears the badge contribution from that sender. */
 export async function markMessageNotificationsRead(
   myProfileId: string,
@@ -830,8 +855,15 @@ interface ConversationRow {
   body: string;
   created_at: string;
   read_at: string | null;
-  a: { id: string; full_name: string; avatar_url: string | null } | { id: string; full_name: string; avatar_url: string | null }[] | null;
-  b: { id: string; full_name: string; avatar_url: string | null } | { id: string; full_name: string; avatar_url: string | null }[] | null;
+  a: ConversationParty | ConversationParty[] | null;
+  b: ConversationParty | ConversationParty[] | null;
+}
+
+interface ConversationParty {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+  is_official: boolean;
 }
 
 /** All of "my" chats, one row per conversation, newest message first. */
@@ -840,8 +872,8 @@ export async function listConversations(myProfileId: string): Promise<Conversati
     .from("messages")
     .select(
       "profile_a,profile_b,sender_profile_id,body,created_at,read_at," +
-        "a:profiles!messages_profile_a_fkey(id,full_name,avatar_url)," +
-        "b:profiles!messages_profile_b_fkey(id,full_name,avatar_url)",
+        "a:profiles!messages_profile_a_fkey(id,full_name,avatar_url,is_official)," +
+        "b:profiles!messages_profile_b_fkey(id,full_name,avatar_url,is_official)",
     )
     .or(`profile_a.eq.${myProfileId},profile_b.eq.${myProfileId}`)
     .order("created_at", { ascending: false })
@@ -860,6 +892,7 @@ export async function listConversations(myProfileId: string): Promise<Conversati
       otherProfileId,
       otherName: other.full_name,
       otherAvatarUrl: other.avatar_url,
+      otherIsOfficial: Boolean(other.is_official),
       lastBody: row.body,
       lastCreatedAt: row.created_at,
       lastSenderProfileId: row.sender_profile_id,
