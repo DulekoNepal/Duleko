@@ -162,9 +162,9 @@ const strings = {
   newProfile: ["New on Duleko", "दुलेकोमा नयाँ"],
   requestWork: ["Request work", "काम अनुरोध गर्नुहोस्"],
   callNow: ["Call", "फोन गर्नुहोस्"],
-  phoneHidden: [
-    "Phone number appears once the worker accepts.",
-    "कामदारले स्वीकार गरेपछि फोन नम्बर देखिन्छ।",
+  noPhoneSaved: [
+    "This person has not added a phone number yet.",
+    "यस व्यक्तिले अझै फोन नम्बर थप्नुभएको छैन।",
   ],
   chat: ["Chat", "कुराकानी"],
   chatHidden: [

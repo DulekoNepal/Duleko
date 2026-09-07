@@ -226,7 +226,7 @@ export function EngagementCard({
               {contact.data.phone}
             </a>
           ) : (
-            <p className="mt-3 text-xs text-slate-400">{t("phoneHidden")}</p>
+            <p className="mt-3 text-xs text-slate-400">{t("noPhoneSaved")}</p>
           ))}
 
         {waitingHint && <p className="mt-2 text-xs text-slate-500">{waitingHint}</p>}

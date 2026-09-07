@@ -51,13 +51,15 @@ people at once. Call them **Ram** (worker) and **Sita** (employer).
 
 ## F. Safety and privacy
 
-- [ ] Sita blocks Ram. He disappears from her search results and skill counts.
-- [ ] Ram no longer sees Sita in his search results either (blocking is mutual).
-- [ ] Unblock from Profile → Settings → Blocked people; he reappears.
 - [ ] Report a user with a reason → a row lands in `reports`.
-- [ ] Sign out and open a worker URL directly (`/worker/<id>`) → you get the sign-in screen, no data.
-- [ ] In the browser console, confirm no phone numbers appear in any network response for a
-      profile you have no accepted work with.
+- [ ] Signed in, open a stranger's profile with no work request and no friendship between you:
+      **Call** and **Chat** both work (this is the open beta rule).
+- [ ] Open a profile of someone who never saved a number: Call is greyed out with "has not
+      added a phone number yet", but Chat still works.
+- [ ] Sign out and open a worker URL directly (`/worker/<id>`): the profile is browsable as a
+      guest, but Call and Chat both bounce you to sign-in.
+- [ ] As a signed-out guest, confirm in the browser console that **no** phone number appears in
+      any network response - `profile_contacts` should come back empty, not merely hidden in the UI.
 
 ## G. Invalid transitions (should all fail)
 
