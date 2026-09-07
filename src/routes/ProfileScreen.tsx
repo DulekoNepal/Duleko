@@ -7,11 +7,14 @@ import {
   Calendar,
   Camera,
   ChevronRight,
+  Eye,
   Info,
+  Link2 as LinkIcon,
   LogOut,
   Mail,
   MapPin,
   MessageSquare,
+  MoreHorizontal,
   Navigation,
   Pencil,
   Settings as SettingsIcon,
@@ -60,7 +63,7 @@ import {
   getUserSkills,
   type UserSkillInput,
 } from "@/lib/queries";
-import { shareProfile } from "@/lib/share";
+import { copyLink, profileUrl, shareProfile } from "@/lib/share";
 import { errorMessage } from "@/lib/supabase";
 import type { NotificationPrefs } from "@/lib/types";
 import {
@@ -95,6 +98,7 @@ export function ProfileScreen() {
 
   const [editing, setEditing] = useState(false);
   const [locationConsentOpen, setLocationConsentOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
@@ -146,6 +150,24 @@ export function ProfileScreen() {
     queryFn: () => getNotificationPrefs(profile!.id),
     enabled: Boolean(profile?.id),
   });
+
+  // The ⋯ menu closes on a tap anywhere else, or Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onPointerDownAnywhere(e: PointerEvent) {
+      if ((e.target as HTMLElement | null)?.closest("[data-profile-menu]")) return;
+      setMenuOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDownAnywhere, true);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDownAnywhere, true);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
 
   // Seed the form once the profile and its related rows have loaded.
   useEffect(() => {
@@ -249,7 +271,7 @@ export function ProfileScreen() {
 
   const share = useMutation({
     mutationFn: () =>
-      shareProfile(profile!.id, profile!.full_name, t("shareProfileText", { name: profile!.full_name })),
+      shareProfile(profile!.public_slug, profile!.full_name, t("shareProfileText", { name: profile!.full_name })),
     onSuccess: (result) => {
       if (result === "copied") toast(t("linkCopied"));
       else if (result === "failed") toast(t("copyFailed"), "error");
@@ -267,6 +289,12 @@ export function ProfileScreen() {
     user?.app_metadata?.provider,
   ];
   const hasPassword = signInMethods.includes("email");
+
+  const copy = useMutation({
+    mutationFn: () => copyLink(profileUrl(profile!.public_slug)),
+    onSuccess: (result) =>
+      result === "copied" ? toast(t("linkCopied")) : toast(t("copyFailed"), "error"),
+  });
 
   const deleteAccount = useMutation({
     mutationFn: async () => {
@@ -399,19 +427,7 @@ export function ProfileScreen() {
     <>
       <AppHeader
         title={t("myProfile")}
-        right={
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => share.mutate()}
-              aria-label={t("shareMyProfile")}
-              className="rounded-lg p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-700"
-            >
-              <Share2 className="h-5 w-5" aria-hidden />
-            </button>
-            <LanguageToggle />
-          </div>
-        }
+        right={<LanguageToggle />}
       />
       <PageContainer className="max-w-2xl">
         {/* ---- Identity card: one flowing hierarchy, not competing blocks - */}
@@ -478,10 +494,42 @@ export function ProfileScreen() {
               </div>
 
               {!editing && (
-                <Button variant="outline" size="sm" className="mt-3 shrink-0" onClick={() => setEditing(true)}>
-                  <Pencil className="h-4 w-4" aria-hidden />
-                  {t("editProfile")}
-                </Button>
+                <div className="relative mt-3 shrink-0" data-profile-menu>
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen((v) => !v)}
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpen}
+                    aria-label={t("profileOptions")}
+                    className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-50 hover:text-slate-700"
+                  >
+                    <MoreHorizontal className="h-5 w-5" aria-hidden />
+                  </button>
+
+                  {menuOpen && (
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
+                    >
+                      <ProfileMenuItem
+                        icon={Pencil}
+                        label={t("editProfile")}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setEditing(true);
+                        }}
+                      />
+                      <ProfileMenuItem
+                        icon={Share2}
+                        label={t("shareProfile")}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          share.mutate();
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -995,7 +1043,7 @@ export function ProfileScreen() {
                 </div>
               </div>
 
-              <div className="mt-4 space-y-2 border-t border-slate-100 pt-4">
+              <div className="mt-4 border-t border-slate-100 pt-4">
                 <Button
                   variant="outline"
                   className="w-full border-red-200 text-red-600 hover:bg-red-50"
@@ -1004,19 +1052,54 @@ export function ProfileScreen() {
                   <LogOut className="h-4 w-4" aria-hidden />
                   {t("signOut")}
                 </Button>
+              </div>
 
-                <Button
-                  variant="ghost"
-                  className="w-full text-red-600 hover:bg-red-50"
-                  onClick={() => {
-                    setDeleteConfirm("");
-                    setDeletePassword("");
-                    setDeleteOpen(true);
-                  }}
+              {/* Deleting is folded away behind its own disclosure: reachable
+                  when wanted, never sitting under a thumb next to Sign out. */}
+              <div className="mt-4 border-t border-slate-100 pt-4">
+                <Collapsible
+                  title={<span className="text-sm font-semibold text-slate-700">{t("manageAccount")}</span>}
                 >
-                  <Trash2 className="h-4 w-4" aria-hidden />
-                  {t("deleteAccount")}
-                </Button>
+                  <Link
+                    to="/worker/$workerId"
+                    params={{ workerId: profile.id }}
+                    className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3.5 py-3 text-sm font-medium text-slate-800 transition-colors duration-200 hover:bg-slate-100"
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-slate-500" aria-hidden />
+                      {t("viewPublicProfile")}
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden />
+                  </Link>
+
+                  <div className="mt-2 rounded-xl bg-slate-50 px-3.5 py-3">
+                    <p className="text-sm font-medium text-slate-800">{t("yourProfileLink")}</p>
+                    <p className="mt-1 break-all text-xs text-slate-500">{profileUrl(profile.public_slug)}</p>
+                    <p className="mt-1 text-xs text-slate-400">{t("shareProfileHint")}</p>
+                    <div className="mt-2.5">
+                      <Button size="sm" variant="outline" onClick={() => copy.mutate()}>
+                        <LinkIcon className="h-4 w-4" aria-hidden />
+                        {t("copyLink")}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 border-t border-slate-100 pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteConfirm("");
+                        setDeletePassword("");
+                        setDeleteOpen(true);
+                      }}
+                      className="inline-flex items-center gap-2 rounded-lg px-1 py-1 text-sm font-medium text-red-600 underline-offset-2 transition-colors duration-200 hover:underline"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden />
+                      {t("deleteAccount")}
+                    </button>
+                    <p className="mt-1 text-xs text-slate-400">{t("deleteAccountHint")}</p>
+                  </div>
+                </Collapsible>
               </div>
             </Collapsible>
           </CardBody>
@@ -1079,5 +1162,27 @@ export function ProfileScreen() {
         )}
       </Dialog>
     </>
+  );
+}
+
+function ProfileMenuItem({
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  icon: typeof Pencil;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-50"
+    >
+      <Icon className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+      {label}
+    </button>
   );
 }
