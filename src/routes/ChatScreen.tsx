@@ -186,7 +186,13 @@ export function ChatScreen() {
     <div className="flex min-h-dvh flex-col">
       <AppHeader
         title={other.data?.full_name ?? ""}
-        subtitle={otherTyping ? `${other.data?.full_name ?? ""} ${t("typingIndicator")}` : undefined}
+        subtitle={
+          otherTyping
+            ? `${other.data?.full_name ?? ""} ${t("typingIndicator")}`
+            : other.data?.is_official
+              ? `✓ ${t("officialAccount")}`
+              : undefined
+        }
         back={
           <button
             type="button"

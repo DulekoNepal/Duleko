@@ -73,6 +73,34 @@ people at once. Call them **Ram** (worker) and **Sita** (employer).
       app still works.
 - [ ] Nepali text renders correctly (no tofu boxes) on the phone.
 
+## I. Welcome message (needs one profile flagged `is_official`)
+
+- [ ] Sign up as a brand new person. Alerts shows a 👋 **Welcome to Duleko** notification.
+- [ ] Chats shows an unread thread from the official account with the founder's note, and the
+      name carries the blue check.
+- [ ] The greeting uses the new person's **first name only**, in the language they picked at
+      signup.
+- [ ] Reply to that thread - it sends, even though there is no work engagement or friendship
+      between the two accounts.
+- [ ] The official account can open the same thread and reply back.
+- [ ] Signing up a second time does not produce a second welcome for the first person
+      (`select public.deliver_welcome('<their profile id>');` in the SQL editor is a no-op).
+
+## J. Email and SMS alerts (needs the edge function deployed)
+
+- [ ] Profile → Settings shows **Email & SMS alerts** with email on and SMS off.
+- [ ] Send Sita a work request. Within a minute her inbox has it, and
+      `select status, count(*) from notification_deliveries group by 1;` shows a `sent` row.
+- [ ] Turn email off in her settings, send another request: no new row for her.
+- [ ] Message Sita while she has the app open: **no** email (the presence guard).
+- [ ] Close her app, wait three minutes, message twice in a row: exactly **one** email.
+- [ ] Turn SMS on for an account with a saved phone number, send a work request: one text.
+      A chat message to the same account sends no text (chat is not in `sms_kinds`).
+- [ ] Break a secret on purpose (e.g. a bad `RESEND_API_KEY`): the row lands in `failed`
+      after three tries, with the provider's message in `last_error`, and nothing else stalls.
+
 ## After the run
 
 Check Supabase → Logs for errors, and Vercel → Deployments → Functions for build warnings.
+For the notification pipeline, Supabase → Edge Functions → `send-notifications` → Logs shows
+one line per run (`claimed / sent / failed`).

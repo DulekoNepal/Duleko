@@ -40,6 +40,8 @@ export interface Profile {
   ward: number | null;
   locality: string | null;
   is_available: boolean;
+  /** The one Duleko account the automatic welcome message is sent from. */
+  is_official: boolean;
   language: Lang;
   rating: number;
   rating_count: number;
@@ -149,7 +151,8 @@ export interface AppNotification {
     | "review"
     | "friend_request"
     | "friend_accepted"
-    | "message";
+    | "message"
+    | "welcome";
   title_en: string;
   title_ne: string;
   body_en: string | null;
@@ -160,6 +163,16 @@ export interface AppNotification {
   actor_name: string | null;
   is_read: boolean;
   created_at: string;
+}
+
+/**
+ * Whether the same notifications should also leave the app. Email is on
+ * by default; SMS is opt-in because each text costs money, and it only
+ * ever fires for the important kinds (see the 'sms_kinds' app setting).
+ */
+export interface NotificationPrefs {
+  email_enabled: boolean;
+  sms_enabled: boolean;
 }
 
 export interface AvailabilityDay {
@@ -208,6 +221,7 @@ export interface ConversationSummary {
   otherProfileId: string;
   otherName: string;
   otherAvatarUrl: string | null;
+  otherIsOfficial: boolean;
   lastBody: string;
   lastCreatedAt: string;
   lastSenderProfileId: string;

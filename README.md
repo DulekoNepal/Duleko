@@ -78,6 +78,80 @@ If `.env.local` is missing, the app shows a setup screen instead of a blank page
 5. In Supabase → **Authentication → URL Configuration**, set **Site URL** to your Vercel
    URL and add it to **Redirect URLs**.
 
+## 7. The official account and the welcome message
+
+Migration `20260101002400_welcome_message.sql` gives every brand new profile a welcome
+notification *and* a real chat message from the founder's account, which they can reply to.
+It needs one manual step: sign up in the app with the account the message should come from,
+then flag it once.
+
+```sql
+update public.profiles p
+   set is_official = true
+  from auth.users u
+ where u.id = p.user_id
+   and u.email = 'you@example.com';
+```
+
+The wording lives in `public.app_settings` under `welcome_message_en` / `welcome_message_ne`,
+so it can be edited from the Supabase table editor with no deploy. `{first_name}` is replaced
+with the first word of the person's name.
+
+To send it to people who signed up before this existed (safe to run twice - nobody gets two):
+
+```sql
+select public.deliver_welcome(id) from public.profiles where not is_official;
+```
+
+The official account can chat with anyone and anyone can reply to it - that is the only thing
+`is_official` unlocks. It does **not** give the account access to anyone's phone number.
+
+## 8. Email and SMS alerts
+
+Migration `20260101002500_notification_delivery.sql` mirrors every in-app notification into an
+outbox (`notification_deliveries`), and the `send-notifications` edge function drains it.
+
+```bash
+supabase functions deploy send-notifications
+
+# Email (Resend free tier: 3,000/month)
+supabase secrets set RESEND_API_KEY=re_xxx
+supabase secrets set NOTIFY_EMAIL_FROM="Duleko <hello@duleko.com>"
+supabase secrets set SITE_URL=https://www.duleko.com
+
+# SMS - optional, costs money per message. Pick one:
+supabase secrets set SMS_PROVIDER=sparrow SPARROW_TOKEN=xxx SPARROW_FROM=Duleko
+# or
+supabase secrets set SMS_PROVIDER=twilio TWILIO_ACCOUNT_SID=ACxxx TWILIO_AUTH_TOKEN=xxx TWILIO_FROM=+1xxx
+```
+
+Then tell Postgres to poke the function once a minute. Store the two values in Vault first
+(Database → Vault, or SQL), so the service key is never written into a migration:
+
+```sql
+select vault.create_secret('https://<ref>.supabase.co/functions/v1/send-notifications',
+                           'notify_function_url');
+select vault.create_secret('<service_role key>', 'notify_service_key');
+
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+
+select cron.schedule('drain-notification-outbox', '* * * * *', $cron$
+  select public.requeue_stuck_deliveries();
+  select net.http_post(
+    url     := (select decrypted_secret from vault.decrypted_secrets where name = 'notify_function_url'),
+    headers := jsonb_build_object(
+                 'Content-Type', 'application/json',
+                 'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets
+                                                 where name = 'notify_service_key')),
+    body    := '{}'::jsonb
+  );
+$cron$);
+```
+
+Check on it with `select status, count(*) from public.notification_deliveries group by 1;` -
+anything in `failed` has the provider's own message in `last_error`.
+
 ---
 
 ## How the app works
@@ -106,9 +180,15 @@ work with you. Blocking is mutual and enforced in the RLS policies themselves, s
 blocked person disappears from search, profiles, and reviews.
 
 ### Notifications
-Database triggers write notification rows on every status change and new review, in both
-languages. The notifications screen subscribes over Supabase Realtime, and the bottom nav
-polls the unread count.
+Database triggers write notification rows on every status change, new review, friend request,
+chat message and new signup, in both languages. The notifications screen subscribes over
+Supabase Realtime, and the bottom nav polls the unread count.
+
+The same rows fan out to email and SMS through the `notification_deliveries` outbox. Two rules
+keep it from being annoying: chat alerts only leave the app when the person has not been seen
+for three minutes, and at most one per sender per fifteen minutes. Email is on by default; SMS
+is opt-in per user (Profile → Settings) and only fires for the kinds listed in the `sms_kinds`
+app setting - work requests, confirmations and friend requests - because each text costs money.
 
 ### Ratings
 A trigger on `reviews` recalculates the reviewee's `rating` and `rating_count`, so the
@@ -136,7 +216,9 @@ src/
     utils.ts         Dates, money, Nepali numerals, phone validation
   routes/            One file per screen
   router.tsx         Route tree
-supabase/migrations/ The database, in order
+supabase/
+  migrations/        The database, in order
+  functions/         Edge functions (send-notifications: the email/SMS sender)
 docs/TESTING.md      Manual test script for the beta
 ```
 
@@ -148,9 +230,15 @@ filters and profile picker all read from that table, so nothing in the code need
 ## Costs
 
 Everything here fits the Supabase and Vercel free tiers: 500 MB database, 1 GB storage,
-100 GB bandwidth. That covers a few thousand users comfortably.
+100 GB bandwidth. That covers a few thousand users comfortably. Email adds nothing on Resend's
+free tier (3,000/month, 100/day).
+
+SMS is the one line item that is not free - roughly NPR 1-2 per message through a Nepali
+gateway like Sparrow, and closer to NPR 7 through Twilio. That is why it defaults to off, is
+opt-in per user, and never fires for chat messages. Leave `SMS_PROVIDER` unset and the whole
+SMS path stays dormant.
 
 ## Not built yet (deliberately)
 
-In-app chat, phone (OTP) verification, payments via Khalti/eSewa, map view, and push
-notifications. Each is a Phase 2 item in the roadmap; the schema leaves room for all of them.
+Phone (OTP) verification, payments via Khalti/eSewa, map view, and web push notifications.
+Each is a Phase 2 item in the roadmap; the schema leaves room for all of them.

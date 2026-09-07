@@ -9,7 +9,9 @@ import {
   ChevronRight,
   Info,
   LogOut,
+  Mail,
   MapPin,
+  MessageSquare,
   Navigation,
   Pencil,
   Settings as SettingsIcon,
@@ -39,10 +41,12 @@ import {
   clearLocation,
   getAvailability,
   getContact,
+  getNotificationPrefs,
   listCertificates,
   listSkills,
   removeCertificate,
   saveContact,
+  saveNotificationPrefs,
   setDayStatus,
   setUserSkills,
   shareLocation,
@@ -53,6 +57,7 @@ import {
   type UserSkillInput,
 } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
+import type { NotificationPrefs } from "@/lib/types";
 import {
   addDays,
   cn,
@@ -126,6 +131,11 @@ export function ProfileScreen() {
   const availability = useQuery({
     queryKey: ["availability", profile?.id],
     queryFn: () => getAvailability(profile!.id, todayKey(), toDateKey(addDays(new Date(), 365))),
+    enabled: Boolean(profile?.id),
+  });
+  const alertPrefs = useQuery({
+    queryKey: ["notification-prefs", profile?.id],
+    queryFn: () => getNotificationPrefs(profile!.id),
     enabled: Boolean(profile?.id),
   });
 
@@ -225,6 +235,20 @@ export function ProfileScreen() {
     mutationFn: (next: boolean) => updateProfile(profile!.id, { is_available: next }),
     onSuccess: async () => {
       await refreshProfile();
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  const saveAlerts = useMutation({
+    mutationFn: (patch: Partial<NotificationPrefs>) =>
+      saveNotificationPrefs(profile!.id, {
+        email_enabled: alertPrefs.data?.email_enabled ?? true,
+        sms_enabled: alertPrefs.data?.sms_enabled ?? false,
+        ...patch,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notification-prefs", profile?.id] });
+      toast(t("alertPrefsSaved"));
     },
     onError: (error) => toast(errorMessage(error), "error"),
   });
@@ -872,6 +896,36 @@ export function ProfileScreen() {
                 </span>
                 <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden />
               </Link>
+
+              <div className="mt-4 border-t border-slate-100 pt-4">
+                <p className="mb-3 text-sm font-semibold text-slate-800">{t("alertsOutsideApp")}</p>
+
+                <div className="flex items-start gap-3 rounded-xl bg-slate-50 px-3.5 py-3">
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-800">{t("emailAlerts")}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{t("emailAlertsHint")}</p>
+                  </div>
+                  <Switch
+                    checked={alertPrefs.data?.email_enabled ?? true}
+                    onChange={(next) => saveAlerts.mutate({ email_enabled: next })}
+                    aria-label={t("emailAlerts")}
+                  />
+                </div>
+
+                <div className="mt-2 flex items-start gap-3 rounded-xl bg-slate-50 px-3.5 py-3">
+                  <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-800">{t("smsAlerts")}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{t("smsAlertsHint")}</p>
+                  </div>
+                  <Switch
+                    checked={alertPrefs.data?.sms_enabled ?? false}
+                    onChange={(next) => saveAlerts.mutate({ sms_enabled: next })}
+                    aria-label={t("smsAlerts")}
+                  />
+                </div>
+              </div>
 
               <div className="mt-4 border-t border-slate-100 pt-4">
                 <Button
