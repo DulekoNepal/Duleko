@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { BadgeCheck, MessageCircle } from "lucide-react";
+import { BadgeCheck, Check, CheckCheck, MessageCircle } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { FriendsPanel } from "@/components/duleko/FriendsPanel";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { CardSkeleton, EmptyState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
+import { useTypingFrom } from "@/hooks/use-typing";
 import { listConversations } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { cn, relativeTime } from "@/lib/utils";
@@ -27,28 +28,36 @@ export function ChatsScreen() {
   const queryClient = useQueryClient();
   const [division, setDivision] = useState<Division>("chats");
 
+  // One channel for the whole list - every row can show "typing…" without
+  // opening a subscription per conversation.
+  const typingFrom = useTypingFrom(profile?.id);
+
   const conversations = useQuery({
     queryKey: ["conversations", profile?.id],
     queryFn: () => listConversations(profile!.id),
     enabled: Boolean(profile?.id),
   });
 
-  // Live updates: a message either direction refreshes the list and its
-  // ordering, from anywhere the app has a live channel open.
+  // Live updates from anywhere the app has a channel open. Listening to
+  // every event, not just INSERT, is what keeps the Seen tick and the
+  // "removed" preview current without opening the thread; reactions come
+  // from their own table, so they need a second listener.
   useEffect(() => {
     if (!profile?.id) return;
+    const refresh = () => queryClient.invalidateQueries({ queryKey: ["conversations", profile.id] });
     const channel = supabase
       .channel(`conversations:${profile.id}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `profile_a=eq.${profile.id}` },
-        () => queryClient.invalidateQueries({ queryKey: ["conversations", profile.id] }),
+        { event: "*", schema: "public", table: "messages", filter: `profile_a=eq.${profile.id}` },
+        refresh,
       )
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `profile_b=eq.${profile.id}` },
-        () => queryClient.invalidateQueries({ queryKey: ["conversations", profile.id] }),
+        { event: "*", schema: "public", table: "messages", filter: `profile_b=eq.${profile.id}` },
+        refresh,
       )
+      .on("postgres_changes", { event: "*", schema: "public", table: "message_reactions" }, refresh)
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -117,15 +126,31 @@ export function ChatsScreen() {
                         {relativeTime(c.lastCreatedAt, lang)}
                       </span>
                     </span>
-                    <span
-                      className={cn(
-                        "mt-0.5 block truncate text-sm",
-                        c.unread ? "font-semibold text-brand-800" : "text-slate-500",
-                      )}
-                    >
-                      {c.lastSenderProfileId === profile?.id ? t("youPrefix") : ""}
-                      {c.lastBody}
-                    </span>
+                    {typingFrom.has(c.otherProfileId) ? (
+                      <span className="mt-0.5 block truncate text-sm italic text-brand-700">
+                        {t("typingIndicator")}
+                      </span>
+                    ) : (
+                      <span
+                        className={cn(
+                          "mt-0.5 flex items-center gap-1 text-sm",
+                          c.unread ? "font-semibold text-brand-800" : "text-slate-500",
+                        )}
+                      >
+                        {/* Seen tick sits on my own last message, like Messenger. */}
+                        {c.lastSenderProfileId === profile?.id &&
+                          (c.lastReadAt ? (
+                            <CheckCheck className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-label={t("seenLabel")} />
+                          ) : (
+                            <Check className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
+                          ))}
+                        <span className="truncate">
+                          {c.lastSenderProfileId === profile?.id ? t("youPrefix") : ""}
+                          {c.lastDeleted ? t("messageRemoved") : c.lastBody}
+                        </span>
+                        {c.lastReaction && <span className="shrink-0">{c.lastReaction}</span>}
+                      </span>
+                    )}
                   </span>
                   {c.unread && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-600" aria-hidden />}
                 </button>

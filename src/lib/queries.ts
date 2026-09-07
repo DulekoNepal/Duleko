@@ -12,8 +12,10 @@ import type {
   EngagementWithParties,
   Friendship,
   Lang,
+  MessageReaction,
   NotificationPrefs,
   Profile,
+  RepliedMessage,
   ReportReason,
   Review,
   Skill,
@@ -776,7 +778,17 @@ export function chatPairKey(profileIdA: string, profileIdB: string): string {
 }
 
 const MESSAGE_COLUMNS =
-  "id,profile_a,profile_b,sender_profile_id,body,created_at,read_at,deleted_at,message_reactions(profile_id,emoji)";
+  "id,profile_a,profile_b,sender_profile_id,body,created_at,read_at,deleted_at,edited_at,reply_to_id," +
+  "message_reactions(profile_id,emoji)," +
+  // Self-join: PostgREST wants the column as the hint here, not the
+  // constraint name it accepts for ordinary foreign keys.
+  "reply_to:messages!reply_to_id(id,body,sender_profile_id,deleted_at)";
+
+/** The self-join embed arrives as an object or a one-element array depending on the planner. */
+function shapeMessage(row: unknown): ChatMessage {
+  const m = row as ChatMessage & { reply_to: RepliedMessage | RepliedMessage[] | null };
+  return { ...m, reply_to: one(m.reply_to), message_reactions: m.message_reactions ?? [] };
+}
 
 export async function listMessages(myProfileId: string, otherProfileId: string): Promise<ChatMessage[]> {
   const [profile_a, profile_b] =
@@ -789,7 +801,7 @@ export async function listMessages(myProfileId: string, otherProfileId: string):
     .order("created_at", { ascending: true })
     .limit(200);
   if (error) throw error;
-  return (data as unknown as ChatMessage[]) ?? [];
+  return (data ?? []).map(shapeMessage);
 }
 
 /** Opening a thread marks the other person's messages as seen. */
@@ -836,16 +848,41 @@ export async function sendMessage(
   myProfileId: string,
   otherProfileId: string,
   body: string,
+  replyToId?: string | null,
 ): Promise<ChatMessage> {
   const [profile_a, profile_b] =
     myProfileId < otherProfileId ? [myProfileId, otherProfileId] : [otherProfileId, myProfileId];
-  return unwrap(
-    await supabase
-      .from("messages")
-      .insert({ profile_a, profile_b, sender_profile_id: myProfileId, body })
-      .select(MESSAGE_COLUMNS)
-      .single(),
+  return shapeMessage(
+    unwrap(
+      await supabase
+        .from("messages")
+        .insert({
+          profile_a,
+          profile_b,
+          sender_profile_id: myProfileId,
+          body,
+          reply_to_id: replyToId ?? null,
+        })
+        .select(MESSAGE_COLUMNS)
+        .single(),
+    ),
   );
+}
+
+/**
+ * Edit your own message. The database enforces the real rules - sender
+ * only, within 15 minutes, never after an unsend - and stamps edited_at.
+ */
+export async function editMessage(messageId: string, body: string): Promise<void> {
+  const { error } = await supabase.from("messages").update({ body }).eq("id", messageId);
+  if (error) throw error;
+}
+
+/** How long after sending a message can still be edited - mirrors the trigger. */
+export const EDIT_WINDOW_MS = 15 * 60_000;
+
+export function withinEditWindow(createdAt: string): boolean {
+  return Date.now() - new Date(createdAt).getTime() < EDIT_WINDOW_MS;
 }
 
 interface ConversationRow {
@@ -855,6 +892,8 @@ interface ConversationRow {
   body: string;
   created_at: string;
   read_at: string | null;
+  deleted_at: string | null;
+  message_reactions: MessageReaction[] | null;
   a: ConversationParty | ConversationParty[] | null;
   b: ConversationParty | ConversationParty[] | null;
 }
@@ -871,7 +910,8 @@ export async function listConversations(myProfileId: string): Promise<Conversati
   const { data, error } = await supabase
     .from("messages")
     .select(
-      "profile_a,profile_b,sender_profile_id,body,created_at,read_at," +
+      "profile_a,profile_b,sender_profile_id,body,created_at,read_at,deleted_at," +
+        "message_reactions(profile_id,emoji)," +
         "a:profiles!messages_profile_a_fkey(id,full_name,avatar_url,is_official)," +
         "b:profiles!messages_profile_b_fkey(id,full_name,avatar_url,is_official)",
     )
@@ -897,6 +937,9 @@ export async function listConversations(myProfileId: string): Promise<Conversati
       lastCreatedAt: row.created_at,
       lastSenderProfileId: row.sender_profile_id,
       unread: row.sender_profile_id !== myProfileId && !row.read_at,
+      lastReadAt: row.read_at,
+      lastDeleted: Boolean(row.deleted_at),
+      lastReaction: row.message_reactions?.[0]?.emoji ?? null,
     });
   }
   return out;

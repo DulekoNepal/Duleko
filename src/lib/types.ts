@@ -203,6 +203,14 @@ export interface MessageReaction {
   emoji: string;
 }
 
+/** The quoted message shown above a reply - just enough to render the stub. */
+export interface RepliedMessage {
+  id: string;
+  body: string;
+  sender_profile_id: string;
+  deleted_at: string | null;
+}
+
 /** A single direct message between two profiles. */
 export interface ChatMessage {
   id: string;
@@ -213,6 +221,10 @@ export interface ChatMessage {
   created_at: string;
   read_at: string | null;
   deleted_at: string | null;
+  /** Set once the sender edits the text; null for an untouched message. */
+  edited_at: string | null;
+  reply_to_id: string | null;
+  reply_to: RepliedMessage | null;
   message_reactions: MessageReaction[];
 }
 
@@ -227,4 +239,10 @@ export interface ConversationSummary {
   lastSenderProfileId: string;
   /** True when the other person sent the last message and I haven't opened the thread since. */
   unread: boolean;
+  /** Set when my own last message has been read - drives the "Seen" tick in the list. */
+  lastReadAt: string | null;
+  /** The last message was unsent, so the preview reads "removed" rather than empty. */
+  lastDeleted: boolean;
+  /** One emoji standing in for any reactions on the last message, shown in the preview. */
+  lastReaction: string | null;
 }
