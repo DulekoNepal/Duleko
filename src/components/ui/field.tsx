@@ -6,9 +6,9 @@ export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLab
 }
 
 const controlClasses =
-  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-slate-900 " +
-  "placeholder:text-slate-400 focus:border-brand-600 focus:outline focus:outline-2 " +
-  "focus:outline-offset-0 focus:outline-brand-600/30 disabled:bg-slate-100";
+  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-slate-900 transition-colors duration-200 " +
+  "placeholder:text-slate-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/25 " +
+  "disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400";
 
 export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   function Input({ className, ...props }, ref) {
@@ -18,7 +18,7 @@ export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTML
 
 export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
   function Textarea({ className, ...props }, ref) {
-    return <textarea ref={ref} className={cn(controlClasses, "min-h-24 resize-y", className)} {...props} />;
+    return <textarea ref={ref} className={cn(controlClasses, "min-h-30 resize-y", className)} {...props} />;
   },
 );
 

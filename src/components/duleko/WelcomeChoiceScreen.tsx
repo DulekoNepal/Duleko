@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Briefcase, Calendar, Compass, LogIn, MapPin, Users } from "lucide-react";
 import { LanguageToggle } from "./Layout";
 import { useI18n, type StringKey } from "@/lib/i18n";
@@ -41,29 +42,37 @@ export function WelcomeChoiceScreen({
           aria-hidden
         />
 
-        <div className="relative mx-auto flex max-w-sm justify-end px-5 pt-4">
+        <div className="relative mx-auto flex max-w-sm justify-end px-5 pt-4 sm:max-w-2xl lg:max-w-4xl">
           <LanguageToggle />
         </div>
 
-        <div className="relative mx-auto mt-5 max-w-sm px-7 text-center">
+        <div className="animate-in-up relative mx-auto mt-5 max-w-sm px-7 text-center sm:max-w-lg">
           <img
             src={dulekoMark}
             alt=""
-            className="mx-auto mb-4 h-16 w-16 rounded-2xl object-cover shadow-lg"
+            className="mx-auto mb-4 h-16 w-16 rounded-2xl object-cover shadow-lg md:h-20 md:w-20"
           />
-          <h1 className="text-2xl font-bold text-white">{t("authWelcome")}</h1>
-          <p className="mx-auto mt-2 max-w-xs text-sm text-brand-50/90">{t("authBlurb")}</p>
+          <h1 className="text-2xl font-bold text-white md:text-3xl">{t("authWelcome")}</h1>
+          <p className="mx-auto mt-2 max-w-xs text-sm text-brand-50/90 sm:max-w-sm md:text-base">
+            {t("authBlurb")}
+          </p>
         </div>
       </div>
 
       {/* ---- Content panel: overlaps the hero for one continuous page ---- */}
-      <div className="relative mx-auto -mt-8 w-full max-w-sm rounded-t-[2rem] bg-cream-50 px-6 pb-14 pt-7">
+      <div className="relative mx-auto -mt-8 w-full max-w-sm rounded-t-[2rem] bg-cream-50 px-6 pb-14 pt-7 sm:max-w-2xl lg:max-w-4xl">
         <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">
           {t("howDulekoWorks")}
         </p>
-        <div className="grid grid-cols-2 gap-2.5">
+        <div
+          className="grid grid-cols-2 gap-2.5 sm:grid-cols-4"
+          style={{ "--delay": "60ms" } as CSSProperties}
+        >
           {FEATURES.map(({ icon: Icon, titleKey, bodyKey }) => (
-            <div key={titleKey} className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+            <div
+              key={titleKey}
+              className="animate-in-up rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm transition-shadow duration-200 hover:shadow-md"
+            >
               <span className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
                 <Icon className="h-4.5 w-4.5" aria-hidden />
               </span>
@@ -74,11 +83,11 @@ export function WelcomeChoiceScreen({
         </div>
 
         {/* ---- The one decision this screen exists for - primary + secondary, both always available ---- */}
-        <div className="mt-7 space-y-2.5">
+        <div className="mx-auto mt-7 max-w-sm space-y-2.5 sm:flex sm:max-w-none sm:gap-3 sm:space-y-0">
           <button
             type="button"
             onClick={onSignIn}
-            className="flex w-full flex-col items-center gap-0.5 rounded-2xl bg-brand-700 px-4 py-3.5 text-center shadow-md transition-colors hover:bg-brand-800"
+            className="flex w-full flex-col items-center gap-0.5 rounded-2xl bg-brand-700 px-4 py-3.5 text-center shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-800 hover:shadow-lg active:translate-y-0 sm:flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
           >
             <span className="inline-flex items-center gap-2 text-base font-semibold text-white">
               <LogIn className="h-4.5 w-4.5" aria-hidden />
@@ -90,7 +99,7 @@ export function WelcomeChoiceScreen({
           <button
             type="button"
             onClick={onExplore}
-            className="flex w-full flex-col items-center gap-0.5 rounded-2xl border-2 border-brand-700 bg-white px-4 py-3.5 text-center transition-colors hover:bg-brand-50"
+            className="flex w-full flex-col items-center gap-0.5 rounded-2xl border-2 border-brand-700 bg-white px-4 py-3.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-50 hover:shadow-md active:translate-y-0 sm:flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
           >
             <span className="inline-flex items-center gap-2 text-base font-semibold text-brand-800">
               <Compass className="h-4.5 w-4.5" aria-hidden />

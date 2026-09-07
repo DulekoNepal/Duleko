@@ -16,14 +16,14 @@ export function WorkerCard({ worker, online }: { worker: WorkerCardData; online?
     <Link
       to="/worker/$workerId"
       params={{ workerId: worker.id }}
-      className="block rounded-2xl border border-slate-200 bg-white p-4 transition-colors hover:border-brand-300 hover:bg-brand-50/40"
+      className="block rounded-2xl border border-slate-200 bg-white p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-50/40 hover:shadow-md active:translate-y-0 active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
     >
       <div className="flex gap-3">
         <Avatar name={worker.full_name} src={worker.avatar_url} size={52} online={online} />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate font-semibold text-slate-900">{worker.full_name}</h3>
-            <Badge tone={worker.is_available ? "success" : "muted"}>
+            <h3 className="min-w-0 font-semibold leading-snug text-slate-900">{worker.full_name}</h3>
+            <Badge className="shrink-0" tone={worker.is_available ? "success" : "muted"}>
               {worker.is_available ? t("availableNow") : t("notAvailable")}
             </Badge>
           </div>

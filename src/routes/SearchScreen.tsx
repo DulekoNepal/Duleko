@@ -144,61 +144,63 @@ export function SearchScreen() {
         </form>
 
         {showFilters && (
-          <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-4">
-            <Field label={t("allSkills")}>
-              <Select
-                value={filters.skill ?? ""}
-                onChange={(e) => update({ skill: e.target.value || undefined })}
-              >
-                <option value="">{t("allSkills")}</option>
-                {(skills.data ?? []).map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.emoji} {skillName(s, lang)}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+          <div className="animate-in-up mb-4 rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="sm:grid sm:grid-cols-2 sm:gap-x-4">
+              <Field label={t("allSkills")}>
+                <Select
+                  value={filters.skill ?? ""}
+                  onChange={(e) => update({ skill: e.target.value || undefined })}
+                >
+                  <option value="">{t("allSkills")}</option>
+                  {(skills.data ?? []).map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.emoji} {skillName(s, lang)}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
 
-            <Field label={t("district")}>
-              <Select
-                value={filters.district ?? ""}
-                onChange={(e) => update({ district: e.target.value || undefined })}
-              >
-                <option value="">{t("anywhere")}</option>
-                {ALL_DISTRICTS.map((d) => (
-                  <option key={d.en} value={d.en}>
-                    {lang === "ne" ? d.ne : d.en}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+              <Field label={t("district")}>
+                <Select
+                  value={filters.district ?? ""}
+                  onChange={(e) => update({ district: e.target.value || undefined })}
+                >
+                  <option value="">{t("anywhere")}</option>
+                  {ALL_DISTRICTS.map((d) => (
+                    <option key={d.en} value={d.en}>
+                      {lang === "ne" ? d.ne : d.en}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
 
-            <Field label={t("onDate")}>
-              <Input
-                type="date"
-                value={filters.day ?? ""}
-                onChange={(e) => update({ day: e.target.value || undefined })}
-              />
-            </Field>
+              <Field label={t("onDate")}>
+                <Input
+                  type="date"
+                  value={filters.day ?? ""}
+                  onChange={(e) => update({ day: e.target.value || undefined })}
+                />
+              </Field>
 
-            <Field label={t("sortBy")}>
-              <Select
-                value={filters.sort ?? "relevance"}
-                onChange={(e) => {
-                  const next = e.target.value as SearchFilters["sort"];
-                  // Duleko's own explanation first - the browser's native
-                  // prompt follows only after someone taps "Allow Location".
-                  if (next === "nearest") setLocationConsentOpen(true);
-                  else update({ sort: next });
-                }}
-                disabled={locating}
-              >
-                <option value="relevance">{t("sortRelevance")}</option>
-                <option value="rating">{t("sortRating")}</option>
-                <option value="newest">{t("sortNewest")}</option>
-                <option value="nearest">{t("nearestSort")}</option>
-              </Select>
-            </Field>
+              <Field label={t("sortBy")}>
+                <Select
+                  value={filters.sort ?? "relevance"}
+                  onChange={(e) => {
+                    const next = e.target.value as SearchFilters["sort"];
+                    // Duleko's own explanation first - the browser's native
+                    // prompt follows only after someone taps "Allow Location".
+                    if (next === "nearest") setLocationConsentOpen(true);
+                    else update({ sort: next });
+                  }}
+                  disabled={locating}
+                >
+                  <option value="relevance">{t("sortRelevance")}</option>
+                  <option value="rating">{t("sortRating")}</option>
+                  <option value="newest">{t("sortNewest")}</option>
+                  <option value="nearest">{t("nearestSort")}</option>
+                </Select>
+              </Field>
+            </div>
 
             <label className="mb-4 flex items-center gap-2.5 text-sm text-slate-700">
               <input
@@ -254,7 +256,7 @@ export function SearchScreen() {
                 {t("resultsCount", { count: formatNumber(results.data?.length ?? 0, lang) })}
               </Badge>
             </p>
-            <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {(results.data ?? []).map((worker) => (
                 <WorkerCard key={worker.id} worker={worker} online={online[worker.id]} />
               ))}

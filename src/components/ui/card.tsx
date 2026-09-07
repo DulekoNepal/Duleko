@@ -1,9 +1,39 @@
 import { cn } from "@/lib/utils";
 
-export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+type CardTone = "default" | "primary" | "success" | "warning" | "danger";
+
+const cardTones: Record<CardTone, string> = {
+  default: "border-slate-200 bg-white",
+  primary: "border-brand-200 bg-brand-50/30",
+  success: "border-green-200 bg-green-50/50",
+  warning: "border-amber-200 bg-amber-50/60",
+  danger: "border-red-200 bg-red-50/50",
+};
+
+export function Card({
+  className,
+  tone = "default",
+  interactive = false,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & {
+  /** Semantic colour, so screens stop hand-rolling their own tinted borders. */
+  tone?: CardTone;
+  /**
+   * Only for cards that are themselves a link or button. A hover lift on a
+   * card nothing happens when you click is a false affordance, so this is
+   * opt-in rather than the default.
+   */
+  interactive?: boolean;
+}) {
   return (
     <div
-      className={cn("rounded-2xl border border-slate-200 bg-white shadow-sm", className)}
+      className={cn(
+        "rounded-2xl border shadow-sm",
+        cardTones[tone],
+        interactive &&
+          "transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md",
+        className,
+      )}
       {...props}
     />
   );

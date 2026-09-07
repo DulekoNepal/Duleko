@@ -7,6 +7,10 @@ import { useSession } from "@/hooks/use-session";
 import { countUnread, countUnreadMessages } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { cn, formatNumber } from "@/lib/utils";
+import dulekoMark from "@/assets/duleko-mark.png";
+
+/** Shared width for the desktop sidebar and the left inset it leaves on content. */
+export const SIDEBAR_WIDTH_CLASS = "md:pl-60";
 
 export function LanguageToggle({ className }: { className?: string }) {
   const { lang, setLang } = useI18n();
@@ -23,7 +27,7 @@ export function LanguageToggle({ className }: { className?: string }) {
           onClick={() => setLang(code)}
           aria-pressed={lang === code}
           className={cn(
-            "rounded-full px-2.5 py-1 transition-colors",
+            "rounded-full px-2.5 py-1 transition-colors duration-200",
             lang === code ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
           )}
         >
@@ -40,23 +44,37 @@ export function AppHeader({
   right,
   back,
   leading,
+  below,
+  gradient,
 }: {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   right?: React.ReactNode;
   back?: React.ReactNode;
   leading?: React.ReactNode;
+  /** An extra row under the title/subtitle - e.g. Home's rating/trust line. */
+  below?: React.ReactNode;
+  /** A faint brand-tinted wash instead of plain white - reserved for the Home greeting, so the rest of the app stays neutral. */
+  gradient?: boolean;
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
-        {back}
-        {leading}
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg font-semibold text-slate-900">{title}</h1>
-          {subtitle && <p className="truncate text-xs text-slate-500">{subtitle}</p>}
+    <header
+      className={cn(
+        "sticky top-0 z-30 border-b border-slate-200 backdrop-blur",
+        gradient ? "bg-gradient-to-r from-brand-50/60 via-white/95 to-white/95" : "bg-white/95",
+      )}
+    >
+      <div className="mx-auto max-w-4xl px-4 py-3 md:py-4">
+        <div className="flex items-center gap-3">
+          {back}
+          {leading}
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-lg font-semibold text-slate-900 md:text-xl">{title}</h1>
+            {subtitle && <p className="truncate text-xs text-slate-500 md:text-sm">{subtitle}</p>}
+          </div>
+          {right}
         </div>
-        {right}
+        {below}
       </div>
     </header>
   );
@@ -64,12 +82,14 @@ export function AppHeader({
 
 export function PageContainer({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <main className={cn("mx-auto w-full max-w-3xl px-4 pb-28 pt-4", className)}>{children}</main>
+    <main className={cn("mx-auto w-full max-w-4xl px-4 pb-28 pt-4 md:pb-10", className)}>
+      {children}
+    </main>
   );
 }
 
 // The search bar at the top of Home/Search is enough on its own - no separate
-// bottom-nav tab for it (it's still reachable via /search, just not pinned here).
+// nav item for it (it's still reachable via /search, just not pinned here).
 const NAV = [
   { to: "/", key: "navHome", icon: Home },
   { to: "/work", key: "navWork", icon: Briefcase },
@@ -78,11 +98,14 @@ const NAV = [
   { to: "/profile", key: "navProfile", icon: User },
 ] as const;
 
-export function BottomNav() {
-  const { t, lang } = useI18n();
+/**
+ * Unread counts for the two badged nav items. Read-only and safe to call from
+ * multiple components at once - react-query dedupes by queryKey, so
+ * BottomNav and DesktopSidebar (both always mounted, just CSS-hidden per
+ * breakpoint) share one cached result instead of firing duplicate requests.
+ */
+function useNavBadges() {
   const { profile } = useSession();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const queryClient = useQueryClient();
 
   const unread = useQuery({
     queryKey: ["unread", profile?.id],
@@ -100,8 +123,23 @@ export function BottomNav() {
     refetchInterval: 60_000,
   });
 
-  // Live badge updates the instant a notification arrives, from anywhere in
-  // the app - not just while the Notifications/Chats screen itself is open.
+  return { notifications: unread.data ?? 0, chats: unreadMessages.data ?? 0 };
+}
+
+/**
+ * Live badge updates the instant a notification arrives, from anywhere in
+ * the app - not just while the Notifications/Chats screen itself is open.
+ * Mount exactly once (in AppShell) - unlike useNavBadges, a realtime channel
+ * isn't safe to open from multiple components at once: since BottomNav and
+ * DesktopSidebar are both always mounted, giving each its own subscription
+ * used to open two channels for the same topic, and Supabase's client
+ * reuses the existing channel object for a repeated topic name - so the
+ * second `.on()` call landed on an already-subscribed channel and threw.
+ */
+export function useNotificationsBadgeSync() {
+  const { profile } = useSession();
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     if (!profile?.id) return;
     const channel = supabase
@@ -120,26 +158,38 @@ export function BottomNav() {
       supabase.removeChannel(channel);
     };
   }, [profile?.id, queryClient]);
+}
+
+function navBadgeFor(to: (typeof NAV)[number]["to"], badges: { notifications: number; chats: number }) {
+  if (to === "/notifications") return badges.notifications;
+  if (to === "/chats") return badges.chats;
+  return 0;
+}
+
+/** Phones/small tablets: a fixed tab bar, hidden once the sidebar takes over. */
+export function BottomNav() {
+  const { t, lang } = useI18n();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const badges = useNavBadges();
 
   // A full-screen chat thread hides the tab bar, like a normal chat app.
   if (pathname.startsWith("/chat/")) return null;
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
       aria-label="Main"
     >
       <div className="mx-auto flex max-w-3xl">
         {NAV.map(({ to, key, icon: Icon }) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
-          const badge =
-            to === "/notifications" ? unread.data ?? 0 : to === "/chats" ? unreadMessages.data ?? 0 : 0;
+          const badge = navBadgeFor(to, badges);
           return (
             <Link
               key={to}
               to={to}
               className={cn(
-                "relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors",
+                "relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors duration-200",
                 active ? "text-teal-700" : "text-slate-500",
               )}
             >
@@ -157,5 +207,49 @@ export function BottomNav() {
         })}
       </div>
     </nav>
+  );
+}
+
+/**
+ * Tablets and up: a persistent left sidebar replaces the bottom tab bar, so
+ * navigation reads as a real desktop app rather than a stretched phone UI.
+ * Pair with SIDEBAR_WIDTH_CLASS on the content wrapper so nothing sits under it.
+ */
+export function DesktopSidebar() {
+  const { t, lang } = useI18n();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const badges = useNavBadges();
+
+  return (
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-slate-200 bg-white md:flex">
+      <Link to="/" className="flex items-center gap-2.5 px-5 py-5">
+        <img src={dulekoMark} alt="" className="h-8 w-8 rounded-lg object-cover" />
+        <span className="text-lg font-semibold text-slate-900">{t("appName")}</span>
+      </Link>
+      <nav className="flex-1 space-y-1 px-3" aria-label="Main">
+        {NAV.map(({ to, key, icon: Icon }) => {
+          const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
+          const badge = navBadgeFor(to, badges);
+          return (
+            <Link
+              key={to}
+              to={to}
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200",
+                active ? "bg-brand-50 text-brand-800" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+              )}
+            >
+              <Icon className="h-5 w-5 shrink-0" aria-hidden />
+              <span className="flex-1">{t(key)}</span>
+              {badge > 0 && (
+                <span className="min-w-5 rounded-full bg-red-500 px-1.5 text-center text-[11px] font-bold leading-5 text-white">
+                  {formatNumber(badge > 9 ? "9+" : badge, lang)}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
   );
 }
