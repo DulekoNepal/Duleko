@@ -86,10 +86,10 @@ export function WorkerScreen() {
     queryFn: () => listCertificates(workerId),
   });
 
-  // Chat and phone-call are unlocked by the exact same rule the server uses
-  // (can_view_contact): an accepted/confirmed/completed work request, or an
-  // accepted friendship. getContact already comes back null when it isn't.
-  const unlocked = Boolean(contact.data);
+  // Chat is open to anyone signed in. Calling needs the other person to
+  // have actually saved a number - getContact comes back null when they
+  // have not (or when you are browsing as a guest).
+  const canCall = Boolean(contact.data);
 
   const friendship = useQuery({
     queryKey: ["friendship", me?.id, workerId],
@@ -254,7 +254,7 @@ export function WorkerScreen() {
             )}
 
             <div className="grid grid-cols-2 gap-2">
-              {unlocked ? (
+              {canCall ? (
                 <a href={`tel:${contact.data!.phone}`} className={secondaryActionClass}>
                   <Phone className="h-4 w-4" aria-hidden />
                   {t("callNow")}
@@ -262,32 +262,23 @@ export function WorkerScreen() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => (me ? toast(t("phoneHidden")) : requestSignIn())}
+                  onClick={() => (me ? toast(t("noPhoneSaved")) : requestSignIn())}
                   className={cn(secondaryActionClass, "opacity-60")}
                 >
                   <Lock className="h-4 w-4" aria-hidden />
                   {t("callNow")}
                 </button>
               )}
-              {unlocked ? (
-                <button
-                  type="button"
-                  onClick={() => navigate({ to: "/chat/$otherId", params: { otherId: w.id } })}
-                  className={secondaryActionClass}
-                >
-                  <MessageCircle className="h-4 w-4" aria-hidden />
-                  {t("chat")}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => (me ? toast(t("phoneHidden")) : requestSignIn())}
-                  className={cn(secondaryActionClass, "opacity-60")}
-                >
-                  <Lock className="h-4 w-4" aria-hidden />
-                  {t("chat")}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() =>
+                  withAuth(() => navigate({ to: "/chat/$otherId", params: { otherId: w.id } }))
+                }
+                className={secondaryActionClass}
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden />
+                {t("chat")}
+              </button>
             </div>
           </div>
         )}
@@ -322,7 +313,7 @@ export function WorkerScreen() {
                 )}
               </div>
             )}
-            {unlocked && contact.data?.alt_phone && (
+            {canCall && contact.data?.alt_phone && (
               <p className="mt-3 flex items-center gap-1.5 text-sm text-slate-600">
                 <Phone className="h-3.5 w-3.5 text-slate-400" aria-hidden />
                 {t("altPhone")}: {contact.data.alt_phone}

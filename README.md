@@ -175,9 +175,14 @@ is the only one who can accept, and the employer the only one who can confirm.
 
 ### Privacy
 Phone numbers live in a separate `profile_contacts` table whose read policy calls
-`can_view_contact()`. A number is invisible until that person has accepted or confirmed
-work with you. Blocking is mutual and enforced in the RLS policies themselves, so a
-blocked person disappears from search, profiles, and reviews.
+`can_view_contact()`, and chat goes through `can_chat_with()`. **For the beta both are open
+to any signed-in user with a completed profile** - anyone can message or call anyone. Guests
+still see neither: those policies are `to authenticated` only, and the functions also require
+the caller to have their own profile.
+
+The original rule - a number and a chat thread unlock only after an accepted work engagement
+or an accepted friendship - is one `create or replace` away; migration
+`20260101002600_open_chat_and_call.sql` carries the exact SQL to put it back.
 
 ### Notifications
 Database triggers write notification rows on every status change, new review, friend request,
