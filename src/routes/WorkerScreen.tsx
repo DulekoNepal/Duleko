@@ -13,6 +13,7 @@ import {
   MapPin,
   MessageCircle,
   Phone,
+  Share2,
   Star,
   UserCheck,
   UserPlus,
@@ -26,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card";
 import { EmptyState, FullPageLoader } from "@/components/ui/states";
+import { shareProfile } from "@/lib/share";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useGuestMode } from "@/hooks/use-guest-mode";
@@ -104,6 +106,15 @@ export function WorkerScreen() {
     queryClient.invalidateQueries({ queryKey: ["unread"] });
   }
 
+  const share = useMutation({
+    mutationFn: () =>
+      shareProfile(workerId, worker.data!.full_name, t("shareProfileText", { name: worker.data!.full_name })),
+    onSuccess: (result) => {
+      if (result === "copied") toast(t("linkCopied"));
+      else if (result === "failed") toast(t("copyFailed"), "error");
+    },
+  });
+
   const addFriend = useMutation({
     mutationFn: () => sendFriendRequest(me!.id, workerId),
     onSuccess: () => {
@@ -153,6 +164,16 @@ export function WorkerScreen() {
             aria-label={t("back")}
           >
             <ArrowLeft className="h-5 w-5" />
+          </button>
+        }
+        right={
+          <button
+            type="button"
+            onClick={() => share.mutate()}
+            aria-label={t("shareProfile")}
+            className="rounded-lg p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-700"
+          >
+            <Share2 className="h-5 w-5" aria-hidden />
           </button>
         }
       />

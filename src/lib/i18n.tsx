@@ -365,6 +365,39 @@ const strings = {
 
   // ---- profile / settings --------------------------------------------
   myProfile: ["My profile", "मेरो प्रोफाइल"],
+
+  // ---- sharing a profile ---------------------------------------------
+  shareProfile: ["Share profile", "प्रोफाइल सेयर गर्नुहोस्"],
+  shareMyProfile: ["Share my profile", "मेरो प्रोफाइल सेयर गर्नुहोस्"],
+  copyLink: ["Copy link", "लिङ्क कपी गर्नुहोस्"],
+  linkCopied: ["Profile link copied.", "प्रोफाइल लिङ्क कपी भयो।"],
+  copyFailed: ["Could not copy the link.", "लिङ्क कपी गर्न सकिएन।"],
+  shareProfileText: [
+    "{name} on Duleko - find local work and local workers.",
+    "दुलेकोमा {name} - नजिकैको काम र कामदार खोज्नुहोस्।",
+  ],
+  shareProfileHint: [
+    "Anyone with this link can open your profile.",
+    "यो लिङ्क भएका जो कोहीले तपाईंको प्रोफाइल हेर्न सक्छन्।",
+  ],
+
+  // ---- deleting an account -------------------------------------------
+  deleteAccount: ["Delete account", "खाता मेटाउनुहोस्"],
+  deleteAccountBody: [
+    "This removes your profile, photos, chats, work history and reviews for good. It cannot be undone.",
+    "यसले तपाईंको प्रोफाइल, फोटो, कुराकानी, कामको इतिहास र समीक्षाहरू सधैंको लागि हटाउँछ। यो फिर्ता गर्न सकिँदैन।",
+  ],
+  deleteAccountConfirmLabel: [
+    "Type DELETE to confirm",
+    "पक्का गर्न DELETE लेख्नुहोस्",
+  ],
+  deleteAccountWord: ["DELETE", "DELETE"],
+  deleteAccountPasswordLabel: [
+    "Enter your password to confirm",
+    "पक्का गर्न आफ्नो पासवर्ड लेख्नुहोस्",
+  ],
+  wrongPassword: ["That password is not right.", "पासवर्ड मिलेन।"],
+  deleteAccountDone: ["Your account has been deleted.", "तपाईंको खाता मेटाइयो।"],
   editProfile: ["Edit profile", "प्रोफाइल सम्पादन"],
   settings: ["Settings", "सेटिङ"],
   language: ["Language", "भाषा"],
