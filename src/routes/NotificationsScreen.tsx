@@ -1,7 +1,22 @@
 import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, CheckCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  Award,
+  Bell,
+  Briefcase,
+  CalendarCheck,
+  CheckCheck,
+  MessageCircle,
+  Sparkles,
+  Star,
+  ThumbsUp,
+  UserCheck,
+  UserPlus,
+  XCircle,
+  type LucideIcon,
+} from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { Button } from "@/components/ui/button";
@@ -12,19 +27,34 @@ import { listNotifications, markAllRead, markNotificationRead } from "@/lib/quer
 import { supabase } from "@/lib/supabase";
 import { cn, relativeTime } from "@/lib/utils";
 
+// An icon per kind, each carrying the tone of its news - amber for
+// something wanting attention, green for something settled, red for
+// something that fell through.
+//
 // "message" notifications never reach this list - they drive the Chats
-// tab badge instead (listNotifications excludes that kind entirely).
-const KIND_EMOJI: Record<string, string> = {
-  request: "🙋",
-  accepted: "👍",
-  declined: "🙅",
-  confirmed: "✅",
-  completed: "🎉",
-  cancelled: "⚠️",
-  review: "⭐",
-  friend_request: "🧑‍🤝‍🧑",
-  friend_accepted: "🤝",
-  welcome: "👋",
+// tab badge instead (listNotifications excludes that kind entirely) -
+// but it is mapped so nothing can render without an icon.
+type IconTone = "brand" | "green" | "amber" | "slate";
+
+const TONE_CLASS: Record<IconTone, string> = {
+  brand: "bg-brand-50 text-brand-700",
+  green: "bg-green-50 text-green-700",
+  amber: "bg-amber-50 text-amber-700",
+  slate: "bg-slate-100 text-slate-500",
+};
+
+const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
+  request: { icon: Briefcase, tone: "amber" },
+  accepted: { icon: ThumbsUp, tone: "brand" },
+  declined: { icon: XCircle, tone: "slate" },
+  confirmed: { icon: CalendarCheck, tone: "green" },
+  completed: { icon: Award, tone: "green" },
+  cancelled: { icon: AlertTriangle, tone: "amber" },
+  review: { icon: Star, tone: "amber" },
+  friend_request: { icon: UserPlus, tone: "brand" },
+  friend_accepted: { icon: UserCheck, tone: "green" },
+  welcome: { icon: Sparkles, tone: "brand" },
+  message: { icon: MessageCircle, tone: "brand" },
 };
 
 export function NotificationsScreen() {
@@ -128,9 +158,7 @@ export function NotificationsScreen() {
                       : "border-brand-200 bg-brand-50/60 hover:bg-brand-50",
                   )}
                 >
-                  <span className="text-xl leading-none" aria-hidden>
-                    {KIND_EMOJI[n.kind] ?? "🔔"}
-                  </span>
+                  <NotificationIcon kind={n.kind} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
                       <span className="font-medium text-slate-900">
@@ -154,3 +182,20 @@ export function NotificationsScreen() {
     </>
   );
 }
+
+/** The little tinted square that carries a notification's kind. */
+function NotificationIcon({ kind }: { kind: string }) {
+  const { icon: Icon, tone } = KIND_ICON[kind] ?? { icon: Bell, tone: "slate" as const };
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+        TONE_CLASS[tone],
+      )}
+    >
+      <Icon className="h-[18px] w-[18px]" />
+    </span>
+  );
+}
+
