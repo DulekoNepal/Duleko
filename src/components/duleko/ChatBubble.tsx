@@ -172,7 +172,9 @@ export function ChatBubble({
       className={cn(
         "group relative flex flex-col",
         mine ? "items-end" : "items-start",
-        lastInRun ? "mb-1.5" : "mb-0.5",
+        // Mid-run messages have no timestamp under them, so they need the
+        // gap for an overhanging reaction chip themselves.
+        lastInRun ? "mb-1.5" : reactions.length > 0 ? "mb-3.5" : "mb-0.5",
         // Lift the whole row while its popover is open, so the popover sits
         // above neighbouring messages rather than under them.
         panel && "z-30",
@@ -241,7 +243,9 @@ export function ChatBubble({
           className={cn(
             // Long press is the menu gesture, so text selection has to stay
             // out of its way - Copy in the menu covers what that takes away.
-            "max-w-[76%] select-none whitespace-pre-wrap break-words px-3.5 py-2 text-sm",
+            // Positioned so reactions can hang off its bottom-right corner
+            // on both sides of the thread.
+            "relative max-w-[76%] select-none whitespace-pre-wrap break-words px-3.5 py-2 text-sm",
             // Rounded on the outside, tightened where a run joins up.
             mine
               ? cn("rounded-2xl", !firstInRun && "rounded-tr-md", !lastInRun && "rounded-br-md")
@@ -255,6 +259,28 @@ export function ChatBubble({
           )}
         >
           {removed ? t("messageRemoved") : m.body}
+
+          {reactions.length > 0 && (
+            // Hanging off the bubble's bottom-right corner, anchored to the
+            // bubble itself rather than to the column so it lands the same
+            // way on incoming and outgoing messages.
+            <span className="absolute -bottom-3 right-3 z-10 flex gap-1">
+              {reactions.map(([emoji, { count, mine: myReaction }]) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => onReact(m, emoji)}
+                  className={cn(
+                    "rounded-full border px-1.5 py-0.5 text-xs leading-none shadow-sm ring-2 ring-white transition-colors duration-200",
+                    myReaction ? "border-brand-300 bg-brand-50 text-slate-900" : "border-slate-200 bg-white text-slate-900",
+                  )}
+                >
+                  {emoji}
+                  {count > 1 ? ` ${count}` : ""}
+                </button>
+              ))}
+            </span>
+          )}
         </div>
 
         {panel === "menu" && (
@@ -335,26 +361,15 @@ export function ChatBubble({
         )}
       </div>
 
-      {reactions.length > 0 && (
-        <div className={cn("-mt-2 flex flex-wrap gap-1", mine ? "mr-2" : "ml-11")}>
-          {reactions.map(([emoji, { count, mine: myReaction }]) => (
-            <button
-              key={emoji}
-              type="button"
-              onClick={() => onReact(m, emoji)}
-              className={cn(
-                "rounded-full border bg-white px-1.5 py-0.5 text-xs shadow-sm ring-2 ring-white transition-colors duration-200",
-                myReaction ? "border-brand-300 bg-brand-50" : "border-slate-200",
-              )}
-            >
-              {emoji} {count > 1 ? count : ""}
-            </button>
-          ))}
-        </div>
-      )}
-
       {lastInRun && (
-        <p className={cn("mt-1 px-1 text-[11px] text-slate-400", mine ? "text-right" : "ml-9")}>
+        <p
+          className={cn(
+            "px-1 text-[11px] text-slate-400",
+            // Clear the reaction chip hanging below the bubble.
+            reactions.length > 0 ? "mt-3.5" : "mt-1",
+            mine ? "text-right" : "ml-9",
+          )}
+        >
           {formatClockTime(m.created_at, lang)}
           {m.edited_at && !removed && ` · ${t("edited")}`}
         </p>
