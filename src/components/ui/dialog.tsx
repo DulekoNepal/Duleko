@@ -26,18 +26,32 @@ export function Dialog({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // Callers pass an inline arrow for onClose, so its identity changes on
+  // every render of the parent. Keeping it in a ref keeps it out of the
+  // effect's dependencies: with it in there, every keystroke in a field
+  // inside the dialog re-ran the whole effect, and the focus handling
+  // below would yank the caret out of the field and onto the ✕ button
+  // after a single character.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   useEffect(() => {
     if (!open) return;
 
     // Send focus into the dialog, and put it back where it was on close -
-    // otherwise a keyboard user lands back at the top of the page.
+    // otherwise a keyboard user lands back at the top of the page. A field
+    // wins over a button, so a dialog that asks for something lands ready
+    // to type in rather than on its close button.
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const panel = panelRef.current;
-    panel?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+    const field = panel?.querySelector<HTMLElement>("input:not([disabled]), textarea:not([disabled])");
+    (field ?? panel?.querySelector<HTMLElement>(FOCUSABLE))?.focus();
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== "Tab" || !panel) return;
@@ -66,7 +80,8 @@ export function Dialog({
       document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus?.();
     };
-  }, [open, onClose]);
+    // Deliberately only `open`: see the ref above.
+  }, [open]);
 
   if (!open) return null;
 

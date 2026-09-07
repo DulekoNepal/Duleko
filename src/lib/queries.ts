@@ -89,6 +89,50 @@ export async function createProfile(userId: string, input: ProfileInput): Promis
   );
 }
 
+const USER_BUCKETS = ["avatars", "covers", "certificates"] as const;
+
+/**
+ * Clears the person's uploads. Storage rows cannot be deleted with SQL
+ * ("Direct deletion from storage tables is not allowed"), so this has to
+ * go through the Storage API - which the existing per-folder policies
+ * already permit for your own files.
+ */
+async function removeMyUploads(userId: string): Promise<void> {
+  for (const bucket of USER_BUCKETS) {
+    const { data } = await supabase.storage.from(bucket).list(userId);
+    const paths = (data ?? []).map((f) => `${userId}/${f.name}`);
+    if (paths.length > 0) await supabase.storage.from(bucket).remove(paths);
+  }
+}
+
+/**
+ * Deletes the signed-in account outright - profile, photos, messages,
+ * work history, the lot. There is no undo, so the caller is expected to
+ * have confirmed identity first.
+ */
+export async function deleteMyAccount(userId: string): Promise<void> {
+  // Best-effort: a stray file left in a bucket must never be the reason
+  // someone cannot close their account, so this failing is not fatal.
+  try {
+    await removeMyUploads(userId);
+  } catch {
+    // Ignored on purpose - the account deletion below is what matters.
+  }
+
+  const { error } = await supabase.rpc("delete_my_account");
+  if (error) throw error;
+}
+
+/**
+ * Confirms the person really is who they say before something
+ * irreversible. Re-signing in is the only way to check a password with
+ * the anon key; it just refreshes the session we are about to discard.
+ */
+export async function verifyPassword(email: string, password: string): Promise<void> {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+}
+
 export async function updateProfile(profileId: string, input: Partial<ProfileInput>): Promise<Profile> {
   return unwrap(
     await supabase

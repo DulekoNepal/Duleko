@@ -15,6 +15,7 @@ import {
   Navigation,
   Pencil,
   Settings as SettingsIcon,
+  Share2,
   Trash2,
   Users,
 } from "lucide-react";
@@ -30,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card";
 import { Collapsible } from "@/components/ui/collapsible";
+import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { EmptyState } from "@/components/ui/states";
 import { Switch } from "@/components/ui/switch";
@@ -39,6 +41,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   addCertificate,
   clearLocation,
+  deleteMyAccount,
   getAvailability,
   getContact,
   getNotificationPrefs,
@@ -52,10 +55,12 @@ import {
   shareLocation,
   updateProfile,
   uploadAvatar,
+  verifyPassword,
   uploadCover,
   getUserSkills,
   type UserSkillInput,
 } from "@/lib/queries";
+import { shareProfile } from "@/lib/share";
 import { errorMessage } from "@/lib/supabase";
 import type { NotificationPrefs } from "@/lib/types";
 import {
@@ -90,6 +95,9 @@ export function ProfileScreen() {
 
   const [editing, setEditing] = useState(false);
   const [locationConsentOpen, setLocationConsentOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [about, setAbout] = useState("");
   const [bio, setBio] = useState("");
@@ -239,6 +247,51 @@ export function ProfileScreen() {
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
+  const share = useMutation({
+    mutationFn: () =>
+      shareProfile(profile!.id, profile!.full_name, t("shareProfileText", { name: profile!.full_name })),
+    onSuccess: (result) => {
+      if (result === "copied") toast(t("linkCopied"));
+      else if (result === "failed") toast(t("copyFailed"), "error");
+      // "shared" and "cancelled" both already spoke for themselves.
+    },
+  });
+
+  // Google sign-ins have no password to check against, so those confirm by
+  // typing the word instead. A restored session doesn't always carry
+  // `identities`, so app_metadata is read as a second signal rather than
+  // wrongly downgrading a password account to the typed confirmation.
+  const signInMethods = [
+    ...(user?.identities?.map((i) => i.provider) ?? []),
+    ...((user?.app_metadata?.providers as string[] | undefined) ?? []),
+    user?.app_metadata?.provider,
+  ];
+  const hasPassword = signInMethods.includes("email");
+
+  const deleteAccount = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error(t("somethingWrong"));
+      if (hasPassword) {
+        try {
+          await verifyPassword(user.email ?? "", deletePassword);
+        } catch {
+          throw new Error(t("wrongPassword"));
+        }
+      }
+      await deleteMyAccount(user.id);
+    },
+    onSuccess: async () => {
+      setDeleteOpen(false);
+      toast(t("deleteAccountDone"));
+      await signOut();
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  const deleteReady = hasPassword
+    ? deletePassword.length > 0
+    : deleteConfirm.trim().toUpperCase() === t("deleteAccountWord");
+
   const saveAlerts = useMutation({
     mutationFn: (patch: Partial<NotificationPrefs>) =>
       saveNotificationPrefs(profile!.id, {
@@ -344,7 +397,22 @@ export function ProfileScreen() {
 
   return (
     <>
-      <AppHeader title={t("myProfile")} right={<LanguageToggle />} />
+      <AppHeader
+        title={t("myProfile")}
+        right={
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => share.mutate()}
+              aria-label={t("shareMyProfile")}
+              className="rounded-lg p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-700"
+            >
+              <Share2 className="h-5 w-5" aria-hidden />
+            </button>
+            <LanguageToggle />
+          </div>
+        }
+      />
       <PageContainer className="max-w-2xl">
         {/* ---- Identity card: one flowing hierarchy, not competing blocks - */}
         <Card className="mb-5 overflow-hidden">
@@ -927,7 +995,7 @@ export function ProfileScreen() {
                 </div>
               </div>
 
-              <div className="mt-4 border-t border-slate-100 pt-4">
+              <div className="mt-4 space-y-2 border-t border-slate-100 pt-4">
                 <Button
                   variant="outline"
                   className="w-full border-red-200 text-red-600 hover:bg-red-50"
@@ -935,6 +1003,19 @@ export function ProfileScreen() {
                 >
                   <LogOut className="h-4 w-4" aria-hidden />
                   {t("signOut")}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="w-full text-red-600 hover:bg-red-50"
+                  onClick={() => {
+                    setDeleteConfirm("");
+                    setDeletePassword("");
+                    setDeleteOpen(true);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden />
+                  {t("deleteAccount")}
                 </Button>
               </div>
             </Collapsible>
@@ -947,6 +1028,56 @@ export function ProfileScreen() {
         onClose={() => setLocationConsentOpen(false)}
         onAllow={() => shareLoc.mutate()}
       />
+
+      {/* Proving it is really you, rather than a plain Yes/No, so this
+          can't be tapped through by accident - there is no undo. */}
+      <Dialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title={t("deleteAccount")}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700"
+              loading={deleteAccount.isPending}
+              disabled={!deleteReady}
+              onClick={() => deleteAccount.mutate()}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+              {t("deleteAccount")}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-slate-600">{t("deleteAccountBody")}</p>
+
+        {hasPassword ? (
+          <Field label={t("deleteAccountPasswordLabel")} className="mt-4">
+            <Input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              autoComplete="current-password"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && deleteReady) deleteAccount.mutate();
+              }}
+            />
+          </Field>
+        ) : (
+          // Signed in with Google: there is no password of ours to check.
+          <Field label={t("deleteAccountConfirmLabel")} className="mt-4">
+            <Input
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder={t("deleteAccountWord")}
+              autoComplete="off"
+            />
+          </Field>
+        )}
+      </Dialog>
     </>
   );
 }
