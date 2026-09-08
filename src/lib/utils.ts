@@ -12,6 +12,21 @@ export function skillName(skill: Skill | null | undefined, lang: Lang): string {
   return lang === "ne" ? skill.name_ne : skill.name_en;
 }
 
+/**
+ * The short place label for cards, where the column is only ~220px wide
+ * on a phone: the neighbourhood plus the district, and nothing else.
+ * locationLine()'s three parts get truncated to "Ramgunj, Ward…" there,
+ * which tells the reader less than "Ramgunj, Rupandehi" does.
+ */
+export function locationShort(
+  p: Pick<Profile, "province" | "district" | "municipality" | "ward" | "locality">,
+  lang: Lang = "en",
+): string {
+  const near = p.locality || municipalityLabel(p.district, p.municipality, lang) || null;
+  const district = districtLabel(p.district, lang) || null;
+  return [near, district].filter(Boolean).join(", ");
+}
+
 /** "Ward 4, Chandrauta, Kapilvastu" - skips whatever is missing. */
 export function locationLine(
   p: Pick<Profile, "province" | "district" | "municipality" | "ward" | "locality">,
@@ -71,6 +86,23 @@ export function formatDate(iso: string, lang: Lang): string {
   const d = new Date(`${iso}T00:00:00`);
   if (Number.isNaN(d.getTime())) return iso;
   const out = d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return lang === "ne" ? formatNumber(out, lang) : out;
+}
+
+/**
+ * Same as formatDate, minus the year when it is the current one. Used
+ * where the column is narrow - "12 Sep" reads at a glance where
+ * "12 Sep 2026" just truncates to "12 Sept 20...".
+ */
+export function formatDateShort(iso: string, lang: Lang): string {
+  const d = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  const thisYear = d.getFullYear() === new Date().getFullYear();
+  const out = d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    ...(thisYear ? {} : { year: "numeric" }),
+  });
   return lang === "ne" ? formatNumber(out, lang) : out;
 }
 

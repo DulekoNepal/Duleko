@@ -7,18 +7,23 @@ export function RatingStars({
   count,
   size = 14,
   showCount = true,
+  showValue = true,
   className,
 }: {
   value: number;
   count?: number;
   size?: number;
   showCount?: boolean;
+  /** Off for a single review's own stars, where "5.0" beside them is noise. */
+  showValue?: boolean;
   className?: string;
 }) {
   const { t, lang } = useI18n();
   const rounded = Math.round(value * 2) / 2;
 
-  if (!count) {
+  // Explicitly zero, not merely absent: a single review's stars pass no
+  // count at all, and should still draw stars rather than "New on Duleko".
+  if (count === 0) {
     return (
       <span className={cn("inline-flex items-center gap-1 text-xs text-slate-500", className)}>
         <Star className="text-slate-300" style={{ width: size, height: size }} aria-hidden />
@@ -41,8 +46,12 @@ export function RatingStars({
           />
         ))}
       </span>
-      <span className="font-medium text-slate-700">{formatNumber(value.toFixed(1), lang)}</span>
-      {showCount && <span className="text-slate-400">({formatNumber(count, lang)})</span>}
+      {showValue && (
+        <span className="font-medium text-slate-700">{formatNumber(value.toFixed(1), lang)}</span>
+      )}
+      {showCount && count != null && (
+        <span className="text-slate-400">({formatNumber(count, lang)})</span>
+      )}
     </span>
   );
 }

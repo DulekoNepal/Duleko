@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
   Award,
@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { RatingStars } from "@/components/duleko/Rating";
+import { ReviewsCard } from "@/components/duleko/ReviewsCard";
 import { RequestWorkDialog } from "@/components/duleko/RequestWorkDialog";
 import { ReportDialog } from "@/components/duleko/ReportDialog";
 import { Avatar } from "@/components/ui/avatar";
@@ -28,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card";
 import { EmptyState, FullPageLoader } from "@/components/ui/states";
 import { shareProfile } from "@/lib/share";
+import { SkillChip } from "@/components/duleko/SkillIcon";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useGuestMode } from "@/hooks/use-guest-mode";
@@ -39,6 +41,7 @@ import {
   getProfile,
   getUserSkills,
   listCertificates,
+  REVIEWS_PAGE,
   listReviewsFor,
   removeFriendship,
   respondFriendRequest,
@@ -85,9 +88,11 @@ export function WorkerScreen() {
     queryFn: () => getUserSkills(workerId),
     enabled: ready,
   });
-  const reviews = useQuery({
+  const reviews = useInfiniteQuery({
     queryKey: ["reviews", workerId],
-    queryFn: () => listReviewsFor(workerId),
+    queryFn: ({ pageParam }) => listReviewsFor(workerId, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (last, all) => (last.length < REVIEWS_PAGE ? undefined : all.length),
     enabled: ready,
   });
 
@@ -359,6 +364,39 @@ export function WorkerScreen() {
           </CardBody>
         </Card>
 
+        <Card className="mb-4">
+          <CardBody>
+            <SectionTitle>
+              <span className="inline-flex items-center gap-2">
+                <SectionIcon icon={Briefcase} />
+                {t("skills")}
+              </span>
+            </SectionTitle>
+            {/* These can only be fetched once the handle in the URL has
+                resolved to a profile, so there is a real gap before they
+                arrive - say "loading" rather than claiming there is
+                nothing here. */}
+            {skills.isPending ? (
+              <p className="text-sm text-slate-400">{t("loading")}</p>
+            ) : (skills.data?.length ?? 0) === 0 ? (
+              <p className="text-sm italic text-slate-400">{t("noSkillsYetProfile")}</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {(skills.data ?? []).map((s) => {
+                  const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
+                  const rate = s.rate_amount != null ? `${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}` : null;
+                  return (
+                    <SkillChip key={s.id} skillId={s.id}>
+                      {label}
+                      {rate ? <span className="text-slate-500">{` · ${rate}`}</span> : null}
+                    </SkillChip>
+                  );
+                })}
+              </div>
+            )}
+          </CardBody>
+        </Card>
+
         {(certificates.data?.length ?? 0) > 0 && (
           <Card className="mb-4">
             <CardBody>
@@ -387,81 +425,15 @@ export function WorkerScreen() {
           </Card>
         )}
 
-        <Card className="mb-4">
-          <CardBody>
-            <SectionTitle>
-              <span className="inline-flex items-center gap-2">
-                <SectionIcon icon={Briefcase} />
-                {t("skills")}
-              </span>
-            </SectionTitle>
-            {/* These can only be fetched once the handle in the URL has
-                resolved to a profile, so there is a real gap before they
-                arrive - say "loading" rather than claiming there is
-                nothing here. */}
-            {skills.isPending ? (
-              <p className="text-sm text-slate-400">{t("loading")}</p>
-            ) : (skills.data?.length ?? 0) === 0 ? (
-              <p className="text-sm italic text-slate-400">{t("noSkillsYetProfile")}</p>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {(skills.data ?? []).map((s) => {
-                  const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
-                  const rate = s.rate_amount != null ? `${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}` : null;
-                  return (
-                    <Badge key={s.id} tone="brand">
-                      <span aria-hidden>{s.emoji}</span>
-                      {label}
-                      {rate ? ` · ${rate}` : ""}
-                    </Badge>
-                  );
-                })}
-              </div>
-            )}
-          </CardBody>
-        </Card>
-
-        <Card className="mb-4">
-          <CardBody>
-            <SectionTitle>
-              <span className="inline-flex items-center gap-2">
-                <SectionIcon icon={Star} />
-                {t("reviews")}
-                {w.rating_count > 0 ? ` (${formatNumber(w.rating_count, lang)})` : ""}
-              </span>
-            </SectionTitle>
-            {reviews.isPending ? (
-              <p className="py-3 text-sm text-slate-400">{t("loading")}</p>
-            ) : (reviews.data?.length ?? 0) === 0 ? (
-              <p className="py-3 text-sm text-slate-500">{t("noReviewsYet")}</p>
-            ) : (
-              <ul className="divide-y divide-slate-100">
-                {(reviews.data ?? []).map((r) => (
-                  <li key={r.id} className="py-3">
-                    <div className="flex items-center gap-2">
-                      <Avatar
-                        name={r.reviewer?.full_name ?? "?"}
-                        src={r.reviewer?.avatar_url}
-                        size={28}
-                        profileId={r.reviewer?.id}
-                      />
-                      <span className="text-sm font-medium text-slate-800">
-                        {r.reviewer?.full_name ?? ""}
-                      </span>
-                      <span className="ml-auto text-xs text-slate-400">
-                        {relativeTime(r.created_at, lang)}
-                      </span>
-                    </div>
-                    <div className="mt-1.5">
-                      <RatingStars value={r.rating} count={1} showCount={false} />
-                    </div>
-                    {r.comment && <p className="mt-1 text-sm text-slate-600">{r.comment}</p>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardBody>
-        </Card>
+        <ReviewsCard
+          reviews={reviews.data?.pages.flat() ?? []}
+          isPending={reviews.isPending}
+          hasMore={reviews.hasNextPage}
+          loadingMore={reviews.isFetchingNextPage}
+          onLoadMore={() => reviews.fetchNextPage()}
+          rating={Number(w.rating)}
+          ratingCount={w.rating_count}
+        />
 
         {!isMe && (
           <div className="flex justify-center pb-4 text-sm">

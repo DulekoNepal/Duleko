@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Briefcase } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { EngagementCard } from "@/components/duleko/EngagementCard";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
+import { Button } from "@/components/ui/button";
 import { CardSkeleton, EmptyState, ErrorState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
-import { listMyEngagements } from "@/lib/queries";
+import { ENGAGEMENTS_PAGE, listMyEngagements } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
 import { cn, formatNumber } from "@/lib/utils";
 
@@ -20,13 +21,18 @@ export function WorkScreen() {
   const { profile } = useSession();
   const [role, setRole] = useState<Role>("worker");
 
-  const engagements = useQuery({
+  // This was unbounded: every job either side had ever had, fetched on
+  // every visit to the tab.
+  const engagements = useInfiniteQuery({
     queryKey: ["engagements", role, profile?.id],
-    queryFn: () => listMyEngagements(profile!.id, role),
+    queryFn: ({ pageParam }) => listMyEngagements(profile!.id, role, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (last, all) => (last.length < ENGAGEMENTS_PAGE ? undefined : all.length),
     enabled: Boolean(profile?.id),
   });
 
-  const sorted = [...(engagements.data ?? [])].sort(
+  const loaded = engagements.data?.pages.flat() ?? [];
+  const sorted = [...loaded].sort(
     (a, b) => ACTIVE_ORDER.indexOf(a.status) - ACTIVE_ORDER.indexOf(b.status),
   );
 
@@ -77,6 +83,19 @@ export function WorkScreen() {
                 <EngagementCard key={e.id} engagement={e} myProfileId={profile!.id} />
               ))}
             </div>
+
+            {engagements.hasNextPage && (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  loading={engagements.isFetchingNextPage}
+                  onClick={() => engagements.fetchNextPage()}
+                >
+                  {t("loadMore")}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </PageContainer>

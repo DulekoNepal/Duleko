@@ -12,6 +12,7 @@ import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/field";
 import { CardSkeleton, EmptyState } from "@/components/ui/states";
 import { Badge } from "@/components/ui/badge";
+import { SkillIcon } from "@/components/duleko/SkillIcon";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useGuestMode } from "@/hooks/use-guest-mode";
@@ -146,7 +147,7 @@ export function HomeScreen() {
                 search={{ skill: skill.id }}
                 className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors duration-200 hover:bg-brand-100 hover:text-brand-800"
               >
-                <span aria-hidden>{skill.emoji}</span>
+                <SkillIcon skillId={skill.id} className="h-3.5 w-3.5" />
                 {skillName(skill, lang)}
               </Link>
             ))}

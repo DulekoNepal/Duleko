@@ -14,7 +14,7 @@ const REASONS: CancellationReason[] = [
   "other",
 ];
 
-const REASON_KEY: Record<CancellationReason, "cancelReasonScheduleConflict" | "cancelReasonChangeOfPlans" | "cancelReasonPriceDisagreement" | "cancelReasonFoundSomeoneElse" | "cancelReasonNoLongerNeeded" | "reasonOther"> = {
+export const REASON_KEY: Record<CancellationReason, "cancelReasonScheduleConflict" | "cancelReasonChangeOfPlans" | "cancelReasonPriceDisagreement" | "cancelReasonFoundSomeoneElse" | "cancelReasonNoLongerNeeded" | "reasonOther"> = {
   schedule_conflict: "cancelReasonScheduleConflict",
   change_of_plans: "cancelReasonChangeOfPlans",
   price_disagreement: "cancelReasonPriceDisagreement",
