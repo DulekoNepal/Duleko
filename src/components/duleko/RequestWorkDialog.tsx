@@ -8,7 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import { createEngagement, getAvailability, getUserSkills } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import { addDays, formatMoney, todayKey, toDateKey } from "@/lib/utils";
+import { addDays, formatMoney, skillName, todayKey, toDateKey } from "@/lib/utils";
 import type { Profile, WorkerCardData } from "@/lib/types";
 
 type Worker = Pick<Profile, "id" | "full_name"> & Partial<WorkerCardData>;
@@ -172,8 +172,13 @@ export function RequestWorkDialog({
         hint={
           ratedSkills.length > 0
             ? t("workerRateHint", {
+                // Plain text - this is a hint string, so it names the
+                // skill rather than trying to carry an icon.
                 rates: ratedSkills
-                  .map((s) => `${s.emoji} ${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}`)
+                  .map(
+                    (s) =>
+                      `${skillName(s, lang)} ${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}`,
+                  )
                   .join(" · "),
               })
             : undefined

@@ -22,6 +22,8 @@ const strings = {
   required: ["Required", "अनिवार्य"],
   search: ["Search", "खोज्नुहोस्"],
   seeAll: ["See all", "सबै हेर्नुहोस्"],
+  loadMore: ["Load more", "थप हेर्नुहोस्"],
+  loadOlderMessages: ["Load older messages", "पुराना सन्देश हेर्नुहोस्"],
   showLess: ["Show less", "कम देखाउनुहोस्"],
   somethingWrong: ["Something went wrong.", "केही गडबड भयो।"],
   noInternet: ["Check your internet connection.", "इन्टरनेट जडान जाँच्नुहोस्।"],
@@ -159,6 +161,7 @@ const strings = {
   availability: ["Availability", "उपलब्धता"],
   reviews: ["Reviews", "समीक्षा"],
   noReviewsYet: ["No reviews yet.", "अझै समीक्षा छैन।"],
+  reviewCount: ["{count} reviews", "{count} समीक्षा"],
   newProfile: ["New on Duleko", "दुलेकोमा नयाँ"],
   requestWork: ["Request work", "काम अनुरोध गर्नुहोस्"],
   callNow: ["Call", "फोन गर्नुहोस्"],
@@ -167,10 +170,6 @@ const strings = {
     "यस व्यक्तिले अझै फोन नम्बर थप्नुभएको छैन।",
   ],
   chat: ["Chat", "कुराकानी"],
-  chatHidden: [
-    "Chat opens once the worker accepts.",
-    "कामदारले स्वीकार गरेपछि कुराकानी खुल्छ।",
-  ],
   chatPlaceholder: ["Type a message", "सन्देश लेख्नुहोस्"],
   chatEmpty: ["No messages yet. Say hello.", "अहिलेसम्म सन्देश छैन। नमस्ते भन्नुहोस्।"],
   send: ["Send", "पठाउनुहोस्"],
@@ -197,7 +196,6 @@ const strings = {
   replyingTo: ["Replying to {name}", "{name} लाई जवाफ"],
   editingMessage: ["Editing message", "सन्देश सम्पादन गर्दै"],
   editMessagePlaceholder: ["Edit your message", "आफ्नो सन्देश सम्पादन गर्नुहोस्"],
-  reactedToMessage: ["Reacted {emoji}", "प्रतिक्रिया {emoji}"],
   newMessages: ["New messages", "नयाँ सन्देश"],
   ratingSummary: ["{rating} ({count} reviews)", "{rating} ({count} समीक्षा)"],
   availableNow: ["Available", "उपलब्ध"],
@@ -244,7 +242,9 @@ const strings = {
     "स्थान लिन सकिएन। ब्राउजरको लोकेसन अनुमति जाँच्नुहोस्।",
   ],
   nearestSort: ["Nearest", "सबैभन्दा नजिक"],
-  distanceAway: ["{km} km away", "{km} कि.मी. टाढा"],
+  // Compact on purpose - it sits beside a place name in a ~220px column
+  // on a phone, and the arrow icon beside it already reads as "away".
+  distanceAway: ["{km} km", "{km} कि.मी."],
 
   // ---- cancellation reason ---------------------------------------------
   cancelReasonTitle: ["Why are you cancelling?", "किन रद्द गर्दै हुनुहुन्छ?"],
@@ -306,6 +306,12 @@ const strings = {
   myWork: ["My work", "मेरो काम"],
   asWorker: ["Work I do", "मैले गर्ने काम"],
   asEmployer: ["Work I gave", "मैले दिएको काम"],
+  // The four steps of a job, shown on the card rail and the timeline.
+  workProgress: ["Progress", "प्रगति"],
+  stepRequested: ["Requested", "अनुरोध"],
+  stepAccepted: ["Accepted", "स्वीकृत"],
+  stepConfirmed: ["Confirmed", "पक्का"],
+  stepDone: ["Done", "सम्पन्न"],
   statusPending: ["Waiting", "पर्खाइमा"],
   statusAccepted: ["Accepted", "स्वीकृत"],
   statusDeclined: ["Declined", "अस्वीकृत"],
@@ -313,6 +319,19 @@ const strings = {
   statusCompleted: ["Completed", "सम्पन्न"],
   statusCancelled: ["Cancelled", "रद्द"],
   accept: ["Accept", "स्वीकार गर्नुहोस्"],
+  // Who the job is with, spelled out - the card used a bare arrow.
+  workForName: ["For {name}", "{name} को लागि"],
+  workByName: ["By {name}", "{name} द्वारा"],
+  // Column headings on the engagement card's facts strip. Distinct from
+  // workDate above, which is the "Which day?" form label.
+  viewDetails: ["View details", "विवरण हेर्नुहोस्"],
+  // A display label, unlike cancelReasonPrompt which prompts a choice.
+  cancelledBecause: ["Cancelled", "रद्द भयो"],
+  workAsWorkerNote: ["You are doing this work", "तपाईंले यो काम गर्दै हुनुहुन्छ"],
+  workAsEmployerNote: ["They are doing this work for you", "उहाँले तपाईंको लागि यो काम गर्दै हुनुहुन्छ"],
+  workCardDate: ["Date", "मिति"],
+  workCardWhere: ["Where", "स्थान"],
+  workCardPayment: ["Payment", "भुक्तानी"],
   decline: ["Decline", "अस्वीकार गर्नुहोस्"],
   confirmWork: ["Confirm", "पक्का गर्नुहोस्"],
   markComplete: ["Mark completed", "सम्पन्न भयो"],
@@ -346,6 +365,10 @@ const strings = {
   // ---- notifications -------------------------------------------------
   notifications: ["Notifications", "सूचना"],
   markAllRead: ["Mark all read", "सबै पढेको चिन्ह"],
+  unreadCount: ["{count} unread", "{count} नपढेको"],
+  filterAll: ["All", "सबै"],
+  filterUnread: ["Unread", "नपढेको"],
+  noUnread: ["Nothing unread.", "नपढेको केही छैन।"],
   noNotifications: ["No notifications.", "कुनै सूचना छैन।"],
   officialAccount: ["Official", "आधिकारिक"],
 
@@ -369,7 +392,6 @@ const strings = {
   // ---- sharing a profile ---------------------------------------------
   shareProfile: ["Share profile", "प्रोफाइल सेयर गर्नुहोस्"],
   profileOptions: ["Profile options", "प्रोफाइल विकल्पहरू"],
-  shareMyProfile: ["Share my profile", "मेरो प्रोफाइल सेयर गर्नुहोस्"],
   copyLink: ["Copy link", "लिङ्क कपी गर्नुहोस्"],
   linkCopied: ["Profile link copied.", "प्रोफाइल लिङ्क कपी भयो।"],
   copyFailed: ["Could not copy the link.", "लिङ्क कपी गर्न सकिएन।"],

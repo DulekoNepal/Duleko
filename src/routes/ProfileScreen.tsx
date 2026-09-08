@@ -38,6 +38,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { EmptyState } from "@/components/ui/states";
 import { Switch } from "@/components/ui/switch";
+import { SkillIcon, SkillTile } from "@/components/duleko/SkillIcon";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
@@ -671,7 +672,8 @@ export function ProfileScreen() {
                       return (
                         <div key={id} className="rounded-xl border border-slate-200 p-3">
                           <p className="mb-2 text-sm font-medium text-slate-800">
-                            <span aria-hidden>{skill.emoji}</span> {skillName(skill, lang)}
+                            <SkillIcon skillId={skill.id} className="h-3.5 w-3.5" />
+                            {skillName(skill, lang)}
                           </p>
                           {id === "other" && (
                             <>
@@ -808,20 +810,24 @@ export function ProfileScreen() {
                             ? `${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}`
                             : null;
                         return (
+                          // Neutral row with the trade's own tile on the
+                          // left. The green gradient this replaced washed
+                          // the whole list one colour and buried the
+                          // per-skill accent under it.
                           <div
                             key={s.id}
-                            className="flex items-center justify-between gap-3 rounded-xl border border-brand-100 bg-gradient-to-r from-brand-50 to-transparent px-4 py-3 transition-colors duration-200 hover:bg-brand-50"
+                            className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3 transition-colors duration-200 hover:bg-slate-50"
                           >
-                            <div className="min-w-0">
-                              <p className="flex items-center gap-2 font-semibold text-slate-900">
-                                <span aria-hidden>{s.emoji}</span>
-                                <span className="truncate">{label}</span>
-                              </p>
+                            <SkillTile skillId={s.id} className="h-10 w-10 rounded-xl" />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate font-semibold text-slate-900">{label}</p>
                               {s.custom_note && (
-                                <p className="mt-0.5 truncate text-xs text-slate-600">{s.custom_note}</p>
+                                <p className="mt-0.5 truncate text-xs text-slate-500">{s.custom_note}</p>
                               )}
                             </div>
-                            {rate && <p className="shrink-0 font-semibold text-slate-900">{rate}</p>}
+                            {rate && (
+                              <p className="shrink-0 text-sm font-semibold text-slate-900">{rate}</p>
+                            )}
                           </div>
                         );
                       })}

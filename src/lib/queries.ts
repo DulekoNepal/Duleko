@@ -267,6 +267,8 @@ export interface SearchParams {
   lng?: number | null;
 }
 
+export const SEARCH_PAGE = 24;
+
 export async function searchWorkers(params: SearchParams): Promise<WorkerCardData[]> {
   const { data, error } = await supabase.rpc("search_workers", {
     p_skill: params.skill ?? null,
@@ -396,16 +398,23 @@ export async function createEngagement(input: {
   );
 }
 
+export const ENGAGEMENTS_PAGE = 15;
+
+/** Was unbounded - every job anyone had ever had, on every visit. */
 export async function listMyEngagements(
   myProfileId: string,
   role: "worker" | "employer",
+  page = 0,
+  pageSize = ENGAGEMENTS_PAGE,
 ): Promise<EngagementWithParties[]> {
   const column = role === "worker" ? "worker_profile_id" : "employer_profile_id";
+  const from = page * pageSize;
   const { data, error } = await supabase
     .from("work_engagements")
     .select(ENGAGEMENT_SELECT)
     .eq(column, myProfileId)
-    .order("work_date", { ascending: false });
+    .order("work_date", { ascending: false })
+    .range(from, from + pageSize - 1);
   if (error) throw error;
   return ((data ?? []) as unknown as RawEngagement[]).map((row) => shapeEngagement(row, myProfileId));
 }
@@ -502,7 +511,14 @@ export async function submitBid(
 // ---------------------------------------------------------------------
 // Reviews
 // ---------------------------------------------------------------------
-export async function listReviewsFor(profileId: string): Promise<Review[]> {
+export const REVIEWS_PAGE = 20;
+
+export async function listReviewsFor(
+  profileId: string,
+  page = 0,
+  pageSize = REVIEWS_PAGE,
+): Promise<Review[]> {
+  const from = page * pageSize;
   const { data, error } = await supabase
     .from("reviews")
     .select(
@@ -511,7 +527,7 @@ export async function listReviewsFor(profileId: string): Promise<Review[]> {
     )
     .eq("reviewee_profile_id", profileId)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .range(from, from + pageSize - 1);
   if (error) throw error;
   return ((data ?? []) as unknown as (Review & { reviewer: Review["reviewer"] | Review["reviewer"][] })[]).map(
     (r) => ({ ...r, reviewer: one(r.reviewer) ?? undefined }),
@@ -534,7 +550,14 @@ export async function submitReview(input: {
 // ---------------------------------------------------------------------
 // "message" notifications drive the Chats tab badge instead - they never
 // show up in the Alerts list or count toward its badge.
-export async function listNotifications(profileId: string): Promise<AppNotification[]> {
+export const NOTIFICATIONS_PAGE = 25;
+
+export async function listNotifications(
+  profileId: string,
+  page = 0,
+  pageSize = NOTIFICATIONS_PAGE,
+): Promise<AppNotification[]> {
+  const from = page * pageSize;
   return unwrap(
     await supabase
       .from("notifications")
@@ -542,7 +565,7 @@ export async function listNotifications(profileId: string): Promise<AppNotificat
       .eq("profile_id", profileId)
       .neq("kind", "message")
       .order("created_at", { ascending: false })
-      .limit(60),
+      .range(from, from + pageSize - 1),
   );
 }
 
@@ -858,7 +881,21 @@ export function attachReplies(items: ChatMessage[]): ChatMessage[] {
   );
 }
 
-export async function listMessages(myProfileId: string, otherProfileId: string): Promise<ChatMessage[]> {
+export const MESSAGES_PAGE = 40;
+
+/**
+ * The most recent `limit` messages, oldest-first for rendering.
+ *
+ * This used to order ascending and take 200, which returns the *oldest*
+ * 200 - so a thread past that length would open on its first ever
+ * messages and never show anything recent. It now takes the newest
+ * window and reverses it, and "load older" simply asks for a bigger one.
+ */
+export async function listMessages(
+  myProfileId: string,
+  otherProfileId: string,
+  limit = MESSAGES_PAGE,
+): Promise<ChatMessage[]> {
   const [profile_a, profile_b] =
     myProfileId < otherProfileId ? [myProfileId, otherProfileId] : [otherProfileId, myProfileId];
   const { data, error } = await supabase
@@ -866,10 +903,10 @@ export async function listMessages(myProfileId: string, otherProfileId: string):
     .select(MESSAGE_COLUMNS)
     .eq("profile_a", profile_a)
     .eq("profile_b", profile_b)
-    .order("created_at", { ascending: true })
-    .limit(200);
+    .order("created_at", { ascending: false })
+    .limit(limit);
   if (error) throw error;
-  return attachReplies((data ?? []).map(shapeMessage));
+  return attachReplies((data ?? []).reverse().map(shapeMessage));
 }
 
 /** Opening a thread marks the other person's messages as seen. */

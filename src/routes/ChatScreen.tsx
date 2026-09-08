@@ -13,6 +13,7 @@ import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import { useTypingFrom, useTypingSender } from "@/hooks/use-typing";
 import {
+  MESSAGES_PAGE,
   chatPairKey,
   editMessage,
   getProfile,
@@ -54,12 +55,17 @@ export function ChatScreen() {
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [atBottom, setAtBottom] = useState(true);
   const [unreadBelow, setUnreadBelow] = useState(false);
+  // Grows when "load older" is tapped; the query always fetches the most
+  // recent `limit` messages, so realtime updates keep working unchanged.
+  const [limit, setLimit] = useState(MESSAGES_PAGE);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastTypingSentAt = useRef(0);
   const typingStopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const landedOn = useRef<string | null>(null);
-  const seenCount = useRef(0);
+  const newestId = useRef<string | null>(null);
+  // Distance from the bottom, stashed while an older page loads in.
+  const anchorFromBottom = useRef<number | null>(null);
 
   const other = useQuery({ queryKey: ["profile", otherId], queryFn: () => getProfile(otherId) });
 
@@ -71,10 +77,13 @@ export function ChatScreen() {
   const pairKey = me ? chatPairKey(me.id, otherId) : null;
 
   const messages = useQuery({
-    queryKey: ["messages", pairKey],
-    queryFn: () => listMessages(me!.id, otherId),
+    queryKey: ["messages", pairKey, limit],
+    queryFn: () => listMessages(me!.id, otherId, limit),
     enabled: Boolean(me && pairKey),
   });
+
+  // A full page came back, so there is probably more history behind it.
+  const mayHaveOlder = (messages.data?.length ?? 0) >= limit;
 
   // One channel per thread for live message and reaction changes. Typing
   // rides a separate per-person channel (see use-typing) so the Chats list
@@ -112,24 +121,30 @@ export function ChatScreen() {
   useLayoutEffect(() => {
     if (!pairKey || !messages.data || landedOn.current === pairKey) return;
     landedOn.current = pairKey;
-    seenCount.current = messages.data.length;
+    newestId.current = messages.data[messages.data.length - 1]?.id ?? null;
     scrollToEnd("auto");
     requestAnimationFrame(() => scrollToEnd("auto"));
   }, [pairKey, messages.data]);
 
-  // Afterwards, only follow new messages when the person is already at the
-  // end - otherwise scrolling back through history would keep yanking them
-  // down. Anything that arrives while they are up there raises the pill.
+  // Loading older messages makes the list longer without anything new
+  // arriving, so this watches the newest id rather than the count -
+  // otherwise reading back through history would snap you to the bottom.
+  useLayoutEffect(() => {
+    const el = listRef.current;
+    if (!el || anchorFromBottom.current == null) return;
+    el.scrollTop = el.scrollHeight - anchorFromBottom.current;
+    anchorFromBottom.current = null;
+  }, [messages.data]);
+
+  // Otherwise: follow new messages when the person is already at the end,
+  // and raise the pill when they are not.
   useEffect(() => {
     const items = messages.data;
-    if (!items || landedOn.current !== pairKey) return;
-    if (items.length <= seenCount.current) {
-      seenCount.current = items.length;
-      return;
-    }
-    const mineArrived = items[items.length - 1]?.sender_profile_id === me?.id;
-    seenCount.current = items.length;
-    if (atBottom || mineArrived) scrollToEnd("smooth");
+    if (!items?.length || landedOn.current !== pairKey) return;
+    const newest = items[items.length - 1];
+    if (newest.id === newestId.current) return;
+    newestId.current = newest.id;
+    if (atBottom || newest.sender_profile_id === me?.id) scrollToEnd("smooth");
     else setUnreadBelow(true);
   }, [messages.data, pairKey, atBottom, me?.id]);
 
@@ -364,7 +379,23 @@ export function ChatScreen() {
         ) : items.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-500">{t("chatEmpty")}</p>
         ) : (
-          rows.map(({ m, newDay, firstInRun, lastInRun }) => (
+          <>
+            {mayHaveOlder && (
+              <div className="flex justify-center pb-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = listRef.current;
+                    anchorFromBottom.current = el ? el.scrollHeight - el.scrollTop : null;
+                    setLimit((n) => n + MESSAGES_PAGE);
+                  }}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 transition-colors duration-200 hover:bg-slate-50"
+                >
+                  {t("loadOlderMessages")}
+                </button>
+              </div>
+            )}
+            {rows.map(({ m, newDay, firstInRun, lastInRun }) => (
             <div key={m.id}>
               {newDay && (
                 <div className="my-3 flex justify-center">
@@ -401,7 +432,8 @@ export function ChatScreen() {
                 highlighted={highlightId === m.id}
               />
             </div>
-          ))
+            ))}
+          </>
         )}
 
         {showSeen && (

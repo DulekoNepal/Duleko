@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Search as SearchIcon, SlidersHorizontal, Users } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { WorkerCard } from "@/components/duleko/WorkerCard";
@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Badge } from "@/components/ui/badge";
 import { CardSkeleton, EmptyState, ErrorState } from "@/components/ui/states";
+import { SkillIcon } from "@/components/duleko/SkillIcon";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { usePresence } from "@/hooks/use-presence";
 import { useToast } from "@/hooks/use-toast";
-import { listSkills, searchWorkers } from "@/lib/queries";
+import { SEARCH_PAGE, listSkills, searchWorkers } from "@/lib/queries";
 import { ALL_DISTRICTS } from "@/lib/nepal";
 import { errorMessage } from "@/lib/supabase";
 import { formatNumber, skillName } from "@/lib/utils";
@@ -82,9 +83,11 @@ export function SearchScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.skill]);
 
-  const results = useQuery({
+  // search_workers already took a limit and an offset; nothing ever sent
+  // an offset, so results were silently capped at the first page.
+  const results = useInfiniteQuery({
     queryKey: ["workers", "search", filters, district, filters.sort === "nearest" ? coords : null],
-    queryFn: () =>
+    queryFn: ({ pageParam }) =>
       searchWorkers({
         skill: filters.skill ?? null,
         query: filters.q ?? null,
@@ -92,14 +95,18 @@ export function SearchScreen() {
         day: filters.day ?? null,
         availableOnly: filters.available ?? false,
         sort: filters.sort ?? "relevance",
-        limit: 50,
+        limit: SEARCH_PAGE,
+        offset: pageParam * SEARCH_PAGE,
         lat: filters.sort === "nearest" ? coords?.lat : null,
         lng: filters.sort === "nearest" ? coords?.lng : null,
       }),
+    initialPageParam: 0,
+    getNextPageParam: (last, all) => (last.length < SEARCH_PAGE ? undefined : all.length),
     enabled: filters.sort !== "nearest" || Boolean(coords),
   });
 
-  const online = usePresence((results.data ?? []).map((w) => w.id));
+  const workers = results.data?.pages.flat() ?? [];
+  const online = usePresence(workers.map((w) => w.id));
 
   function update(patch: Partial<SearchFilters>) {
     navigate({ to: "/search", search: { ...filters, ...patch } as SearchFilters });
@@ -154,7 +161,8 @@ export function SearchScreen() {
                   <option value="">{t("allSkills")}</option>
                   {(skills.data ?? []).map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.emoji} {skillName(s, lang)}
+                      <SkillIcon skillId={s.id} className="h-3.5 w-3.5" />
+                      {skillName(s, lang)}
                     </option>
                   ))}
                 </Select>
@@ -236,7 +244,7 @@ export function SearchScreen() {
             onRetry={() => results.refetch()}
             retryLabel={t("retry")}
           />
-        ) : (results.data?.length ?? 0) === 0 ? (
+        ) : workers.length === 0 ? (
           <EmptyState
             icon={<Users className="h-8 w-8" />}
             title={t("noResults")}
@@ -253,14 +261,27 @@ export function SearchScreen() {
           <>
             <p className="mb-3 text-sm text-slate-500">
               <Badge tone="neutral">
-                {t("resultsCount", { count: formatNumber(results.data?.length ?? 0, lang) })}
+                {t("resultsCount", { count: formatNumber(workers.length, lang) })}
               </Badge>
             </p>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {(results.data ?? []).map((worker) => (
+              {workers.map((worker) => (
                 <WorkerCard key={worker.id} worker={worker} online={online[worker.id]} />
               ))}
             </div>
+
+            {results.hasNextPage && (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  loading={results.isFetchingNextPage}
+                  onClick={() => results.fetchNextPage()}
+                >
+                  {t("loadMore")}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </PageContainer>
