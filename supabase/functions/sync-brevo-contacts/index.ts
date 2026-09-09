@@ -44,6 +44,13 @@ async function syncContact(c: ContactSync): Promise<void> {
   const res = await fetch("https://api.brevo.com/v3/contacts", {
     method: "POST",
     headers: { "api-key": key, "Content-Type": "application/json", Accept: "application/json" },
+    // A batch is processed one contact at a time, awaited in sequence - a
+    // single hung request with no timeout stalls the whole run, which is
+    // exactly what leaves every row after it stuck on 'sending' until the
+    // 10-minute requeue kicks in (and likely just stalls again the same
+    // way). Failing fast here means one bad contact costs a few seconds,
+    // not the rest of the batch.
+    signal: AbortSignal.timeout(10_000),
     body: JSON.stringify({
       email: c.email,
       // FIRSTNAME/LASTNAME are Brevo's own default attributes, so this

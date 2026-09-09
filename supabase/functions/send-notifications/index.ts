@@ -79,6 +79,10 @@ async function sendEmail(d: Delivery): Promise<void> {
   const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: { "api-key": key, "Content-Type": "application/json", Accept: "application/json" },
+    // A batch is sent one row at a time, awaited in sequence - without
+    // this, one hung request stalls every delivery after it in the same
+    // run rather than failing just that one row.
+    signal: AbortSignal.timeout(10_000),
     body: JSON.stringify({
       sender,
       to: [{ email: d.destination }],
@@ -109,6 +113,7 @@ async function sendSms(d: Delivery): Promise<void> {
     const res = await fetch("https://api.sparrowsms.com/v2/sms/", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      signal: AbortSignal.timeout(10_000),
       body: new URLSearchParams({
         token,
         from: env("SPARROW_FROM", "Duleko"),
@@ -130,6 +135,7 @@ async function sendSms(d: Delivery): Promise<void> {
         Authorization: `Basic ${btoa(`${sid}:${token}`)}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
+      signal: AbortSignal.timeout(10_000),
       body: new URLSearchParams({ From: env("TWILIO_FROM"), To: phone.e164, Body: d.body }),
     });
     if (!res.ok) throw new Error(`twilio ${res.status}: ${(await res.text()).slice(0, 300)}`);
