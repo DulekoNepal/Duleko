@@ -98,7 +98,7 @@ people at once. Call them **Ram** (worker) and **Sita** (employer).
 - [ ] Close her app, wait three minutes, message twice in a row: exactly **one** email.
 - [ ] Turn SMS on for an account with a saved phone number, send a work request: one text.
       A chat message to the same account sends no text (chat is not in `sms_kinds`).
-- [ ] Break a secret on purpose (e.g. a bad `RESEND_API_KEY`): the row lands in `failed`
+- [ ] Break a secret on purpose (e.g. a bad `BREVO_API_KEY`): the row lands in `failed`
       after three tries, with the provider's message in `last_error`, and nothing else stalls.
 
 ## K. Chat (needs two accounts, ideally two phones)

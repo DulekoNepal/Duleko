@@ -2,15 +2,15 @@
 // Duleko :: send-notifications
 // =====================================================================
 // Drains public.notification_deliveries and pushes each row out over
-// email (Resend) or SMS (Sparrow SMS or Twilio). Called once a minute by
+// email (Brevo) or SMS (Sparrow SMS or Twilio). Called once a minute by
 // pg_cron via pg_net - see supabase/migrations/20260101002500_*.sql.
 //
 // It never throws on a single bad row: one failure is recorded against
 // that row and the rest of the batch still goes out.
 //
 // Secrets (supabase secrets set ...):
-//   RESEND_API_KEY      required for email
-//   NOTIFY_EMAIL_FROM   e.g. "Duleko <hello@duleko.com>"  (default: onboarding@resend.dev)
+//   BREVO_API_KEY       required for email
+//   NOTIFY_EMAIL_FROM   e.g. "Duleko <no-reply@duleko.com>" (default below)
 //   SITE_URL            e.g. https://www.duleko.com       (default: same)
 //   SMS_PROVIDER        "sparrow" | "twilio" | unset to disable SMS
 //   SPARROW_TOKEN, SPARROW_FROM
@@ -64,23 +64,31 @@ function emailHtml(d: Delivery): string {
 </html>`;
 }
 
-async function sendEmail(d: Delivery): Promise<void> {
-  const key = env("RESEND_API_KEY");
-  if (!key) throw new Error("RESEND_API_KEY is not set");
+/** Brevo wants the sender as separate name/email fields, not one combined string. */
+function parseFrom(raw: string): { name: string; email: string } {
+  const match = raw.match(/^(.*)<(.+)>$/);
+  return match ? { name: match[1].trim(), email: match[2].trim() } : { name: "Duleko", email: raw.trim() };
+}
 
-  const res = await fetch("https://api.resend.com/emails", {
+async function sendEmail(d: Delivery): Promise<void> {
+  const key = env("BREVO_API_KEY");
+  if (!key) throw new Error("BREVO_API_KEY is not set");
+
+  const sender = parseFrom(env("NOTIFY_EMAIL_FROM", "Duleko <no-reply@duleko.com>"));
+
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    headers: { "api-key": key, "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({
-      from: env("NOTIFY_EMAIL_FROM", "Duleko <onboarding@resend.dev>"),
-      to: [d.destination],
+      sender,
+      to: [{ email: d.destination }],
       subject: d.subject,
-      html: emailHtml(d),
-      text: `${d.subject}\n\n${d.body}\n\n${SITE_URL}`,
+      htmlContent: emailHtml(d),
+      textContent: `${d.subject}\n\n${d.body}\n\n${SITE_URL}`,
     }),
   });
 
-  if (!res.ok) throw new Error(`resend ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) throw new Error(`brevo ${res.status}: ${(await res.text()).slice(0, 300)}`);
 }
 
 /** Nepali numbers are stored however the user typed them; normalise here. */
