@@ -56,6 +56,45 @@ const strings = {
     "A simple way for workers and employers in your area to find each other.",
     "तपाईंको क्षेत्रका कामदार र काम दिने बीच सजिलो भेटघाट।",
   ],
+  confirmPassword: ["Confirm password", "पासवर्ड पुष्टि गर्नुहोस्"],
+  passwordsDontMatch: ["Passwords don't match.", "पासवर्ड मिलेन।"],
+  incorrectCredentials: ["Incorrect email or password.", "गलत इमेल वा पासवर्ड।"],
+  pleaseWaitBeforeRetry: [
+    "Please wait a moment before trying again.",
+    "कृपया अलिक पर्खेर फेरि प्रयास गर्नुहोस्।",
+  ],
+
+  // ---- email verification (OTP) ----------------------------------------
+  verifyEmailTitle: ["Verify your email", "आफ्नो इमेल पुष्टि गर्नुहोस्"],
+  verifyEmailBlurb: [
+    "Enter the 6-digit code we sent to {email}.",
+    "हामीले {email} मा पठाएको ६ अंकको कोड यहाँ हाल्नुहोस्।",
+  ],
+  verify: ["Verify", "पुष्टि गर्नुहोस्"],
+  resendCode: ["Resend code", "कोड फेरि पठाउनुहोस्"],
+  resendCodeIn: ["Resend code in {seconds}s", "{seconds} सेकेन्डमा कोड फेरि पठाउनुहोस्"],
+  codeResent: ["We've sent a new code.", "हामीले नयाँ कोड पठायौं।"],
+  useAnotherEmail: ["Use a different email", "फरक इमेल प्रयोग गर्नुहोस्"],
+  invalidOrExpiredCode: [
+    "That code is incorrect or has expired. Request a new one.",
+    "त्यो कोड गलत छ वा म्याद सकिएको छ। नयाँ अनुरोध गर्नुहोस्।",
+  ],
+
+  // ---- forgot password ----------------------------------------------
+  forgotPassword: ["Forgot password?", "पासवर्ड बिर्सनुभयो?"],
+  resetPasswordTitle: ["Reset your password", "पासवर्ड रिसेट गर्नुहोस्"],
+  resetPasswordBlurb: [
+    "Enter your account email and we'll send you a code to reset your password.",
+    "आफ्नो खाताको इमेल हाल्नुहोस्, हामी पासवर्ड रिसेट गर्न कोड पठाउनेछौं।",
+  ],
+  sendResetCode: ["Send code", "कोड पठाउनुहोस्"],
+  verifyResetCodeBlurb: [
+    "Enter the 6-digit code we sent to {email} to continue.",
+    "जारी राख्न हामीले {email} मा पठाएको ६ अंकको कोड यहाँ हाल्नुहोस्।",
+  ],
+  newPassword: ["New password", "नयाँ पासवर्ड"],
+  setNewPassword: ["Set new password", "नयाँ पासवर्ड सेट गर्नुहोस्"],
+  backToSignIn: ["Back to sign in", "लगइनमा फर्कनुहोस्"],
 
   // ---- guest browsing --------------------------------------------------
   exploreDuleko: ["Explore Duleko", "डुलेको हेर्नुहोस्"],

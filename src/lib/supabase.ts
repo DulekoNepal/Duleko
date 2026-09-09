@@ -41,5 +41,21 @@ export function errorMessage(error: unknown): string {
   ) {
     return translateStatic("emailAlreadyRegistered");
   }
+  // A stale, reused, or mistyped OTP - the code path, not the email/password one.
+  if (
+    e.code === "otp_expired" ||
+    /otp.*expired|token has expired|invalid.*(otp|token)/i.test(e.message || "")
+  ) {
+    return translateStatic("invalidOrExpiredCode");
+  }
+  // Wrong email/password - Supabase's own wording ("Invalid login credentials")
+  // reads like a system message, not something aimed at the person typing it.
+  if (e.code === "invalid_credentials" || /invalid login credentials/i.test(e.message || "")) {
+    return translateStatic("incorrectCredentials");
+  }
+  // The resend/reset-code cooldown Supabase enforces server-side.
+  if (e.code === "over_email_send_rate_limit" || /security purposes.*after \d+ seconds/i.test(e.message || "")) {
+    return translateStatic("pleaseWaitBeforeRetry");
+  }
   return e.error_description || e.message || "Something went wrong. Please try again.";
 }

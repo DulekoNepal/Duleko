@@ -10,7 +10,7 @@
 --                                        v
 --                          edge function `send-notifications`
 --                                        |
---                             Resend (email) / SMS provider
+--                             Brevo (email) / SMS provider
 --
 -- The outbox exists so a failed send is retried instead of lost, and so
 -- nothing user-facing ever blocks on an external HTTP call.
@@ -239,7 +239,7 @@ grant execute on function public.requeue_stuck_deliveries() to service_role;
 --      supabase functions deploy send-notifications
 --
 -- 2. Set its secrets (email is enough to start; SMS is optional):
---      supabase secrets set RESEND_API_KEY=re_xxx
+--      supabase secrets set BREVO_API_KEY=xkeysib-xxx
 --      supabase secrets set NOTIFY_EMAIL_FROM="Duleko <hello@duleko.com>"
 --      supabase secrets set SMS_PROVIDER=sparrow          # or twilio, or leave unset
 --      supabase secrets set SPARROW_TOKEN=xxx SPARROW_FROM=Duleko

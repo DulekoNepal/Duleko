@@ -114,8 +114,8 @@ outbox (`notification_deliveries`), and the `send-notifications` edge function d
 ```bash
 supabase functions deploy send-notifications
 
-# Email (Resend free tier: 3,000/month)
-supabase secrets set RESEND_API_KEY=re_xxx
+# Email (Brevo free tier: 300/day)
+supabase secrets set BREVO_API_KEY=xkeysib-xxx
 supabase secrets set NOTIFY_EMAIL_FROM="Duleko <hello@duleko.com>"
 supabase secrets set SITE_URL=https://www.duleko.com
 
@@ -151,6 +151,26 @@ $cron$);
 
 Check on it with `select status, count(*) from public.notification_deliveries group by 1;` -
 anything in `failed` has the provider's own message in `last_error`.
+
+## 9. Marketing contact sync
+
+`hello@duleko.com` sends Campaigns by hand from Brevo's own dashboard - that needs a contact
+list to send to. Migration `20260101003400_brevo_contact_sync.sql` mirrors every profile that
+finishes onboarding into `marketing_contact_syncs`, and the `sync-brevo-contacts` edge function
+drains it into a Brevo list. It never sends anything itself; it only keeps the list current.
+
+```bash
+supabase functions deploy sync-brevo-contacts
+
+# BREVO_API_KEY is the same one set for send-notifications above - reused, not a second key.
+supabase secrets set BREVO_API_KEY=xkeysib-xxx
+supabase secrets set BREVO_LIST_ID=7   # Brevo -> Contacts -> Lists -> open one -> id is in the URL
+```
+
+Same Vault + cron pattern as section 8, with its own function URL secret and schedule name -
+see the migration's own comment block for the exact SQL (`brevo_sync_function_url`,
+`drain-marketing-contact-syncs`). It reuses the `notify_service_key` Vault secret from section 8
+rather than storing the service key twice.
 
 ---
 
@@ -223,7 +243,8 @@ src/
   router.tsx         Route tree
 supabase/
   migrations/        The database, in order
-  functions/         Edge functions (send-notifications: the email/SMS sender)
+  functions/         Edge functions (send-notifications: email/SMS sender;
+                     sync-brevo-contacts: keeps the marketing list current)
 docs/TESTING.md      Manual test script for the beta
 ```
 
@@ -235,8 +256,8 @@ filters and profile picker all read from that table, so nothing in the code need
 ## Costs
 
 Everything here fits the Supabase and Vercel free tiers: 500 MB database, 1 GB storage,
-100 GB bandwidth. That covers a few thousand users comfortably. Email adds nothing on Resend's
-free tier (3,000/month, 100/day).
+100 GB bandwidth. That covers a few thousand users comfortably. Email adds nothing on Brevo's
+free tier (300/day).
 
 SMS is the one line item that is not free - roughly NPR 1-2 per message through a Nepali
 gateway like Sparrow, and closer to NPR 7 through Twilio. That is why it defaults to off, is
