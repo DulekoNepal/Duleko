@@ -7,7 +7,7 @@ import type { Lang } from "./types";
  */
 const strings = {
   // ---- generic -------------------------------------------------------
-  appName: ["Duleko", "दुलेको"],
+  appName: ["Duleko", "डुलेको"],
   tagline: ["Find local work. Find local workers.", "नजिकैको काम खोज्नुहोस्। नजिकैका कामदार भेट्नुहोस्।"],
   save: ["Save", "सुरक्षित गर्नुहोस्"],
   cancel: ["Cancel", "रद्द गर्नुहोस्"],
@@ -51,14 +51,14 @@ const strings = {
     "An account already exists for this email. Try signing in instead, including with \"Continue with Google\".",
     "यो इमेलको लागि खाता पहिले नै छ। बरु लगइन गर्नुहोस्, \"Google बाट जारी राख्नुहोस्\" पनि प्रयोग गर्न सक्नुहुन्छ।",
   ],
-  authWelcome: ["Welcome to Duleko", "दुलेकोमा स्वागत छ"],
+  authWelcome: ["Welcome to Duleko", "डुलेकोमा स्वागत छ"],
   authBlurb: [
     "A simple way for workers and employers in your area to find each other.",
     "तपाईंको क्षेत्रका कामदार र काम दिने बीच सजिलो भेटघाट।",
   ],
 
   // ---- guest browsing --------------------------------------------------
-  exploreDuleko: ["Explore Duleko", "दुलेको हेर्नुहोस्"],
+  exploreDuleko: ["Explore Duleko", "डुलेको हेर्नुहोस्"],
   exploreDulekoHint: [
     "Look around first - browse workers and skills, no account needed.",
     "पहिले हेर्नुहोस् - कामदार र सीपहरू खाता बिना नै हेर्न सकिन्छ।",
@@ -68,7 +68,7 @@ const strings = {
     "Create work requests, chat, and build your own profile.",
     "काम अनुरोध, कुराकानी, र आफ्नो प्रोफाइल बनाउनुहोस्।",
   ],
-  howDulekoWorks: ["How Duleko works", "दुलेको कसरी काम गर्छ"],
+  howDulekoWorks: ["How Duleko works", "डुलेको कसरी काम गर्छ"],
   landingFreeNote: [
     "Free to join. Free to browse.",
     "जोडिन निःशुल्क। हेर्न निःशुल्क।",
@@ -76,7 +76,7 @@ const strings = {
   signInRequiredTitle: ["Sign in to continue", "जारी राख्न लगइन गर्नुहोस्"],
   signInRequiredBody: [
     "You'll need a free Duleko account for this. It only takes a minute.",
-    "यसको लागि दुलेकोको निःशुल्क खाता चाहिन्छ। एक मिनेटमै बन्छ।",
+    "यसको लागि डुलेकोको निःशुल्क खाता चाहिन्छ। एक मिनेटमै बन्छ।",
   ],
   notNow: ["Not now", "अहिले होइन"],
   keepExploring: ["Keep exploring", "हेर्न जारी राख्नुहोस्"],
@@ -164,7 +164,7 @@ const strings = {
   reviews: ["Reviews", "समीक्षा"],
   noReviewsYet: ["No reviews yet.", "अझै समीक्षा छैन।"],
   reviewCount: ["{count} reviews", "{count} समीक्षा"],
-  newProfile: ["New on Duleko", "दुलेकोमा नयाँ"],
+  newProfile: ["New on Duleko", "डुलेकोमा नयाँ"],
   requestWork: ["Request work", "काम अनुरोध गर्नुहोस्"],
   callNow: ["Call", "फोन गर्नुहोस्"],
   noPhoneSaved: [
@@ -399,7 +399,7 @@ const strings = {
   copyFailed: ["Could not copy the link.", "लिङ्क कपी गर्न सकिएन।"],
   shareProfileText: [
     "{name} on Duleko - find local work and local workers.",
-    "दुलेकोमा {name} - नजिकैको काम र कामदार खोज्नुहोस्।",
+    "डुलेकोमा {name} - नजिकैको काम र कामदार खोज्नुहोस्।",
   ],
   shareProfileHint: [
     "Anyone with this link can open your profile.",
@@ -501,10 +501,10 @@ const strings = {
   nextMonth: ["Next month", "अर्को महिना"],
 
   // ---- sign-up policy agreement -----------------------------------------
-  createYourAccount: ["Create your Duleko account", "आफ्नो दुलेको खाता बनाउनुहोस्"],
+  createYourAccount: ["Create your Duleko account", "आफ्नो डुलेको खाता बनाउनुहोस्"],
   byCreatingAccountNotice: [
     "By creating an account, you agree to Duleko's Terms of Use and acknowledge the Privacy Policy.",
-    "खाता बनाएर, तपाईं दुलेकोको प्रयोगका सर्तहरूमा सहमत हुनुहुन्छ र गोपनीयता नीति स्वीकार गर्नुहुन्छ।",
+    "खाता बनाएर, तपाईं डुलेकोको प्रयोगका सर्तहरूमा सहमत हुनुहुन्छ र गोपनीयता नीति स्वीकार गर्नुहुन्छ।",
   ],
   iAgreeToThe: ["I agree to the", "म"],
   // Nepali puts the verb after the noun phrase, so it lands after both links
@@ -528,11 +528,11 @@ const strings = {
   ],
   policySummary3: [
     "Use Duleko responsibly. It must not be used for scams, harassment, discrimination, or illegal activity.",
-    "दुलेको जिम्मेवारीपूर्वक प्रयोग गर्नुहोस्। यो ठगी, दुर्व्यवहार, भेदभाव, वा गैरकानूनी गतिविधिको लागि प्रयोग हुनु हुँदैन।",
+    "डुलेको जिम्मेवारीपूर्वक प्रयोग गर्नुहोस्। यो ठगी, दुर्व्यवहार, भेदभाव, वा गैरकानूनी गतिविधिको लागि प्रयोग हुनु हुँदैन।",
   ],
   policySummary4: [
     "Only list skills you can reasonably perform. Listing a skill does not by itself mean Duleko has verified it.",
-    "तपाईं वास्तवमै गर्न सक्ने सीपहरू मात्र राख्नुहोस्। सीप राख्नुले मात्र दुलेकोले त्यो प्रमाणित गरेको जनाउँदैन।",
+    "तपाईं वास्तवमै गर्न सक्ने सीपहरू मात्र राख्नुहोस्। सीप राख्नुले मात्र डुलेकोले त्यो प्रमाणित गरेको जनाउँदैन।",
   ],
   policySummary5: [
     "Be respectful and truthful in requests, communication, cancellations, payments, and reviews.",
@@ -544,7 +544,7 @@ const strings = {
   ],
   policySummary7: [
     "Duleko helps people connect. It does not guarantee the quality, safety, completion, price, or payment of any work arranged between users.",
-    "दुलेकोले मानिसहरूलाई जोड्न मद्दत गर्छ। यसले प्रयोगकर्ताहरू बीच मिलेको कामको गुणस्तर, सुरक्षा, पूरा हुने, मूल्य, वा भुक्तानीकोग्यारेन्टी दिँदैन।",
+    "डुलेकोले मानिसहरूलाई जोड्न मद्दत गर्छ। यसले प्रयोगकर्ताहरू बीच मिलेको कामको गुणस्तर, सुरक्षा, पूरा हुने, मूल्य, वा भुक्तानीकोग्यारेन्टी दिँदैन।",
   ],
   policySummary8: [
     "Use reasonable judgment before meeting, hiring, or working with someone. Report suspicious or unsafe behaviour.",
@@ -556,10 +556,10 @@ const strings = {
   ],
 
   // ---- location permission prompt (asked only when a feature needs it) --
-  locationConsentTitle: ["Allow Duleko to use your location?", "दुलेकोलाई तपाईंको स्थान प्रयोग गर्न दिनुहुन्छ?"],
+  locationConsentTitle: ["Allow Duleko to use your location?", "डुलेकोलाई तपाईंको स्थान प्रयोग गर्न दिनुहुन्छ?"],
   locationConsentBody: [
     "Your location helps Duleko show relevant people and opportunities nearby. Your precise or live location will not be publicly displayed unless you choose to share it.",
-    "तपाईंको स्थानले दुलेकोलाई नजिकैका सान्दर्भिक मानिस र अवसरहरू देखाउन मद्दत गर्छ। तपाईंले साझा गर्ने नछानेसम्म तपाईंको सटीक वा लाइभ स्थान सार्वजनिक रूपमा देखिँदैन।",
+    "तपाईंको स्थानले डुलेकोलाई नजिकैका सान्दर्भिक मानिस र अवसरहरू देखाउन मद्दत गर्छ। तपाईंले साझा गर्ने नछानेसम्म तपाईंको सटीक वा लाइभ स्थान सार्वजनिक रूपमा देखिँदैन।",
   ],
   allowLocation: ["Allow Location", "स्थान अनुमति दिनुहोस्"],
   continueAction: ["Continue", "जारी राख्नुहोस्"],

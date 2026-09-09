@@ -35,7 +35,7 @@ const SITE_URL = env("SITE_URL", "https://www.duleko.com");
 
 const COPY = {
   en: { open: "Open Duleko", footer: "You are getting this because you have an account on Duleko.", settings: "Turn these off in Profile → Settings." },
-  ne: { open: "दुलेको खोल्नुहोस्", footer: "तपाईंको दुलेकोमा खाता भएकाले यो सन्देश पठाइएको हो।", settings: "प्रोफाइल → सेटिङबाट यो बन्द गर्न सकिन्छ।" },
+  ne: { open: "डुलेको खोल्नुहोस्", footer: "तपाईंको डुलेकोमा खाता भएकाले यो सन्देश पठाइएको हो।", settings: "प्रोफाइल → सेटिङबाट यो बन्द गर्न सकिन्छ।" },
 } as const;
 
 function escapeHtml(text: string): string {
