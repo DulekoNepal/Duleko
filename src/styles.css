@@ -4,6 +4,19 @@
   --font-sans: "Noto Sans", "Noto Sans Devanagari", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, sans-serif;
 
+  /* Deep Navy - the default ink for iconography. One colour for every
+     skill icon, so the grid reads as one family instead of a dozen
+     mini-brands. */
+  --color-navy-500: #24507c;
+  --color-navy-600: #1d4166;
+  --color-navy-700: #16324f;
+  --color-navy-900: #0d1f31;
+
+  /* Opportunity Orange - emphasis only, never a per-item accent. */
+  --color-accent-50: #fff7ed;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+
   /* Duleko Green - opportunity, work, growth, availability. The brand color. */
   --color-brand-50: #f0fdf4;
   --color-brand-100: #dcfce7;

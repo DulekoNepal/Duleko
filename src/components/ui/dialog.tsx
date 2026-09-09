@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -85,7 +86,17 @@ export function Dialog({
 
   if (!open) return null;
 
-  return (
+  // Portalled to the body, not rendered wherever the JSX happens to sit.
+  // A card that opens one of these is often itself `interactive` - hover
+  // lift, overflow-hidden, the works - and once that card is under a
+  // full-screen dialog, the pointer is technically still "over" it. A
+  // dialog nested inside such a card inherits its hover transform, which
+  // creates a new containing block for this panel's `fixed` positioning
+  // and traps the whole dialog inside the card's own clipped box instead
+  // of covering the screen. Escaping to the body side-steps the ancestor
+  // entirely, the way an overlay like this should behave regardless of
+  // where it's opened from.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div
         className="absolute inset-0 bg-slate-900/40"
@@ -119,6 +130,7 @@ export function Dialog({
           <div className="sticky bottom-0 border-t border-slate-200 bg-white px-4 py-3">{footer}</div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -8,12 +8,15 @@ export type EngagementStatus =
   | "completed"
   | "cancelled";
 
+export type SkillCategory = "trades" | "professional" | "personal";
+
 export interface Skill {
   id: string;
   name_en: string;
   name_ne: string;
   emoji: string;
   sort_order?: number;
+  category: SkillCategory;
 }
 
 /** A skill a profile has listed, with its optional custom entry and rate. */

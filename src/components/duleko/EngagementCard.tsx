@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Info, Phone } from "lucide-react";
+import { Check, Info, Phone } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -135,17 +135,16 @@ export function EngagementCard({
       </Button>,
     );
   }
-  if (engagement.status === "completed") {
+  // Already reviewed sits up by the status badge instead of down here - a
+  // footer row that exists only to hold one small badge, with nothing on
+  // the other side of it, read as an empty afterthought. A review still
+  // owed stays an action, so it keeps the button and the footer that
+  // holds it.
+  if (engagement.status === "completed" && !engagement.my_review) {
     actions.push(
-      engagement.my_review ? (
-        <Badge key="reviewed" tone="success">
-          {t("reviewDone")}
-        </Badge>
-      ) : (
-        <Button key="review" size="sm" onClick={() => setReviewOpen(true)}>
-          {t("leaveReview")}
-        </Button>
-      ),
+      <Button key="review" size="sm" onClick={() => setReviewOpen(true)}>
+        {t("leaveReview")}
+      </Button>,
     );
   }
 
@@ -163,7 +162,7 @@ export function EngagementCard({
           : null;
 
   return (
-    <Card className="group relative overflow-hidden p-0 transition-all duration-200 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/60">
+    <Card interactive className="group relative overflow-hidden p-0">
       {/* One line across the top carries both the state and how far along
           it is - readable before a single word of the card is. */}
       <ProgressBar status={engagement.status} />
@@ -194,9 +193,15 @@ export function EngagementCard({
               )}
             </div>
           </div>
-          <Badge className="shrink-0" tone={STATUS_TONE[engagement.status]}>
-            {t(STATUS_KEY[engagement.status])}
-          </Badge>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <Badge tone={STATUS_TONE[engagement.status]}>{t(STATUS_KEY[engagement.status])}</Badge>
+            {engagement.status === "completed" && engagement.my_review && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-green-700">
+                <Check className="h-3 w-3" aria-hidden />
+                {t("reviewDone")}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* The fee is what people look for first, so it is a figure, not
@@ -207,7 +212,7 @@ export function EngagementCard({
               the one thing here that can be arbitrarily long, so it is
               what gives way. */}
           <div className="shrink-0">
-            <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
               {t("workCardPayment")}
             </p>
             <p className="text-lg font-bold leading-tight text-slate-900">

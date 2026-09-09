@@ -78,7 +78,7 @@ export function WorkScreen() {
             <p className="mb-3 text-sm text-slate-500">
               {formatNumber(sorted.length, lang)} · {role === "worker" ? t("asWorker") : t("asEmployer")}
             </p>
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               {sorted.map((e) => (
                 <EngagementCard key={e.id} engagement={e} myProfileId={profile!.id} />
               ))}

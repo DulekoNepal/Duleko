@@ -22,7 +22,7 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { AppHeader, LanguageToggle, PageContainer } from "@/components/duleko/Layout";
+import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { LocationConsentDialog } from "@/components/duleko/LocationConsentDialog";
@@ -426,10 +426,7 @@ export function ProfileScreen() {
 
   return (
     <>
-      <AppHeader
-        title={t("myProfile")}
-        right={<LanguageToggle />}
-      />
+      <AppHeader title={t("myProfile")} />
       <PageContainer className="max-w-2xl">
         {/* ---- Identity card: one flowing hierarchy, not competing blocks - */}
         <Card className="mb-5 overflow-hidden">

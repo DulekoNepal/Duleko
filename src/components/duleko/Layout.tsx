@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Briefcase, Home, MessageCircle, User } from "lucide-react";
+import { Bell, Briefcase, Globe, Home, MessageCircle, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
@@ -38,6 +38,32 @@ export function LanguageToggle({ className }: { className?: string }) {
   );
 }
 
+/**
+ * Compact one-tap language switch, small enough to sit in a header
+ * alongside whatever else that screen already puts in `right` (a share
+ * icon, a filter toggle, "mark all read"). Shows the language you are
+ * currently in and flips on tap - the full two-segment picker below is
+ * for the handful of screens with room to spare and a reason to make
+ * the choice explicit (auth, onboarding, the welcome screen).
+ */
+export function LanguageToggleButton({ className }: { className?: string }) {
+  const { lang, toggleLang, t } = useI18n();
+  return (
+    <button
+      type="button"
+      onClick={toggleLang}
+      aria-label={lang === "en" ? t("switchToNepali") : t("switchToEnglish")}
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors duration-200 hover:bg-slate-50",
+        className,
+      )}
+    >
+      <Globe className="h-3.5 w-3.5" aria-hidden />
+      {lang === "en" ? "EN" : "ने"}
+    </button>
+  );
+}
+
 export function AppHeader({
   title,
   subtitle,
@@ -46,6 +72,7 @@ export function AppHeader({
   leading,
   below,
   gradient,
+  logo = false,
 }: {
   title: string;
   subtitle?: React.ReactNode;
@@ -56,6 +83,9 @@ export function AppHeader({
   below?: React.ReactNode;
   /** A faint brand-tinted wash instead of plain white - reserved for the Home greeting, so the rest of the app stays neutral. */
   gradient?: boolean;
+  /** Home only: the brand mark itself instead of a text title - the app's
+   * name in wordmark form doesn't need to also be spelled out next to it. */
+  logo?: boolean;
 }) {
   return (
     <header
@@ -68,11 +98,24 @@ export function AppHeader({
         <div className="flex items-center gap-3">
           {back}
           {leading}
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-lg font-semibold text-slate-900 md:text-xl">{title}</h1>
-            {subtitle && <p className="truncate text-xs text-slate-500 md:text-sm">{subtitle}</p>}
-          </div>
+          {logo ? (
+            <div className="flex min-w-0 flex-1 items-center gap-2.5">
+              <img src={dulekoMark} alt="" className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm" />
+              {/* Still announced to screen readers/tab title - just not spelled out visually next to its own mark. */}
+              <h1 className="sr-only">{title}</h1>
+              {subtitle && <p className="truncate text-xs text-slate-500 md:text-sm">{subtitle}</p>}
+            </div>
+          ) : (
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-lg font-semibold text-slate-900 md:text-xl">{title}</h1>
+              {subtitle && <p className="truncate text-xs text-slate-500 md:text-sm">{subtitle}</p>}
+            </div>
+          )}
           {right}
+          {/* Always present, on every screen that uses this header - not
+              something you have to remember to wire up per route, and
+              not something a screen can accidentally leave out. */}
+          <LanguageToggleButton />
         </div>
         {below}
       </div>

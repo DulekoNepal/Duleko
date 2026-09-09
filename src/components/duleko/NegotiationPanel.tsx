@@ -60,13 +60,13 @@ export function NegotiationPanel({
   return (
     <div
       className={cn(
-        "mt-3 overflow-hidden rounded-2xl border",
+        "mt-3 overflow-hidden rounded-xl border",
         myTurn ? "border-brand-200 bg-brand-50/40" : "border-slate-200 bg-slate-50",
       )}
     >
       <div className="flex items-center gap-2 border-b border-black/5 px-3.5 py-2">
         <Handshake className="h-4 w-4 shrink-0 text-brand-700" aria-hidden />
-        <span className="truncate text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <span className="truncate text-[11px] font-semibold uppercase tracking-wide text-slate-400">
           {t("negotiation")}
         </span>
         <Badge tone={myTurn ? "brand" : "muted"} className="ml-auto shrink-0">

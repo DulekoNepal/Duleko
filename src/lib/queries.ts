@@ -187,7 +187,7 @@ export async function saveContact(
 // ---------------------------------------------------------------------
 export async function listSkills(): Promise<Skill[]> {
   return unwrap(
-    await supabase.from("skills").select("id,name_en,name_ne,emoji,sort_order").order("sort_order"),
+    await supabase.from("skills").select("id,name_en,name_ne,emoji,sort_order,category").order("sort_order"),
   );
 }
 
@@ -202,7 +202,9 @@ interface RawUserSkillRow {
 export async function getUserSkills(profileId: string): Promise<UserSkillDetail[]> {
   const { data, error } = await supabase
     .from("user_skills")
-    .select("skill:skills(id,name_en,name_ne,emoji,sort_order),custom_label,custom_note,rate_amount,rate_unit")
+    .select(
+      "skill:skills(id,name_en,name_ne,emoji,sort_order,category),custom_label,custom_note,rate_amount,rate_unit",
+    )
     .eq("profile_id", profileId);
   if (error) throw error;
   return ((data ?? []) as unknown as RawUserSkillRow[])
@@ -356,7 +358,7 @@ const ENGAGEMENT_SELECT = `
   payment_amount,payment_note,status,cancelled_by,completed_at,created_at,updated_at,
   employer:profiles!work_engagements_employer_profile_id_fkey(${PARTY_COLUMNS}),
   worker:profiles!work_engagements_worker_profile_id_fkey(${PARTY_COLUMNS}),
-  skill:skills(id,name_en,name_ne,emoji),
+  skill:skills(id,name_en,name_ne,emoji,category),
   reviews(id,rating,comment,reviewer_profile_id)
 `;
 

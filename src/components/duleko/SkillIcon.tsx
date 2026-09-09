@@ -1,17 +1,32 @@
 import {
-  BookOpen,
+  Bike,
   BrickWall,
+  Briefcase,
+  Brush,
+  Calculator,
+  Camera,
   Car,
-  ChefHat,
+  Cog,
+  CookingPot,
   Droplets,
+  Dumbbell,
   Flame,
-  HardHat,
+  GraduationCap,
   Hammer,
+  HardHat,
+  HeartHandshake,
   Laptop,
+  Music,
   Paintbrush,
+  PenTool,
+  Plus,
+  Ruler,
+  Scale,
   Scissors,
+  Shirt,
   Smartphone,
-  SprayCan,
+  Sparkles,
+  Stethoscope,
   Wheat,
   Wrench,
   Zap,
@@ -20,74 +35,120 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * One icon and one accent per skill, chosen to read as the trade itself:
- * a spark for the electrician, a wrench for the mechanic, a chef's hat
- * for the cook - each in a colour the trade already suggests, so the
- * grid is scannable at a glance rather than a wall of one green.
+ * One icon per skill, and one colour for all of them.
  *
- * Keyed on skills.id, which is a stable slug - not on the name, which is
- * translated. The `emoji` column stays in the database as a hint when
- * seeding a skill, but nothing in the UI renders it any more.
+ * Every icon here is a lucide outline glyph, so they share a stroke
+ * weight, a corner radius and a set of round line caps by construction -
+ * nothing filled sits next to something outlined. Colour is Deep Navy
+ * throughout: giving each trade its own hue turned the grid into a dozen
+ * competing mini-brands, which is exactly what a marketplace should not
+ * look like. Orange is reserved for emphasis the app chooses, never for
+ * telling one skill apart from another.
  *
- * Class strings are written out in full so Tailwind can see them; built
- * from fragments they would be stripped from the stylesheet.
+ * Keyed on skills.id, a stable slug, not on the translated name.
  */
-interface SkillLook {
-  icon: LucideIcon;
-  /** Icon colour on a neutral surface. */
-  fg: string;
-  /** Soft wash behind the icon in the browse grid. */
-  bg: string;
-}
+const SKILL_ICON: Record<string, LucideIcon> = {
+  // Trades & local services
+  electrician: Zap,
+  plumber: Droplets,
+  carpenter: Hammer,
+  mason: BrickWall,
+  painter: Paintbrush,
+  mechanic: Wrench,
+  mobile_repair: Smartphone,
+  driver: Car,
+  // A shirt says tailoring; scissors read as barbering, and now belong there.
+  tailor: Shirt,
+  // A pot is the trade; a chef's hat is a uniform.
+  cook: CookingPot,
+  // Shine, rather than an unrecognisable spray can.
+  cleaner: Sparkles,
+  welder: Flame,
+  farm_worker: Wheat,
+  labourer: HardHat,
 
-const SKILL_LOOK: Record<string, SkillLook> = {
-  electrician: { icon: Zap, fg: "text-amber-600", bg: "bg-amber-50" },
-  it_computer: { icon: Laptop, fg: "text-indigo-600", bg: "bg-indigo-50" },
-  plumber: { icon: Droplets, fg: "text-sky-600", bg: "bg-sky-50" },
-  mobile_repair: { icon: Smartphone, fg: "text-violet-600", bg: "bg-violet-50" },
-  carpenter: { icon: Hammer, fg: "text-orange-600", bg: "bg-orange-50" },
-  mason: { icon: BrickWall, fg: "text-stone-600", bg: "bg-stone-100" },
-  painter: { icon: Paintbrush, fg: "text-pink-600", bg: "bg-pink-50" },
-  mechanic: { icon: Wrench, fg: "text-slate-600", bg: "bg-slate-100" },
-  farm_worker: { icon: Wheat, fg: "text-lime-600", bg: "bg-lime-50" },
-  labourer: { icon: HardHat, fg: "text-yellow-600", bg: "bg-yellow-50" },
-  driver: { icon: Car, fg: "text-blue-600", bg: "bg-blue-50" },
-  tutor: { icon: BookOpen, fg: "text-teal-600", bg: "bg-teal-50" },
-  tailor: { icon: Scissors, fg: "text-purple-600", bg: "bg-purple-50" },
-  cleaner: { icon: SprayCan, fg: "text-cyan-600", bg: "bg-cyan-50" },
-  cook: { icon: ChefHat, fg: "text-rose-600", bg: "bg-rose-50" },
-  welder: { icon: Flame, fg: "text-red-600", bg: "bg-red-50" },
+  // Professional & skilled services
+  it_computer: Laptop,
+  health: Stethoscope,
+  accountant: Calculator,
+  tutor: GraduationCap,
+  engineer: Ruler,
+  legal: Scale,
+  designer: PenTool,
+  photographer: Camera,
+  technician: Cog,
+  consultant: Briefcase,
+
+  // Personal & everyday services
+  fitness: Dumbbell,
+  barber: Scissors,
+  makeup: Brush,
+  music_dance: Music,
+  delivery: Bike,
+  care: HeartHandshake,
+  other: Plus,
 };
 
-/** "Others", and anything added later, gets a neutral work mark. */
-const FALLBACK: SkillLook = { icon: Hammer, fg: "text-slate-600", bg: "bg-slate-100" };
-
-export function skillLook(skillId: string): SkillLook {
-  return SKILL_LOOK[skillId] ?? FALLBACK;
+/** Anything added later falls back to a hammer rather than a blank space. */
+export function skillIconFor(skillId: string): LucideIcon {
+  return SKILL_ICON[skillId] ?? Hammer;
 }
+
+/**
+ * The one stroke weight every skill icon uses. Lucide's default is 2,
+ * which reads heavy at the sizes these appear at.
+ */
+const STROKE = 1.75;
 
 export function SkillIcon({
   skillId,
   className,
-  /**
-   * Takes the colour of whatever it sits in. Used inside filled pills and
-   * brand badges, where the skill's own accent would fight the container.
-   */
   inherit = false,
 }: {
   skillId: string;
   className?: string;
+  /**
+   * Takes the colour of whatever it sits in, instead of navy. Used on a
+   * filled surface - the selected picker pill - where navy would fight
+   * the fill rather than read against it.
+   */
   inherit?: boolean;
 }) {
-  const { icon: Icon, fg } = skillLook(skillId);
-  return <Icon className={cn("h-4 w-4 shrink-0", !inherit && fg, className)} aria-hidden />;
+  const Icon = skillIconFor(skillId);
+  return (
+    <Icon
+      className={cn("h-4 w-4 shrink-0", !inherit && "text-navy-700", className)}
+      strokeWidth={STROKE}
+      aria-hidden
+    />
+  );
 }
 
 /**
- * The standard way a skill appears as a label. Deliberately neutral -
- * white with a hairline border - so the only colour on it is the trade's
- * own accent. A brand-filled pill would both bury that accent and put a
- * second green next to it.
+ * A larger, neutral tile for a skill icon - one flat wash, the same for
+ * every skill, used where a row wants a leading icon slot (the profile's
+ * own skills list). The browse grid on Home deliberately skips this: an
+ * outline icon straight on the card's own background is what actually
+ * reads as "one clean icon set" rather than "icons in boxes".
+ */
+export function SkillTile({ skillId, className }: { skillId: string; className?: string }) {
+  const Icon = skillIconFor(skillId);
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100",
+        className,
+      )}
+    >
+      <Icon className="h-[18px] w-[18px] text-navy-700" strokeWidth={STROKE} />
+    </span>
+  );
+}
+
+/**
+ * A skill as a label. Neutral by design - the icon carries the navy, and
+ * nothing else on the chip competes with it.
  */
 export function SkillChip({
   skillId,
@@ -109,25 +170,8 @@ export function SkillChip({
         className,
       )}
     >
-      <SkillIcon skillId={skillId} className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
+      <SkillIcon skillId={skillId} className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
       {children}
-    </span>
-  );
-}
-
-/** The larger, washed tile used in the browse grid. */
-export function SkillTile({ skillId, className }: { skillId: string; className?: string }) {
-  const { icon: Icon, fg, bg } = skillLook(skillId);
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-200 group-hover:scale-110",
-        bg,
-        className,
-      )}
-    >
-      <Icon className={cn("h-[22px] w-[22px]", fg)} />
     </span>
   );
 }

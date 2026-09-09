@@ -126,6 +126,9 @@ const strings = {
   greeting: ["Namaste, {name}", "नमस्ते, {name}"],
   searchPlaceholder: ["Search workers or skills", "कामदार वा सीप खोज्नुहोस्"],
   browseSkills: ["Browse by skill", "सीप अनुसार हेर्नुहोस्"],
+  skillCategoryTrades: ["Trades & Local Services", "सीप र स्थानीय सेवा"],
+  skillCategoryProfessional: ["Professional & Skilled Services", "व्यावसायिक तथा दक्ष सेवा"],
+  skillCategoryPersonal: ["Personal & Everyday Services", "व्यक्तिगत तथा दैनिक सेवा"],
   availableToday: ["Available today", "आज उपलब्ध"],
   nearYou: ["Near you", "तपाईंको नजिक"],
   noWorkersYet: ["No workers here yet.", "यहाँ अझै कामदार छैनन्।"],
@@ -137,7 +140,6 @@ const strings = {
   pendingRequests: ["{count} waiting for you", "{count} तपाईंको जवाफ पर्खिरहेको"],
   addYourSkills: ["Add your skills", "आफ्ना सीपहरू थप्नुहोस्"],
   browseWorkers: ["Browse workers", "कामदारहरू हेर्नुहोस्"],
-  popularSkills: ["Popular", "लोकप्रिय"],
 
   // ---- search --------------------------------------------------------
   filters: ["Filters", "फिल्टर"],
@@ -431,6 +433,8 @@ const strings = {
   editProfile: ["Edit profile", "प्रोफाइल सम्पादन"],
   settings: ["Settings", "सेटिङ"],
   language: ["Language", "भाषा"],
+  switchToEnglish: ["Switch to English", "अंग्रेजीमा बदल्नुहोस्"],
+  switchToNepali: ["Switch to Nepali", "नेपालीमा बदल्नुहोस्"],
   english: ["English", "अंग्रेजी"],
   nepali: ["Nepali", "नेपाली"],
   availableForWork: ["Available for work", "काम गर्न उपलब्ध"],
