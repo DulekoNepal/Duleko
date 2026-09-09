@@ -35,11 +35,49 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
+ * Lucide has no auto-rickshaw / tuk-tuk glyph, so this one is hand-drawn.
+ * It deliberately breaks from the rest of the set's thin-stroke outlines:
+ * a rickshaw's silhouette (canopy overhang, boxy cabin windows, a sloped
+ * rear engine panel, wheels tucked into fender arches) is what makes it
+ * read as "auto rickshaw" rather than "car" or "van", and at the 16-18px
+ * this renders at, a solid silhouette holds up far better than the same
+ * shape traced in hairlines - those blurred into an illegible smudge.
+ * Still `currentColor`-filled rather than a hardcoded shade, so it still
+ * follows navy (or inherits, on a filled surface) like every other skill
+ * icon; only the fill-vs-stroke technique differs.
+ */
+function AutoRickshawIcon({
+  className,
+}: {
+  className?: string;
+  /** Accepted so this drops into the same `<Icon .../>` call sites as a LucideIcon, and ignored - this glyph is filled, not stroked. */
+  strokeWidth?: number;
+  "aria-hidden"?: boolean | "true" | "false";
+}) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M4 17 4 10Q4 8 6 8L15 8 18.8 12.8 18.9 15Q19.3 15.6 19 17A2.35 2.35 0 0 1 14.3 17L9.7 17A2.35 2.35 0 0 1 5 17L4 17Z
+           M6.5 9.5H10V12.8H6.5Z
+           M10.8 9.5H14.3V12.8H10.8Z
+           M15.3 9.6 18.2 12.5 18.2 14.3 15.3 14.3Z"
+      />
+      <circle cx="6.5" cy="17.5" r="2.4" fill="currentColor" />
+      <circle cx="16.5" cy="17.5" r="2.4" fill="currentColor" />
+    </svg>
+  );
+}
+
+/**
  * One icon per skill, and one colour for all of them.
  *
- * Every icon here is a lucide outline glyph, so they share a stroke
- * weight, a corner radius and a set of round line caps by construction -
- * nothing filled sits next to something outlined. Colour is Deep Navy
+ * Every icon here is a lucide outline glyph (bar the hand-drawn rickshaw
+ * above, built to the same rules), so they share a stroke weight, a
+ * corner radius and a set of round line caps by construction - nothing
+ * filled sits next to something outlined. Colour is Deep Navy
  * throughout: giving each trade its own hue turned the grid into a dozen
  * competing mini-brands, which is exactly what a marketplace should not
  * look like. Orange is reserved for emphasis the app chooses, never for
@@ -47,7 +85,7 @@ import { cn } from "@/lib/utils";
  *
  * Keyed on skills.id, a stable slug, not on the translated name.
  */
-const SKILL_ICON: Record<string, LucideIcon> = {
+const SKILL_ICON: Record<string, LucideIcon | typeof AutoRickshawIcon> = {
   // Trades & local services
   electrician: Zap,
   plumber: Droplets,
@@ -57,6 +95,7 @@ const SKILL_ICON: Record<string, LucideIcon> = {
   mechanic: Wrench,
   mobile_repair: Smartphone,
   driver: Car,
+  auto_rickshaw: AutoRickshawIcon,
   // A shirt says tailoring; scissors read as barbering, and now belong there.
   tailor: Shirt,
   // A pot is the trade; a chef's hat is a uniform.
@@ -90,7 +129,7 @@ const SKILL_ICON: Record<string, LucideIcon> = {
 };
 
 /** Anything added later falls back to a hammer rather than a blank space. */
-export function skillIconFor(skillId: string): LucideIcon {
+export function skillIconFor(skillId: string): LucideIcon | typeof AutoRickshawIcon {
   return SKILL_ICON[skillId] ?? Hammer;
 }
 
