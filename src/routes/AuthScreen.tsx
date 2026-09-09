@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { LanguageToggle } from "@/components/duleko/Layout";
 import { PolicyDialog } from "@/components/duleko/PolicyDialog";
+import { siteOrigin } from "@/lib/share";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { supabase, errorMessage } from "@/lib/supabase";
@@ -37,9 +38,19 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
     setGoogleBusy(true);
     setError(null);
     try {
+      // The real domain, not whatever host happens to be serving this
+      // page - visiting the Vercel default URL directly (or a preview
+      // deploy) must still bounce back to the live site, not to itself.
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: window.location.origin },
+        options: {
+          redirectTo: siteOrigin(),
+          // Without this, Google silently reuses whatever account is
+          // already signed into the browser and bounces straight back -
+          // no picker, no chance to pick a different account. Forcing it
+          // means every click here really does ask, every time.
+          queryParams: { prompt: "select_account" },
+        },
       });
       if (oauthError) throw oauthError;
       // On success the browser navigates away to Google, so nothing else to do here.

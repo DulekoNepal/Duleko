@@ -13,7 +13,13 @@ export type ShareResult = "shared" | "cancelled" | "copied" | "failed";
  */
 const SITE_URL = (import.meta.env.VITE_SITE_URL ?? "").replace(/\/+$/, "");
 
-function siteOrigin(): string {
+/**
+ * The one real address of the app, regardless of which host served the
+ * page it's called from - a Vercel preview URL, a branch deploy, even
+ * localhost. Anything that leaves the device (a shared link, an OAuth
+ * redirect) needs to come back to this, not to `window.location.origin`.
+ */
+export function siteOrigin(): string {
   if (SITE_URL) return SITE_URL;
   return typeof window === "undefined" ? "" : window.location.origin;
 }
