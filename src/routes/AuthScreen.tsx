@@ -11,6 +11,7 @@ import { PolicyDialog } from "@/components/duleko/PolicyDialog";
 import { siteOrigin } from "@/lib/share";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
+import { useSession } from "@/hooks/use-session";
 import { supabase, errorMessage } from "@/lib/supabase";
 import dulekoMark from "@/assets/duleko-mark.png";
 
@@ -21,6 +22,10 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const RESEND_COOLDOWN_SECONDS = 45;
+// Supabase's own email OTP - the `{{ .Token }}` in the auth email
+// templates - is always 6 digits; there's no project setting that
+// changes it, so this has to match that fixed length, not the other
+// way around.
 const OTP_LENGTH = 6;
 
 /**
@@ -33,6 +38,7 @@ type View = "auth" | "verify" | "forgotEmail" | "forgotCode" | "forgotPassword";
 
 export function AuthScreen({ onBack }: { onBack?: () => void }) {
   const { t, lang } = useI18n();
+  const { clearPasswordRecovery } = useSession();
   const [view, setView] = useState<View>("auth");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [notice, setNotice] = useState<string | null>(null);
@@ -253,8 +259,9 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
       if (updateError) throw updateError;
-      // The recovery code already left them signed in - AppShell takes
-      // it from here now that the password is actually changed.
+      // The recovery code already left them signed in - this is what
+      // actually lets AppShell move on to the app instead of holding here.
+      clearPasswordRecovery();
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -328,7 +335,7 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
           {view === "verify" && (
             <>
               <div className="mb-5 flex justify-center">
-                <OtpInput value={otp} onChange={setOtp} disabled={busy} autoFocus />
+                <OtpInput value={otp} onChange={setOtp} length={OTP_LENGTH} disabled={busy} autoFocus />
               </div>
               <Button
                 type="button"
@@ -370,7 +377,7 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
           {view === "forgotCode" && (
             <>
               <div className="mb-5 flex justify-center">
-                <OtpInput value={otp} onChange={setOtp} disabled={busy} autoFocus />
+                <OtpInput value={otp} onChange={setOtp} length={OTP_LENGTH} disabled={busy} autoFocus />
               </div>
               <Button
                 type="button"

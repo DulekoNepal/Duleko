@@ -44,7 +44,8 @@ const WELCOMED_THIS_SESSION_KEY = "duleko_welcomed_this_session";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { session, profile, loadingSession, loadingProfile } = useSession();
+  const { session, profile, loadingSession, loadingProfile, isPasswordRecovery, clearPasswordRecovery, signOut } =
+    useSession();
   const [showWalkthrough, setShowWalkthrough] = useState(false);
 
   // One realtime subscription for the whole app, regardless of how many nav
@@ -90,6 +91,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (!isSupabaseConfigured) return <SetupScreen />;
   if (loadingSession) return <FullPageLoader label={t("loading")} />;
+
+  // A recovery code just verified, which does sign them in - but that's a
+  // side effect of the code, not the point of it. Keep them on the
+  // password step regardless of session/profile state below, until they
+  // actually set a new one.
+  if (isPasswordRecovery) {
+    return (
+      <AuthScreen
+        onBack={() => {
+          clearPasswordRecovery();
+          signOut();
+        }}
+      />
+    );
+  }
 
   if (!session) {
     if (authIntent) return <AuthScreen onBack={() => setAuthIntent(false)} />;

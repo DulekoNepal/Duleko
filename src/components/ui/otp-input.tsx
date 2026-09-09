@@ -2,9 +2,11 @@ import { useRef } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * A row of single-digit boxes for a 6-digit email code - typing, pasting
- * the whole code at once, and backspacing all move focus the way a phone
- * keyboard's own OTP autofill expects.
+ * A row of single-digit boxes for an email code - typing, pasting the
+ * whole code at once, and backspacing all move focus the way a phone
+ * keyboard's own OTP autofill expects. Six digits, to match Supabase's
+ * own email OTP length - not something we choose, it's what `{{ .Token }}`
+ * in the auth email templates actually renders.
  */
 export function OtpInput({
   length = 6,

@@ -16,6 +16,15 @@ interface SessionValue {
   loadingSession: boolean;
   /** Signed in, but we do not yet know whether a profile exists. */
   loadingProfile: boolean;
+  /**
+   * A recovery code was just verified, which signs the person in - but
+   * "signed in" is not the point of that code, choosing a new password is.
+   * AppShell checks this to keep showing the auth screen's password step
+   * instead of routing straight into the app the instant a session appears.
+   */
+  isPasswordRecovery: boolean;
+  /** Called once the new password is actually set, to resume normal routing. */
+  clearPasswordRecovery: () => void;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -25,6 +34,7 @@ const SessionContext = createContext<SessionValue | null>(null);
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -36,7 +46,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setLoadingSession(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       setSession((prev) => {
         // A different user must never see the previous user's cached data.
         // A token refresh is not a user change, so the cache survives it.
@@ -44,6 +54,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
       setLoadingSession(false);
+      // Supabase fires this the moment a recovery code (or link) verifies,
+      // regardless of which path got there - the one signal both need.
+      if (event === "PASSWORD_RECOVERY") setIsPasswordRecovery(true);
+      if (event === "SIGNED_OUT") setIsPasswordRecovery(false);
     });
 
     return () => {
@@ -85,6 +99,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       profile: profileQuery.data ?? null,
       loadingSession,
       loadingProfile: Boolean(userId) && profileQuery.isLoading,
+      isPasswordRecovery,
+      clearPasswordRecovery: () => setIsPasswordRecovery(false),
       refreshProfile: async () => {
         await profileQuery.refetch();
       },
@@ -96,7 +112,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         persistGuestMode(false);
       },
     }),
-    [session, profileQuery, loadingSession, userId, queryClient],
+    [session, profileQuery, loadingSession, userId, queryClient, isPasswordRecovery],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
