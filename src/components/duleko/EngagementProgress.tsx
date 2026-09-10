@@ -31,6 +31,25 @@ export const STATUS_ACCENT: Record<EngagementStatus, string> = {
   cancelled: "bg-red-400",
 };
 
+/** The Badge tone each status reads with - shared by the row, the sheet, and group headers. */
+export const STATUS_TONE: Record<EngagementStatus, "warning" | "brand" | "success" | "muted" | "danger"> = {
+  pending: "warning",
+  accepted: "brand",
+  confirmed: "success",
+  completed: "muted",
+  declined: "danger",
+  cancelled: "danger",
+};
+
+export const STATUS_KEY = {
+  pending: "statusPending",
+  accepted: "statusAccepted",
+  declined: "statusDeclined",
+  confirmed: "statusConfirmed",
+  completed: "statusCompleted",
+  cancelled: "statusCancelled",
+} as const;
+
 export function isOffRamp(status: EngagementStatus): boolean {
   return status === "declined" || status === "cancelled";
 }

@@ -406,6 +406,7 @@ const strings = {
   myWork: ["My work", "मेरो काम"],
   asWorker: ["Work I do", "मैले गर्ने काम"],
   asEmployer: ["Work I gave", "मैले दिएको काम"],
+  jobsCount: ["{count} jobs", "{count} काम"],
   // The four steps of a job, shown on the card rail and the timeline.
   workProgress: ["Progress", "प्रगति"],
   stepRequested: ["Requested", "अनुरोध"],
