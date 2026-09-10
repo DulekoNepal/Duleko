@@ -16,6 +16,7 @@ import {
   MessageSquare,
   MoreHorizontal,
   Navigation,
+  Download,
   Pencil,
   Settings as SettingsIcon,
   Share2,
@@ -68,6 +69,7 @@ import {
   type UserSkillInput,
 } from "@/lib/queries";
 import { copyLink, profileUrl, shareProfile } from "@/lib/share";
+import { downloadBlob, renderProfileCard } from "@/lib/profileCard";
 import { errorMessage } from "@/lib/supabase";
 import type { NotificationPrefs } from "@/lib/types";
 import {
@@ -282,6 +284,17 @@ export function ProfileScreen() {
       else if (result === "failed") toast(t("copyFailed"), "error");
       // "shared" and "cancelled" both already spoke for themselves.
     },
+  });
+
+  // Drawn fresh on a canvas from the real profile - never a screenshot -
+  // then handed to the browser as a plain PNG download.
+  const downloadCard = useMutation({
+    mutationFn: async () => {
+      const blob = await renderProfileCard(profile!, mySkills.data ?? []);
+      downloadBlob(blob, `${profile!.public_slug}-duleko-card.png`);
+    },
+    onSuccess: () => toast(t("cardDownloaded")),
+    onError: (error) => toast(errorMessage(error), "error"),
   });
 
   // Google sign-ins have no password to check against, so those confirm by
@@ -530,6 +543,14 @@ export function ProfileScreen() {
                         onClick={() => {
                           setMenuOpen(false);
                           share.mutate();
+                        }}
+                      />
+                      <MenuItem
+                        icon={Download}
+                        label={downloadCard.isPending ? t("generatingCard") : t("downloadCard")}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          downloadCard.mutate();
                         }}
                       />
                       {profile.staff_role && (
