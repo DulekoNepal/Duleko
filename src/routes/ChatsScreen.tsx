@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { BadgeCheck, Check, CheckCheck, MessageCircle } from "lucide-react";
+import { Check, CheckCheck, MessageCircle } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { FriendsPanel } from "@/components/duleko/FriendsPanel";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
+import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { Avatar } from "@/components/ui/avatar";
 import { CardSkeleton, EmptyState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
@@ -125,9 +126,7 @@ export function ChatsScreen() {
                         <span className={cn("truncate", c.unread ? "font-bold text-slate-950" : "font-medium text-slate-900")}>
                           {c.otherName}
                         </span>
-                        {c.otherIsOfficial && (
-                          <BadgeCheck className="h-4 w-4 shrink-0 text-brand-600" aria-label={t("officialAccount")} />
-                        )}
+                        <VerifiedBadge staffRole={c.otherStaffRole} verified={c.otherIsVerified} size={14} />
                       </span>
                       <span className="shrink-0 text-xs text-slate-400">
                         {relativeTime(c.lastCreatedAt, lang)}

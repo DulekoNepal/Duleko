@@ -74,7 +74,7 @@ export function AppHeader({
   gradient,
   logo = false,
 }: {
-  title: string;
+  title: React.ReactNode;
   subtitle?: React.ReactNode;
   right?: React.ReactNode;
   back?: React.ReactNode;

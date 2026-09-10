@@ -9,6 +9,7 @@ import {
   CalendarCheck,
   CheckCheck,
   MessageCircle,
+  ShieldCheck,
   Sparkles,
   Star,
   ThumbsUp,
@@ -55,6 +56,8 @@ const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
   friend_accepted: { icon: UserCheck, tone: "green" },
   welcome: { icon: Sparkles, tone: "brand" },
   message: { icon: MessageCircle, tone: "brand" },
+  verified: { icon: ShieldCheck, tone: "green" },
+  verify_reminder: { icon: ShieldCheck, tone: "brand" },
 };
 
 export function NotificationsScreen() {
@@ -133,7 +136,7 @@ export function NotificationsScreen() {
     if (!n.is_read) readOne.mutate(n.id);
     if (n.kind === "friend_request" || n.kind === "friend_accepted") {
       navigate({ to: "/friends" });
-    } else if (n.kind === "welcome") {
+    } else if (n.kind === "welcome" || n.kind === "verified" || n.kind === "verify_reminder") {
       navigate({ to: "/profile" });
     } else if (n.related_profile_id) {
       navigate({ to: "/chat/$otherId", params: { otherId: n.related_profile_id } });

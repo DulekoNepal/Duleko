@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Award,
   Briefcase,
@@ -19,6 +19,7 @@ import {
   Pencil,
   Settings as SettingsIcon,
   Share2,
+  ShieldCheck,
   Trash2,
   Users,
 } from "lucide-react";
@@ -28,6 +29,7 @@ import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { LocationConsentDialog } from "@/components/duleko/LocationConsentDialog";
 import { RatingStars } from "@/components/duleko/Rating";
 import { SkillPicker } from "@/components/duleko/SkillGrid";
+import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { LocationFields, type LocationValue } from "@/components/duleko/LocationFields";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -36,6 +38,7 @@ import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card"
 import { Collapsible } from "@/components/ui/collapsible";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/field";
+import { MenuItem, MenuPanel } from "@/components/ui/menu";
 import { EmptyState } from "@/components/ui/states";
 import { Switch } from "@/components/ui/switch";
 import { SkillIcon, SkillTile } from "@/components/duleko/SkillIcon";
@@ -96,6 +99,7 @@ export function ProfileScreen() {
   const { profile, user, refreshProfile, signOut } = useSession();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [editing, setEditing] = useState(false);
   const [locationConsentOpen, setLocationConsentOpen] = useState(false);
@@ -505,11 +509,8 @@ export function ProfileScreen() {
                   </button>
 
                   {menuOpen && (
-                    <div
-                      role="menu"
-                      className="absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
-                    >
-                      <ProfileMenuItem
+                    <MenuPanel className="w-48">
+                      <MenuItem
                         icon={Pencil}
                         label={t("editProfile")}
                         onClick={() => {
@@ -517,7 +518,7 @@ export function ProfileScreen() {
                           setEditing(true);
                         }}
                       />
-                      <ProfileMenuItem
+                      <MenuItem
                         icon={Share2}
                         label={t("shareProfile")}
                         onClick={() => {
@@ -525,14 +526,27 @@ export function ProfileScreen() {
                           share.mutate();
                         }}
                       />
-                    </div>
+                      {profile.staff_role && (
+                        <MenuItem
+                          icon={ShieldCheck}
+                          label={t("moderation")}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            navigate({ to: "/moderation" });
+                          }}
+                        />
+                      )}
+                    </MenuPanel>
                   )}
                 </div>
               )}
             </div>
 
             {/* h2, not h1 - AppHeader already owns this page's single h1. */}
-            <h2 className="mt-3 truncate text-xl font-bold text-slate-900">{profile.full_name}</h2>
+            <h2 className="mt-3 flex min-w-0 items-center gap-1.5 text-xl font-bold text-slate-900">
+              <span className="truncate">{profile.full_name}</span>
+              <VerifiedBadge staffRole={profile.staff_role} verified={profile.is_verified} size={18} />
+            </h2>
             {profile.bio && <p className="mt-1 text-sm text-slate-600">{profile.bio}</p>}
 
             <div className="mt-2">
@@ -1168,24 +1182,3 @@ export function ProfileScreen() {
   );
 }
 
-function ProfileMenuItem({
-  icon: Icon,
-  label,
-  onClick,
-}: {
-  icon: typeof Pencil;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      onClick={onClick}
-      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-50"
-    >
-      <Icon className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
-      {label}
-    </button>
-  );
-}

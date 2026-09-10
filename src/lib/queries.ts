@@ -17,14 +17,28 @@ import type {
   Profile,
   RepliedMessage,
   ReportReason,
+  ReportStatus,
+  ReportWithParties,
   Review,
   Skill,
+  StaffRole,
   UserSkillDetail,
   WorkerCardData,
 } from "./types";
 
 const PROFILE_COLUMNS =
   "id,user_id,full_name,about,bio,age,education,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,is_official,public_slug,language,rating,rating_count,lat,lng,location_shared_at,created_at,updated_at";
+
+// Verification and role live in their own tables (see 3500_staff_roles_
+// and_verification.sql), embedded here and flattened by mapProfileRow so
+// the rest of the app can just read profile.is_verified/staff_role. Both
+// tables have a second FK back to profiles (verified_by/granted_by), so
+// the embed must name the profile_id constraint explicitly or PostgREST
+// refuses the query as ambiguous.
+const PROFILE_COLUMNS_WITH_BADGES =
+  PROFILE_COLUMNS +
+  ",profile_verifications!profile_verifications_profile_id_fkey(verified_at)" +
+  ",staff_roles!staff_roles_profile_id_fkey(role)";
 
 const PARTY_COLUMNS = "id,full_name,avatar_url,rating,rating_count";
 
@@ -39,17 +53,37 @@ function one<T>(value: T | T[] | null | undefined): T | null {
   return value ?? null;
 }
 
+/**
+ * Flattens the embedded profile_verifications/staff_roles rows onto a
+ * plain Profile. Typed loosely on purpose: PROFILE_COLUMNS_WITH_BADGES is
+ * built at runtime (not a string literal), so supabase-js cannot infer a
+ * precise row shape for it - same reason the rest of this file leans on
+ * `unwrap<T>`'s cast rather than the query builder's own inference.
+ */
+function mapProfileRow(row: unknown): Profile | null {
+  if (!row) return null;
+  const { profile_verifications, staff_roles, ...rest } = row as Record<string, unknown> & {
+    profile_verifications?: { verified_at: string } | { verified_at: string }[] | null;
+    staff_roles?: { role: StaffRole } | { role: StaffRole }[] | null;
+  };
+  return {
+    ...(rest as Omit<Profile, "is_verified" | "staff_role">),
+    is_verified: one(profile_verifications) != null,
+    staff_role: one(staff_roles)?.role ?? null,
+  };
+}
+
 // ---------------------------------------------------------------------
 // Profile
 // ---------------------------------------------------------------------
 export async function getMyProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select(PROFILE_COLUMNS)
+    .select(PROFILE_COLUMNS_WITH_BADGES)
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw error;
-  return (data as Profile) ?? null;
+  return mapProfileRow(data);
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -63,11 +97,11 @@ export async function getProfile(handle: string): Promise<Profile | null> {
   const column = UUID_RE.test(handle) ? "id" : "public_slug";
   const { data, error } = await supabase
     .from("profiles")
-    .select(PROFILE_COLUMNS)
+    .select(PROFILE_COLUMNS_WITH_BADGES)
     .eq(column, handle)
     .maybeSingle();
   if (error) throw error;
-  return (data as Profile) ?? null;
+  return mapProfileRow(data);
 }
 
 export interface ProfileInput {
@@ -88,13 +122,17 @@ export interface ProfileInput {
 }
 
 export async function createProfile(userId: string, input: ProfileInput): Promise<Profile> {
-  return unwrap(
-    await supabase
-      .from("profiles")
-      .insert({ user_id: userId, ...input })
-      .select(PROFILE_COLUMNS)
-      .single(),
-  );
+  // A brand new profile has no verification/staff rows yet, but map it
+  // through the same helper anyway so the shape always matches Profile.
+  return mapProfileRow(
+    unwrap(
+      await supabase
+        .from("profiles")
+        .insert({ user_id: userId, ...input })
+        .select(PROFILE_COLUMNS_WITH_BADGES)
+        .single(),
+    ),
+  )!;
 }
 
 const USER_BUCKETS = ["avatars", "covers", "certificates"] as const;
@@ -142,14 +180,16 @@ export async function verifyPassword(email: string, password: string): Promise<v
 }
 
 export async function updateProfile(profileId: string, input: Partial<ProfileInput>): Promise<Profile> {
-  return unwrap(
-    await supabase
-      .from("profiles")
-      .update(input)
-      .eq("id", profileId)
-      .select(PROFILE_COLUMNS)
-      .single(),
-  );
+  return mapProfileRow(
+    unwrap(
+      await supabase
+        .from("profiles")
+        .update(input)
+        .eq("id", profileId)
+        .select(PROFILE_COLUMNS_WITH_BADGES)
+        .single(),
+    ),
+  )!;
 }
 
 // ---------------------------------------------------------------------
@@ -754,6 +794,79 @@ export async function reportUser(input: {
 }
 
 // ---------------------------------------------------------------------
+// Staff: verification, suspension, reports queue
+// ---------------------------------------------------------------------
+
+/** Grants the verified badge. Staff-only - enforced by RLS on profile_verifications. */
+export async function verifyProfile(profileId: string, verifiedBy: string): Promise<void> {
+  const { error } = await supabase
+    .from("profile_verifications")
+    .upsert({ profile_id: profileId, verified_by: verifiedBy });
+  if (error) throw error;
+}
+
+export async function unverifyProfile(profileId: string): Promise<void> {
+  const { error } = await supabase.from("profile_verifications").delete().eq("profile_id", profileId);
+  if (error) throw error;
+}
+
+/** Admin tier and above only - enforced by is_admin_or_above() inside the function. */
+export async function suspendProfile(profileId: string, reason?: string | null): Promise<void> {
+  const { error } = await supabase.rpc("suspend_profile", {
+    target_profile_id: profileId,
+    p_reason: reason ?? null,
+  });
+  if (error) throw error;
+}
+
+export async function unsuspendProfile(profileId: string): Promise<void> {
+  const { error } = await supabase.rpc("unsuspend_profile", { target_profile_id: profileId });
+  if (error) throw error;
+}
+
+export async function isProfileSuspended(profileId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("profile_suspensions")
+    .select("profile_id")
+    .eq("profile_id", profileId)
+    .maybeSingle();
+  if (error) throw error;
+  return data != null;
+}
+
+const REPORT_COLUMNS = `
+  id,reason,details,status,created_at,resolved_at,
+  reporter:reporter_profile_id(id,full_name,avatar_url),
+  reported:reported_profile_id(id,full_name,avatar_url)
+`;
+
+/** The moderation queue - every open report, newest first. Staff-only via RLS. */
+export async function listOpenReports(): Promise<ReportWithParties[]> {
+  const { data, error } = await supabase
+    .from("reports")
+    .select(REPORT_COLUMNS)
+    .eq("status", "open")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as unknown[]).map((row) => {
+    const r = row as Record<string, unknown>;
+    return { ...r, reporter: one(r.reporter), reported: one(r.reported) } as ReportWithParties;
+  });
+}
+
+export async function resolveReport(
+  reportId: string,
+  status: "reviewed" | "dismissed",
+  resolvedBy: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("reports")
+    .update({ status, resolved_by: resolvedBy, resolved_at: new Date().toISOString() })
+    .eq("id", reportId);
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------
 // Presence - "has the app open right now", separate from is_available
 // ("open to accept new work"). Shown as a small dot on the avatar.
 // ---------------------------------------------------------------------
@@ -1010,17 +1123,27 @@ interface ConversationParty {
   full_name: string;
   avatar_url: string | null;
   is_official: boolean;
+  profile_verifications?: { verified_at: string } | { verified_at: string }[] | null;
+  staff_roles?: { role: StaffRole } | { role: StaffRole }[] | null;
 }
 
 /** All of "my" chats, one row per conversation, newest message first. */
 export async function listConversations(myProfileId: string): Promise<ConversationSummary[]> {
   const { data, error } = await supabase
     .from("messages")
+    // profile_verifications/staff_roles both carry a second FK back to
+    // profiles (verified_by/granted_by) - same as PROFILE_COLUMNS_WITH_
+    // BADGES above, the embed must name the profile_id constraint or
+    // PostgREST refuses it as ambiguous, even nested this deep.
     .select(
       "profile_a,profile_b,sender_profile_id,body,created_at,read_at,deleted_at," +
         "message_reactions(profile_id,emoji)," +
-        "a:profiles!messages_profile_a_fkey(id,full_name,avatar_url,is_official)," +
-        "b:profiles!messages_profile_b_fkey(id,full_name,avatar_url,is_official)",
+        "a:profiles!messages_profile_a_fkey(id,full_name,avatar_url,is_official," +
+        "profile_verifications!profile_verifications_profile_id_fkey(verified_at)," +
+        "staff_roles!staff_roles_profile_id_fkey(role))," +
+        "b:profiles!messages_profile_b_fkey(id,full_name,avatar_url,is_official," +
+        "profile_verifications!profile_verifications_profile_id_fkey(verified_at)," +
+        "staff_roles!staff_roles_profile_id_fkey(role))",
     )
     .or(`profile_a.eq.${myProfileId},profile_b.eq.${myProfileId}`)
     .order("created_at", { ascending: false })
@@ -1040,6 +1163,8 @@ export async function listConversations(myProfileId: string): Promise<Conversati
       otherName: other.full_name,
       otherAvatarUrl: other.avatar_url,
       otherIsOfficial: Boolean(other.is_official),
+      otherIsVerified: one(other.profile_verifications) != null,
+      otherStaffRole: one(other.staff_roles)?.role ?? null,
       lastBody: row.body,
       lastCreatedAt: row.created_at,
       lastSenderProfileId: row.sender_profile_id,

@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowDown, Check, CornerUpLeft, Pencil, Send, X } from "luci
 import { AppHeader } from "@/components/duleko/Layout";
 import { ChatBubble, type BubblePanel } from "@/components/duleko/ChatBubble";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
+import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FullPageLoader } from "@/components/ui/states";
@@ -335,7 +336,16 @@ export function ChatScreen() {
     // The tab bar hides itself on /chat/, so the full height is ours.
     <div className="flex h-dvh flex-col overflow-hidden bg-white">
       <AppHeader
-        title={otherName}
+        title={
+          // The parent <h1> (AppHeader) applies its own `truncate`, which
+          // only works cleanly on plain text - so truncation is handled
+          // here instead, on the name span alone, with the badge (already
+          // shrink-0) sitting safely outside the truncated part.
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate">{otherName}</span>
+            <VerifiedBadge staffRole={other.data?.staff_role} verified={other.data?.is_verified} size={15} />
+          </span>
+        }
         subtitle={
           otherTyping ? (
             <span className="text-brand-700">{t("typingIndicator")}</span>

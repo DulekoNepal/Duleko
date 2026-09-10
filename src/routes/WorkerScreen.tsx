@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
@@ -12,8 +12,12 @@ import {
   Lock,
   MapPin,
   MessageCircle,
+  MoreHorizontal,
   Phone,
   Share2,
+  ShieldBan,
+  ShieldCheck,
+  ShieldOff,
   Star,
   UserCheck,
   UserPlus,
@@ -23,6 +27,9 @@ import { RatingStars } from "@/components/duleko/Rating";
 import { ReviewsCard } from "@/components/duleko/ReviewsCard";
 import { RequestWorkDialog } from "@/components/duleko/RequestWorkDialog";
 import { ReportDialog } from "@/components/duleko/ReportDialog";
+import { SuspendUserDialog } from "@/components/duleko/SuspendUserDialog";
+import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
+import { MenuItem, MenuPanel } from "@/components/ui/menu";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,12 +47,17 @@ import {
   getFriendshipWith,
   getProfile,
   getUserSkills,
+  isProfileSuspended,
   listCertificates,
   REVIEWS_PAGE,
   listReviewsFor,
   removeFriendship,
   respondFriendRequest,
   sendFriendRequest,
+  suspendProfile,
+  unsuspendProfile,
+  unverifyProfile,
+  verifyProfile,
 } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
 import { cn, formatMoney, formatNumber, locationLine, relativeTime, skillName } from "@/lib/utils";
@@ -67,6 +79,27 @@ export function WorkerScreen() {
   const { workerId: handle } = useParams({ from: "/worker/$workerId" });
   const [requestOpen, setRequestOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [suspendOpen, setSuspendOpen] = useState(false);
+  const [moderationMenuOpen, setModerationMenuOpen] = useState(false);
+
+  // The staff ⋯ menu closes on a tap anywhere else, or Escape - same
+  // behaviour as the ⋯ menu on your own Profile screen.
+  useEffect(() => {
+    if (!moderationMenuOpen) return;
+    function onPointerDownAnywhere(e: PointerEvent) {
+      if ((e.target as HTMLElement | null)?.closest("[data-moderation-menu]")) return;
+      setModerationMenuOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setModerationMenuOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDownAnywhere, true);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDownAnywhere, true);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [moderationMenuOpen]);
 
   /** Every action below needs an account - a guest gets the sign-in prompt instead. */
   function withAuth(action: () => void) {
@@ -127,6 +160,58 @@ export function WorkerScreen() {
     queryClient.invalidateQueries({ queryKey: ["unread"] });
   }
 
+  // ---- Staff-only: verify/unverify, suspend/unsuspend -------------------
+  const isStaffViewer = Boolean(me?.staff_role);
+  const canSuspend = me?.staff_role === "admin" || me?.staff_role === "technical_admin";
+
+  const suspension = useQuery({
+    queryKey: ["suspended", workerId],
+    queryFn: () => isProfileSuspended(workerId),
+    enabled: ready && canSuspend,
+  });
+
+  function invalidateWorker() {
+    queryClient.invalidateQueries({ queryKey: ["profile", handle] });
+    queryClient.invalidateQueries({ queryKey: ["suspended", workerId] });
+  }
+
+  const verify = useMutation({
+    mutationFn: () => verifyProfile(workerId, me!.id),
+    onSuccess: () => {
+      toast(t("verifiedSuccess"));
+      invalidateWorker();
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  const unverify = useMutation({
+    mutationFn: () => unverifyProfile(workerId),
+    onSuccess: () => {
+      toast(t("unverifiedSuccess"));
+      invalidateWorker();
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  const suspend = useMutation({
+    mutationFn: (reason: string | null) => suspendProfile(workerId, reason),
+    onSuccess: () => {
+      setSuspendOpen(false);
+      toast(t("suspendedSuccess"));
+      invalidateWorker();
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  const unsuspend = useMutation({
+    mutationFn: () => unsuspendProfile(workerId),
+    onSuccess: () => {
+      toast(t("unsuspendedSuccess"));
+      invalidateWorker();
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
   const share = useMutation({
     mutationFn: () =>
       shareProfile(worker.data!.public_slug, worker.data!.full_name, t("shareProfileText", { name: worker.data!.full_name })),
@@ -172,6 +257,11 @@ export function WorkerScreen() {
   const fs = friendship.data;
   const iAmRequester = fs?.requester_profile_id === me?.id;
 
+  // Staff moderation only ever targets an ordinary member - never your own
+  // profile, and never another staff member's (verify/suspend a colleague
+  // makes no sense; revoke their role first if that's ever really needed).
+  const showModerationMenu = isStaffViewer && !isMe && !w.staff_role;
+
   return (
     <>
       <AppHeader
@@ -188,14 +278,77 @@ export function WorkerScreen() {
           </button>
         }
         right={
-          <button
-            type="button"
-            onClick={() => share.mutate()}
-            aria-label={t("shareProfile")}
-            className="rounded-lg p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-700"
-          >
-            <Share2 className="h-5 w-5" aria-hidden />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => share.mutate()}
+              aria-label={t("shareProfile")}
+              className="rounded-lg p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-700"
+            >
+              <Share2 className="h-5 w-5" aria-hidden />
+            </button>
+
+            {showModerationMenu && (
+              <div className="relative" data-moderation-menu>
+                <button
+                  type="button"
+                  onClick={() => setModerationMenuOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={moderationMenuOpen}
+                  aria-label={t("moderatorActions")}
+                  className="rounded-lg p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <MoreHorizontal className="h-5 w-5" aria-hidden />
+                </button>
+
+                {moderationMenuOpen && (
+                  <MenuPanel>
+                    {w.is_verified ? (
+                      <MenuItem
+                        icon={ShieldOff}
+                        label={t("unverifyProfile")}
+                        onClick={() => {
+                          setModerationMenuOpen(false);
+                          unverify.mutate();
+                        }}
+                      />
+                    ) : (
+                      <MenuItem
+                        icon={ShieldCheck}
+                        label={t("verifyProfile")}
+                        onClick={() => {
+                          setModerationMenuOpen(false);
+                          verify.mutate();
+                        }}
+                      />
+                    )}
+
+                    {canSuspend &&
+                      (suspension.data ? (
+                        <MenuItem
+                          icon={ShieldBan}
+                          label={t("unsuspendUser")}
+                          onClick={() => {
+                            setModerationMenuOpen(false);
+                            unsuspend.mutate();
+                          }}
+                        />
+                      ) : (
+                        <MenuItem
+                          icon={ShieldBan}
+                          label={t("suspendUser")}
+                          tone="danger"
+                          onClick={() => {
+                            setModerationMenuOpen(false);
+                            setSuspendOpen(true);
+                          }}
+                        />
+                      ))}
+                  </MenuPanel>
+                )}
+              </div>
+            )}
+          </div>
         }
       />
 
@@ -222,7 +375,10 @@ export function WorkerScreen() {
             <div className="mt-3 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 {/* h2, not h1 - AppHeader already carries this name as the page h1. */}
-                <h2 className="truncate text-xl font-bold text-slate-900">{w.full_name}</h2>
+                <h2 className="flex min-w-0 items-center gap-1.5 text-xl font-bold text-slate-900">
+                  <span className="truncate">{w.full_name}</span>
+                  <VerifiedBadge staffRole={w.staff_role} verified={w.is_verified} size={18} />
+                </h2>
                 <div className="mt-1">
                   <RatingStars value={Number(w.rating)} count={w.rating_count} />
                 </div>
@@ -464,6 +620,14 @@ export function WorkerScreen() {
             reporterProfileId={me.id}
             reportedProfileId={w.id}
           />
+          {canSuspend && (
+            <SuspendUserDialog
+              open={suspendOpen}
+              onClose={() => setSuspendOpen(false)}
+              loading={suspend.isPending}
+              onConfirm={(reason) => suspend.mutate(reason)}
+            />
+          )}
         </>
       )}
     </>

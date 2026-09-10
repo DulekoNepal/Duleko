@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
 import { SkillChip } from "./SkillIcon";
 import { RatingStars } from "./Rating";
+import { VerifiedBadge } from "./VerifiedBadge";
 import { useI18n } from "@/lib/i18n";
 import { cn, formatNumber, locationShort, skillName } from "@/lib/utils";
 import type { WorkerCardData } from "@/lib/types";
@@ -46,8 +47,9 @@ export function WorkerCard({ worker, online }: { worker: WorkerCardData; online?
                 status pill beside it was cutting them off. Rating and
                 availability then share the line below: both are status, and
                 together they still leave the name its full width. */}
-            <h3 className="truncate font-semibold leading-tight text-slate-900">
-              {worker.full_name}
+            <h3 className="flex min-w-0 items-center gap-1 font-semibold leading-tight text-slate-900">
+              <span className="truncate">{worker.full_name}</span>
+              <VerifiedBadge staffRole={worker.staff_role} verified={worker.is_verified} />
             </h3>
 
             <div className="mt-1.5 flex items-center justify-between gap-2">

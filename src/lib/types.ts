@@ -1,5 +1,12 @@
 export type Lang = "en" | "ne";
 
+/**
+ * The three staff tiers, ranked low to high. Read from the `staff_roles`
+ * table - never stored as a column on `profiles` itself, so a profile
+ * update can never grant a role.
+ */
+export type StaffRole = "moderator" | "admin" | "technical_admin";
+
 export type EngagementStatus =
   | "pending"
   | "accepted"
@@ -55,6 +62,10 @@ export interface Profile {
   location_shared_at: string | null;
   created_at: string;
   updated_at: string;
+  /** Set once a moderator/admin verifies this profile - drives the hollow green badge. */
+  is_verified: boolean;
+  /** Set when this profile belongs to staff - drives the solid staff badge instead. */
+  staff_role: StaffRole | null;
 }
 
 /** A training/skill certificate a worker has chosen to show on their profile. */
@@ -85,6 +96,8 @@ export interface WorkerCardData {
   free_on_day: boolean;
   match_score: number;
   distance_km: number | null;
+  is_verified: boolean;
+  staff_role: StaffRole | null;
 }
 
 export type CancellationReason =
@@ -157,7 +170,9 @@ export interface AppNotification {
     | "friend_request"
     | "friend_accepted"
     | "message"
-    | "welcome";
+    | "welcome"
+    | "verified"
+    | "verify_reminder";
   title_en: string;
   title_ne: string;
   body_en: string | null;
@@ -189,6 +204,20 @@ export interface AvailabilityDay {
 }
 
 export type ReportReason = "spam" | "fake_profile" | "abusive" | "no_show" | "unsafe" | "other";
+
+export type ReportStatus = "open" | "reviewed" | "dismissed";
+
+/** One user report, with just enough of each party to show in the moderation queue. */
+export interface ReportWithParties {
+  id: string;
+  reason: ReportReason;
+  details: string | null;
+  status: ReportStatus;
+  created_at: string;
+  resolved_at: string | null;
+  reporter: Pick<Profile, "id" | "full_name" | "avatar_url">;
+  reported: Pick<Profile, "id" | "full_name" | "avatar_url">;
+}
 
 export type FriendshipStatus = "pending" | "accepted" | "declined";
 
@@ -239,6 +268,8 @@ export interface ConversationSummary {
   otherName: string;
   otherAvatarUrl: string | null;
   otherIsOfficial: boolean;
+  otherIsVerified: boolean;
+  otherStaffRole: StaffRole | null;
   lastBody: string;
   lastCreatedAt: string;
   lastSenderProfileId: string;
