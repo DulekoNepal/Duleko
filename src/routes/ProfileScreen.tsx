@@ -105,6 +105,7 @@ export function ProfileScreen() {
   const [locationConsentOpen, setLocationConsentOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -1064,7 +1065,7 @@ export function ProfileScreen() {
                 <Button
                   variant="outline"
                   className="w-full border-red-200 text-red-600 hover:bg-red-50"
-                  onClick={() => void signOut()}
+                  onClick={() => setSignOutConfirmOpen(true)}
                 >
                   <LogOut className="h-4 w-4" aria-hidden />
                   {t("signOut")}
@@ -1128,6 +1129,34 @@ export function ProfileScreen() {
         onClose={() => setLocationConsentOpen(false)}
         onAllow={() => shareLoc.mutate()}
       />
+
+      {/* One tap on the button should never be the whole action - a
+          plain Cancel/Sign out is enough here since it's reversible,
+          unlike delete account below. */}
+      <Dialog
+        open={signOutConfirmOpen}
+        onClose={() => setSignOutConfirmOpen(false)}
+        title={t("signOutConfirmTitle")}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setSignOutConfirmOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                setSignOutConfirmOpen(false);
+                void signOut();
+              }}
+            >
+              <LogOut className="h-4 w-4" aria-hidden />
+              {t("signOut")}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-slate-600">{t("signOutConfirmBody")}</p>
+      </Dialog>
 
       {/* Proving it is really you, rather than a plain Yes/No, so this
           can't be tapped through by accident - there is no undo. */}

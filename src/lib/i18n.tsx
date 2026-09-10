@@ -35,6 +35,11 @@ const strings = {
   signIn: ["Sign in", "लगइन गर्नुहोस्"],
   signUp: ["Create account", "खाता खोल्नुहोस्"],
   signOut: ["Sign out", "लगआउट"],
+  signOutConfirmTitle: ["Sign out?", "लगआउट गर्ने हो?"],
+  signOutConfirmBody: [
+    "You can sign back in anytime with the same email and password.",
+    "तपाईं जुनसुकै बेला उही इमेल र पासवर्डले फेरि लगइन गर्न सक्नुहुन्छ।",
+  ],
   email: ["Email", "इमेल"],
   password: ["Password", "पासवर्ड"],
   emailPlaceholder: ["you@example.com", "you@example.com"],
