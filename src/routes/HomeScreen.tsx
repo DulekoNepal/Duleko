@@ -2,6 +2,7 @@ import { useState, type CSSProperties } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Clock, LogIn, MapPin, Search, Users } from "lucide-react";
+import { EmergencyContactsSection } from "@/components/duleko/EmergencyContacts";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { RatingStars } from "@/components/duleko/Rating";
 import { SKILL_CATEGORY_ORDER, SkillCategorySection, groupSkillsByCategory } from "@/components/duleko/SkillGrid";
@@ -220,6 +221,14 @@ export function HomeScreen() {
                   counts={counts.data}
                 />
               ))}
+        </section>
+
+        {/* Same "own card" treatment as the skill categories above, so this
+            reads as one more category in that stack rather than a bolted-on
+            banner - just tinted red, since it's safety information rather
+            than browsing. */}
+        <section className="animate-in-up mb-7" style={{ "--delay": "90ms" } as CSSProperties}>
+          <EmergencyContactsSection />
         </section>
 
         {/* No outer card here, unlike the skill categories above - these
