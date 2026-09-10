@@ -26,7 +26,6 @@ import {
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
-import { LocationConsentDialog } from "@/components/duleko/LocationConsentDialog";
 import { RatingStars } from "@/components/duleko/Rating";
 import { SkillPicker } from "@/components/duleko/SkillGrid";
 import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
@@ -58,6 +57,7 @@ import {
   saveContact,
   saveNotificationPrefs,
   setDayStatus,
+  setLocationConsent,
   setUserSkills,
   shareLocation,
   updateProfile,
@@ -102,7 +102,6 @@ export function ProfileScreen() {
   const navigate = useNavigate();
 
   const [editing, setEditing] = useState(false);
-  const [locationConsentOpen, setLocationConsentOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
@@ -392,31 +391,37 @@ export function ProfileScreen() {
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
-  const shareLoc = useMutation({
-    mutationFn: () =>
-      new Promise<void>((resolve, reject) => {
-        if (!navigator.geolocation) {
-          reject(new Error(t("locationPermissionDenied")));
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            shareLocation(profile!.id, pos.coords.latitude, pos.coords.longitude).then(resolve, reject);
-          },
-          () => reject(new Error(t("locationPermissionDenied"))),
-          { enableHighAccuracy: true, timeout: 10_000 },
-        );
-      }),
+  // One switch instead of a button: turning it on records consent and
+  // shares a fresh location right away (the same thing AutoShareLocation
+  // then keeps doing silently on every future login, no dialog, no
+  // button); turning it off withdraws consent and wipes the stored
+  // coordinates, same tap.
+  const toggleLocationSharing = useMutation({
+    mutationFn: async (next: boolean) => {
+      if (next) {
+        await setLocationConsent(profile!.id, "granted");
+        await new Promise<void>((resolve, reject) => {
+          if (!navigator.geolocation) {
+            reject(new Error(t("locationPermissionDenied")));
+            return;
+          }
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              shareLocation(profile!.id, pos.coords.latitude, pos.coords.longitude).then(resolve, reject);
+            },
+            () => reject(new Error(t("locationPermissionDenied"))),
+            { enableHighAccuracy: true, timeout: 10_000 },
+          );
+        });
+      } else {
+        await setLocationConsent(profile!.id, "declined");
+        await clearLocation(profile!.id);
+      }
+    },
     onSuccess: async () => {
       await refreshProfile();
       toast(t("profileSaved"));
     },
-    onError: (error) => toast(errorMessage(error), "error"),
-  });
-
-  const clearLoc = useMutation({
-    mutationFn: () => clearLocation(profile!.id),
-    onSuccess: async () => refreshProfile(),
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
@@ -860,31 +865,26 @@ export function ProfileScreen() {
                   }
                 >
                   <p className="mb-3 text-sm text-slate-500">{t("shareLocationHint")}</p>
-                  <p className="mb-3 text-sm text-slate-700">
-                    {profile.location_shared_at
-                      ? t("locationShared", { time: relativeTime(profile.location_shared_at, lang) })
-                      : t("locationNotShared")}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      loading={shareLoc.isPending}
-                      onClick={() => {
-                        // Ask with our own explanation the first time - after
-                        // that, they've already consented once.
-                        if (profile.location_shared_at) shareLoc.mutate();
-                        else setLocationConsentOpen(true);
-                      }}
-                    >
-                      <Navigation className="h-4 w-4" aria-hidden />
-                      {profile.location_shared_at ? t("updateLocation") : t("shareLocation")}
-                    </Button>
-                    {profile.location_shared_at && (
-                      <Button variant="ghost" loading={clearLoc.isPending} onClick={() => clearLoc.mutate()}>
-                        {t("clearLocationAction")}
-                      </Button>
-                    )}
+                  {/* No button here on purpose - the one ask already
+                      happened once, automatically, right after signup
+                      (see AutoShareLocation). This switch is only for
+                      changing that decision afterward. */}
+                  <div className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3.5 py-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-800">
+                        {profile.location_consent === "granted"
+                          ? profile.location_shared_at
+                            ? t("locationShared", { time: relativeTime(profile.location_shared_at, lang) })
+                            : t("locationSharedPending")
+                          : t("locationNotShared")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={profile.location_consent === "granted"}
+                      disabled={toggleLocationSharing.isPending}
+                      onChange={(next) => toggleLocationSharing.mutate(next)}
+                      aria-label={t("shareLocation")}
+                    />
                   </div>
                 </Collapsible>
               </CardBody>
@@ -904,7 +904,6 @@ export function ProfileScreen() {
                   )}
                 </span>
               }
-              defaultOpen
             >
               <p className="mb-3 text-sm text-slate-500">{t("calendarHint")}</p>
               <div className="rounded-xl border border-slate-200 bg-white p-3">
@@ -1123,12 +1122,6 @@ export function ProfileScreen() {
           </CardBody>
         </Card>
       </PageContainer>
-
-      <LocationConsentDialog
-        open={locationConsentOpen}
-        onClose={() => setLocationConsentOpen(false)}
-        onAllow={() => shareLoc.mutate()}
-      />
 
       {/* One tap on the button should never be the whole action - a
           plain Cancel/Sign out is enough here since it's reversible,

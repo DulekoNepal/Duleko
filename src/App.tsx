@@ -16,6 +16,7 @@ import {
   useNotificationsBadgeSync,
 } from "@/components/duleko/Layout";
 import { WelcomeWalkthrough, hasSeenWalkthrough } from "@/components/duleko/WelcomeWalkthrough";
+import { AutoShareLocation } from "@/components/duleko/AutoShareLocation";
 import { FullPageLoader } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
 
@@ -137,6 +138,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {children}
       <BottomNav />
       {showWalkthrough && <WelcomeWalkthrough onDone={() => setShowWalkthrough(false)} />}
+      <AutoShareLocation />
     </div>
   );
 }

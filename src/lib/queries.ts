@@ -27,7 +27,7 @@ import type {
 } from "./types";
 
 const PROFILE_COLUMNS =
-  "id,user_id,full_name,about,bio,age,education,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,is_official,public_slug,language,rating,rating_count,lat,lng,location_shared_at,created_at,updated_at";
+  "id,user_id,full_name,about,bio,age,education,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,is_official,public_slug,language,rating,rating_count,lat,lng,location_shared_at,location_consent,created_at,updated_at";
 
 // Verification and role live in their own tables (see 3500_staff_roles_
 // and_verification.sql), embedded here and flattened by mapProfileRow so
@@ -331,8 +331,19 @@ export async function searchWorkers(params: SearchParams): Promise<WorkerCardDat
 }
 
 // ---------------------------------------------------------------------
-// Live location (optional, one-tap snapshot)
+// Live location - asked once, remembered on the profile from then on.
 // ---------------------------------------------------------------------
+export async function setLocationConsent(
+  profileId: string,
+  consent: "granted" | "declined",
+): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ location_consent: consent })
+    .eq("id", profileId);
+  if (error) throw error;
+}
+
 export async function shareLocation(profileId: string, lat: number, lng: number): Promise<void> {
   const { error } = await supabase
     .from("profiles")

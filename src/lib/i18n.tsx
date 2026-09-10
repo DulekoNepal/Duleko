@@ -332,7 +332,8 @@ const strings = {
   updateLocation: ["Update location", "स्थान अद्यावधिक गर्नुहोस्"],
   clearLocationAction: ["Clear", "हटाउनुहोस्"],
   locationShared: ["Shared {time} ago", "{time} अघि साझा गरियो"],
-  locationNotShared: ["Not shared yet", "अझै साझा गरिएको छैन"],
+  locationSharedPending: ["On - sharing automatically", "सक्रिय - स्वतः साझा हुँदैछ"],
+  locationNotShared: ["Off", "बन्द"],
   shareLocationHint: [
     "Useful for drivers and delivery - lets nearby people find you. Optional.",
     "चालक र डेलिभरीका लागि उपयोगी - नजिकैका मानिसले भेट्टाउन सक्छन्। वैकल्पिक।",
@@ -655,10 +656,10 @@ const strings = {
   ],
 
   // ---- location permission prompt (asked only when a feature needs it) --
-  locationConsentTitle: ["Allow Duleko to use your location?", "डुलेकोलाई तपाईंको स्थान प्रयोग गर्न दिनुहुन्छ?"],
+  locationConsentTitle: ["Share your location with Duleko?", "डुलेकोसँग तपाईंको स्थान साझा गर्ने हो?"],
   locationConsentBody: [
-    "Your location helps Duleko show relevant people and opportunities nearby. Your precise or live location will not be publicly displayed unless you choose to share it.",
-    "तपाईंको स्थानले डुलेकोलाई नजिकैका सान्दर्भिक मानिस र अवसरहरू देखाउन मद्दत गर्छ। तपाईंले साझा गर्ने नछानेसम्म तपाईंको सटीक वा लाइभ स्थान सार्वजनिक रूपमा देखिँदैन।",
+    "If you allow it, your location is shared automatically every time you sign in from now on - no need to ask again. It lets nearby people see roughly how far away you are. You can turn this off anytime from Profile.",
+    "अनुमति दिनुभयो भने, अबदेखि तपाईं लगइन गर्दा हरेक पटक स्वतः स्थान साझा हुनेछ - फेरि सोध्नु पर्दैन। यसले नजिकैका मानिसहरूलाई तपाईं कति टाढा हुनुहुन्छ भनेर देख्न मद्दत गर्छ। तपाईं जुनसुकै बेला प्रोफाइलबाट यो बन्द गर्न सक्नुहुन्छ।",
   ],
   allowLocation: ["Allow Location", "स्थान अनुमति दिनुहोस्"],
   continueAction: ["Continue", "जारी राख्नुहोस्"],

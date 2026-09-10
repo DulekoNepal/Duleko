@@ -60,6 +60,8 @@ export interface Profile {
   lat: number | null;
   lng: number | null;
   location_shared_at: string | null;
+  /** null = never asked; 'granted' auto-shares silently on every login; 'declined' means never ask again. */
+  location_consent: "granted" | "declined" | null;
   created_at: string;
   updated_at: string;
   /** Set once a moderator/admin verifies this profile - drives the hollow green badge. */

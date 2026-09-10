@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarDays, ChevronDown } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
@@ -8,7 +9,7 @@ import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import { createEngagement, getAvailability, getUserSkills } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import { addDays, formatMoney, skillName, todayKey, toDateKey } from "@/lib/utils";
+import { addDays, cn, formatDate, formatMoney, skillName, todayKey, toDateKey } from "@/lib/utils";
 import type { Profile, WorkerCardData } from "@/lib/types";
 
 type Worker = Pick<Profile, "id" | "full_name"> & Partial<WorkerCardData>;
@@ -36,6 +37,7 @@ export function RequestWorkDialog({
   const [location, setLocation] = useState(defaultLocation ?? "");
   const [offerAmount, setOfferAmount] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   // Shown as a reference so the hirer's opening bid is in the right ballpark -
   // the worker set these rates themselves (see Profile > Your skills).
@@ -100,6 +102,7 @@ export function RequestWorkDialog({
     setWorkDate(todayKey());
     setOfferAmount("");
     setErrors({});
+    setCalendarOpen(false);
   }
 
   function validate(): boolean {
@@ -146,15 +149,39 @@ export function RequestWorkDialog({
       </Field>
 
       <Field label={t("workDate")} error={errors.workDate}>
-        <AvailabilityCalendar
-          days={availability.data ?? []}
-          weeks={6}
-          selectedDay={workDate}
-          onSelectDay={(day) => {
-            setWorkDate(day);
-            setErrors((prev) => ({ ...prev, workDate: "" }));
-          }}
-        />
+        {/* Collapsed by default - the calendar grid is a lot of space to
+            spend on one field before anyone asked to change the date. */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setCalendarOpen((v) => !v)}
+            aria-expanded={calendarOpen}
+            className="flex h-11 w-full items-center justify-between rounded-xl border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-900 transition-colors duration-200 hover:border-slate-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/25"
+          >
+            <span className="inline-flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-slate-400" aria-hidden />
+              {formatDate(workDate, lang)}
+            </span>
+            <ChevronDown
+              className={cn("h-4 w-4 text-slate-400 transition-transform duration-200", calendarOpen && "rotate-180")}
+              aria-hidden
+            />
+          </button>
+          {calendarOpen && (
+            <div className="mt-3">
+              <AvailabilityCalendar
+                days={availability.data ?? []}
+                weeks={6}
+                selectedDay={workDate}
+                onSelectDay={(day) => {
+                  setWorkDate(day);
+                  setErrors((prev) => ({ ...prev, workDate: "" }));
+                  setCalendarOpen(false);
+                }}
+              />
+            </div>
+          )}
+        </div>
       </Field>
 
       <Field label={t("workLocation")} error={errors.location}>
