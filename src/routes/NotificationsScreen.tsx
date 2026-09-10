@@ -8,6 +8,7 @@ import {
   Briefcase,
   CalendarCheck,
   CheckCheck,
+  Megaphone,
   MessageCircle,
   ShieldCheck,
   Sparkles,
@@ -58,6 +59,7 @@ const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
   message: { icon: MessageCircle, tone: "brand" },
   verified: { icon: ShieldCheck, tone: "green" },
   verify_reminder: { icon: ShieldCheck, tone: "brand" },
+  announcement: { icon: Megaphone, tone: "brand" },
 };
 
 export function NotificationsScreen() {
@@ -136,7 +138,12 @@ export function NotificationsScreen() {
     if (!n.is_read) readOne.mutate(n.id);
     if (n.kind === "friend_request" || n.kind === "friend_accepted") {
       navigate({ to: "/friends" });
-    } else if (n.kind === "welcome" || n.kind === "verified" || n.kind === "verify_reminder") {
+    } else if (
+      n.kind === "welcome" ||
+      n.kind === "verified" ||
+      n.kind === "verify_reminder" ||
+      n.kind === "announcement"
+    ) {
       navigate({ to: "/profile" });
     } else if (n.related_profile_id) {
       navigate({ to: "/chat/$otherId", params: { otherId: n.related_profile_id } });

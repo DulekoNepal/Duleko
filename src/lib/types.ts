@@ -174,7 +174,8 @@ export interface AppNotification {
     | "message"
     | "welcome"
     | "verified"
-    | "verify_reminder";
+    | "verify_reminder"
+    | "announcement";
   title_en: string;
   title_ne: string;
   body_en: string | null;
