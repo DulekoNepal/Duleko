@@ -2,6 +2,9 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MapPin } from "lucide-react";
 import QRCode from "qrcode";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 import { skillIconFor } from "@/components/duleko/SkillIcon";
 import { profileUrl } from "@/lib/share";
 import { initials, locationShort } from "@/lib/utils";
@@ -321,7 +324,7 @@ export async function renderProfileCard(profile: Profile, skills: UserSkillDetai
 }
 
 /** Triggers a real file download of the rendered card - a plain <a download>, same as any file save. */
-export function downloadBlob(blob: Blob, filename: string) {
+function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -330,4 +333,48 @@ export function downloadBlob(blob: Blob, filename: string) {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      // reader.result is "data:image/png;base64,AAAA..." - Filesystem wants
+      // the raw base64 payload, not the data URL wrapper.
+      const result = reader.result as string;
+      resolve(result.slice(result.indexOf(",") + 1));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read the rendered card"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+export type SaveCardResult = "downloaded" | "shared" | "cancelled";
+
+/**
+ * Saves the rendered card. The web's `<a download>` trick has no real
+ * equivalent inside an Android WebView - blob-URL downloads there are
+ * silently dropped, since there's no browser download manager to catch
+ * them. Natively the file is written to disk via the Filesystem plugin and
+ * handed to the OS share sheet instead, so "Save to Photos", "Save to
+ * Files", or sending it straight to WhatsApp all fall out of the same
+ * native picker someone already knows how to use.
+ */
+export async function saveProfileCard(blob: Blob, filename: string): Promise<SaveCardResult> {
+  if (!Capacitor.isNativePlatform()) {
+    downloadBlob(blob, filename);
+    return "downloaded";
+  }
+
+  const base64 = await blobToBase64(blob);
+  const written = await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Cache });
+
+  try {
+    await Share.share({ url: written.uri, title: filename });
+    return "shared";
+  } catch (err) {
+    // Dismissing the share sheet is a normal outcome, not a failure.
+    if (err instanceof Error && err.name === "AbortError") return "cancelled";
+    throw err;
+  }
 }

@@ -42,6 +42,7 @@ import { MenuItem, MenuPanel } from "@/components/ui/menu";
 import { EmptyState } from "@/components/ui/states";
 import { Switch } from "@/components/ui/switch";
 import { SkillIcon, SkillTile } from "@/components/duleko/SkillIcon";
+import { getCurrentPosition } from "@/lib/geolocation";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
@@ -69,7 +70,7 @@ import {
   type UserSkillInput,
 } from "@/lib/queries";
 import { copyLink, profileUrl, shareProfile } from "@/lib/share";
-import { downloadBlob, renderProfileCard } from "@/lib/profileCard";
+import { renderProfileCard, saveProfileCard } from "@/lib/profileCard";
 import { errorMessage } from "@/lib/supabase";
 import type { NotificationPrefs } from "@/lib/types";
 import {
@@ -291,9 +292,12 @@ export function ProfileScreen() {
   const downloadCard = useMutation({
     mutationFn: async () => {
       const blob = await renderProfileCard(profile!, mySkills.data ?? []);
-      downloadBlob(blob, `${profile!.public_slug}-duleko-card.png`);
+      return saveProfileCard(blob, `${profile!.public_slug}-duleko-card.png`);
     },
-    onSuccess: () => toast(t("cardDownloaded")),
+    onSuccess: (result) => {
+      if (result === "cancelled") return;
+      toast(t(result === "shared" ? "cardReadyToShare" : "cardDownloaded"));
+    },
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
@@ -414,11 +418,7 @@ export function ProfileScreen() {
       if (next) {
         await setLocationConsent(profile!.id, "granted");
         await new Promise<void>((resolve, reject) => {
-          if (!navigator.geolocation) {
-            reject(new Error(t("locationPermissionDenied")));
-            return;
-          }
-          navigator.geolocation.getCurrentPosition(
+          getCurrentPosition(
             (pos) => {
               shareLocation(profile!.id, pos.coords.latitude, pos.coords.longitude).then(resolve, reject);
             },

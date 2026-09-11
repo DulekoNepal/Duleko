@@ -32,7 +32,7 @@ export function WelcomeChoiceScreen({
   return (
     <div className="min-h-dvh bg-cream-50">
       {/* ---- Hero band: brand-color gradient, two soft blobs for texture ---- */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-brand-600 via-brand-700 to-teal-800 pb-16">
+      <div className="relative overflow-hidden bg-gradient-to-br from-brand-600 via-brand-700 to-teal-800 pb-16 pt-[env(safe-area-inset-top)]">
         <div
           className="pointer-events-none absolute -right-14 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl"
           aria-hidden

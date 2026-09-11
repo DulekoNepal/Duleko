@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { LocationConsentDialog } from "./LocationConsentDialog";
 import { useSession } from "@/hooks/use-session";
 import { setLocationConsent, shareLocation } from "@/lib/queries";
+import { getCurrentPosition } from "@/lib/geolocation";
 
 /**
  * Location sharing, asked once and then silent for good - no button, no
@@ -32,9 +33,9 @@ export function AutoShareLocation() {
       return;
     }
 
-    if (profile.location_consent === "granted" && !sharedRef.current && navigator.geolocation) {
+    if (profile.location_consent === "granted" && !sharedRef.current) {
       sharedRef.current = true;
-      navigator.geolocation.getCurrentPosition(
+      getCurrentPosition(
         (pos) => {
           shareLocation(profile.id, pos.coords.latitude, pos.coords.longitude).catch(() => {});
         },

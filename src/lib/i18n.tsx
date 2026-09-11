@@ -496,6 +496,7 @@ const strings = {
   downloadCard: ["Download profile card", "प्रोफाइल कार्ड डाउनलोड गर्नुहोस्"],
   generatingCard: ["Preparing your card…", "तपाईंको कार्ड तयार हुँदैछ…"],
   cardDownloaded: ["Profile card downloaded.", "प्रोफाइल कार्ड डाउनलोड भयो।"],
+  cardReadyToShare: ["Choose where to save your card.", "आफ्नो कार्ड कहाँ सुरक्षित गर्ने रोज्नुहोस्।"],
   profileOptions: ["Profile options", "प्रोफाइल विकल्पहरू"],
   copyLink: ["Copy link", "लिङ्क कपी गर्नुहोस्"],
   linkCopied: ["Profile link copied.", "प्रोफाइल लिङ्क कपी भयो।"],

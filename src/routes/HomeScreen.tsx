@@ -1,11 +1,11 @@
 import { useState, type CSSProperties } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, Clock, LogIn, MapPin, Search, Users } from "lucide-react";
+import { ChevronRight, Clock, LogIn, MapPin, Search, Star, Users } from "lucide-react";
 import { EmergencyContactsSection } from "@/components/duleko/EmergencyContacts";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
-import { RatingStars } from "@/components/duleko/Rating";
 import { SKILL_CATEGORY_ORDER, SkillCategorySection, groupSkillsByCategory } from "@/components/duleko/SkillGrid";
+import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { WorkerCard } from "@/components/duleko/WorkerCard";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -77,12 +77,15 @@ export function HomeScreen() {
 
       <PageContainer>
         {profile ? (
-          <Link to="/profile" aria-label={t("myProfile")} className="animate-in-up mb-4 block">
-            <Card
-              tone="primary"
-              interactive
-              className="overflow-hidden bg-gradient-to-br from-brand-50 via-white to-white"
-            >
+          <Link to="/profile" aria-label={t("myProfile")} className="animate-in-up group mb-4 block">
+            {/* tone="primary" is the same "this card is special" signal the
+                emergency section below uses with tone="danger" - a soft
+                brand wash and border, not a one-off custom background, so
+                this reads as this page's own vocabulary for "not a plain
+                card" rather than a different design system. Structure
+                mirrors WorkerCard: name (+ verified seal) and rating share
+                the top line, place sits on its own line below. */}
+            <Card tone="primary" interactive className="overflow-hidden">
               <CardBody className="flex items-center gap-4">
                 <Avatar
                   name={profile.full_name}
@@ -91,24 +94,32 @@ export function HomeScreen() {
                   className="shrink-0 shadow-sm ring-4 ring-white"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-lg font-bold leading-tight text-slate-900">
-                    {t("greeting", { name: firstName })}
-                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="flex min-w-0 items-center gap-1 text-base font-semibold leading-tight text-slate-900">
+                      <span className="truncate">{t("greeting", { name: firstName })}</span>
+                      <VerifiedBadge staffRole={profile.staff_role} verified={profile.is_verified} />
+                    </h3>
+                    {profile.rating_count > 0 && (
+                      <Badge tone="warning" className="shrink-0 px-2 py-0.5 text-[11px]">
+                        <Star className="h-3 w-3 shrink-0 fill-sun-400 text-sun-400" aria-hidden />
+                        {formatNumber(Number(profile.rating).toFixed(1), lang)}
+                        <span className="opacity-70">({formatNumber(profile.rating_count, lang)})</span>
+                      </Badge>
+                    )}
+                  </div>
                   {profile.district ? (
-                    <p className="mt-1 flex items-center gap-1 truncate text-sm text-slate-500">
-                      <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                      {districtLabel(profile.district, lang)}
+                    <p className="mt-1 flex items-center gap-1 text-sm text-slate-600">
+                      <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
+                      <span className="truncate">{districtLabel(profile.district, lang)}</span>
                     </p>
                   ) : (
-                    <p className="mt-1 text-sm text-slate-500">{t("tagline")}</p>
-                  )}
-                  {profile.rating_count > 0 && (
-                    <div className="mt-1.5">
-                      <RatingStars value={Number(profile.rating)} count={profile.rating_count} />
-                    </div>
+                    <p className="mt-1 text-sm text-slate-600">{t("tagline")}</p>
                   )}
                 </div>
-                <ChevronRight className="h-5 w-5 shrink-0 text-brand-300" aria-hidden />
+                <ChevronRight
+                  className="h-5 w-5 shrink-0 text-brand-300 transition-transform duration-200 group-hover:translate-x-0.5"
+                  aria-hidden
+                />
               </CardBody>
             </Card>
           </Link>

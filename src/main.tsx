@@ -6,7 +6,10 @@ import { I18nProvider } from "@/lib/i18n";
 import { SessionProvider } from "@/hooks/use-session";
 import { ToastProvider } from "@/hooks/use-toast";
 import { router } from "@/router";
+import { setupNativeAndroid } from "@/lib/native-android";
 import "./styles.css";
+
+setupNativeAndroid();
 
 const queryClient = new QueryClient({
   defaultOptions: {

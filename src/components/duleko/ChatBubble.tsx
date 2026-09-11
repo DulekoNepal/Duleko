@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Copy, CornerUpLeft, Pencil, SmilePlus, Trash2 } from "lucide-react";
+import { Clipboard } from "@capacitor/clipboard";
 import { Avatar } from "@/components/ui/avatar";
 import { useI18n } from "@/lib/i18n";
 import { withinEditWindow } from "@/lib/queries";
@@ -294,7 +295,7 @@ export function ChatBubble({
               icon={Copy}
               label={t("copy")}
               onClick={() => {
-                void navigator.clipboard?.writeText(m.body);
+                void Clipboard.write({ string: m.body });
                 openPanel(null);
               }}
             />

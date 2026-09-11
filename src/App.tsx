@@ -64,6 +64,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isSharedProfileLink = pathname.startsWith("/worker/");
 
+  // Fully public, no matter what: an app-store reviewer or a signed-out
+  // visitor following the Play Store listing's privacy link has no session
+  // and shouldn't need one. Every check below this - Supabase configured,
+  // session loading, signed in or not - is irrelevant to a static policy
+  // page, so it renders before any of that runs rather than after.
+  if (pathname === "/privacy") return children;
+
   function enterGuest() {
     setGuestMode(true);
     persistGuestMode(true);

@@ -1,7 +1,7 @@
+import { Fragment } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, MapPin, Navigation } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
 import { SkillChip } from "./SkillIcon";
 import { RatingStars } from "./Rating";
@@ -32,6 +32,29 @@ export function WorkerCard({ worker, online }: { worker: WorkerCardData; online?
   const skills = worker.skills ?? [];
   const blurb = worker.about?.trim();
 
+  // A brand-new worker has no rating yet - rather than filling that slot
+  // with a "New on Duleko" label, this card just leaves it out, so the
+  // meta line below is place/distance only for them instead of stretching
+  // to fit an extra badge. Built as a list (not inline JSX) so the dot
+  // separators between parts never dangle at the start or double up.
+  const metaParts = [
+    worker.rating_count > 0 && (
+      <RatingStars key="rating" value={Number(worker.rating)} count={worker.rating_count} size={13} />
+    ),
+    place && (
+      <span key="place" className="inline-flex min-w-0 items-center gap-1">
+        <MapPin className="h-3 w-3 shrink-0 text-slate-400" aria-hidden />
+        <span className="truncate">{place}</span>
+      </span>
+    ),
+    worker.distance_km != null && (
+      <span key="distance" className="inline-flex shrink-0 items-center gap-1 font-medium text-brand-700">
+        <Navigation className="h-3 w-3" aria-hidden />
+        {t("distanceAway", { km: formatNumber(worker.distance_km, lang) })}
+      </span>
+    ),
+  ].filter(Boolean);
+
   return (
     <Link
       to="/worker/$workerId"
@@ -39,64 +62,53 @@ export function WorkerCard({ worker, online }: { worker: WorkerCardData; online?
       className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 rounded-2xl"
     >
       <Card interactive className="h-full">
-        <CardBody className="flex items-start gap-3.5">
-          <Avatar name={worker.full_name} src={worker.avatar_url} size={56} online={online} />
+        <CardBody className="flex items-start gap-3 p-3.5">
+          <Avatar name={worker.full_name} src={worker.avatar_url} size={52} online={online} />
 
           <div className="min-w-0 flex-1">
-            {/* The name gets the whole line - Nepali names are long, and a
-                status pill beside it was cutting them off. Rating and
-                availability then share the line below: both are status, and
-                together they still leave the name its full width. */}
-            <h3 className="flex min-w-0 items-center gap-1 font-semibold leading-tight text-slate-900">
-              <span className="truncate">{worker.full_name}</span>
-              <VerifiedBadge staffRole={worker.staff_role} verified={worker.is_verified} />
-            </h3>
-
-            <div className="mt-1.5 flex items-center justify-between gap-2">
-              <RatingStars value={Number(worker.rating)} count={worker.rating_count} />
-
-              <Badge
-                tone={worker.is_available ? "success" : "muted"}
-                className="shrink-0 px-2 py-0.5 text-[11px]"
-              >
-                <span
-                  aria-hidden
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    worker.is_available ? "bg-green-500" : "bg-slate-400",
-                  )}
-                />
-                {worker.is_available ? t("availableNow") : t("notAvailable")}
-              </Badge>
+            {/* Name and availability share the top line - both are the
+                headline facts, and pairing them frees the line below for
+                rating, place and distance to sit together as one compact
+                meta row instead of three stacked ones. */}
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="flex min-w-0 items-center gap-1 font-semibold leading-tight text-slate-900">
+                <span className="truncate">{worker.full_name}</span>
+                <VerifiedBadge staffRole={worker.staff_role} verified={worker.is_verified} />
+              </h3>
+              <span
+                aria-hidden
+                className={cn(
+                  "h-2 w-2 shrink-0 rounded-full",
+                  worker.is_available ? "bg-green-500" : "bg-slate-300",
+                )}
+              />
+              <span className="sr-only">{worker.is_available ? t("availableNow") : t("notAvailable")}</span>
             </div>
 
-            {/* Where, and how far - one line, since they answer one question. */}
-            {(place || worker.distance_km != null) && (
-              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500">
-                {place && (
-                  <span className="inline-flex min-w-0 items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
-                    <span className="truncate">{place}</span>
-                  </span>
-                )}
-                {place && worker.distance_km != null && (
-                  <span aria-hidden className="text-slate-300">
-                    ·
-                  </span>
-                )}
-                {worker.distance_km != null && (
-                  <span className="inline-flex shrink-0 items-center gap-1 font-medium text-brand-700">
-                    <Navigation className="h-3.5 w-3.5" aria-hidden />
-                    {t("distanceAway", { km: formatNumber(worker.distance_km, lang) })}
-                  </span>
-                )}
-              </p>
+            {/* Rating, where, and how far - one meta line, all answering
+                "should I tap this card" together rather than spread across
+                separate rows. Whichever parts exist just line up with a dot
+                between them, so a new worker with no rating yet still reads
+                cleanly instead of leaving a gap or a stray leading dot. */}
+            {metaParts.length > 0 && (
+              <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-slate-500">
+                {metaParts.map((part, i) => (
+                  <Fragment key={i}>
+                    {i > 0 && (
+                      <span aria-hidden className="text-slate-300">
+                        ·
+                      </span>
+                    )}
+                    {part}
+                  </Fragment>
+                ))}
+              </div>
             )}
 
-            {blurb && <p className="mt-1.5 line-clamp-1 text-xs text-slate-500">{blurb}</p>}
+            {blurb && <p className="mt-1 line-clamp-1 text-xs text-slate-500">{blurb}</p>}
 
             {skills.length > 0 && (
-              <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 {skills.slice(0, 3).map((s) => (
                   <SkillChip key={s.id} skillId={s.id} compact>
                     {skillName(s, lang)}
