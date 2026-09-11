@@ -15,6 +15,7 @@ import { FriendsScreen } from "@/routes/FriendsScreen";
 import { ChatScreen } from "@/routes/ChatScreen";
 import { ChatsScreen } from "@/routes/ChatsScreen";
 import { ModerationScreen } from "@/routes/ModerationScreen";
+import { PrivacyPolicyScreen } from "@/routes/PrivacyPolicyScreen";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -98,6 +99,12 @@ const moderationRoute = createRoute({
   component: ModerationScreen,
 });
 
+const privacyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/privacy",
+  component: PrivacyPolicyScreen,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   searchRoute,
@@ -109,6 +116,7 @@ const routeTree = rootRoute.addChildren([
   chatRoute,
   chatsRoute,
   moderationRoute,
+  privacyRoute,
 ]);
 
 export const router = createRouter({
