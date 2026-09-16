@@ -1,140 +1,151 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import dulekoMark from "@/assets/duleko-mark.png";
+import { Mail, ShieldCheck, ChevronDown, ChevronRight } from "lucide-react";
+import { StaticIntro, StaticPage, StaticSection } from "@/components/duleko/StaticPage";
+import { Card, CardBody } from "@/components/ui/card";
+import { useI18n } from "@/lib/i18n";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
-/**
- * A fully static, standalone page - no session, no Supabase call, nothing
- * that can fail or hang. It's linked from the Play Store listing and app
- * settings, so it has to render for anyone (a signed-out visitor, an app
- * store reviewer, someone without an account at all) unconditionally. See
- * the early-return for "/privacy" in AppShell (src/App.tsx) - this page is
- * deliberately kept outside the normal auth-gated shell for that reason.
- */
-export function PrivacyPolicyScreen() {
+function CollapsibleSection({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   return (
-    <div className="min-h-dvh bg-cream-50">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 pt-[env(safe-area-inset-top)] backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden />
-            Back
-          </Link>
-          <img src={dulekoMark} alt="" className="h-7 w-7 rounded-lg object-cover" />
-          <span className="font-semibold text-slate-900">Duleko</span>
+    <div className="border-b border-slate-100 last:border-0">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between gap-3 py-3.5 text-left transition-colors hover:text-brand-700 sm:py-4"
+        aria-expanded={isOpen}
+      >
+        <span className="min-w-0 text-sm font-medium text-slate-900 sm:text-[15px]">{title}</span>
+        {isOpen ? (
+          <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+        ) : (
+          <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+        )}
+      </button>
+      {isOpen && (
+        <div className={cn("space-y-2.5 pb-4 text-sm leading-relaxed text-slate-700 sm:pb-5 sm:leading-7")}>
+          {children}
         </div>
-      </header>
-
-      <main className="mx-auto max-w-2xl px-5 py-8 text-sm leading-relaxed text-slate-700">
-        <h1 className="mb-1 text-2xl font-bold text-slate-900">Privacy Policy</h1>
-        <p className="mb-8 text-xs text-slate-400">Last updated: September 11, 2026</p>
-
-        <p className="mb-6">
-          Duleko ("we", "us", "our") connects people who need work done with skilled workers
-          nearby. This page explains what information we collect, why, and the choices you have
-          about it.
-        </p>
-
-        <Section title="Information we collect">
-          <ul className="list-disc space-y-1.5 pl-5">
-            <li>
-              <strong>Account information</strong> - your email address, used to sign in and for
-              account-related messages.
-            </li>
-            <li>
-              <strong>Profile information</strong> - your name, photo, bio, skills, and general
-              location (district/locality), which is shown to other users as part of the service.
-            </li>
-            <li>
-              <strong>Precise location</strong> - only if you turn this on. It's used to sort
-              search results by distance and to show your approximate location on your profile.
-              You can turn it off at any time, and it is never collected without your consent.
-            </li>
-            <li>
-              <strong>Messages</strong> - chat messages you send through Duleko, stored so
-              conversations persist between sessions.
-            </li>
-            <li>
-              <strong>Usage information</strong> - basic technical data (like device type and app
-              version) used to keep the service working reliably.
-            </li>
-          </ul>
-        </Section>
-
-        <Section title="How we use this information">
-          <p>We use your information to:</p>
-          <ul className="mt-1.5 list-disc space-y-1.5 pl-5">
-            <li>Operate the core features of Duleko - profiles, search, work requests, and chat</li>
-            <li>Sort search results by distance, when you've shared your location</li>
-            <li>Send you notifications about requests, messages, and reviews</li>
-            <li>Keep the platform safe (e.g. reviewing reports of misuse)</li>
-          </ul>
-          <p className="mt-2">We do not sell your personal information, and we do not use it for advertising.</p>
-        </Section>
-
-        <Section title="Who your information is shared with">
-          <p>
-            Your public profile (name, photo, bio, skills, general location, ratings) is visible
-            to other Duleko users, since that's the point of the service. Precise location and
-            chat messages are only visible to the people you choose to share them with.
-          </p>
-          <p className="mt-2">
-            We use <strong>Supabase</strong> as our backend infrastructure provider (database,
-            authentication, and file storage). They process data on our behalf and don't use it
-            for their own purposes.
-          </p>
-        </Section>
-
-        <Section title="Your choices">
-          <ul className="list-disc space-y-1.5 pl-5">
-            <li>You can edit or remove most profile information at any time from your profile.</li>
-            <li>You can turn location sharing on or off at any time.</li>
-            <li>
-              You can permanently delete your account and associated data from Profile → Delete
-              account.
-            </li>
-          </ul>
-        </Section>
-
-        <Section title="Children's privacy">
-          <p>Duleko is not directed at children, and we do not knowingly collect information from anyone under 13.</p>
-        </Section>
-
-        <Section title="Security">
-          <p>
-            We take reasonable technical and organizational measures to protect your information,
-            but no method of storage or transmission is 100% secure.
-          </p>
-        </Section>
-
-        <Section title="Changes to this policy">
-          <p>
-            If this policy changes, we'll update the date above. Continued use of Duleko after a
-            change means you accept the updated policy.
-          </p>
-        </Section>
-
-        <Section title="Contact us">
-          <p>
-            Questions about this policy or your data? Reach us at{" "}
-            <a href="mailto:dulekonepal@gmail.com" className="font-medium text-brand-700 underline">
-              dulekonepal@gmail.com
-            </a>
-            .
-          </p>
-        </Section>
-      </main>
+      )}
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+export function PrivacyPolicyScreen() {
+  const { t } = useI18n();
   return (
-    <section className="mb-6">
-      <h2 className="mb-2 text-base font-semibold text-slate-900">{title}</h2>
-      {children}
-    </section>
+    <StaticPage title={t("privacyTitle")} subtitle={t("privacyLastUpdated")} icon={ShieldCheck}>
+      <StaticIntro>{t("privacyIntro")}</StaticIntro>
+
+      <Card>
+        <CardBody className="p-4 sm:p-5">
+          <CollapsibleSection title={t("privacyInfoCollectTitle")} defaultOpen={true}>
+            <p>{t("privacyInfoCollectIntro")}</p>
+            <ul className="list-disc space-y-1.5 pl-5">
+              <li>{t("privacyAccountInfo")}</li>
+              <li>{t("privacyProfileInfo")}</li>
+              <li>{t("privacyWorkInfo")}</li>
+              <li>{t("privacyVerificationInfo")}</li>
+              <li>{t("privacyLocationInfo")}</li>
+              <li>{t("privacyTechnicalInfo")}</li>
+            </ul>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500 sm:mt-3">{t("privacyNepalAct")}</p>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={t("privacyWhyUseTitle")}>
+            <p>{t("privacyWhyUseIntro")}</p>
+            <ul className="list-disc space-y-1.5 pl-5">
+              <li>{t("privacyUseCreateAccount")}</li>
+              <li>{t("privacyUseShowWorkers")}</li>
+              <li>{t("privacyUseConnect")}</li>
+              <li>{t("privacyUseLocation")}</li>
+              <li>{t("privacyUseVerify")}</li>
+              <li>{t("privacyUseProcessRequests")}</li>
+              <li>{t("privacyUseDisplayReviews")}</li>
+              <li>{t("privacyUsePreventFraud")}</li>
+              <li>{t("privacyUseImprove")}</li>
+              <li>{t("privacyUseComply")}</li>
+            </ul>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500 sm:mt-3">{t("privacyNoFutureCollection")}</p>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={t("privacyPublicProfileTitle")}>
+            <p>{t("privacyPublicProfileIntro")}</p>
+            <p className="font-medium text-slate-800">{t("privacyPublicProfileItems")}</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">{t("privacyPublicProfileNotice")}</p>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={t("privacyPhoneTitle")}>
+            <p>{t("privacyPhoneIntro")}</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">{t("privacyPhoneNotPublic")}</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">{t("privacyPhoneAccess")}</p>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={t("privacyLocationTitle")}>
+            <p className="font-medium text-brand-700">{t("privacyLocationImportant")}</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">{t("privacyLocationNotPublic")}</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">{t("privacyLocationPermission")}</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">{t("privacyLocationLiveSharing")}</p>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={t("privacyCertificatesTitle")}>
+            <p className="text-xs leading-relaxed text-slate-500">{t("privacyCertificatesNotPublic")}</p>
+            <p className="mt-2">{t("privacyCertificatesDisplay")}</p>
+            <p className="font-medium text-slate-800">{t("privacyVerified")}</p>
+            <p className="font-medium text-slate-800">{t("privacyVerifiedBy")}</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">{t("privacyCertificatesCollect")}</p>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={t("privacySharingTitle")}>
+            <p className="font-medium text-slate-800">{t("privacyNoSell")}</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">{t("privacySharingConditions")}</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">{t("privacyMunicipality")}</p>
+            <p className="mt-2">{t("privacyAggregated")}</p>
+            <p className="whitespace-pre-line font-medium text-slate-800">{t("privacyAggregatedExample")}</p>
+            <p className="text-xs leading-relaxed text-slate-500">{t("privacyNoIndividualDisclosure")}</p>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={t("privacySecurityTitle")}>
+            <p>{t("privacySecurityDesc")}</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">{t("privacyNoAbsoluteSecurity")}</p>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={t("privacyChoicesTitle")}>
+            <p>{t("privacyChoicesIntro")}</p>
+            <ul className="list-disc space-y-1.5 pl-5">
+              <li>{t("privacyChoiceEdit")}</li>
+              <li>{t("privacyChoiceVisibility")}</li>
+              <li>{t("privacyChoiceStopLocation")}</li>
+              <li>{t("privacyChoiceLogout")}</li>
+              <li>{t("privacyChoiceDelete")}</li>
+            </ul>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">{t("privacyChoicesImplementation")}</p>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={t("privacyChangesTitle")}>
+            <p>{t("privacyChangesDesc")}</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">{t("privacyChangesNotice")}</p>
+          </CollapsibleSection>
+        </CardBody>
+      </Card>
+
+      <StaticSection title={t("contactUs")} icon={Mail}>
+        <p>
+          {t("privacyContactQuestion")}{" "}
+          <a href="mailto:dulekonepal@gmail.com" className="font-medium text-brand-700 hover:underline">
+            {t("contactEmail")}
+          </a>
+          .
+        </p>
+      </StaticSection>
+    </StaticPage>
   );
 }

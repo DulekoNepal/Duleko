@@ -16,6 +16,11 @@ import { ChatScreen } from "@/routes/ChatScreen";
 import { ChatsScreen } from "@/routes/ChatsScreen";
 import { ModerationScreen } from "@/routes/ModerationScreen";
 import { PrivacyPolicyScreen } from "@/routes/PrivacyPolicyScreen";
+import { AboutScreen } from "@/routes/AboutScreen";
+import { MissionScreen } from "@/routes/MissionScreen";
+import { MotivationScreen } from "@/routes/MotivationScreen";
+import { RegistrationPolicyScreen } from "@/routes/RegistrationPolicyScreen";
+import { TermsOfUseScreen } from "@/routes/TermsOfUseScreen";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -105,6 +110,36 @@ const privacyRoute = createRoute({
   component: PrivacyPolicyScreen,
 });
 
+const aboutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/about",
+  component: AboutScreen,
+});
+
+const missionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/mission",
+  component: MissionScreen,
+});
+
+const motivationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/motivation",
+  component: MotivationScreen,
+});
+
+const registrationPolicyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/registration-policy",
+  component: RegistrationPolicyScreen,
+});
+
+const termsOfUseRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/terms",
+  component: TermsOfUseScreen,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   searchRoute,
@@ -117,6 +152,11 @@ const routeTree = rootRoute.addChildren([
   chatsRoute,
   moderationRoute,
   privacyRoute,
+  aboutRoute,
+  missionRoute,
+  motivationRoute,
+  registrationPolicyRoute,
+  termsOfUseRoute,
 ]);
 
 export const router = createRouter({
