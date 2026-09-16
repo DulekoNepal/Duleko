@@ -131,7 +131,7 @@ export function OnboardingScreen() {
 
   return (
     <div className="min-h-dvh bg-cream-50">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
           {step > 1 && (
             <button

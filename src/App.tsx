@@ -42,6 +42,10 @@ VITE_SUPABASE_ANON_KEY=eyJhbGci...`}
  */
 const WELCOMED_THIS_SESSION_KEY = "duleko_welcomed_this_session";
 
+/** Fully static pages - no session, no Supabase call - that render for
+ * anyone regardless of auth state. See the early-return below. */
+const STATIC_PATHS = ["/privacy", "/about", "/mission", "/motivation"];
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
   const { toast } = useToast();
@@ -65,11 +69,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isSharedProfileLink = pathname.startsWith("/worker/");
 
   // Fully public, no matter what: an app-store reviewer or a signed-out
-  // visitor following the Play Store listing's privacy link has no session
-  // and shouldn't need one. Every check below this - Supabase configured,
-  // session loading, signed in or not - is irrelevant to a static policy
-  // page, so it renders before any of that runs rather than after.
-  if (pathname === "/privacy") return children;
+  // visitor following a shared link (Play Store listing, site footer) has
+  // no session and shouldn't need one. Every check below this - Supabase
+  // configured, session loading, signed in or not - is irrelevant to a
+  // static page, so it renders before any of that runs rather than after.
+  if (STATIC_PATHS.includes(pathname)) return children;
 
   function enterGuest() {
     setGuestMode(true);

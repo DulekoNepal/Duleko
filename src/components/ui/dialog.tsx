@@ -125,9 +125,13 @@ export function Dialog({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="px-4 py-4">{children}</div>
+        <div className={cn("px-4 pt-4", footer ? "pb-4" : "pb-[calc(1rem+env(safe-area-inset-bottom))]")}>
+          {children}
+        </div>
         {footer && (
-          <div className="sticky bottom-0 border-t border-slate-200 bg-white px-4 py-3">{footer}</div>
+          <div className="sticky bottom-0 border-t border-slate-200 bg-white px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
+            {footer}
+          </div>
         )}
       </div>
     </div>,

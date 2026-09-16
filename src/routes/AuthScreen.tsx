@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { OtpInput } from "@/components/ui/otp-input";
@@ -34,7 +34,7 @@ const OTP_LENGTH = 6;
  * the same three beats - request a code, enter it, then finish the action
  * it unlocked - which is why they share one screen instead of two.
  */
-type View = "auth" | "verify" | "forgotEmail" | "forgotCode" | "forgotPassword";
+type View = "auth" | "verify" | "forgotEmail" | "forgotCode" | "forgotPassword" | "locationConsent";
 
 export function AuthScreen({ onBack }: { onBack?: () => void }) {
   const { t, lang } = useI18n();
@@ -48,7 +48,8 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
-  const [policyOpen, setPolicyOpen] = useState<"terms" | "privacy" | null>(null);
+  const [policyOpen, setPolicyOpen] = useState<"terms" | "privacy" | "registration" | null>(null);
+  const [policiesExpanded, setPoliciesExpanded] = useState(false);
 
   // Shared between the verify-email and forgot-password flows - both are
   // "a code went to this address, now type it back" at heart.
@@ -289,7 +290,7 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-cream-50">
-      <div className="flex items-center justify-between p-4">
+      <div className="flex items-center justify-between p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         {onBack ? (
           <button
             type="button"
@@ -545,7 +546,58 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
                 )}
 
                 {mode === "signup" && (
-                  <p className="mb-3 text-xs leading-relaxed text-slate-500">{t("byCreatingAccountNotice")}</p>
+                  <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <button
+                      type="button"
+                      onClick={() => setPoliciesExpanded(!policiesExpanded)}
+                      className="flex w-full items-center justify-between text-left font-medium text-slate-900 hover:text-brand-700 transition-colors"
+                    >
+                      <span>{t("registrationAgreement")}</span>
+                      {policiesExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </button>
+                    
+                    {policiesExpanded && (
+                      <div className="mt-3 space-y-2 text-sm text-slate-700">
+                        <p>{t("registrationPolicyIntro")}</p>
+                        <div className="space-y-1 pl-2">
+                          <p className="text-xs">• {t("regPolicyGenuineInfo")}</p>
+                          <p className="text-xs">• {t("regPolicyPhoneVerification")}</p>
+                          <p className="text-xs">• {t("regPolicyResponsibleUse")}</p>
+                          <p className="text-xs">• {t("regPolicyTruthfulSkills")}</p>
+                          <p className="text-xs">• {t("regPolicyRespectOthers")}</p>
+                          <p className="text-xs">• {t("regPolicyProtectInfo")}</p>
+                          <p className="text-xs">• {t("regPolicyWorkPayment")}</p>
+                          <p className="text-xs">• {t("regPolicySafetyFirst")}</p>
+                          <p className="text-xs">• {t("regPolicyAccountAction")}</p>
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setPolicyOpen("terms")}
+                            className="text-xs font-medium text-brand-700 underline"
+                          >
+                            {t("termsOfService")}
+                          </button>
+                          <span className="text-xs text-slate-400">•</span>
+                          <button
+                            type="button"
+                            onClick={() => setPolicyOpen("privacy")}
+                            className="text-xs font-medium text-brand-700 underline"
+                          >
+                            {t("privacyPolicy")}
+                          </button>
+                          <span className="text-xs text-slate-400">•</span>
+                          <button
+                            type="button"
+                            onClick={() => setPolicyOpen("registration")}
+                            className="text-xs font-medium text-brand-700 underline"
+                          >
+                            {t("registrationPolicyTitle")}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {mode === "signup" && (
@@ -559,25 +611,7 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
                         if (e.target.checked) setError(null);
                       }}
                     />
-                    <span>
-                      {t("iAgreeToThe")}{" "}
-                      <button
-                        type="button"
-                        onClick={() => setPolicyOpen("terms")}
-                        className="font-medium text-brand-700 underline underline-offset-2"
-                      >
-                        {t("termsOfService")}
-                      </button>{" "}
-                      {lang === "ne" ? "र" : "and"}{" "}
-                      <button
-                        type="button"
-                        onClick={() => setPolicyOpen("privacy")}
-                        className="font-medium text-brand-700 underline underline-offset-2"
-                      >
-                        {t("privacyPolicy")}
-                      </button>
-                      {t("agreeToPoliciesSuffix")}.
-                    </span>
+                    <span>{t("registrationAgreePolicies")}</span>
                   </label>
                 )}
 

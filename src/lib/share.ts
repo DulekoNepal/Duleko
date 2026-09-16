@@ -2,7 +2,15 @@
  * Sharing a profile. Phones get the native share sheet (WhatsApp, Viber,
  * Messenger - how a link actually travels in Nepal); everything else
  * falls back to putting the link on the clipboard.
+ *
+ * @capacitor/share and @capacitor/clipboard are used instead of calling
+ * navigator.share/navigator.clipboard directly: on the web they're a thin
+ * pass-through to those same browser APIs (identical behavior, including
+ * AbortError on a dismissed share sheet), while inside the Android app
+ * they route to the native share sheet and clipboard instead.
  */
+import { Share } from "@capacitor/share";
+import { Clipboard } from "@capacitor/clipboard";
 
 export type ShareResult = "shared" | "cancelled" | "copied" | "failed";
 
@@ -40,15 +48,13 @@ export async function shareProfile(
 ): Promise<ShareResult> {
   const url = profileUrl(handle);
 
-  if (typeof navigator !== "undefined" && navigator.share) {
-    try {
-      await navigator.share({ title, text, url });
-      return "shared";
-    } catch (err) {
-      // Dismissing the share sheet is a normal outcome, not a failure -
-      // falling through to a clipboard copy there would be surprising.
-      if (err instanceof Error && err.name === "AbortError") return "cancelled";
-    }
+  try {
+    await Share.share({ title, text, url });
+    return "shared";
+  } catch (err) {
+    // Dismissing the share sheet is a normal outcome, not a failure -
+    // falling through to a clipboard copy there would be surprising.
+    if (err instanceof Error && err.name === "AbortError") return "cancelled";
   }
 
   return copyLink(url);
@@ -56,7 +62,7 @@ export async function shareProfile(
 
 export async function copyLink(url: string): Promise<ShareResult> {
   try {
-    await navigator.clipboard.writeText(url);
+    await Clipboard.write({ string: url });
     return "copied";
   } catch {
     return "failed";

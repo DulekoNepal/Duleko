@@ -15,6 +15,7 @@ import { useSession } from "@/hooks/use-session";
 import { usePresence } from "@/hooks/use-presence";
 import { useToast } from "@/hooks/use-toast";
 import { SEARCH_PAGE, listSkills, searchWorkers } from "@/lib/queries";
+import { getCurrentPosition } from "@/lib/geolocation";
 import { ALL_DISTRICTS } from "@/lib/nepal";
 import { errorMessage } from "@/lib/supabase";
 import { formatNumber, skillName } from "@/lib/utils";
@@ -47,12 +48,8 @@ export function SearchScreen() {
   const district = filters.district;
 
   function requestNearest(silent = false) {
-    if (!navigator.geolocation) {
-      if (!silent) toast(t("locationPermissionDenied"), "error");
-      return;
-    }
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
+    getCurrentPosition(
       (pos) => {
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setLocating(false);

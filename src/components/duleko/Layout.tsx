@@ -90,7 +90,7 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 border-b border-slate-200 backdrop-blur",
+        "sticky top-0 z-30 border-b border-slate-200 pt-[env(safe-area-inset-top)] backdrop-blur",
         gradient ? "bg-gradient-to-r from-brand-50/60 via-white/95 to-white/95" : "bg-white/95",
       )}
     >

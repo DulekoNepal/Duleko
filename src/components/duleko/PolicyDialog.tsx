@@ -23,13 +23,19 @@ export function PolicyDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  kind: "terms" | "privacy";
+  kind: "terms" | "privacy" | "registration";
 }) {
   const { t, lang } = useI18n();
 
+  const title = kind === "terms" ? t("termsOfService") : 
+                kind === "privacy" ? t("privacyPolicy") : 
+                t("registrationPolicyTitle");
+
   return (
-    <Dialog open={open} onClose={onClose} title={kind === "terms" ? t("termsOfService") : t("privacyPolicy")}>
-      {kind === "terms" ? <TermsContent lang={lang} /> : <PrivacyContent lang={lang} />}
+    <Dialog open={open} onClose={onClose} title={title}>
+      {kind === "terms" ? <TermsContent lang={lang} /> : 
+       kind === "privacy" ? <PrivacyContent lang={lang} /> : 
+       <RegistrationContent lang={lang} />}
     </Dialog>
   );
 }
@@ -437,6 +443,43 @@ function PrivacyFullNe() {
         प्रयोगकर्ताको व्यक्तिगत जानकारी व्यवस्थापन गर्ने तरिकामा महत्त्वपूर्ण असर पार्ने परिवर्तन भएमा, प्रयोगकर्तालाई
         उपयुक्त रूपमा जानकारी दिइन्छ।
       </p>
+    </div>
+  );
+}
+
+function RegistrationContent({ lang }: { lang: "en" | "ne" }) {
+  const { t } = useI18n();
+  return (
+    <div>
+      <p className="mb-3 text-xs text-slate-400">{t("registrationPolicyLastUpdated")}</p>
+      <p className={body}>{t("registrationPolicyIntro")}</p>
+      
+      <h3 className={heading}>{t("regPolicyGenuineInfo").split(".")[0]}</h3>
+      <p className={body}>{t("regPolicyGenuineInfo")}</p>
+      
+      <h3 className={heading}>{t("regPolicyPhoneVerification").split(".")[0]}</h3>
+      <p className={body}>{t("regPolicyPhoneVerification")}</p>
+      
+      <h3 className={heading}>{t("regPolicyResponsibleUse").split(".")[0]}</h3>
+      <p className={body}>{t("regPolicyResponsibleUse")}</p>
+      
+      <h3 className={heading}>{t("regPolicyTruthfulSkills").split(".")[0]}</h3>
+      <p className={body}>{t("regPolicyTruthfulSkills")}</p>
+      
+      <h3 className={heading}>{t("regPolicyRespectOthers").split(".")[0]}</h3>
+      <p className={body}>{t("regPolicyRespectOthers")}</p>
+      
+      <h3 className={heading}>{t("regPolicyProtectInfo").split(".")[0]}</h3>
+      <p className={body}>{t("regPolicyProtectInfo")}</p>
+      
+      <h3 className={heading}>{t("regPolicyWorkPayment").split(".")[0]}</h3>
+      <p className={body}>{t("regPolicyWorkPayment")}</p>
+      
+      <h3 className={heading}>{t("regPolicySafetyFirst").split(".")[0]}</h3>
+      <p className={body}>{t("regPolicySafetyFirst")}</p>
+      
+      <h3 className={heading}>{t("regPolicyAccountAction").split(".")[0]}</h3>
+      <p className={body}>{t("regPolicyAccountAction")}</p>
     </div>
   );
 }

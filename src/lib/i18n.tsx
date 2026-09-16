@@ -496,6 +496,7 @@ const strings = {
   downloadCard: ["Download profile card", "प्रोफाइल कार्ड डाउनलोड गर्नुहोस्"],
   generatingCard: ["Preparing your card…", "तपाईंको कार्ड तयार हुँदैछ…"],
   cardDownloaded: ["Profile card downloaded.", "प्रोफाइल कार्ड डाउनलोड भयो।"],
+  cardReadyToShare: ["Choose where to save your card.", "आफ्नो कार्ड कहाँ सुरक्षित गर्ने रोज्नुहोस्।"],
   profileOptions: ["Profile options", "प्रोफाइल विकल्पहरू"],
   copyLink: ["Copy link", "लिङ्क कपी गर्नुहोस्"],
   linkCopied: ["Profile link copied.", "प्रोफाइल लिङ्क कपी भयो।"],
@@ -667,6 +668,13 @@ const strings = {
   allowLocation: ["Allow Location", "स्थान अनुमति दिनुहोस्"],
   continueAction: ["Continue", "जारी राख्नुहोस्"],
 
+  // Location consent prompt for registration
+  registrationLocationConsentTitle: ["Allow Duleko to use your location?", "के डुलेकोले तपाईंको स्थान प्रयोग गर्न दिनुहुन्छ?"],
+  registrationLocationConsentDesc: [
+    "Your location helps Duleko show relevant people and opportunities nearby. Your precise/live location will not be publicly displayed unless you choose to share it.",
+    "तपाईंको स्थानले डुलेकोलाई नजिकैका प्रासंगिक मानिसहरू र अवसरहरू देखाउन मद्दत गर्छ। तपाईंले साझा गर्ने छनोज नगरेसम्म तपाईंको सटीक/लाइभ स्थान सार्वजनिक रूपमा देखाइँदैन।",
+  ],
+
   // ---- welcome walkthrough ----------------------------------------------
   skip: ["Skip", "छोड्नुहोस्"],
   getStarted: ["Get started", "सुरु गर्नुहोस्"],
@@ -703,6 +711,465 @@ const strings = {
   theirTurn: ["Waiting", "पर्खाइमा"],
   offerFrom: ["Offer from {name}", "{name}को प्रस्ताव"],
   waitingForResponse: ["Waiting for {name} to respond.", "{name}को जवाफको पर्खाइमा।"],
+
+  // ---- static pages (About, Mission, Motivation, Privacy) ---------------
+  navAbout: ["About", "बारेमा"],
+  navMission: ["Mission", "उद्देश्य"],
+  navMotivation: ["Motivation", "प्रेरणा"],
+  navPrivacy: ["Privacy policy", "गोपनीयता नीति"],
+  staticPagesNav: ["Related pages", "सम्बन्धित पृष्ठहरू"],
+  profileStaticPagesHint: [
+    "Learn more about Duleko, our mission, and how we handle your data.",
+    "डुलेको, हाम्रो उद्देश्य, र तपाईंको डेटा कसरी ह्यान्डल हुन्छ भन्ने बारे थप जान्नुहोस्।",
+  ],
+
+  aboutTitle: ["About Duleko", "डुलेकोको बारेमा"],
+  aboutSubtitle: ["Who we are and what we're building", "हामी को हौं र के बनाउँदैछौं"],
+  aboutDescription: [
+    "Duleko is a simple local skills marketplace built for Nepal, connecting people who need work done with skilled workers nearby, tutors, electricians, IT help, drivers, and anyone else with a skill to offer.",
+    "डुलेको नेपालको लागि बनाइएको सरल स्थानीय सीप बजार हो, जसले काम गर्ने मानिसहरूलाई नजिकैका सिपालु कामदार, ट्युटर, इलेक्ट्रिसियन, आईटी सहयोग, चालक, र सीप भएका अन्य कसैसँग जोड्छ।",
+  ],
+  howItWorks: ["How it works", "यस कसरी काम गर्छ"],
+  meetTheTeam: ["Meet the team", "टोली भेट्नुहोस्"],
+  contactUs: ["Contact", "सम्पर्क"],
+  contactEmail: ["dulekonepal@gmail.com", "dulekonepal@gmail.com"],
+  contactQuestion: ["Questions, feedback, or partnership ideas? Reach us at", "प्रश्न, प्रतिक्रिया, वा साझेदारीको विचार? हामीलाई सम्पर्क गर्नुहोस्"],
+
+  // Mission page
+  missionTitle: ["Our mission", "हाम्रो उद्देश्य"],
+  missionSubtitle: ["Why Duleko exists", "डुलेको किन छ"],
+  whatWereBuildingToward: ["What we're building toward", "हामी के तिर बनाउँदैछौं"],
+  missionPrinciple1: [
+    "Any skill, not just a fixed list. Free-typed skills are just as searchable as catalogued ones.",
+    "कुनै पनि सीप, निश्चित सूची मात्र होइन। मुक्त-रूपमा टाइप गरिएका सीपहरू पनि सूचीकृत जस्तै खोज्न सकिन्छ।",
+  ],
+  missionPrinciple2: [
+    "Distance-first search, so the nearest available person is the easiest to find.",
+    "दूरी-पहिले खोज, ताकि नजिकैको उपलब्ध व्यक्ति भेट्न सजिलो होस्।",
+  ],
+  missionPrinciple3: [
+    "Free to join, free to browse. No cost to find work or find workers.",
+    "जोडिन निःशुल्क, हेर्न निःशुल्क। काम वा कामदार खोज्न कुनै खर्च छैन।",
+  ],
+  missionPrinciple4: [
+    "Built bilingual from day one: English and Nepali, equally.",
+    "दिन एकदेखि द्विभाषिक: अंग्रेजी र नेपाली, समान रूपमा।",
+  ],
+  missionPrinciple5: [
+    "Works well even on slower connections, since that is the reality for many people it is meant to serve.",
+    "ढिलो कनेक्सनमा पनि राम्रोसँग काम गर्छ, किनकि यो धेरै मानिसहरूको लागि वास्तविकता हो।",
+  ],
+  yourSkillsOurCommunity: ["Your skills. Our community.", "तपाईंको सीप। हाम्रो समुदाय।"],
+  yourSkillsOurCommunityDesc: [
+    "That is the line on every Duleko profile card, and it is the whole idea in five words: the skills belong to the people who have them, and the platform's only job is to help the right two people find each other.",
+    "हरेक डुलेको प्रोफाइल कार्डमा यही लाइन छ, र यो पाँच शब्दमा सम्पूर्ण विचार हो: सीपहरू ती भएका मानिसहरूकै हुन्, र प्लेटफर्मको एकमात्र काम सही दुई मानिसलाई एकअर्कालाई भेटाउन मद्दत गर्नु हो।",
+  ],
+  missionStatement: [
+    "If someone who isn't technical can't use and understand Duleko, it doesn't matter how well we build.",
+    "यदि प्राविधिक नभएको व्यक्तिले डुलेको प्रयोग र बुझ्न सकेन भने, हामीले कति राम्रो बनाए पनि केही मात्र हुँदैन।",
+  ],
+  missionStatementDesc: [
+    "That is the bar for every screen we ship. Duleko is for people who need work done and people who do the work, not for people who build software. In most communities in Nepal, finding local work, or finding someone to do it, still happens by word of mouth. Duleko exists to make that connection direct, and clear enough that anyone can use it.",
+    "हामीले पठाउने हरेक स्क्रिनको मापदण्ड यही हो। डुलेको काम गराउने र काम गर्ने मानिसहरूका लागि हो, सफ्टवेयर बनाउनेहरूका लागि होइन। नेपालका धेरै समुदायहरूमा स्थानीय काम खोज्ने वा त्यो गर्न कसैलाई भेट्टाउने अझै शब्दको माध्यमबाट हुन्छ। डुलेको त्यो जोडाई सिधै बनाउन, र जो कोहीले बुझेर प्रयोग गर्न सक्ने बनाउन छ।",
+  ],
+
+  // Motivation page
+  motivationTitle: ["Why we built Duleko", "हामीले डुलेको किन बनायौं"],
+  motivationSubtitle: ["In the founders' own words", "संस्थापकहरूकै शब्दहरूमा"],
+  motivationIntro: [
+    "Duleko started from a plain observation: skilled people and the people who need them are usually close by, but there is no easy way for them to find each other beyond asking around. In Nepal's local communities, that gap costs both sides time, whether it is a worker who could use the job or an employer who could use the help.",
+    "डुलेको एउटा सामान्य अवलोकनबाट सुरु भयो: सिपालु मानिसहरू र तिनीहरूलाई चाहिने मानिसहरू सामान्यतया नजिकै हुन्छन्, तर वरिपरि सोध्नु बाहेक तिनीहरूलाई एकअर्कालाई भेट्टाउन कुनै सजिलो तरिका छैन। नेपालका स्थानीय समुदायहरूमा, त्यो खाडलले दुवैपट्टिलाई समय खर्च गराउँछ, चाहे काम चाहिने कामदार होस् वा सहयोग चाहिने काम दिने होस्।",
+  ],
+  straightFromTheTeam: ["Straight from the team", "टोलीबाट सिधै"],
+  whatKeepsUsBuilding: ["What keeps us building", "हामीलाई के बनाउँदै राख्छ"],
+  whatKeepsUsBuildingDesc: [
+    "Every real profile on Duleko (a tutor listing their rate, a worker marking which days they are free, an employer sending a work request instead of making a dozen phone calls) is the actual reason this exists. Not to be another app, but to make one specific thing easier for people who should not need to be technical to use it.",
+    "डुलेकोमा हरेक वास्तविक प्रोफाइल (ट्युटरले आफ्नो दर राख्ने, कामदारले कुन दिन खाली छ चिन्ह लगाउने, काम दिनेले दर्जनौं फोन नगरी काम अनुरोध पठाउने) यो अस्तित्वमा रहनको वास्तविक कारण हो। अर्को ऐप हुन नभई, प्राविधिक नभए पनि प्रयोग गर्न सकिने गरी एउटा खास कुरा सजिलो बनाउनु।",
+  ],
+
+  // Privacy policy page
+  privacyTitle: ["Privacy policy", "गोपनीयता नीति"],
+  privacyLastUpdated: ["Last updated: September 2026", "अन्तिम अद्यावधिक: सेप्टेम्बर २०२६"],
+  privacyIntro: [
+    "Welcome to Duleko. Duleko helps people discover skills, connect with people nearby, and find or offer work opportunities.",
+    "डुलेकोमा स्वागत छ। डुलेकोले मानिसहरूलाई सीपहरू खोज्न, नजिकैका मानिसहरूसँग जोड्न, र कामको अवसर खोज्न वा प्रस्ताव गर्न मद्दत गर्छ।",
+  ],
+
+  // Information we collect
+  privacyInfoCollectTitle: ["1. Information we collect", "१. हामीले संकलन गर्ने जानकारी"],
+  privacyInfoCollectIntro: [
+    "Depending on the features a user chooses to use, Duleko may collect:",
+    "प्रयोगकर्ताले प्रयोग गर्ने सुविधाहरूको आधारमा, डुलेकोले निम्न जानकारी संकलन गर्न सक्छ:",
+  ],
+  privacyAccountInfo: ["Account information: name, mobile number and authentication information.", "खाता जानकारी: नाम, मोबाइल नम्बर र प्रमाणीकरण जानकारी।"],
+  privacyProfileInfo: ["Profile information: photograph, skills, description, rates, general address/location and availability.", "प्रोफाइल जानकारी: फोटो, सीपहरू, विवरण, दरहरू, सामान्य ठेगाना/स्थान र उपलब्धता।"],
+  privacyWorkInfo: ["Work information: work requests, accepted/completed work, cancellations and reviews.", "काम जानकारी: कामको अनुरोध, स्वीकृत/पूरा गरिएको काम, रद्द र समीक्षाहरू।"],
+  privacyVerificationInfo: ["Verification information: certificates or other documents voluntarily submitted for verification.", "प्रमाणीकरण जानकारी: प्रमाणीकरणको लागि स्वेच्छिक रूपमा पेश गरिएका प्रमाणपत्र वा अन्य कागजातहरू।"],
+  privacyLocationInfo: ["Location information: approximate or precise device location when the user gives permission to a feature requiring it.", "स्थान जानकारी: प्रयोगकर्ताले आवश्यक सुविधालाई अनुमति दिँदा उपकरणको अनुमानित वा सटीक स्थान।"],
+  privacyTechnicalInfo: ["Technical information: information reasonably necessary for security, authentication, troubleshooting and operation of Duleko.", "प्राविधिक जानकारी: सुरक्षा, प्रमाणीकरण, समस्या समाधान र डुलेकोको सञ्चालनको लागि उचित रूपमा आवश्यक जानकारी।"],
+  privacyNepalAct: [
+    "Nepal's Privacy Act expressly regulates personal information and privacy, so Duleko should treat collection, storage and disclosure of these data as a core compliance issue rather than merely an app setting.",
+    "नेपालको गोपनीयता ऐनले व्यक्तिगत जानकारी र गोपनीयतालाई स्पष्ट रूपमा नियमन गर्छ, त्यसैले डुलेकोले यी डेटाहरूको संकलन, भण्डारण र प्रकटीकरणलाई मात्र एक ऐप सेटिङको रूपमा होइन, तर एक मुख्य अनुपालन मुद्दाको रूपमा व्यवहार गर्नुपर्छ।",
+  ],
+
+  // Why We Use This Information
+  privacyWhyUseTitle: ["2. Why we use this information", "२. हामी यो जानकारी किन प्रयोग गर्छौं"],
+  privacyWhyUseIntro: ["Duleko may use information to:", "डुलेकोले जानकारी प्रयोग गर्न सक्छ:"],
+  privacyUseCreateAccount: ["Create and maintain accounts", "खाताहरू सिर्जना र सम्हाल्न"],
+  privacyUseShowWorkers: ["Show users relevant workers and skills", "प्रयोगकर्ताहरूलाई प्रासंगिक कामदार र सीपहरू देखाउन"],
+  privacyUseConnect: ["Enable users to connect", "प्रयोगकर्ताहरूलाई जोड्न सक्ने बनाउन"],
+  privacyUseLocation: ["Provide location-based discovery", "स्थान-आधारित खोज प्रदान गर्न"],
+  privacyUseVerify: ["Verify users or qualifications", "प्रयोगकर्ता वा योग्यताहरू प्रमाणित गर्न"],
+  privacyUseProcessRequests: ["Process work requests", "कामको अनुरोधहरू प्रक्रिया गर्न"],
+  privacyUseDisplayReviews: ["Display ratings and reviews", "रेटिङ र समीक्षाहरू प्रदर्शन गर्न"],
+  privacyUsePreventFraud: ["Prevent fraud and misuse", "ठगी र दुरुपयोग रोक्न"],
+  privacyUseImprove: ["Improve Duleko", "डुलेको सुधार गर्न"],
+  privacyUseComply: ["Comply with applicable Nepalese law", "लागू नेपाली कानून अनुपालन गर्न"],
+  privacyNoFutureCollection: ["We should not collect personal information simply because it might become useful later.", "हामीले केवल भविष्यमा उपयोगी हुन सक्छ भनेर व्यक्तिगत जानकारी संकलन गर्नु हुँदैन।"],
+
+  // Public Profile Information
+  privacyPublicProfileTitle: ["3. Public profile information", "३. सार्वजनिक प्रोफाइल जानकारी"],
+  privacyPublicProfileIntro: [
+    "Some information is intended to be visible to other Duleko users or visitors, such as:",
+    "केही जानकारी अन्य डुलेको प्रयोगकर्ता वा आगन्तुकहरूलाई देखिने उद्देश्यले राखिएको छ, जस्तै:",
+  ],
+  privacyPublicProfileItems: [
+    "Name • profile photo • skills • expected rates • general location • availability • ratings • verification status",
+    "नाम • प्रोफाइल फोटो • सीपहरू • अपेक्षित दरहरू • सामान्य स्थान • उपलब्धता • रेटिङ • प्रमाणीकरण स्थिति",
+  ],
+  privacyPublicProfileNotice: [
+    "Users should be clearly informed which information will become public before publishing their profile.",
+    "प्रयोगकर्ताहरूलाई आफ्नो प्रोफाइल प्रकाशित गर्नुअघि कुन जानकारी सार्वजनिक हुने भनेर स्पष्ट रूपमा जानकारी दिनुपर्छ।",
+  ],
+
+  // Phone Numbers
+  privacyPhoneTitle: ["4. Phone numbers", "४. फोन नम्बरहरू"],
+  privacyPhoneIntro: [
+    "A user's mobile number is collected for account verification and communication.",
+    "प्रयोगकर्ताको मोबाइल नम्बर खाता प्रमाणीकरण र सञ्चारको लागि संकलन गरिन्छ।",
+  ],
+  privacyPhoneNotPublic: [
+    "Duleko should not make phone numbers openly available to anonymous visitors.",
+    "डुलेकोले फोन नम्बरहरूलाई अनाम आगन्तुकहरूलाई खुला रूपमा उपलब्ध गर्नु हुँदैन।",
+  ],
+  privacyPhoneAccess: [
+    "Where Duleko enables users to call or contact each other, access should follow Duleko's account and privacy controls.",
+    "जहाँ डुलेकोले प्रयोगकर्ताहरूलाई एकअर्कालाई कल वा सम्पर्क गर्न सक्ने बनाउँछ, पहुँचले डुलेकोको खाता र गोपनीयता नियन्त्रणहरू पछ्याउनुपर्छ।",
+  ],
+
+  // Location and Live Location
+  privacyLocationTitle: ["5. Location and live location", "५. स्थान र लाइभ स्थान"],
+  privacyLocationImportant: ["This section is especially important for Duleko.", "यो खण्ड डुलेकोको लागि विशेष गरी महत्त्वपूर्ण छ।"],
+  privacyLocationNotPublic: [
+    "A user's exact or live location should never become publicly visible merely because they created an account.",
+    "प्रयोगकर्ताको सटीक वा लाइभ स्थाले कहिल्यै मात्र खाता सिर्जना गरेकैले सार्वजनिक रूपमा देखिने हुनु हुँदैन।",
+  ],
+  privacyLocationPermission: [
+    "Location access should be permission-based. Where possible, public discovery should display an approximate area or distance rather than exact coordinates.",
+    "स्थान पहुँच अनुमति-आधारित हुनुपर्छ। सम्भव भए सम्म, सार्वजनिक खोजले सटीक निर्देशांकको सट्टा अनुमानित क्षेत्र वा दूरी प्रदर्शन गर्नुपर्छ।",
+  ],
+  privacyLocationLiveSharing: [
+    "If Duleko introduces live-location sharing, the user should knowingly activate it and be able to stop sharing it.",
+    "यदि डुलेकोले लाइभ-स्थान साझेदारी प्रस्तुत गर्छ भने, प्रयोगकर्ताले जानीजानी यसलाई सक्रिय गर्नुपर्छ र साझेदारी रोक्न सक्नुपर्छ।",
+  ],
+
+  // Certificates and Verification
+  privacyCertificatesTitle: ["6. Certificates and verification", "६. प्रमाणपत्र र प्रमाणीकरण"],
+  privacyCertificatesNotPublic: [
+    "Certificates submitted for verification should not automatically become publicly downloadable documents.",
+    "प्रमाणीकरणको लागि पेश गरिएका प्रमाणपत्रहरू स्वचालित रूपमा सार्वजनिक रूपमा डाउनलोड गर्न मिल्ने कागजातहरू बन्नु हुँदैन।",
+  ],
+  privacyCertificatesDisplay: [
+    "Duleko may instead display information such as:",
+    "डुलेकोले सट्टा यस्तो जानकारी प्रदर्शन गर्न सक्छ:",
+  ],
+  privacyVerified: ["✓ Training Verified", "✓ तालिम प्रमाणित"],
+  privacyVerifiedBy: ["Verified by [Municipality/Training Institution]", "[नगरपालिका/तालिम संस्था] द्वारा प्रमाणित"],
+  privacyCertificatesCollect: [
+    "Duleko should collect and retain only the verification information reasonably necessary for this purpose.",
+    "डुलेकोले यो उद्देश्यको लागि उचित रूपमा आवश्यक प्रमाणीकरण जानकारी मात्र संकलन र राख्नुपर्छ।",
+  ],
+
+  // Sharing Information
+  privacySharingTitle: ["7. Sharing information", "७. जानकारी साझा गर्ने"],
+  privacyNoSell: [
+    "Duleko should not sell users' personal information.",
+    "डुलेकोले प्रयोगकर्ताहरूको व्यक्तिगत जानकारी बेच्नु हुँदैन।",
+  ],
+  privacySharingConditions: [
+    "Information may be shared only where reasonably necessary to operate Duleko, where the user has authorized the sharing, with service providers needed to operate the platform subject to appropriate safeguards, or where disclosure is required by applicable law.",
+    "जानकारी केवल डुलेको सञ्चालन गर्न उचित रूपमा आवश्यक भएता, प्रयोगकर्ताले साझेदारीलाई अनुमति दिएको ठाउँमा, उपयुक्त सुरक्षाको अधीनमा प्लेटफर्म सञ्चालन गर्न आवश्यक सेवा प्रदायकहरूसँग, वा लागू कानूनले आवश्यक गरेको ठाउँमा मात्र साझा गर्न सकिन्छ।",
+  ],
+  privacyMunicipality: [
+    "A municipality partnering with Duleko should not automatically receive individual users' private information simply because it promotes or verifies people on the platform.",
+    "डुलेकोसँग साझेदार गरेको नगरपालिकाले केवल प्लेटफर्ममा मानिसहरूलाई प्रवर्द्धन वा प्रमाणित गर्छ भनेर व्यक्तिगत प्रयोगकर्ताहरूको निजी जानकारी स्वचालित रूपमा प्राप्त गर्नु हुँदैन।",
+  ],
+  privacyAggregated: [
+    "For reporting purposes, Duleko should preferably provide aggregated information such as:",
+    "रिपोर्टिङको उद्देश्यको लागि, डुलेकोले प्राथमिकताका साथ समगु जानकारी प्रदान गर्नुपर्छ, जस्तै:",
+  ],
+  privacyAggregatedExample: [
+    "247 trained people registered\n163 received work opportunities\n92 completed work",
+    "२४७ जना प्रशिक्षित व्यक्ति दर्ता भए\n१६३ जनाले कामको अवसर पाए\n९२ जनाले काम पूरा गरे",
+  ],
+  privacyNoIndividualDisclosure: [
+    "rather than disclosing individual people's private activity.",
+    "व्यक्तिगत मानिसहरूको निजी गतिविधि प्रकट गर्नुको सट्टा।",
+  ],
+
+  // Data Security
+  privacySecurityTitle: ["8. Data security", "८. डेटा सुरक्षा"],
+  privacySecurityDesc: [
+    "Duleko will take reasonable technical and organizational measures to protect personal information from unauthorized access, disclosure, alteration, loss, or misuse.",
+    "डुलेकोले व्यक्तिगत जानकारीलाई अनाधिकृत पहुँच, प्रकटीकरण, परिवर्तन, हराउने, वा दुरुपयोगबाट बचाउन उचित प्राविधिक र संगठनात्मक उपायहरू लिनेछ।",
+  ],
+  privacyNoAbsoluteSecurity: [
+    "No online system can guarantee absolute security.",
+    "कुनै पनि अनलाइन प्रणालीले पूर्ण सुरक्षा ग्यारेन्टी दिन सक्दैन।",
+  ],
+
+  // User Choices
+  privacyChoicesTitle: ["9. User choices", "९. प्रयोगकर्ता विकल्पहरू"],
+  privacyChoicesIntro: [
+    "Users should be provided reasonable ways to:",
+    "प्रयोगकर्ताहरूलाई उचित तरिकाहरू प्रदान गर्नुपर्छ:",
+  ],
+  privacyChoiceEdit: ["Edit their information", "आफ्नो जानकारी सम्पादन गर्न"],
+  privacyChoiceVisibility: ["Control relevant visibility and location permissions", "प्रासंगिक दृश्यता र स्थान अनुमतिहरू नियन्त्रण गर्न"],
+  privacyChoiceStopLocation: ["Stop live-location sharing", "लाइभ-स्थान साझेदारी रोक्न"],
+  privacyChoiceLogout: ["Log out", "लग आउट गर्न"],
+  privacyChoiceDelete: ["Request account deletion", "खाता मेटाउन अनुरोध गर्न"],
+  privacyChoicesImplementation: [
+    "The engineering implementation should actually support the rights and choices promised in this policy.",
+    "इन्जिनियरिङ कार्यान्वयनले यस नीतिमा वाचा गरिएका अधिकार र विकल्पहरूलाई वास्तवमा समर्थन गर्नुपर्छ।",
+  ],
+
+  // Changes to Policy
+  privacyChangesTitle: ["10. Changes to this policy", "१०. यो नीतिमा परिवर्तन"],
+  privacyChangesDesc: [
+    "Duleko may update this Privacy Policy as the platform develops or legal requirements change.",
+    "डुलेकोले प्लेटफर्म विकास हुँदा वा कानूनी आवश्यकताहरू परिवर्तन हुँदा यो गोपनीयता नीति अद्यावधिक गर्न सक्छ।",
+  ],
+  privacyChangesNotice: [
+    "Where a material change significantly affects how users' personal information is handled, users should be appropriately informed.",
+    "जहाँ एउटा महत्त्वपूर्ण परिवर्तनले प्रयोगकर्ताहरूको व्यक्तिगत जानकारी कसरी ह्यान्डल गरिन्छ भन्ने कुरालाई महत्त्वपूर्ण रूपमा असर गर्छ, प्रयोगकर्ताहरूलाई उपयुक्त रूपमा जानकारी दिनुपर्छ।",
+  ],
+
+  // Contact
+  privacyContactQuestion: ["Questions about this policy or your data? Reach us at", "यो नीति वा तपाईंको डेटाको बारेमा प्रश्न? हामीलाई सम्पर्क गर्नुहोस्"],
+
+  // User Registration Policy
+  registrationPolicyTitle: ["Duleko User Registration Policy", "डुलेको प्रयोगकर्ता दर्ता नीति"],
+  registrationPolicyLastUpdated: ["Last updated: September 2026", "अन्तिम अद्यावधिक: सेप्टेम्बर २०२६"],
+  registrationPolicyIntro: [
+    "Welcome to Duleko. Duleko helps people discover skills, connect with people nearby, and find or offer work opportunities. By creating an account, you agree to the following:",
+    "डुलेकोमा स्वागत छ। डुलेकोले मानिसहरूलाई सीपहरू खोज्न, नजिकैका मानिसहरूसँग जोड्न, र कामको अवसर खोज्न वा प्रस्ताव गर्न मद्दत गर्छ। खाता सिर्जना गरेर, तपाईं निम्नलाई स्वीकार गर्नुहुन्छ:",
+  ],
+  regPolicyGenuineInfo: [
+    "Provide genuine information. Use accurate information about yourself, your skills, experience, location, rates, and qualifications. Do not impersonate another person or provide false certificates or credentials.",
+    "सही जानकारी प्रदान गर्नुहोस्। आफ्नो बारेमा, सीप, अनुभव, स्थान, दर, र योग्यताको बारेमा सटीक जानकारी प्रयोग गर्नुहोस्। अर्को व्यक्तिको नक्कल नगर्नुहोस् वा नक्कली प्रमाणपत्र वा प्रमाणपत्र प्रदान नगर्नुहोस्।",
+  ],
+  regPolicyPhoneVerification: [
+    "Phone verification is required. Every registered account must have a verified phone number. One person should not create multiple accounts for misleading, fraudulent, or abusive purposes.",
+    "फोन प्रमाणीकरण आवश्यक छ। हरेक दर्ता गरिएको खातामा प्रमाणित फोन नम्बर हुनुपर्छ। एक व्यक्तिले भ्रामक, ठगी, वा दुरुपयोगको उद्देश्यका लागि धेरै खाता सिर्जना गर्नु हुँदैन।",
+  ],
+  regPolicyResponsibleUse: [
+    "Use Duleko responsibly. Duleko may not be used for scams, harassment, discrimination, illegal activities, exploitation, or activities that could harm other users.",
+    "डुलेको जिम्मेवारीपूर्वक प्रयोग गर्नुहोस्। डुलेको ठगी, दुर्व्यवहार, भेदभाव, गैरकानूनी गतिविधि, शोषण, वा अन्य प्रयोगकर्ताहरूलाई हानि पुर्याउने गतिविधिहरूको लागि प्रयोग हुनु हुँदैन।",
+  ],
+  regPolicyTruthfulSkills: [
+    "Be truthful about your skills. Only list skills you can reasonably perform. A skill listed by a user does not automatically mean that Duleko has verified that person's qualifications. Verified credentials will be clearly identified separately.",
+    "आफ्नो सीपहरूको बारेमा सत्य हुनुहोस्। तपाईं वास्तवमा गर्न सक्ने सीपहरू मात्र सूचीमा राख्नुहोस्। प्रयोगकर्ताले सूचीमा राखेको सीपले डुलेकोले त्यो व्यक्तिको योग्यता प्रमाणित गरेको जनाउँदैन। प्रमाणित प्रमाणपत्रहरू छुट्टै स्पष्ट रूपमा पहिचान गरिनेछ।",
+  ],
+  regPolicyRespectOthers: [
+    "Respect other users. Work requests, communication, cancellations, payments, and reviews should be made respectfully and truthfully. Users should not intentionally mislead or take advantage of one another.",
+    "अन्य प्रयोगकर्ताहरूलाई सम्मान गर्नुहोस्। कामको अनुरोध, सञ्चार, रद्द, भुक्तानी, र समीक्षाहरू सम्मानजनक र सत्य रूपमा गर्नुपर्छ। प्रयोगकर्ताहरूले एकअर्कालाई जानीजानी भ्रमित वा फाइदा उठाउनु हुँदैन।",
+  ],
+  regPolicyProtectInfo: [
+    "Protect personal information. Some profile information may be visible to people exploring Duleko. Sensitive information such as your phone number, exact/live location, and other private information should only be shared according to Duleko's privacy and contact settings.",
+    "व्यक्तिगत जानकारी सुरक्षित गर्नुहोस्। केही प्रोफाइल जानकारी डुलेको हेर्ने मानिसहरूलाई देखिन सक्छ। तपाईंको फोन नम्बर, सटीक/लाइभ स्थान, र अन्य निजी जानकारी जस्ता संवेदनशील जानकारी डुलेकोको गोपनीयता र सम्पर्क सेटिङ अनुसार मात्र सा�-shared गर्नुपर्छ।",
+  ],
+  regPolicyWorkPayment: [
+    "Work and payment responsibility. Duleko helps people connect; it does not guarantee the quality, safety, completion, price, or payment of work arranged between users unless explicitly stated otherwise.",
+    "काम र भुक्तानीको जिम्मेवारी। डुलेकोले मानिसहरूलाई जोड्न मद्दत गर्छ; यसले प्रयोगकर्ताहरू बीच मिलेको कामको गुणस्तर, सुरक्षा, पूरा हुने, मूल्य, वा भुक्तानीको ग्यारेन्टी दिँदैन जब सम्म स्पष्ट रूपमा भनिएको छैन।",
+  ],
+  regPolicySafetyFirst: [
+    "Safety comes first. Users are responsible for using reasonable judgment before meeting, hiring, or working with another person. Suspicious, unsafe, or inappropriate behavior should be reported to Duleko.",
+    "सुरक्षा पहिले आउँछ। प्रयोगकर्ताहरूले कसैलाई भेट्नु, काममा राख्नु, वा सँगै काम गर्नुअघि उचित सतर्कता अपनाउने जिम्मेवार छन्। शंकास्पद, असुरक्षित, वा अनुपयुक्त व्यवहार डुलेकोलाई जानकारी दिनुपर्छ।",
+  ],
+  regPolicyAccountAction: [
+    "Account action. Duleko may restrict or suspend accounts involved in fraud, fake credentials, repeated harmful behavior, serious policy violations, or activities that threaten the safety of the community.",
+    "खाता कारबाही। डुलेकोले ठगी, नक्कली प्रमाणपत्र, बारम्बार हानिकारक व्यवहार, गम्भीर नीति उल्लंघन, वा समुदायको सुरक्षालाई खतरा पैदा गर्ने गतिविधिहरूमा संलग्न खाताहरू रोक्न वा निलम्बन गर्न सकिन्छ।",
+  ],
+  registrationAgreement: [
+    "Registration Agreement",
+    "दर्ता सम्झौता",
+  ],
+  registrationAgreementIntro: [
+    "Before creating the account:",
+    "खाता सिर्जना गर्नुअघि:",
+  ],
+  registrationAgreePolicies: [
+    "I have read and agree to Duleko's Terms, Privacy Policy, and User Registration Policy.",
+    "मैले डुलेको सर्तहरू, गोपनीयता नीति, र प्रयोगकर्ता दर्ता नीति पढेको छु र स्वीकार गर्छु।",
+  ],
+  createAccount: ["Create Account", "खाता सिर्जना गर्नुहोस्"],
+
+  // Terms of Use
+  termsTitle: ["DULEKO – TERMS OF USE & USER POLICY", "डुलेको – प्रयोगका सर्तहरू र प्रयोगकर्ता नीति"],
+  termsEffectiveDate: ["Effective Date: September 2026", "प्रभावकाली मिति: सेप्टेम्बर २०२६"],
+  termsJurisdiction: ["Applicable Jurisdiction: Nepal", "लागू अधिकार क्षेत्र: नेपाल"],
+  
+  termsAboutTitle: ["1. About Duleko", "१. डुलेकोको बारेमा"],
+  termsAboutDesc: [
+    "Duleko is a digital platform that helps people discover, offer, and connect around skills and local work opportunities.",
+    "डुलेको एक डिजिटल प्लेटफर्म हो जसले मानिसहरूलाई सीपहरू र स्थानीय कामको अवसरहरू खोज्न, प्रस्ताव गर्न, र तिनीहरू वरिपरि जोडिन मद्दत गर्छ।",
+  ],
+  termsNotEmployer: [
+    "Duleko itself is not the employer of users listed on the platform and, unless specifically stated otherwise, is not a party to agreements made between users regarding work, wages, transportation, delivery, or other services.",
+    "डुलेको आफैं प्लेटफर्ममा सूचीकृत प्रयोगकर्ताहरूको नियोक्ता होइन, र जब सम्म स्पष्ट रूपमा भनिएको छैन, यो काम, मजदुरी, यातायात, डेलिभरी, वा अन्य सेवाहरू सम्बन्धी प्रयोगकर्ताहरू बीच गरिएका सम्झौताहरूको पक्ष होइन।",
+  ],
+
+  termsCreatingAccountTitle: ["2. Creating an Account", "२. खाता सिर्जना गर्ने"],
+  termsCreatingAccountDesc: [
+    "To create a Duleko account, users must provide accurate information and verify their mobile number through OTP.",
+    "डुलेको खाता सिर्जना गर्न, प्रयोगकर्ताहरूले सटीक जानकारी प्रदान गर्नुपर्छ र OTP मार्फत आफ्नो मोबाइल नम्बर प्रमाणित गर्नुपर्छ।",
+  ],
+  termsMustNot: ["Users must not:", "प्रयोगकर्ताहरूले यी गर्नु हुँदैन:"],
+  termsMustNotImpersonate: ["impersonate another person;", "अर्को व्यक्तिको नक्कल गर्नु;"],
+  termsMustNotFraud: ["create accounts for fraudulent purposes;", "ठगीको उद्देश्यका लागि खाताहरू सिर्जना गर्नु;"],
+  termsMustNotFalseInfo: ["provide intentionally false information;", "जानीजानी गलत जानकारी प्रदान गर्नु;"],
+  termsMustNotFakeCerts: ["upload fake certificates or qualifications;", "नक्कली प्रमाणपत्र वा योग्यताहरू अपलोड गर्नु;"],
+  termsMustNotMisuseInfo: ["misuse another person's phone number, photograph, identity, or personal information.", "अर्को व्यक्तिको फोन नम्बर, फोटो, परिचय, वा व्यक्तिगत जानकारीको दुरुपयोग गर्नु।"],
+  termsAccountResponsibility: [
+    "Users are responsible for activity conducted through their accounts.",
+    "प्रयोगकर्ताहरू आफ्ना खाताहरू मार्फत गरिएका गतिविधिको लागि जिम्मेवार छन्।",
+  ],
+
+  termsSkillsTitle: ["3. Skills and Qualifications", "३. सीपहरू र योग्यताहरू"],
+  termsSkillsDesc: [
+    "Users may list skills they are capable of performing.",
+    "प्रयोगकर्ताहरूले आफू गर्न सक्ने सीपहरू सूचीमा राख्न सक्छन्।",
+  ],
+  termsNotVerified: [
+    "Simply listing a skill on Duleko does not mean Duleko has verified that skill.",
+    "डुलेकोमा सीप सूचीमा राख्नाले मात्र डुलेकोले त्यो सीप प्रमाणित गरेको जनाउँदैन।",
+  ],
+  termsVerificationIndicator: [
+    "Where Duleko, a municipality, training institution, or another authorized organization has verified a certificate or qualification, the profile may display a separate verification indicator.",
+    "जहाँ डुलेको, नगरपालिका, तालिम संस्था, वा अन्य अधिकृत संगठनले प्रमाणपत्र वा योग्यता प्रमाणित गरेको छ, प्रोफाइलमा छुट्टै प्रमाणीकरण संकेत प्रदर्शन हुन सक्छ।",
+  ],
+  termsNoFalseClaims: [
+    "Users must not falsely claim professional qualifications or certifications.",
+    "प्रयोगकर्ताहरूले व्यावसायिक योग्यता वा प्रमाणपत्रहरू गलत रूपमा दाबी गर्नु हुँदैन।",
+  ],
+
+  termsWorkArrangementsTitle: ["4. Work Arrangements", "४. कामको व्यवस्था"],
+  termsWorkArrangementsDesc: [
+    "Users may contact one another and arrange work through Duleko.",
+    "प्रयोगकर्ताहरूले एकअर्कालाई सम्पर्क गर्न सक्छन् र डुलेको मार्फत काम व्यवस्था गर्न सक्छन्।",
+  ],
+  termsUnlessStated: [
+    "Unless Duleko explicitly states otherwise, the worker and hirer are responsible for agreeing on:",
+    "डुलेकोले स्पष्ट रूपमा भनेको बाहेक, कामदार र काम दिनेले निम्नमा सहमत हुने जिम्मेवार छन्:",
+  ],
+  termsWorkAgreement: [
+    "the work → location → time → price/wage → payment method → other conditions.",
+    "काम → स्थान → समय → मूल्य/मजदुरी → भुक्तानी विधि → अन्य शर्तहरू।",
+  ],
+  termsNoGuarantee: [
+    "Duleko does not guarantee that a user will receive work, that a worker will perform work satisfactorily, or that another user will make payment.",
+    "डुलेकोले प्रयोगकर्ताले काम पाउने, कामदारले काम सन्तुष्टिकरण रूपमा गर्ने, वा अर्को प्रयोगकर्ताले भुक्तानी गर्ने ग्यारेन्टी दिँदैन।",
+  ],
+  termsUseJudgment: [
+    "Users should use reasonable judgment before meeting or entering into a work arrangement.",
+    "प्रयोगकर्ताहरूले भेट्नु वा कामको व्यवस्था गर्नुअघि उचित सतर्कता अपनाउनुपर्छ।",
+  ],
+
+  termsRatesPaymentsTitle: ["5. Rates and Payments", "५. दर र भुक्तानीहरू"],
+  termsRatesDesc: [
+    "Rates displayed on profiles are the user's stated or expected rates and may not represent a final agreed price.",
+    "प्रोफाइलहरूमा देखाइएका दरहरू प्रयोगकर्ताको जनाइएको वा अपेक्षित दरहरू हुन् र अन्तिम सहमत मूल्य प्रतिनिधित्व गर्न सक्दैन।",
+  ],
+  termsNoIntegratedPayment: [
+    "Unless Duleko later introduces an integrated payment service, payments are made directly between users and Duleko does not hold, transfer, or guarantee those payments.",
+    "डुलेकोले पछि एकीकृत भुक्तानी सेवा प्रस्तुत नगरेसम्म, भुक्तानीहरू प्रयोगकर्ताहरू बीच सिधै गरिन्छ र डुलेकोले ती भुक्तानीहरू थाम्दैन, सार्नदैन, वा ग्यारेन्टी दिँदैन।",
+  ],
+
+  termsReviewsTitle: ["6. Reviews", "६. समीक्षाहरू"],
+  termsReviewsDesc: [
+    "Users may be permitted to review people with whom they have completed work.",
+    "प्रयोगकर्ताहरूलाई आफूसँग काम गरिसकेका मानिसहरूको समीक्षा गर्न अनुमति दिइन सक्छ।",
+  ],
+  termsReviewsGenuine: [
+    "Reviews must reflect genuine experiences. Fake, abusive, discriminatory, threatening, or intentionally misleading reviews may be removed.",
+    "समीक्षाहरूले वास्तविक अनुभवहरू प्रतिबिम्बित गर्नुपर्छ। नक्कली, दुरुपयोग गर्ने, भेदभावपूर्ण, धम्की दिने, वा जानीजानी भ्रामक समीक्षाहरू हटाउन सकिन्छ।",
+  ],
+  termsReviewsDistinction: [
+    "Duleko may distinguish a user's reputation as a worker from their reputation as a hirer.",
+    "डुलेकोले प्रयोगकर्ताको कामदारको रूपमा प्रतिष्ठालाई काम दिनेको रूपमा प्रतिष्ठाबाट छुट्टै गर्न सक्छ।",
+  ],
+
+  termsSafetyTitle: ["7. Safety and Prohibited Conduct", "७. सुरक्षा र निषिद्ध आचरण"],
+  termsSafetyDesc: [
+    "Duleko must not be used for fraud, harassment, threats, exploitation, discrimination, illegal activity, misleading representation, or activities that may endanger other users.",
+    "डुलेको ठगी, दुरुपयोग, धम्की, शोषण, भेदभाव, गैरकानूनी गतिविधि, भ्रामक प्रतिनिधित्व, वा अन्य प्रयोगकर्ताहरूलाई खतरा पैदा गर्ने गतिविधिहरूको लागि प्रयोग हुनु हुँदैन।",
+  ],
+  termsReportSuspicious: [
+    "Users should report suspicious or unsafe activity.",
+    "प्रयोगकर्ताहरूले शंकास्पद वा असुरक्षित गतिविधिको रिपोर्ट गर्नुपर्छ।",
+  ],
+  termsInvestigate: [
+    "Duleko may investigate reports and restrict, suspend, or terminate accounts where reasonably necessary to protect users or the platform.",
+    "डुलेकोले रिपोर्टहरू अनुसन्धान गर्न सक्छ र प्रयोगकर्ता वा प्लेटफर्मको सुरक्षा गर्न उचित रूपमा आवश्यक ठाउँमा खाताहरू रोक्न, निलम्बन, वा समाप्त गर्न सक्छ।",
+  ],
+
+  // Team member specific translations
+  sunilName: ["Sunil K. Chaudhary", "सुनिल के. चौधरी"],
+  sunilRole: ["Founder", "संस्थापक"],
+  sunilLocation: ["Kapilvastu, Nepal", "कपिलवस्तु, नेपाल"],
+  sunilUniversity: ["Haverford College & University of Oxford", "ह्याभरफोर्ड कलेज र अक्सफोर्ड विश्वविद्यालय"],
+  sunilBio: [
+    '"What if the opportunity you need is already somewhere around you?"\n\nThat question sits at the heart of Sunil K. Chaudhary\'s journey in building Duleko. Growing up in Kapilvastu, Nepal, he saw people searching for work while, often in the same communities, others struggled to find the right people for the work they needed done. He founded Duleko to bridge that gap and help turn local skills into accessible opportunities.\n\nSunil leads Duleko\'s product vision, strategy, and partnerships. He studies Mathematics and Economics at Haverford College with cross courses at University of Pennsylvania (Wharton), and is spending his junior year studying Mathematics & Economics at the University of Oxford. His experiences across community development, entrepreneurship, and technology-driven initiatives in Nepal and the United States continue to shape Duleko\'s mission: connecting local skills with local opportunities.',
+    '"तिम्रो लागि आवश्यक अवसर पहिल्यै तिम्रै वरिपरि कतै छ कि?"\n\nत्यो प्रश्न सुनिल के. चौधरीको डुलेको निर्माण यात्राको मुटुमा बसेको छ। कपिलवस्तु, नेपालमा हुर्कँदै, उनले मानिसहरूलाई काम खोज्दै गरेको देखे, जहाँ बारम्बार उही समुदायहरूमा, अन्य मानिसहरूले आफूलाई आवश्यक कामको लागि उपयुक्त मानिस खोज्न संघर्ष गर्थे। उनले त्यो खाडललाई पूर्ति गर्न र स्थानीय सीपहरूलाई पहुँचयोग्य अवसरहरूमा परिवर्तन गर्न मद्दत गर्न डुलेकोको स्थापना गरे।\n\nसुनिलले डुलेकोको उत्पादन दृष्टि, रणनीति, र साझेदारीहरूको नेतृत्व गर्छन्। उनी ह्याभरफोर्ड कलेजमा गणित र अर्थशास्त्र अध्ययन गर्छन् र पेन्सिल्भेनिया विश्वविद्यालय (व्हार्टन) मा क्रस-कोर्सहरू लिन्छन्, र आफ्नो जुनियर वर्ष अक्सफोर्ड विश्वविद्यालयमा गणित र अर्थशास्त्र अध्ययन गर्दै छन्। नेपाल र संयुक्त राज्य अमेरिकामा समुदाय विकास, उद्यमशीलता, र प्रविधि-चालित पहलहरूमा उनको अनुभवले डुलेकोको मिशनलाई निरन्तर आकार दिइरहेको छ: स्थानीय सीपहरूलाई स्थानीय अवसरहरूसँग जोड्न।',
+  ],
+  sunilSkill1: ["Product Strategy", "उत्पादन रणनीति"],
+  sunilSkill2: ["Partnerships", "साझेदारी"],
+  sunilSkill3: ["Community Development", "समुदाय विकास"],
+
+  sanjayName: ["Sanjay Gupta", "संजय गुप्ता"],
+  sanjayRole: ["Tech Lead", "प्राविधिक नेता"],
+  sanjayLocation: ["Chitkara University", "चितकारा विश्वविद्यालय"],
+  sanjayBio: [
+    '"If someone who isn\'t technical can\'t use and understand Duleko, it doesn\'t matter how well I build."\n\nThat\'s the standard Sanjay holds Duleko\'s engineering to. As Tech Lead, he owns the platform end to end, from the web app to the native Android build, the database, and everything that keeps requests, chats, and profiles clear and reliable for people who should never need to think about the tech underneath.\n\nHe\'s a Software Engineer, graduating in 2027 from Chitkara University, and has built Duleko\'s stack from the ground up: a bilingual (English/Nepali) app backed by Supabase, with real-time chat, distance-based search, and a native Android release. At Duleko, Sanjay leads all technical decisions, architecture, infrastructure, and app releases, working hands-on with Sunil and Dipendra to make sure what the community actually needs is what gets built.',
+    '"यदि प्राविधिक नभएको व्यक्तिले डुलेको प्रयोग र बुझ्न सकेन भने, मैले कति राम्रो बनाए पनि केही मात्र हुँदैन।"\n\nत्यो संजयले डुलेकोको इन्जिनियरिङलाई राख्ने मापदण्ड हो। प्राविधिक नेताको रूपमा, उनले प्लेटफर्मलाई अन्त्यदेखि अन्त्यसम्म सम्हाल्छन्, वेब ऐपबाट नेटिभ एन्ड्रोइड बिल्डसम्म, डेटाबेस, र तलको प्रविधिको बारेमा कहिल्यै सोच्नु नपर्ने मानिसहरूका लागि अनुरोध, कुराकानी, र प्रोफाइलहरू स्पष्ट र विश्वसनीय बनाउने सबै कुरा।\n\nउनी एक सफ्टवेयर इन्जिनियर हुन्, २०२७ मा चितकारा विश्वविद्यालयबाट स्नातक हुनेछौं, र डुलेकोको स्ट्याकले जमिनाबाट निर्माण गरेका छन्: सुपाबेसद्वारा समर्थित द्विभाषिक (अंग्रेजी/नेपाली) ऐप, रियल-टाइम कुराकानी, दूरी-आधारित खोज, र नेटिभ एन्ड्रोइड रिलिज। डुलेकोमा, संजयले सबै प्राविधिक निर्णयहरू, आर्किटेक्चर, इन्फ्रास्ट्रक्चर, र ऐप रिलिजहरूको नेतृत्व गर्छन्, सुनिल र दिपेन्द्रसँग हातेमाथे काम गर्दै समुदायले वास्तवमा के चाहन्छ त्यो नै निर्माण हुने गरी।',
+  ],
+  sanjaySkill1: ["Full Stack Development", "फुल स्ट्याक विकास"],
+  sanjaySkill2: ["Android Development", "एन्ड्रोइड विकास"],
+  sanjaySkill3: ["System Architecture", "प्रणाली आर्किटेक्चर"],
+
+  dipendraName: ["Dipendra Chaudhary", "दिपेन्द्र चौधरी"],
+  dipendraRole: ["Community & Communications Coordinator", "समुदाय र संचार समन्वयक"],
+  dipendraLocation: ["Lumbini Provincial Hospital", "लुम्बिनी प्रादेशिक अस्पताल"],
+  dipendraBio: [
+    '"How do we make sure that every individual\'s unique skills are recognized and turned into real, local opportunities?"\n\nThat conviction powers Dipendra\'s work as Community & Communications Coordinator at Duleko. He earned his Bachelor of Pharmacy degree (2021) as a Ministry of Education merit scholar from Universal College of Medical Sciences, Tribhuvan University, and has served as a Hospital Pharmacist at Lumbini Provincial Hospital (2022 to present), working closely with healthcare professionals and multidisciplinary teams on research, data management, and public health initiatives.\n\nAt Duleko, Dipendra leads community outreach, user support, product coordination, and social media communications. Drawing on his experience in health research, leadership, and community engagement, he runs educational initiatives to help users navigate the platform, manages direct communication channels, gathers vital user feedback to guide technical improvements, and takes part in core team meetings to shape the platform\'s strategy.',
+    '"हामी कसरी सुनिश्चित गर्छौं कि हरेक व्यक्तिको अद्वितीय सीपहरू पहिचान गरिन्छ र वास्तविक, स्थानीय अवसरहरूमा परिवर्तन हुन्छ?"\n\nत्यो विश्वासले दिपेन्द्रको डुलेकोमा समुदाय र संचार समन्वयकको रूपमा कामलाई शक्ति दिन्छ। उनले त्रिभुवन विश्वविद्यालयको युनिभर्सल कलेज अफ मेडिकल साइन्सेजबाट शिक्षा मन्त्रालय मेरिट विद्वानको रूपमा फार्मेसीको स्नातक डिग्री (२०२१) प्राप्त गरे, र लुम्बिनी प्रादेशिक अस्पतालमा अस्पताल फार्मासिस्टको रूपमा सेवा गरेका छन् (२०२२ देखि हालसम्म), स्वास्थ्य सेवा पेशेवरहरू र बहु-विषयक टोलीहरूसँग अनुसन्धान, डेटा व्यवस्थापन, र सार्वजनिक स्वास्थ्य पहलहरूमा काम गर्दै।\n\nडुलेकोमा, दिपेन्द्रले समुदाय पहुँच, प्रयोगकर्ता समर्थन, उत्पादन समन्वय, र सामाजिक मिडिया संचारको नेतृत्व गर्छन्। स्वास्थ्य अनुसन्धान, नेतृत्व, र समुदाय संलग्नतामा उनको अनुभवको आधारमा, उनले प्रयोगकर्ताहरूलाई प्लेटफर्ममा नेभिगेट गर्न मद्दत गर्न शैक्षिक पहलहरू चलाउँछन्, प्रत्यक्ष संचार च्यानलहरू व्यवस्थापन गर्छन्, प्राविधिक सुधारहरू मार्गदर्शन गर्न महत्त्वपूर्ण प्रयोगकर्ता प्रतिक्रिया संकलन गर्छन्, र प्लेटफर्मको रणनीति आकार दिन मुख्य टोली बैठकहरूमा भाग लिन्छन्।',
+  ],
+  dipendraSkill1: ["Community Outreach", "समुदाय पहुँच"],
+  dipendraSkill2: ["User Support", "प्रयोगकर्ता समर्थन"],
+  dipendraSkill3: ["Communications", "संचार"],
+  viewDulekoProfile: ["View Duleko profile →", "डुलेको प्रोफाइल हेर्नुहोस् →"],
+
+  // Quotes for motivation page
+  sunilQuote: ["What if the opportunity you need is already somewhere around you?", "तिम्रो लागि आवश्यक अवसर पहिल्यै तिम्रै वरिपरि कतै छ कि?"],
+  sanjayQuote: [
+    "If someone who isn't technical can't use and understand Duleko, it doesn't matter how well I build.",
+    "यदि प्राविधिक नभएको व्यक्तिले डुलेको प्रयोग र बुझ्न सकेन भने, मैले कति राम्रो बनाए पनि केही मात्र हुँदैन।",
+  ],
+  dipendraQuote: [
+    "How do we make sure that every individual's unique skills are recognized and turned into real, local opportunities?",
+    "हामी कसरी सुनिश्चित गर्छौं कि हरेक व्यक्तिको अद्वितीय सीपहरू पहिचान गरिन्छ र वास्तविक, स्थानीय अवसरहरूमा परिवर्तन हुन्छ?",
+  ],
 } as const;
 
 export type StringKey = keyof typeof strings;
