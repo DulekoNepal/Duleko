@@ -1,7 +1,9 @@
-import { useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Briefcase, Wrench } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
+import { EngagementDetailsDialog } from "@/components/duleko/EngagementDetailsDialog";
 import { EngagementRow } from "@/components/duleko/EngagementRow";
 import { STATUS_ACCENT, STATUS_KEY } from "@/components/duleko/EngagementProgress";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
@@ -9,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { CardSkeleton, EmptyState, ErrorState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
-import { ENGAGEMENTS_PAGE, listMyEngagements } from "@/lib/queries";
+import { ENGAGEMENTS_PAGE, getEngagement, listMyEngagements } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
 import { cn, formatNumber } from "@/lib/utils";
 import type { EngagementStatus } from "@/lib/types";
@@ -37,6 +39,30 @@ export function WorkScreen() {
   const { t, lang } = useI18n();
   const { profile } = useSession();
   const [role, setRole] = useState<Role>("worker");
+  const navigate = useNavigate();
+  const { job: jobId, from } = useSearch({ from: "/work" });
+
+  // Arriving from a notification: load that one job, open its details
+  // over the list, and land on the tab it belongs to. The key sits under
+  // "engagements" so any action taken in the sheet refreshes it too.
+  const linkedJob = useQuery({
+    queryKey: ["engagements", "job", jobId, profile?.id],
+    queryFn: () => getEngagement(jobId!, profile!.id),
+    enabled: Boolean(jobId && profile?.id),
+  });
+  const linked = linkedJob.data ?? null;
+
+  useEffect(() => {
+    if (linked && profile) {
+      setRole(linked.worker_profile_id === profile.id ? "worker" : "employer");
+    }
+  }, [linked?.id, profile?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Closing the sheet returns to wherever it was opened from.
+  function closeLinkedJob() {
+    if (from === "notifications") window.history.back();
+    else navigate({ to: "/work", search: {}, replace: true });
+  }
 
   // This was unbounded: every job either side had ever had, fetched on
   // every visit to the tab.
@@ -140,6 +166,15 @@ export function WorkScreen() {
           </>
         )}
       </PageContainer>
+
+      {linked && (
+        <EngagementDetailsDialog
+          open
+          onClose={closeLinkedJob}
+          engagement={linked}
+          myProfileId={profile.id}
+        />
+      )}
     </>
   );
 }

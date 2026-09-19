@@ -65,6 +65,13 @@ const workerRoute = createRoute({
 const workRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/work",
+  // ?job=<engagement id> opens that job's details straight away - the
+  // landing spot for notifications about it.
+  // ?from=notifications makes closing the sheet return there.
+  validateSearch: (search: Record<string, unknown>): { job?: string; from?: "notifications" } => ({
+    job: typeof search.job === "string" && search.job ? search.job : undefined,
+    from: search.from === "notifications" ? "notifications" : undefined,
+  }),
   component: WorkScreen,
 });
 

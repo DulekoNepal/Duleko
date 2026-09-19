@@ -8,6 +8,7 @@ import {
   Briefcase,
   CalendarCheck,
   CheckCheck,
+  ExternalLink,
   Megaphone,
   MessageCircle,
   ShieldCheck,
@@ -25,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { CardSkeleton, EmptyState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
-import { NOTIFICATIONS_PAGE, listNotifications, markAllRead, markNotificationRead } from "@/lib/queries";
+import { NOTIFICATIONS_PAGE, getEngagement, listNotifications, markAllRead, markNotificationRead } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { cn, formatDayLabel, formatNumber, relativeTime, toDateKey } from "@/lib/utils";
 
@@ -61,6 +62,25 @@ const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
   verify_reminder: { icon: ShieldCheck, tone: "brand" },
   announcement: { icon: Megaphone, tone: "brand" },
 };
+
+const URL_RE = /https?:\/\/[^\s<>"')\]]+/i;
+
+/** The first web link in a notification's text, if it carries one. */
+function linkIn(n: {
+  kind: string;
+  body_en: string | null;
+  body_ne: string | null;
+  title_en: string;
+  title_ne: string;
+}): string | null {
+  // Only staff announcements are trusted to carry a link - other kinds
+  // embed user-written text (job titles, names) that could hold anything.
+  if (n.kind !== "announcement") return null;
+  const text = [n.body_en, n.body_ne, n.title_en, n.title_ne].join(" ");
+  const match = text.match(URL_RE);
+  // Trailing punctuation belongs to the sentence, not the address.
+  return match ? match[0].replace(/[.,;:!?]+$/, "") : null;
+}
 
 export function NotificationsScreen() {
   const { t, lang } = useI18n();
@@ -134,8 +154,30 @@ export function NotificationsScreen() {
     else groups.push({ day, label: formatDayLabel(n.created_at, lang), rows: [n] });
   }
 
-  function openTarget(n: (typeof items)[number]) {
+  async function openTarget(n: (typeof items)[number]) {
     if (!n.is_read) readOne.mutate(n.id);
+
+    // A link written into the notification wins: it opens in a new tab,
+    // leaving this list where it was.
+    const link = linkIn(n);
+    if (link) {
+      window.open(link, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    // "Someone accepted your request" is about a person - show who.
+    if (n.kind === "accepted" && n.engagement_id) {
+      try {
+        const job = await getEngagement(n.engagement_id, profile!.id);
+        if (job) {
+          navigate({ to: "/worker/$workerId", params: { workerId: job.worker_profile_id } });
+          return;
+        }
+      } catch {
+        // Fall through to the job itself.
+      }
+    }
+
     if (n.kind === "friend_request" || n.kind === "friend_accepted") {
       navigate({ to: "/friends" });
     } else if (
@@ -145,10 +187,11 @@ export function NotificationsScreen() {
       n.kind === "announcement"
     ) {
       navigate({ to: "/profile" });
+    } else if (n.engagement_id) {
+      // Job updates and reviews land on the job itself, not just the list.
+      navigate({ to: "/work", search: { job: n.engagement_id, from: "notifications" } });
     } else if (n.related_profile_id) {
       navigate({ to: "/chat/$otherId", params: { otherId: n.related_profile_id } });
-    } else if (n.engagement_id) {
-      navigate({ to: "/work" });
     }
   }
 
@@ -235,7 +278,8 @@ export function NotificationsScreen() {
                             >
                               {lang === "ne" ? n.title_ne : n.title_en}
                             </span>
-                            <span className="shrink-0 text-xs text-slate-400">
+                            <span className="flex shrink-0 items-center gap-1 text-xs text-slate-400">
+                              {linkIn(n) && <ExternalLink className="h-3 w-3" aria-hidden />}
                               {relativeTime(n.created_at, lang)}
                             </span>
                           </span>
