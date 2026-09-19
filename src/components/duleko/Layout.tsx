@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { countUnread, countUnreadMessages } from "@/lib/queries";
+import { setAppBadge } from "@/lib/native-android";
 import { supabase } from "@/lib/supabase";
 import { cn, formatNumber } from "@/lib/utils";
 import dulekoMark from "@/assets/duleko-mark.png";
@@ -182,6 +183,13 @@ function useNavBadges() {
 export function useNotificationsBadgeSync() {
   const { profile } = useSession();
   const queryClient = useQueryClient();
+  const badges = useNavBadges();
+  const total = profile?.id ? badges.notifications + badges.chats : 0;
+
+  // Mirror the unread total onto the Android launcher icon.
+  useEffect(() => {
+    setAppBadge(total);
+  }, [total]);
 
   useEffect(() => {
     if (!profile?.id) return;

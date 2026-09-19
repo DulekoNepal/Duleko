@@ -1,6 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import { StatusBar, Style } from "@capacitor/status-bar";
+import { Badge } from "@capawesome/capacitor-badge";
 
 /**
  * Native-Android-only wiring with no web equivalent, so none of this runs
@@ -35,4 +36,21 @@ export function setupNativeAndroid(): void {
 
   StatusBar.setStyle({ style: Style.Light }).catch(() => {});
   StatusBar.setBackgroundColor({ color: "#ffffff" }).catch(() => {});
+}
+
+/**
+ * Unread count on the launcher icon (the small red number, like Messenger).
+ * Android has no badge API of its own, so the plugin uses each launcher's
+ * vendor support (Samsung, Xiaomi, Huawei, OnePlus, ...); launchers with no
+ * support simply ignore it. Zero clears the badge.
+ */
+export function setAppBadge(count: number): void {
+  if (Capacitor.getPlatform() !== "android") return;
+  const n = Math.max(0, Math.floor(count));
+  Badge.isSupported()
+    .then(({ isSupported }) => {
+      if (!isSupported) return;
+      return Badge.requestPermissions().then(() => (n > 0 ? Badge.set({ count: n }) : Badge.clear()));
+    })
+    .catch(() => {});
 }
