@@ -66,7 +66,7 @@ export function AboutScreen() {
             bio={t("dipendraBio")}
             skills={[t("dipendraSkill1"), t("dipendraSkill2"), t("dipendraSkill3")]}
             phone="+977 9867503930"
-            profileUrl="https://duleko.com/worker"
+            profileUrl="https://duleko.com/worker/541bf85d-3b39-465f-b14d-f0267ab09b10"
             imageSrc={dipendraImage}
           />
         </div>
