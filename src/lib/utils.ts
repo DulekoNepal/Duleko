@@ -154,3 +154,14 @@ export function isValidNepaliPhone(input: string): boolean {
   const local = digits.startsWith("977") ? digits.slice(3) : digits;
   return /^9[678]\d{8}$/.test(local) || /^0?1\d{7}$/.test(local);
 }
+
+/**
+ * True when text contains a phone number: 9+ digits in one run, with
+ * spaces, dashes, dots or brackets between them (Nepali digits count).
+ * Mirrors text_has_phone_number() in the database, which enforces it.
+ */
+export function containsPhoneNumber(text: string): boolean {
+  const normalized = text.replace(/[०-९]/g, (d) => String("०१२३४५६७८९".indexOf(d)));
+  const runs = normalized.match(/\+?\d[\d\s().-]{7,}\d/g) ?? [];
+  return runs.some((run) => run.replace(/\D/g, "").length >= 9);
+}

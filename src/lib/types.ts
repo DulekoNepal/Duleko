@@ -5,6 +5,8 @@ export type Lang = "en" | "ne";
  * table - never stored as a column on `profiles` itself, so a profile
  * update can never grant a role.
  */
+export type CallPermission = "everyone" | "accepted_work" | "friends" | "nobody";
+
 export type StaffRole = "moderator" | "admin" | "technical_admin";
 
 export type EngagementStatus =
@@ -62,6 +64,8 @@ export interface Profile {
   location_shared_at: string | null;
   /** null = never asked; 'granted' auto-shares silently on every login; 'declined' means never ask again. */
   location_consent: "granted" | "declined" | null;
+  /** Who may see this person's phone number (and so use the Call button). */
+  call_permission: CallPermission;
   created_at: string;
   updated_at: string;
   /** Set once a moderator/admin verifies this profile - drives the hollow green badge. */

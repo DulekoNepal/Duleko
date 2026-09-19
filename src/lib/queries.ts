@@ -10,6 +10,7 @@ import type {
   Engagement,
   EngagementStatus,
   EngagementWithParties,
+  CallPermission,
   Friendship,
   Lang,
   MessageReaction,
@@ -27,7 +28,7 @@ import type {
 } from "./types";
 
 const PROFILE_COLUMNS =
-  "id,user_id,full_name,about,bio,age,education,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,is_official,public_slug,language,rating,rating_count,lat,lng,location_shared_at,location_consent,created_at,updated_at";
+  "id,user_id,full_name,about,bio,age,education,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,is_official,public_slug,language,rating,rating_count,lat,lng,location_shared_at,location_consent,call_permission,created_at,updated_at";
 
 // Verification and role live in their own tables (see 3500_staff_roles_
 // and_verification.sql), embedded here and flattened by mapProfileRow so
@@ -341,6 +342,11 @@ export async function setLocationConsent(
     .from("profiles")
     .update({ location_consent: consent })
     .eq("id", profileId);
+  if (error) throw error;
+}
+
+export async function setCallPermission(profileId: string, value: CallPermission): Promise<void> {
+  const { error } = await supabase.from("profiles").update({ call_permission: value }).eq("id", profileId);
   if (error) throw error;
 }
 

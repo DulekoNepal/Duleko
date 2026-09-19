@@ -28,7 +28,7 @@ import {
 } from "@/lib/queries";
 import { usePresence } from "@/hooks/use-presence";
 import { supabase, errorMessage } from "@/lib/supabase";
-import { cn, formatDayLabel, relativeTime, sameMinuteWindow, toDateKey } from "@/lib/utils";
+import { cn, containsPhoneNumber, formatDayLabel, relativeTime, sameMinuteWindow, toDateKey } from "@/lib/utils";
 import type { ChatMessage } from "@/lib/types";
 
 const TYPING_BROADCAST_THROTTLE_MS = 1500;
@@ -256,6 +256,10 @@ export function ChatScreen() {
   function submit() {
     const body = draft.trim();
     if (!body) return;
+    if (containsPhoneNumber(body)) {
+      toast(t("phoneNumberBlocked"), "error");
+      return;
+    }
     if (editing) {
       if (saveEdit.isPending) return;
       if (body === editing.body) {

@@ -460,7 +460,9 @@ export function WorkerScreen() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => (me ? toast(t("noPhoneSaved")) : requestSignIn())}
+                  onClick={() =>
+                    me ? toast(t("callNotAllowed")) : requestSignIn()
+                  }
                   className={cn(secondaryActionClass, "opacity-60")}
                 >
                   <Lock className="h-4 w-4" aria-hidden />
