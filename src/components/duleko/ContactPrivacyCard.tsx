@@ -6,7 +6,6 @@ import {
   Phone,
   PhoneOff,
   ShieldCheck,
-  Users,
   Globe,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -38,12 +37,6 @@ const OPTIONS: {
     hint: "callAcceptedWorkHint",
   },
   {
-    value: "friends",
-    icon: Users,
-    label: "callFriends",
-    hint: "callFriendsHint",
-  },
-  {
     value: "nobody",
     icon: PhoneOff,
     label: "callNobody",
@@ -68,7 +61,11 @@ export function ContactPrivacyCard() {
   });
 
   if (!profile) return null;
-  const current = profile.call_permission ?? "accepted_work";
+  const current =
+    profile.call_permission === "everyone" ||
+    profile.call_permission === "nobody"
+      ? profile.call_permission
+      : "accepted_work";
   const currentLabel = OPTIONS.find((o) => o.value === current)!.label;
 
   return (

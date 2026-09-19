@@ -246,6 +246,10 @@ const strings = {
   ],
   callFriendsHint: ["Only people you have added as friends.", "तपाईंले साथी बनाएका व्यक्तिहरू मात्र।"],
   callNobodyHint: ["Your number stays hidden. Others can only chat.", "तपाईंको नम्बर लुकेको रहन्छ। अरूले कुराकानी मात्र गर्न सक्छन्।"],
+  friendsAlwaysHint: [
+    "Friends can always call and chat with you, whatever you pick.",
+    "तपाईंले जे रोके पनि साथीहरूले सधैं फोन र कुराकानी गर्न सक्छन्।",
+  ],
   callSettingSaved: ["Call setting saved.", "फोन सेटिङ सुरक्षित भयो।"],
   chatSettingTitle: ["Who can chat with me", "मसँग कसले कुराकानी गर्न सक्छ"],
   chatEveryone: ["Everybody", "सबैजना"],
