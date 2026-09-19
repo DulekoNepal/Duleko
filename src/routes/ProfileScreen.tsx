@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card";
 import { Collapsible } from "@/components/ui/collapsible";
+import { ContactPrivacyCard } from "@/components/duleko/ContactPrivacyCard";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { MenuItem, MenuPanel } from "@/components/ui/menu";
@@ -59,7 +60,6 @@ import {
   saveContact,
   saveNotificationPrefs,
   setDayStatus,
-  setCallPermission,
   setLocationConsent,
   setUserSkills,
   shareLocation,
@@ -73,8 +73,7 @@ import {
 import { copyLink, profileUrl, shareProfile } from "@/lib/share";
 import { renderProfileCard, saveProfileCard } from "@/lib/profileCard";
 import { errorMessage } from "@/lib/supabase";
-import type { CallPermission, NotificationPrefs } from "@/lib/types";
-import type { StringKey } from "@/lib/i18n";
+import type { NotificationPrefs } from "@/lib/types";
 import {
   addDays,
   cn,
@@ -96,13 +95,6 @@ interface SkillDraft {
   custom_label: string;
   custom_note: string;
 }
-
-const CALL_OPTIONS: [CallPermission, StringKey][] = [
-  ["everyone", "callEveryone"],
-  ["accepted_work", "callAcceptedWork"],
-  ["friends", "callFriends"],
-  ["nobody", "callNobody"],
-];
 
 const emptyDraft: SkillDraft = { rate_amount: "", rate_unit: "", custom_label: "", custom_note: "" };
 
@@ -361,15 +353,6 @@ export function ProfileScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notification-prefs", profile?.id] });
       toast(t("alertPrefsSaved"));
-    },
-    onError: (error) => toast(errorMessage(error), "error"),
-  });
-
-  const saveCallPermission = useMutation({
-    mutationFn: (value: CallPermission) => setCallPermission(profile!.id, value),
-    onSuccess: async () => {
-      await refreshProfile();
-      toast(t("callSettingSaved"));
     },
     onError: (error) => toast(errorMessage(error), "error"),
   });
@@ -1086,6 +1069,8 @@ export function ProfileScreen() {
           </CardBody>
         </Card>
 
+        <ContactPrivacyCard />
+
         <Card>
           <CardBody className="p-4 sm:p-5">
             <Collapsible
@@ -1106,49 +1091,6 @@ export function ProfileScreen() {
                 </span>
                 <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden />
               </Link>
-
-              <div className="mt-4 space-y-2 border-t border-slate-100 pt-4">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  {t("callSettingTitle")}
-                </p>
-                <div role="radiogroup" aria-label={t("callSettingTitle")} className="space-y-1.5">
-                  {CALL_OPTIONS.map(([value, labelKey]) => {
-                    const selected = (profile.call_permission ?? "accepted_work") === value;
-                    return (
-                      <button
-                        key={value}
-                        type="button"
-                        role="radio"
-                        aria-checked={selected}
-                        disabled={saveCallPermission.isPending}
-                        onClick={() => !selected && saveCallPermission.mutate(value)}
-                        className={cn(
-                          "flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-sm font-medium transition-colors duration-200",
-                          selected ? "bg-brand-50 text-brand-800" : "bg-slate-50 text-slate-800 hover:bg-slate-100",
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
-                            selected ? "border-brand-700" : "border-slate-300",
-                          )}
-                        >
-                          {selected && <span className="h-2 w-2 rounded-full bg-brand-700" />}
-                        </span>
-                        {t(labelKey)}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <p className="mb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  {t("chatSettingTitle")}
-                </p>
-                <div className="rounded-xl bg-slate-50 px-3.5 py-3">
-                  <p className="text-sm font-medium text-slate-800">{t("chatEveryone")}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">{t("chatEveryoneHint")}</p>
-                </div>
-              </div>
 
               <div className="mt-4 space-y-2 border-t border-slate-100 pt-4">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
