@@ -71,7 +71,7 @@ import {
   type UserSkillInput,
 } from "@/lib/queries";
 import { copyLink, profileUrl, shareProfile } from "@/lib/share";
-import { renderProfileCard, saveProfileCard } from "@/lib/profileCard";
+import { profileCardFilename, renderProfileCard, saveProfileCard } from "@/lib/profileCard";
 import { errorMessage } from "@/lib/supabase";
 import type { NotificationPrefs } from "@/lib/types";
 import {
@@ -292,8 +292,8 @@ export function ProfileScreen() {
   // then handed to the browser as a plain PNG download.
   const downloadCard = useMutation({
     mutationFn: async () => {
-      const blob = await renderProfileCard(profile!, mySkills.data ?? []);
-      return saveProfileCard(blob, `${profile!.public_slug}-duleko-card.png`);
+      const blob = await renderProfileCard(profile!, mySkills.data ?? [], myPhone.data?.phone);
+      return saveProfileCard(blob, profileCardFilename(profile!));
     },
     onSuccess: (result) => {
       if (result === "cancelled") return;

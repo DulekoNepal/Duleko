@@ -9,7 +9,7 @@ import { skillIconFor } from "@/components/duleko/SkillIcon";
 import { profileUrl } from "@/lib/share";
 import { initials, locationShort } from "@/lib/utils";
 import type { Profile, UserSkillDetail } from "@/lib/types";
-import dulekoMark from "@/assets/duleko-mark.png";
+import dulekoLogo from "@/assets/duleko-logo-full.png";
 
 // Duleko Green (brand-700 in styles.css) - the app's own official colour,
 // used as the one accent here (underlines, avatar ring, QR frame,
@@ -130,7 +130,11 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number,
  * without printing a working URL that could be typed in by someone it
  * wasn't meant for.
  */
-export async function renderProfileCard(profile: Profile, skills: UserSkillDetail[]): Promise<Blob> {
+export async function renderProfileCard(
+  profile: Profile,
+  skills: UserSkillDetail[],
+  phone?: string | null,
+): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -277,18 +281,15 @@ export async function renderProfileCard(profile: Profile, skills: UserSkillDetai
 
   // ---- Right column: Duleko + QR -----------------------------------------
   const rightCx = splitX + (W - splitX) / 2;
-  const logoImg = await loadImage(dulekoMark);
-  const logoSize = 110;
-  if (logoImg) ctx.drawImage(logoImg, rightCx - logoSize / 2, PAD, logoSize, logoSize);
+  const logoImg = await loadImage(dulekoLogo);
+  const logoH = 210;
+  const logoW = logoImg ? (logoImg.width / logoImg.height) * logoH : 0;
+  if (logoImg) ctx.drawImage(logoImg, rightCx - logoW / 2, PAD - 20, logoW, logoH);
 
   ctx.textAlign = "center";
-  ctx.fillStyle = INK;
-  ctx.font = "700 44px system-ui, sans-serif";
-  ctx.fillText("Duleko", rightCx, PAD + logoSize + 54);
-
   ctx.fillStyle = BRAND;
   ctx.font = "700 24px system-ui, sans-serif";
-  ctx.fillText("Your Skills. Our Community.", rightCx, PAD + logoSize + 92);
+  ctx.fillText("Your Skills. Our Community.", rightCx, PAD - 20 + logoH + 40);
 
   const qrSize = 320;
   // Encodes the real, specific profile link - this is the only place the
@@ -299,7 +300,7 @@ export async function renderProfileCard(profile: Profile, skills: UserSkillDetai
     color: { dark: INK, light: "#ffffff" },
   });
   const qrImg = await loadImage(qrDataUrl);
-  const qrY = PAD + logoSize + 130;
+  const qrY = PAD - 20 + logoH + 80;
   const framePad = 20;
   ctx.strokeStyle = BRAND;
   ctx.lineWidth = 4;
@@ -318,9 +319,25 @@ export async function renderProfileCard(profile: Profile, skills: UserSkillDetai
   // one way this card actually opens it.
   ctx.fillText("duleko.com", rightCx, contactY + 42);
 
+  const phoneText = phone?.trim();
+  if (phoneText) {
+    ctx.fillStyle = INK;
+    ctx.font = "700 32px system-ui, sans-serif";
+    ctx.fillText(phoneText, rightCx, contactY + 92);
+  }
+
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Could not render the card"))), "image/png");
   });
+}
+
+/** A readable, per-person file name, e.g. "Duleko-Sanjay-Kumar-Profile-Card-ab12cd.png". */
+export function profileCardFilename(profile: Profile): string {
+  const name = profile.full_name
+    .normalize("NFKD")
+    .replace(/[^A-Za-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return ["Duleko", name, "Profile-Card", profile.public_slug].filter(Boolean).join("-") + ".png";
 }
 
 /** Triggers a real file download of the rendered card - a plain <a download>, same as any file save. */
