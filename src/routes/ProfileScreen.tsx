@@ -1069,8 +1069,6 @@ export function ProfileScreen() {
           </CardBody>
         </Card>
 
-        <ContactPrivacyCard />
-
         <Card>
           <CardBody className="p-4 sm:p-5">
             <Collapsible
@@ -1091,6 +1089,10 @@ export function ProfileScreen() {
                 </span>
                 <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden />
               </Link>
+
+              <div className="mt-4 border-t border-slate-100 pt-4">
+                <ContactPrivacyCard />
+              </div>
 
               <div className="mt-4 space-y-2 border-t border-slate-100 pt-4">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
