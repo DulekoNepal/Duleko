@@ -56,6 +56,7 @@ export function AboutScreen() {
             skills={[t("sanjaySkill1"), t("sanjaySkill2"), t("sanjaySkill3")]}
             phone="+977 9766382090"
             profileUrl="https://duleko.com/worker/b7bc1f68-7f04-4eb4-addd-df5d71db8e98"
+            portfolioUrl="https://guptasanjay.com.np"
             imageSrc={sanjayImage}
           />
 

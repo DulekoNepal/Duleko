@@ -183,6 +183,7 @@ export function TeamMemberCard({
   skills,
   phone,
   profileUrl,
+  portfolioUrl,
   imageSrc,
 }: {
   name: string;
@@ -193,6 +194,8 @@ export function TeamMemberCard({
   skills: string[];
   phone: string;
   profileUrl: string;
+  /** Optional personal site, shown as its bare domain next to the profile link. */
+  portfolioUrl?: string;
   imageSrc?: string;
 }) {
   const { t } = useI18n();
@@ -230,6 +233,16 @@ export function TeamMemberCard({
             >
               {t("viewDulekoProfile")}
             </a>
+            {portfolioUrl && (
+              <a
+                href={portfolioUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-brand-700 hover:underline"
+              >
+                {portfolioUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+              </a>
+            )}
           </div>
         </div>
       </CardBody>
