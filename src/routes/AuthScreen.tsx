@@ -290,7 +290,7 @@ export function AuthScreen({ onBack }: { onBack?: () => void }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-cream-50">
-      <div className="flex items-center justify-between p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
+      <div className="flex items-center justify-between p-4 pt-[calc(1rem+var(--sat))]">
         {onBack ? (
           <button
             type="button"

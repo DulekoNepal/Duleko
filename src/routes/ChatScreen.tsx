@@ -491,7 +491,7 @@ export function ChatScreen() {
       )}
 
       <form
-        className="sticky bottom-0 border-t border-slate-200 bg-white p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+        className="sticky bottom-0 border-t border-slate-200 bg-white p-3 pb-[calc(0.75rem+var(--sab))]"
         onSubmit={(e) => {
           e.preventDefault();
           submit();

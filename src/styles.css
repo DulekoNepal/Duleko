@@ -42,6 +42,14 @@
   --color-neutral-500: #6b7280;
 }
 
+/* System-bar insets. Capacitor's Android build publishes --safe-area-inset-*
+   itself (the WebView's env() is unreliable on older Android System WebView),
+   so prefer that and fall back to env() in browsers and iOS. */
+:root {
+  --sat: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --sab: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+}
+
 /* Nepali text renders with Devanagari fallbacks; both scripts share metrics. */
 html {
   -webkit-text-size-adjust: 100%;
@@ -51,8 +59,6 @@ html {
 body {
   @apply bg-cream-50 text-slate-900 antialiased;
   font-family: var(--font-sans);
-  /* Room for the fixed bottom navigation on phones. */
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Touch targets stay comfortable on small, cheap phones. */

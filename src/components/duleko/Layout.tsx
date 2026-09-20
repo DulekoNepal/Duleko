@@ -91,24 +91,24 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 border-b border-slate-200 pt-[env(safe-area-inset-top)] backdrop-blur",
+        "sticky top-0 z-30 border-b border-slate-200 pt-[var(--sat)] backdrop-blur",
         gradient ? "bg-gradient-to-r from-brand-50/60 via-white/95 to-white/95" : "bg-white/95",
       )}
     >
-      <div className="mx-auto max-w-4xl px-4 py-3 md:py-4">
+      <div className="mx-auto max-w-4xl px-4 py-2 md:py-4">
         <div className="flex items-center gap-3">
           {back}
           {leading}
           {logo ? (
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
-              <img src={dulekoMark} alt="" className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm" />
+              <img src={dulekoMark} alt="" className="h-8 w-8 shrink-0 rounded-xl object-cover shadow-sm" />
               {/* Still announced to screen readers/tab title - just not spelled out visually next to its own mark. */}
               <h1 className="sr-only">{title}</h1>
               {subtitle && <p className="truncate text-xs text-slate-500 md:text-sm">{subtitle}</p>}
             </div>
           ) : (
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-lg font-semibold text-slate-900 md:text-xl">{title}</h1>
+              <h1 className="truncate text-base font-semibold text-slate-900 md:text-xl">{title}</h1>
               {subtitle && <p className="truncate text-xs text-slate-500 md:text-sm">{subtitle}</p>}
             </div>
           )}
@@ -126,7 +126,7 @@ export function AppHeader({
 
 export function PageContainer({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <main className={cn("mx-auto w-full max-w-4xl px-4 pb-28 pt-4 md:pb-10", className)}>
+    <main className={cn("mx-auto w-full max-w-4xl px-4 pb-20 pt-3 md:pb-10", className)}>
       {children}
     </main>
   );
@@ -228,7 +228,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[var(--sab)] md:hidden"
       aria-label="Main"
     >
       <div className="mx-auto flex max-w-3xl">
@@ -240,7 +240,7 @@ export function BottomNav() {
               key={to}
               to={to}
               className={cn(
-                "relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors duration-200",
+                "relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-medium transition-colors duration-200",
                 active ? "text-teal-700" : "text-slate-500",
               )}
             >
