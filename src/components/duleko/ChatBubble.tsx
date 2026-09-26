@@ -249,7 +249,7 @@ export function ChatBubble({
             // out of its way - Copy in the menu covers what that takes away.
             // Positioned so reactions can hang off its bottom-right corner
             // on both sides of the thread.
-            "relative max-w-[76%] select-none whitespace-pre-wrap break-words px-3.5 py-2 text-sm",
+            "relative max-w-[80%] select-none whitespace-pre-wrap break-words px-3.5 py-2 text-[15px] leading-snug sm:max-w-[70%]",
             // Rounded on the outside, tightened where a run joins up.
             mine
               ? cn("rounded-2xl", !firstInRun && "rounded-tr-md", !lastInRun && "rounded-br-md")
@@ -257,8 +257,8 @@ export function ChatBubble({
             removed
               ? "border border-slate-200 bg-white italic text-slate-400"
               : mine
-                ? "bg-brand-700 text-white"
-                : "bg-slate-100 text-slate-900",
+                ? "bg-brand-700 text-white shadow-sm shadow-brand-900/10"
+                : "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70",
             highlighted && "ring-2 ring-brand-400 ring-offset-2",
           )}
         >

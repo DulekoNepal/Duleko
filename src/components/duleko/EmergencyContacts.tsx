@@ -108,8 +108,8 @@ function EmergencyContactGrid({ contacts }: { contacts: EmergencyContact[] }) {
 }
 
 /**
- * The "one more category" for the home page, built exactly like
- * SkillCategorySection - a card, a title with an icon badge, a "see
+ * The "one more category" for the home page, built like the skill
+ * categories used to be - a card, a title with an icon badge, a "see
  * all"/"show less" toggle once there are more than four items, then the
  * same bare icon grid - just tinted red throughout so it still reads as
  * safety-critical rather than another thing to browse.

@@ -2,13 +2,14 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Briefcase, ChevronDown, HeartHandshake, Wrench, type LucideIcon } from "lucide-react";
 import { useI18n, type StringKey } from "@/lib/i18n";
-import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/ui/card";
 import { cn, formatNumber, skillName } from "@/lib/utils";
 import { SkillIcon } from "./SkillIcon";
 import type { Skill, SkillCategory } from "@/lib/types";
 
-/** Home shows this many per category before "view all" takes over. */
-const HOME_PREVIEW_COUNT = 4;
+/** Home shows this many per category before "see all" takes over - one
+ * row on desktop, two on a phone. */
+const HOME_PREVIEW_COUNT = 8;
 
 export const SKILL_CATEGORY_ORDER: SkillCategory[] = ["trades", "professional", "personal"];
 
@@ -44,13 +45,16 @@ export function groupSkillsByCategory(skills: Skill[]): Record<SkillCategory, Sk
 export function SkillGrid({
   skills,
   counts,
+  className,
 }: {
   skills: Skill[];
   counts?: Record<string, number>;
+  /** Overrides the column count, e.g. more columns on wider screens. */
+  className?: string;
 }) {
   const { lang } = useI18n();
   return (
-    <div className="grid grid-cols-4 gap-1">
+    <div className={cn("grid grid-cols-4 gap-1", className)}>
       {skills.map((skill) => (
         <Link
           key={skill.id}
@@ -74,61 +78,92 @@ export function SkillGrid({
 }
 
 /**
- * One category, as its own card - the same "bordered white block on the
- * page's own grey" every other screen already uses for a section, rather
- * than Home being the one place where content sits directly on the
- * background with nothing to separate one group from the next.
- *
- * Shows the first four skills, and - only once there are more than four -
- * a "view all" that expands the same grid in place. Orange is the one
- * spot of emphasis, on that link alone, so it reads as "there's more
- * here" without turning the card itself into another coloured block.
+ * Home's skill directory: one card, a tab per category, and a grid that
+ * widens with the screen (4 columns on a phone, 6 on a tablet, 8 on a
+ * wide desktop) instead of three stacked cards of four. Shows one desktop row
+ * per category until "see all" expands it in place - orange stays the one
+ * spot of emphasis, on that toggle alone.
  */
-export function SkillCategorySection({
-  category,
-  skills,
+export function SkillCategoryBrowser({
+  skillsByCategory,
   counts,
 }: {
-  category: SkillCategory;
-  skills: Skill[];
+  skillsByCategory: Record<SkillCategory, Skill[]>;
   counts?: Record<string, number>;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const categories = SKILL_CATEGORY_ORDER.filter((c) => skillsByCategory[c].length > 0);
+  const [active, setActive] = useState<SkillCategory>(categories[0] ?? "trades");
   const [expanded, setExpanded] = useState(false);
 
-  if (skills.length === 0) return null;
+  if (categories.length === 0) return null;
 
+  const current = categories.includes(active) ? active : categories[0];
+  const skills = skillsByCategory[current];
   const hasMore = skills.length > HOME_PREVIEW_COUNT;
   const visible = expanded ? skills : skills.slice(0, HOME_PREVIEW_COUNT);
 
   return (
-    <Card>
-      <CardBody>
-        <SectionTitle
-          action={
-            hasMore && (
-              <button
-                type="button"
-                onClick={() => setExpanded((v) => !v)}
-                aria-expanded={expanded}
-                className="inline-flex shrink-0 items-center gap-0.5 text-xs font-semibold text-accent-600 transition-colors duration-200 hover:text-accent-700"
+    <Card className="overflow-hidden">
+      <div
+        role="tablist"
+        aria-label={t("browseSkills")}
+        className="no-scrollbar flex gap-1 overflow-x-auto border-b border-slate-100 bg-slate-50/70 p-1.5"
+      >
+        {categories.map((category) => {
+          const Icon = SKILL_CATEGORY_ICON[category];
+          const selected = category === current;
+          return (
+            <button
+              key={category}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              aria-controls="skill-category-panel"
+              onClick={() => {
+                setActive(category);
+                setExpanded(false);
+              }}
+              className={cn(
+                "flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200 sm:flex-1 sm:justify-center",
+                selected
+                  ? "bg-white text-brand-800 shadow-sm ring-1 ring-slate-200"
+                  : "text-slate-500 hover:bg-white/70 hover:text-slate-800",
+              )}
+            >
+              <Icon className={cn("h-4 w-4 shrink-0", selected ? "text-brand-700" : "text-slate-400")} aria-hidden />
+              {t(SKILL_CATEGORY_LABEL[category])}
+              <span
+                className={cn(
+                  "rounded-full px-1.5 text-[11px] font-semibold leading-5",
+                  selected ? "bg-brand-50 text-brand-700" : "bg-slate-200/70 text-slate-500",
+                )}
               >
-                {expanded ? t("showLess") : t("seeAll")}
-                <ChevronDown
-                  className={cn("h-3.5 w-3.5 transition-transform duration-200", expanded && "rotate-180")}
-                  strokeWidth={1.75}
-                  aria-hidden
-                />
-              </button>
-            )
-          }
-        >
-          <span className="inline-flex items-center gap-2">
-            <SectionIcon icon={SKILL_CATEGORY_ICON[category]} />
-            {t(SKILL_CATEGORY_LABEL[category])}
-          </span>
-        </SectionTitle>
-        <SkillGrid skills={visible} counts={counts} />
+                {formatNumber(skillsByCategory[category].length, lang)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <CardBody id="skill-category-panel" role="tabpanel" className="px-2 pb-2 pt-2 sm:px-3">
+        <SkillGrid skills={visible} counts={counts} className="sm:grid-cols-6 lg:grid-cols-8" />
+        {hasMore && (
+          <div className="flex justify-center border-t border-slate-100 pt-2">
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              className="inline-flex items-center gap-0.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-accent-600 transition-colors duration-200 hover:bg-accent-50 hover:text-accent-700"
+            >
+              {expanded ? t("showLess") : t("seeAll")}
+              <ChevronDown
+                className={cn("h-3.5 w-3.5 transition-transform duration-200", expanded && "rotate-180")}
+                strokeWidth={1.75}
+                aria-hidden
+              />
+            </button>
+          </div>
+        )}
       </CardBody>
     </Card>
   );

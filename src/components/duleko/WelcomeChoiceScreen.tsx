@@ -14,7 +14,8 @@ const FEATURES: { icon: typeof MapPin; titleKey: StringKey; bodyKey: StringKey }
 ];
 
 /**
- * The very first screen anyone sees: a proper landing page (what Duleko is,
+ * The first screen anyone sees in the Android app (the web shows the full
+ * website - LandingPage - instead): a proper landing page (what Duleko is,
  * what you can do on it) ending in the one real decision - look around
  * first, or go straight to an account. "Explore" drops them into the real
  * home screen as a guest, not a demo; signing in only comes up later, the

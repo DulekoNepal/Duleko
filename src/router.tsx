@@ -15,10 +15,12 @@ import { FriendsScreen } from "@/routes/FriendsScreen";
 import { ChatScreen } from "@/routes/ChatScreen";
 import { ChatsScreen } from "@/routes/ChatsScreen";
 import { ModerationScreen } from "@/routes/ModerationScreen";
-import { PrivacyPolicyScreen } from "@/routes/PrivacyPolicyScreen";
-import { AboutScreen } from "@/routes/AboutScreen";
-import { MissionScreen } from "@/routes/MissionScreen";
-import { MotivationScreen } from "@/routes/MotivationScreen";
+import { PrivacyPage } from "@/routes/site/PrivacyPage";
+import { AboutPage } from "@/routes/site/AboutPage";
+import { MissionPage } from "@/routes/site/MissionPage";
+import { ForBusinessesPage, ForIndividualsPage, PartnersPage } from "@/routes/site/AudiencePages";
+import { SafetyPage } from "@/routes/site/SafetyPage";
+import { MotivationPage } from "@/routes/site/MotivationPage";
 import { RegistrationPolicyScreen } from "@/routes/RegistrationPolicyScreen";
 import { TermsOfUseScreen } from "@/routes/TermsOfUseScreen";
 
@@ -114,25 +116,49 @@ const moderationRoute = createRoute({
 const privacyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/privacy",
-  component: PrivacyPolicyScreen,
+  component: PrivacyPage,
 });
 
 const aboutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/about",
-  component: AboutScreen,
+  component: AboutPage,
 });
 
 const missionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/mission",
-  component: MissionScreen,
+  component: MissionPage,
+});
+
+const individualsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/individuals",
+  component: ForIndividualsPage,
+});
+
+const businessesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/businesses",
+  component: ForBusinessesPage,
+});
+
+const partnersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/partners",
+  component: PartnersPage,
+});
+
+const safetyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/safety",
+  component: SafetyPage,
 });
 
 const motivationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/motivation",
-  component: MotivationScreen,
+  component: MotivationPage,
 });
 
 const registrationPolicyRoute = createRoute({
@@ -161,6 +187,10 @@ const routeTree = rootRoute.addChildren([
   privacyRoute,
   aboutRoute,
   missionRoute,
+  individualsRoute,
+  businessesRoute,
+  partnersRoute,
+  safetyRoute,
   motivationRoute,
   registrationPolicyRoute,
   termsOfUseRoute,

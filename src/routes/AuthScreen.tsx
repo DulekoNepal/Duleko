@@ -36,11 +36,17 @@ const OTP_LENGTH = 6;
  */
 type View = "auth" | "verify" | "forgotEmail" | "forgotCode" | "forgotPassword" | "locationConsent";
 
-export function AuthScreen({ onBack }: { onBack?: () => void }) {
+export function AuthScreen({
+  onBack,
+  initialMode = "signin",
+}: {
+  onBack?: () => void;
+  initialMode?: "signin" | "signup";
+}) {
   const { t, lang } = useI18n();
   const { clearPasswordRecovery } = useSession();
   const [view, setView] = useState<View>("auth");
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

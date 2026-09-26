@@ -1,13 +1,26 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
-import { ArrowLeft, ArrowDown, Check, CornerUpLeft, Pencil, Send, X } from "lucide-react";
-import { AppHeader } from "@/components/duleko/Layout";
-import { ChatBubble, type BubblePanel } from "@/components/duleko/ChatBubble";
+import { Link, useParams } from "@tanstack/react-router";
+import {
+  ArrowDown,
+  ArrowLeft,
+  Check,
+  CheckCheck,
+  CornerUpLeft,
+  Loader2,
+  Pencil,
+  Send,
+  Smile,
+  UserRound,
+  X,
+} from "lucide-react";
+import { LanguageToggleButton } from "@/components/duleko/Layout";
+import { ALL_REACTIONS, ChatBubble, type BubblePanel } from "@/components/duleko/ChatBubble";
+import { useConversationsLive } from "@/components/duleko/ConversationList";
+import { ChatsPane } from "@/routes/ChatsScreen";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { FullPageLoader } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
@@ -27,6 +40,7 @@ import {
   unsendMessage,
 } from "@/lib/queries";
 import { usePresence } from "@/hooks/use-presence";
+import { CHAT_SPLIT_QUERY, useMediaQuery } from "@/hooks/use-media-query";
 import { supabase, errorMessage } from "@/lib/supabase";
 import { cn, containsPhoneNumber, formatDayLabel, relativeTime, sameMinuteWindow, toDateKey } from "@/lib/utils";
 import type { ChatMessage } from "@/lib/types";
@@ -40,7 +54,8 @@ const NEAR_BOTTOM_PX = 80;
 /**
  * A full-page direct-message thread with one other profile: live typing,
  * a "Seen" receipt, emoji reactions, quoted replies, edit and unsend, and
- * swipe-to-reply on touch. No calling, groups, or media.
+ * swipe-to-reply on touch. No calling, groups, or media. On a desktop the
+ * conversation list sits beside it, Messenger-style.
  */
 export function ChatScreen() {
   const { t, lang } = useI18n();
@@ -60,7 +75,8 @@ export function ChatScreen() {
   // recent `limit` messages, so realtime updates keep working unchanged.
   const [limit, setLimit] = useState(MESSAGES_PAGE);
   const listRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const lastTypingSentAt = useRef(0);
   const typingStopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const landedOn = useRef<string | null>(null);
@@ -74,6 +90,10 @@ export function ChatScreen() {
   const otherTyping = typingFrom.has(otherId);
   const notifyTyping = useTypingSender(me?.id, otherId);
   const onlineMap = usePresence([otherId]);
+  const split = useMediaQuery(CHAT_SPLIT_QUERY);
+  // The list beside the thread needs its own live updates - only mounted on
+  // desktop, so only subscribe there.
+  useConversationsLive(split ? me?.id : undefined);
 
   const pairKey = me ? chatPairKey(me.id, otherId) : null;
 
@@ -240,6 +260,44 @@ export function ChatScreen() {
     };
   }, [activePanel]);
 
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
+  }, [draft]);
+
+  // The emoji palette closes on a tap anywhere outside it, or Escape.
+  useEffect(() => {
+    if (!emojiOpen) return;
+    function onPointerDownAnywhere(e: PointerEvent) {
+      if ((e.target as HTMLElement | null)?.closest("[data-chat-emoji]")) return;
+      setEmojiOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setEmojiOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDownAnywhere, true);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDownAnywhere, true);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [emojiOpen]);
+
+  /** Drops an emoji in at the caret and keeps the palette open for more. */
+  function insertEmoji(emoji: string) {
+    const el = inputRef.current;
+    const start = el?.selectionStart ?? draft.length;
+    const end = el?.selectionEnd ?? draft.length;
+    onDraftChange(draft.slice(0, start) + emoji + draft.slice(end));
+    requestAnimationFrame(() => {
+      el?.focus();
+      const pos = start + emoji.length;
+      el?.setSelectionRange(pos, pos);
+    });
+  }
+
   function onDraftChange(value: string) {
     setDraft(value);
     // Editing an old message shouldn't read as "typing" to the other side.
@@ -333,234 +391,350 @@ export function ChatScreen() {
     return { m, newDay, firstInRun: !joinsPrev, lastInRun: !joinsNext };
   });
 
+  const starters = [t("chatStarter1"), t("chatStarter2"), t("chatStarter3"), t("chatStarter4")];
+  const showJump = !atBottom || unreadBelow;
+
   return (
     // h-dvh, not min-h-dvh: the thread itself has to be the scroller, and a
     // wrapper that can grow past the viewport would hand scrolling to the
     // page instead - which silently breaks opening on the newest message.
     // The tab bar hides itself on /chat/, so the full height is ours.
-    <div className="flex h-dvh flex-col overflow-hidden bg-white">
-      <AppHeader
-        title={
-          // The parent <h1> (AppHeader) applies its own `truncate`, which
-          // only works cleanly on plain text - so truncation is handled
-          // here instead, on the name span alone, with the badge (already
-          // shrink-0) sitting safely outside the truncated part.
-          <span className="flex min-w-0 items-center gap-1.5">
-            <span className="truncate">{otherName}</span>
-            <VerifiedBadge staffRole={other.data?.staff_role} verified={other.data?.is_verified} size={15} />
-          </span>
-        }
-        subtitle={
-          otherTyping ? (
-            <span className="text-brand-700">{t("typingIndicator")}</span>
-          ) : isOnline ? (
-            <span className="inline-flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden />
-              {t("online")}
-            </span>
-          ) : other.data?.is_official ? (
-            `✓ ${t("officialAccount")}`
-          ) : undefined
-        }
-        back={
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="rounded-lg p-1.5 text-slate-500 transition-colors duration-200 hover:bg-slate-100"
-            aria-label={t("back")}
-          >
-            <ArrowLeft className="h-5 w-5" aria-hidden />
-          </button>
-        }
-        leading={<Avatar name={otherName || "?"} src={other.data?.avatar_url} size={36} profileId={otherId} />}
-      />
+    <div className="flex h-dvh overflow-hidden bg-white">
+      {split && <ChatsPane typingFrom={typingFrom} activeId={otherId} showDivisions={false} />}
 
-      <div
-        ref={listRef}
-        onScroll={(e) => {
-          const el = e.currentTarget;
-          const near = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX;
-          setAtBottom(near);
-          if (near) setUnreadBelow(false);
-        }}
-        // min-h-0 lets this flex child shrink below its content height;
-        // without it the default min-height:auto keeps it as tall as the
-        // thread and overflow-y-auto never engages.
-        className="mx-auto flex w-full min-h-0 max-w-3xl flex-1 flex-col overflow-y-auto overflow-x-hidden px-4 py-4"
-      >
-        {messages.isLoading ? (
-          <p className="py-6 text-center text-sm text-slate-500">{t("loading")}</p>
-        ) : items.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-500">{t("chatEmpty")}</p>
-        ) : (
-          <>
-            {mayHaveOlder && (
-              <div className="flex justify-center pb-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const el = listRef.current;
-                    anchorFromBottom.current = el ? el.scrollHeight - el.scrollTop : null;
-                    setLimit((n) => n + MESSAGES_PAGE);
-                  }}
-                  className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 transition-colors duration-200 hover:bg-slate-50"
-                >
-                  {t("loadOlderMessages")}
-                </button>
-              </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* ---- Thread header ------------------------------------------- */}
+        <header className="z-20 border-b border-slate-200 bg-white/95 pt-[var(--sat)] backdrop-blur">
+          <div className="flex h-16 items-center gap-2 px-2 sm:gap-3 sm:px-4 lg:h-[72px]">
+            {!split && (
+              <button
+                type="button"
+                onClick={() => window.history.back()}
+                className="rounded-xl p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100"
+                aria-label={t("back")}
+              >
+                <ArrowLeft className="h-5 w-5" aria-hidden />
+              </button>
             )}
-            {rows.map(({ m, newDay, firstInRun, lastInRun }) => (
-            <div key={m.id}>
-              {newDay && (
-                <div className="my-3 flex justify-center">
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-500">
-                    {formatDayLabel(m.created_at, lang)}
+
+            <Link
+              to="/worker/$workerId"
+              params={{ workerId: otherId }}
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1.5 py-1 transition-colors hover:bg-slate-50"
+            >
+              <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={42} online={isOnline} />
+              <span className="min-w-0">
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <span className="truncate font-semibold text-slate-900">{otherName}</span>
+                  <VerifiedBadge staffRole={other.data?.staff_role} verified={other.data?.is_verified} size={15} />
+                </span>
+                <span className="block truncate text-xs">
+                  {otherTyping ? (
+                    <span className="inline-flex items-center gap-1.5 font-medium text-brand-700">
+                      <TypingDots />
+                      {t("typingIndicator")}
+                    </span>
+                  ) : isOnline ? (
+                    <span className="inline-flex items-center gap-1.5 font-medium text-green-600">
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden />
+                      {t("online")}
+                    </span>
+                  ) : other.data?.is_official ? (
+                    <span className="text-slate-500">✓ {t("officialAccount")}</span>
+                  ) : (
+                    <span className="text-slate-400">{t("viewProfile")}</span>
+                  )}
+                </span>
+              </span>
+            </Link>
+
+            <Link
+              to="/worker/$workerId"
+              params={{ workerId: otherId }}
+              className="hidden h-10 shrink-0 items-center gap-2 rounded-xl border border-slate-200 px-3.5 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-800 sm:inline-flex"
+            >
+              <UserRound className="h-4 w-4" aria-hidden />
+              {t("viewProfile")}
+            </Link>
+            {/* The list pane beside it already has one on desktop. */}
+            {!split && <LanguageToggleButton />}
+          </div>
+        </header>
+
+        {/* ---- Messages ------------------------------------------------- */}
+        <div className="relative min-h-0 flex-1 bg-slate-50">
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgb(15_76_92/0.06)_1px,transparent_0)] [background-size:20px_20px]"
+            aria-hidden
+          />
+          <div
+            ref={listRef}
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              const near = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX;
+              setAtBottom(near);
+              if (near) setUnreadBelow(false);
+            }}
+            className="relative h-full overflow-y-auto overflow-x-hidden"
+          >
+            <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-3 py-4 sm:px-6">
+              {messages.isLoading ? (
+                <div className="space-y-3 py-4" aria-label={t("loading")}>
+                  {[48, 64, 40, 56].map((w, i) => (
+                    <div key={i} className={cn("flex", i % 2 ? "justify-end" : "justify-start")}>
+                      <div className="skeleton h-10 rounded-2xl" style={{ width: `${w}%` }} />
+                    </div>
+                  ))}
+                </div>
+              ) : items.length === 0 ? (
+                // An empty thread gets a proper welcome - who you're talking
+                // to, and a few one-tap openers.
+                <div className="m-auto flex max-w-sm flex-col items-center py-10 text-center">
+                  <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={80} online={isOnline} className="ring-4 ring-white shadow-md" />
+                  <p className="mt-4 text-lg font-bold text-slate-900">{t("sayHelloTo", { name: otherName })}</p>
+                  <p className="mt-1 text-sm text-slate-500">{t("chatStarterHint")}</p>
+                  <div className="mt-5 flex flex-wrap justify-center gap-2">
+                    {starters.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => {
+                          onDraftChange(s);
+                          inputRef.current?.focus();
+                        }}
+                        className="rounded-full border border-brand-200 bg-white px-3.5 py-2 text-sm font-medium text-brand-800 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-50"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {mayHaveOlder && (
+                    <div className="flex justify-center pb-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const el = listRef.current;
+                          anchorFromBottom.current = el ? el.scrollHeight - el.scrollTop : null;
+                          setLimit((n) => n + MESSAGES_PAGE);
+                        }}
+                        className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-colors duration-200 hover:bg-slate-50"
+                      >
+                        {t("loadOlderMessages")}
+                      </button>
+                    </div>
+                  )}
+                  {rows.map(({ m, newDay, firstInRun, lastInRun }) => (
+                    <div key={m.id}>
+                      {newDay && (
+                        <div className="my-4 flex items-center gap-3" role="separator">
+                          <span className="h-px flex-1 bg-slate-200" aria-hidden />
+                          <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-500 shadow-sm ring-1 ring-slate-200">
+                            {formatDayLabel(m.created_at, lang)}
+                          </span>
+                          <span className="h-px flex-1 bg-slate-200" aria-hidden />
+                        </div>
+                      )}
+                      <ChatBubble
+                        message={m}
+                        mine={m.sender_profile_id === me.id}
+                        myProfileId={me.id}
+                        otherName={otherName}
+                        otherAvatarUrl={other.data?.avatar_url ?? null}
+                        otherProfileId={otherId}
+                        firstInRun={firstInRun}
+                        lastInRun={lastInRun}
+                        panel={activeMessageId === m.id ? activePanel : null}
+                        onPanel={(panel) => {
+                          setActiveMessageId(panel ? m.id : null);
+                          setActivePanel(panel);
+                        }}
+                        onReply={startReply}
+                        onEdit={startEdit}
+                        onUnsend={(msg) => unsend.mutate(msg.id)}
+                        onReact={(msg, emoji) =>
+                          react.mutate({
+                            messageId: msg.id,
+                            emoji,
+                            mine: msg.message_reactions.some((r) => r.profile_id === me.id && r.emoji === emoji),
+                          })
+                        }
+                        onJumpTo={jumpTo}
+                        highlighted={highlightId === m.id}
+                      />
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {showSeen && (
+                <p className="flex items-center justify-end gap-1 pt-0.5 text-[11px] font-medium text-brand-700">
+                  <CheckCheck className="h-3.5 w-3.5" aria-hidden />
+                  {t("seenLabel")} · {relativeTime(lastMessage.read_at!, lang)}
+                </p>
+              )}
+
+              {otherTyping && (
+                <div className="mt-1 flex items-end gap-1.5">
+                  <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={28} profileId={otherId} />
+                  <span className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-white px-3.5 py-3 text-slate-400 shadow-sm ring-1 ring-slate-200/70">
+                    <TypingDots />
+                    <span className="sr-only">
+                      {otherName} {t("typingIndicator")}
+                    </span>
                   </span>
                 </div>
               )}
-              <ChatBubble
-                message={m}
-                mine={m.sender_profile_id === me.id}
-                myProfileId={me.id}
-                otherName={otherName}
-                otherAvatarUrl={other.data?.avatar_url ?? null}
-                otherProfileId={otherId}
-                firstInRun={firstInRun}
-                lastInRun={lastInRun}
-                panel={activeMessageId === m.id ? activePanel : null}
-                onPanel={(panel) => {
-                  setActiveMessageId(panel ? m.id : null);
-                  setActivePanel(panel);
-                }}
-                onReply={startReply}
-                onEdit={startEdit}
-                onUnsend={(msg) => unsend.mutate(msg.id)}
-                onReact={(msg, emoji) =>
-                  react.mutate({
-                    messageId: msg.id,
-                    emoji,
-                    mine: msg.message_reactions.some((r) => r.profile_id === me.id && r.emoji === emoji),
-                  })
-                }
-                onJumpTo={jumpTo}
-                highlighted={highlightId === m.id}
-              />
             </div>
-            ))}
-          </>
-        )}
-
-        {showSeen && (
-          <p className="pt-0.5 text-right text-[11px] text-slate-400">
-            {t("seenLabel")} · {relativeTime(lastMessage.read_at!, lang)}
-          </p>
-        )}
-
-        {otherTyping && (
-          <div className="mt-1 flex items-end gap-1.5">
-            <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={28} profileId={otherId} />
-            <span className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-slate-100 px-3.5 py-3">
-              {[0, 150, 300].map((delay) => (
-                <span
-                  key={delay}
-                  className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
-                  style={{ animationDelay: `${delay}ms` }}
-                />
-              ))}
-              <span className="sr-only">
-                {otherName} {t("typingIndicator")}
-              </span>
-            </span>
           </div>
-        )}
-      </div>
 
-      {/* Reading history shouldn't be interrupted, so new messages raise
-          this instead of dragging the thread down under the finger. */}
-      {unreadBelow && (
-        <div className="pointer-events-none sticky bottom-2 z-20 flex justify-center">
-          <button
-            type="button"
-            onClick={() => scrollToEnd("smooth")}
-            className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-3.5 py-2 text-xs font-medium text-white shadow-lg transition-colors duration-200 hover:bg-brand-800"
-          >
-            <ArrowDown className="h-3.5 w-3.5" aria-hidden />
-            {t("newMessages")}
-          </button>
-        </div>
-      )}
-
-      <form
-        className="sticky bottom-0 border-t border-slate-200 bg-white p-3 pb-[calc(0.75rem+var(--sab))]"
-        onSubmit={(e) => {
-          e.preventDefault();
-          submit();
-        }}
-      >
-        <div className="mx-auto w-full max-w-3xl">
-          {(replyTo || editing) && (
-            <div className="mb-2 flex items-start gap-2 rounded-xl border-l-2 border-brand-500 bg-brand-50/70 px-3 py-2">
-              <span className="mt-0.5 shrink-0 text-brand-700" aria-hidden>
-                {editing ? <Pencil className="h-3.5 w-3.5" /> : <CornerUpLeft className="h-3.5 w-3.5" />}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-xs font-medium text-brand-900">
-                  {editing
-                    ? t("editingMessage")
-                    : t("replyingTo", {
-                        name:
-                          replyTo!.sender_profile_id === me.id
-                            ? t("youLabel")
-                            : (other.data?.full_name ?? ""),
-                      })}
-                </span>
-                <span className="mt-0.5 block truncate text-xs text-slate-500">
-                  {(editing ?? replyTo)!.body}
-                </span>
-              </span>
-              <button
-                type="button"
-                onClick={cancelComposer}
-                aria-label={t("cancel")}
-                className="shrink-0 rounded-lg p-1 text-slate-400 transition-colors duration-200 hover:bg-white hover:text-slate-600"
-              >
-                <X className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            {/* Deliberately not autofocused: on a phone the keyboard would
-                spring up and resize the viewport just as the thread is
-                settling on its newest message. */}
-            <input
-              ref={inputRef}
-              value={draft}
-              onChange={(e) => onDraftChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  submit();
-                } else if (e.key === "Escape" && (replyTo || editing)) {
-                  cancelComposer();
-                }
-              }}
-              placeholder={editing ? t("editMessagePlaceholder") : t("chatPlaceholder")}
-              maxLength={1000}
-              className="h-11 flex-1 rounded-xl border border-slate-300 bg-white px-3.5 text-slate-900 placeholder:text-slate-400 focus:border-brand-600 focus:outline focus:outline-2 focus:outline-offset-0 focus:outline-brand-600/30"
-            />
-            <Button
-              type="submit"
-              size="icon"
-              loading={send.isPending || saveEdit.isPending}
-              disabled={!draft.trim()}
-              aria-label={editing ? t("save") : t("send")}
+          {/* Reading history shouldn't be interrupted, so new messages raise
+              this instead of dragging the thread down under the finger. */}
+          {showJump && items.length > 0 && (
+            <button
+              type="button"
+              onClick={() => scrollToEnd("smooth")}
+              aria-label={unreadBelow ? t("newMessages") : t("jumpToLatest")}
+              className={cn(
+                "absolute bottom-4 z-20 inline-flex items-center gap-1.5 rounded-full shadow-lg transition-all duration-200",
+                unreadBelow
+                  ? "left-1/2 -translate-x-1/2 bg-brand-700 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-800"
+                  : "right-4 h-10 w-10 justify-center bg-white text-slate-600 ring-1 ring-slate-200 hover:text-brand-700",
+              )}
             >
-              {editing ? <Check className="h-4 w-4" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
-            </Button>
-          </div>
+              <ArrowDown className="h-4 w-4" aria-hidden />
+              {unreadBelow && t("newMessages")}
+            </button>
+          )}
         </div>
-      </form>
+
+        {/* ---- Composer ------------------------------------------------- */}
+        <form
+          className="border-t border-slate-200 bg-white px-3 pb-[calc(0.75rem+var(--sab))] pt-3 sm:px-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+        >
+          <div className="mx-auto w-full max-w-3xl">
+            {(replyTo || editing) && (
+              <div className="animate-in-up mb-2 flex items-start gap-2.5 rounded-2xl border border-brand-200 bg-brand-50/70 px-3 py-2.5">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 ring-1 ring-brand-200" aria-hidden>
+                  {editing ? <Pencil className="h-3.5 w-3.5" /> : <CornerUpLeft className="h-3.5 w-3.5" />}
+                </span>
+                <span className="min-w-0 flex-1 border-l-2 border-brand-500 pl-2.5">
+                  <span className="block text-xs font-semibold text-brand-900">
+                    {editing
+                      ? t("editingMessage")
+                      : t("replyingTo", {
+                          name: replyTo!.sender_profile_id === me.id ? t("youLabel") : (other.data?.full_name ?? ""),
+                        })}
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-slate-500">{(editing ?? replyTo)!.body}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={cancelComposer}
+                  aria-label={t("cancel")}
+                  className="shrink-0 rounded-lg p-1 text-slate-400 transition-colors duration-200 hover:bg-white hover:text-slate-600"
+                >
+                  <X className="h-4 w-4" aria-hidden />
+                </button>
+              </div>
+            )}
+
+            <div className="relative flex items-end gap-2">
+              <div className="flex min-w-0 flex-1 items-end gap-0.5 rounded-3xl border border-slate-200 bg-slate-50 py-1 pl-1 pr-3 transition-all focus-within:border-brand-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-100">
+                <button
+                  type="button"
+                  data-chat-emoji
+                  onClick={() => setEmojiOpen((v) => !v)}
+                  aria-expanded={emojiOpen}
+                  aria-label={t("addEmoji")}
+                  className={cn(
+                    "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors",
+                    emojiOpen ? "bg-brand-50 text-brand-700" : "text-slate-500 hover:bg-slate-100 hover:text-brand-700",
+                  )}
+                >
+                  <Smile className="h-5 w-5" aria-hidden />
+                </button>
+                {/* Deliberately not autofocused: on a phone the keyboard would
+                    spring up and resize the viewport just as the thread is
+                    settling on its newest message. */}
+                <textarea
+                  ref={inputRef}
+                  rows={1}
+                  value={draft}
+                  onChange={(e) => onDraftChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      submit();
+                    } else if (e.key === "Escape" && (replyTo || editing)) {
+                      cancelComposer();
+                    }
+                  }}
+                  placeholder={editing ? t("editMessagePlaceholder") : t("chatPlaceholder")}
+                  maxLength={1000}
+                  aria-label={t("chatPlaceholder")}
+                  className="max-h-32 min-h-10 min-w-0 flex-1 resize-none bg-transparent py-2 text-[15px] leading-6 text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={!draft.trim() || send.isPending || saveEdit.isPending}
+                aria-label={editing ? t("save") : t("send")}
+                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-700 text-white shadow-md shadow-brand-900/15 transition-all duration-200 hover:bg-brand-800 active:scale-95 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+              >
+                {send.isPending || saveEdit.isPending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                ) : editing ? (
+                  <Check className="h-5 w-5" aria-hidden />
+                ) : (
+                  <Send className="h-5 w-5 -translate-x-px translate-y-px" aria-hidden />
+                )}
+              </button>
+
+              {emojiOpen && (
+                <div
+                  data-chat-emoji
+                  className="animate-in-up absolute bottom-full left-0 z-30 mb-2 w-[min(21rem,calc(100vw-1.5rem))] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"
+                >
+                  <div className="grid max-h-56 grid-cols-8 gap-0.5 overflow-y-auto">
+                    {ALL_REACTIONS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => insertEmoji(emoji)}
+                        className="rounded-lg py-1.5 text-xl transition-transform duration-150 hover:scale-125 hover:bg-slate-50"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <p className="mt-1.5 hidden px-4 text-[11px] text-slate-400 lg:block">{t("shiftEnterHint")}</p>
+          </div>
+        </form>
+      </div>
     </div>
+  );
+}
+
+function TypingDots() {
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-hidden>
+      {[0, 150, 300].map((delay) => (
+        <span
+          key={delay}
+          className="h-1.5 w-1.5 animate-bounce rounded-full bg-current"
+          style={{ animationDelay: `${delay}ms` }}
+        />
+      ))}
+    </span>
   );
 }

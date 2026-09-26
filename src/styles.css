@@ -85,6 +85,15 @@ textarea {
   }
 }
 
+/* Horizontal chip rows that scroll by swipe - no bar in the way. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .skeleton {
   @apply relative overflow-hidden rounded-md bg-slate-200;
 }

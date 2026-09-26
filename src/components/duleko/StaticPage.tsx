@@ -2,15 +2,14 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /**
- * Shared shell for fully static, standalone pages (Privacy, About, Mission,
- * Motivation). Built from the same AppHeader/PageContainer/Card primitives
- * as the rest of the app so they read as part of Duleko.
+ * Shared shell for the in-app static pages (Terms, Registration policy).
+ * Built from the same AppHeader/PageContainer/Card primitives as the rest
+ * of the app so they read as part of Duleko. The public website pages use
+ * SiteLayout instead.
  */
 export function StaticPage({
   title,
@@ -142,109 +141,6 @@ export function StaticSection({
           </span>
         </SectionTitle>
         <div className="space-y-3 text-sm leading-relaxed text-slate-700">{children}</div>
-      </CardBody>
-    </Card>
-  );
-}
-
-/** Highlighted creed / mission line used on About, Mission, and Motivation. */
-export function CreedCallout({ statement, description }: { statement: string; description?: string }) {
-  return (
-    <Card tone="primary">
-      <CardBody className="p-4 sm:p-6">
-        <p className="text-base font-medium leading-snug text-slate-900 sm:text-lg sm:leading-relaxed">
-          {statement}
-        </p>
-        {description ? (
-          <p className="mt-3 text-sm leading-relaxed text-slate-700 sm:mt-4 sm:leading-7">
-            {description}
-          </p>
-        ) : null}
-      </CardBody>
-    </Card>
-  );
-}
-
-/** A small pill matching SkillChip's look, without needing a catalogued skill id. */
-export function SkillPill({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700">
-      {children}
-    </span>
-  );
-}
-
-export function TeamMemberCard({
-  name,
-  role,
-  location,
-  university,
-  bio,
-  skills,
-  phone,
-  profileUrl,
-  portfolioUrl,
-  imageSrc,
-}: {
-  name: string;
-  role: string;
-  location?: string;
-  university?: string;
-  bio: string;
-  skills: string[];
-  phone: string;
-  profileUrl: string;
-  /** Optional personal site, shown as its bare domain next to the profile link. */
-  portfolioUrl?: string;
-  imageSrc?: string;
-}) {
-  const { t } = useI18n();
-
-  return (
-    <Card>
-      <CardBody className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:gap-5 sm:p-5">
-        <Avatar name={name} src={imageSrc} size={80} className={cn("mx-auto shrink-0 sm:mx-0")} />
-        <div className="min-w-0 flex-1 text-center sm:text-left">
-          <div className="flex flex-col items-center gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-3 sm:gap-y-1">
-            <h3 className="text-base font-semibold text-slate-900 sm:text-lg">{name}</h3>
-            <Badge tone="brand">{role}</Badge>
-          </div>
-          <div className="mt-1.5 text-sm text-slate-500">{university || location}</div>
-
-          <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-700 sm:leading-7">
-            {bio}
-          </p>
-
-          <div className="mt-3 flex flex-wrap justify-center gap-1.5 sm:justify-start">
-            {skills.map((skill) => (
-              <SkillPill key={skill}>{skill}</SkillPill>
-            ))}
-          </div>
-
-          <div className="mt-4 flex flex-col items-center gap-2 border-t border-slate-100 pt-3 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-1.5 sm:justify-start">
-            <a href={`tel:${phone.replace(/\s+/g, "")}`} className="font-medium text-brand-700 hover:underline">
-              {phone}
-            </a>
-            <a
-              href={profileUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-brand-700 hover:underline"
-            >
-              {t("viewDulekoProfile")}
-            </a>
-            {portfolioUrl && (
-              <a
-                href={portfolioUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="font-medium text-brand-700 hover:underline"
-              >
-                {portfolioUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-              </a>
-            )}
-          </div>
-        </div>
       </CardBody>
     </Card>
   );

@@ -1,19 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
-  Award,
   ArrowLeft,
+  Award,
   Briefcase,
   Cake,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
   Flag,
   GraduationCap,
   Info,
   Lock,
   MapPin,
   MessageCircle,
+  MessageSquare,
   MoreHorizontal,
   Phone,
+  Send,
   Share2,
   ShieldBan,
   ShieldCheck,
@@ -21,9 +27,11 @@ import {
   Star,
   UserCheck,
   UserPlus,
+  UserRound,
 } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
-import { RatingStars } from "@/components/duleko/Rating";
+import { RatingLine } from "@/components/duleko/WorkerList";
+import { DetailRow, ProfileCover, SectionCard, StatItem } from "@/components/duleko/ProfileParts";
 import { ReviewsCard } from "@/components/duleko/ReviewsCard";
 import { RequestWorkDialog } from "@/components/duleko/RequestWorkDialog";
 import { ReportDialog } from "@/components/duleko/ReportDialog";
@@ -31,12 +39,10 @@ import { SuspendUserDialog } from "@/components/duleko/SuspendUserDialog";
 import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { MenuItem, MenuPanel } from "@/components/ui/menu";
 import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card";
 import { EmptyState, FullPageLoader } from "@/components/ui/states";
 import { shareProfile } from "@/lib/share";
-import { SkillChip } from "@/components/duleko/SkillIcon";
+import { SkillTile } from "@/components/duleko/SkillIcon";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useGuestMode } from "@/hooks/use-guest-mode";
@@ -60,11 +66,7 @@ import {
   verifyProfile,
 } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import { cn, formatMoney, formatNumber, locationLine, relativeTime, skillName } from "@/lib/utils";
-
-/** Matches the Call/Chat buttons' look - a native `<a href="tel:">` can't use the <Button> component. */
-const secondaryActionClass =
-  "inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-50 px-4 text-sm font-medium text-brand-800 transition-colors duration-200 hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2";
+import { cn, formatDate, formatMoney, formatNumber, locationLine, skillName } from "@/lib/utils";
 
 export function WorkerScreen() {
   const { t, lang } = useI18n();
@@ -242,6 +244,24 @@ export function WorkerScreen() {
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
+  // On a phone, the Request/Chat bar slides in once the hero's own buttons
+  // have scrolled out of view, so the main action is never more than a tap away.
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  useEffect(() => {
+    const onScroll = () => {
+      const el = actionsRef.current;
+      setShowStickyBar(Boolean(el) && el!.getBoundingClientRect().bottom < 0);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
   if (worker.isLoading) return <FullPageLoader label={t("loading")} />;
   if (!worker.data) {
     return (
@@ -256,11 +276,81 @@ export function WorkerScreen() {
   const place = locationLine(w, lang);
   const fs = friendship.data;
   const iAmRequester = fs?.requester_profile_id === me?.id;
+  const incomingRequest = fs?.status === "pending" && !iAmRequester;
+  const skillList = skills.data ?? [];
+  const certList = certificates.data ?? [];
 
   // Staff moderation only ever targets an ordinary member - never your own
   // profile, and never another staff member's (verify/suspend a colleague
   // makes no sense; revoke their role first if that's ever really needed).
   const showModerationMenu = isStaffViewer && !isMe && !w.staff_role;
+
+  const tileClass =
+    // Icon over label on a phone, where three sit side by side; one line from sm up.
+    "inline-flex h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold sm:h-11 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm text-slate-700 transition-colors duration-200 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 disabled:opacity-60";
+
+  const callButton = canCall ? (
+    <a href={`tel:${contact.data!.phone}`} className={tileClass}>
+      <Phone className="h-4 w-4" aria-hidden />
+      {t("callNow")}
+    </a>
+  ) : (
+    <button
+      type="button"
+      onClick={() => (me ? toast(t("callNotAllowed")) : requestSignIn())}
+      className={cn(tileClass, "text-slate-400 hover:text-slate-500")}
+    >
+      <Lock className="h-4 w-4" aria-hidden />
+      {t("callNow")}
+    </button>
+  );
+
+  const chatButton = (
+    <button
+      type="button"
+      onClick={() => withAuth(() => navigate({ to: "/chat/$otherId", params: { otherId: w.id } }))}
+      className={tileClass}
+    >
+      <MessageCircle className="h-4 w-4" aria-hidden />
+      {t("chat")}
+    </button>
+  );
+
+  // Friend state is the one button that changes: add, cancel your own
+  // pending request, or show you're already friends (tap to remove).
+  const friendButton = !fs ? (
+    <button
+      type="button"
+      disabled={addFriend.isPending}
+      onClick={() => withAuth(() => addFriend.mutate())}
+      className={tileClass}
+    >
+      <UserPlus className="h-4 w-4" aria-hidden />
+      <span className="truncate">{t("addFriend")}</span>
+    </button>
+  ) : fs.status === "pending" && iAmRequester ? (
+    <button
+      type="button"
+      disabled={removeFriend.isPending}
+      onClick={() => removeFriend.mutate()}
+      className={tileClass}
+    >
+      <Clock className="h-4 w-4" aria-hidden />
+      <span className="truncate">{t("friendRequestPending")}</span>
+    </button>
+  ) : fs.status === "accepted" ? (
+    <button
+      type="button"
+      disabled={removeFriend.isPending}
+      onClick={() => {
+        if (window.confirm(t("removeFriendConfirm"))) removeFriend.mutate();
+      }}
+      className={cn(tileClass, "border-brand-200 bg-brand-50 text-brand-800")}
+    >
+      <UserCheck className="h-4 w-4" aria-hidden />
+      <span className="truncate">{t("alreadyFriends")}</span>
+    </button>
+  ) : null;
 
   return (
     <>
@@ -352,260 +442,311 @@ export function WorkerScreen() {
         }
       />
 
-      <PageContainer className="max-w-2xl">
-        {/* ---- Identity card: cover photo behind an overlapping avatar, one flowing hierarchy - */}
-        <Card className="mb-4 overflow-hidden">
-          <div className="relative h-28 w-full bg-gradient-to-br from-slate-100 to-slate-200 sm:h-36">
-            {w.cover_url && (
-              <img src={w.cover_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            )}
-          </div>
+      <PageContainer className={cn("space-y-5 md:space-y-6", !isMe && "pb-40 md:pb-10")}>
+        {/* ==============================================================
+            Identity: cover, photo, name, actions, stats
+            ============================================================== */}
+        <section className="animate-in-up overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <ProfileCover src={w.cover_url} />
 
-          <div className="px-5 pb-5">
-            <div className="relative z-10 -mt-14 inline-block">
-              <Avatar
-                name={w.full_name}
-                src={w.avatar_url}
-                size={84}
-                online={online}
-                className="shadow-md ring-4 ring-white"
-              />
-            </div>
+          <div className="px-4 pb-5 sm:px-6 sm:pb-6">
+            {/* Centred on a phone, photo-left from sm up. */}
+            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-end sm:gap-5 sm:text-left">
+              <div className="relative z-10 -mt-14 shrink-0 sm:-mt-16">
+                <Avatar
+                  name={w.full_name}
+                  src={w.avatar_url}
+                  size={112}
+                  online={online}
+                  className="shadow-lg ring-4 ring-white"
+                />
+              </div>
 
-            <div className="mt-3 flex items-start justify-between gap-3">
-              <div className="min-w-0">
+              <div className="min-w-0 max-w-full flex-1 sm:pb-1">
                 {/* h2, not h1 - AppHeader already carries this name as the page h1. */}
-                <h2 className="flex min-w-0 items-center gap-1.5 text-xl font-bold text-slate-900">
+                <h2 className="flex min-w-0 items-center justify-center gap-1.5 text-2xl font-bold leading-tight tracking-tight text-slate-900 sm:justify-start sm:text-[1.75rem]">
                   <span className="truncate">{w.full_name}</span>
-                  <VerifiedBadge staffRole={w.staff_role} verified={w.is_verified} size={18} />
+                  <VerifiedBadge staffRole={w.staff_role} verified={w.is_verified} size={22} />
                 </h2>
-                <div className="mt-1">
-                  <RatingStars value={Number(w.rating)} count={w.rating_count} />
+                {w.bio && <p className="mt-1 text-sm leading-relaxed text-slate-600 sm:text-base">{w.bio}</p>}
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-sm text-slate-500 sm:justify-start">
+                  {place && (
+                    <span className="inline-flex min-w-0 items-center gap-1">
+                      <MapPin className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+                      <span className="truncate">{place}</span>
+                    </span>
+                  )}
+                  <RatingLine rating={w.rating} count={w.rating_count} className="text-sm" />
                 </div>
               </div>
-              <Badge tone={w.is_available ? "success" : "muted"} className="shrink-0">
-                {w.is_available ? t("availableNow") : t("notAvailable")}
-              </Badge>
-            </div>
 
-            {place && (
-              <p className="mt-2.5 flex items-center gap-1.5 text-sm text-slate-500">
-                <MapPin className="h-4 w-4 shrink-0" aria-hidden />
-                {place}
-              </p>
-            )}
-          </div>
-        </Card>
-
-        {/* ---- Actions: Request Work + Friend side by side, Call + Chat side
-             by side below - same 4 buttons for everyone, friends or not. - */}
-        {!isMe && (
-          <div className="mb-4 space-y-2">
-            {fs?.status === "pending" && !iAmRequester ? (
-              <div className="grid grid-cols-2 gap-2">
-                <Button size="lg" className="col-span-2" onClick={() => setRequestOpen(true)}>
-                  {t("requestWork")}
-                </Button>
-                <Button loading={respond.isPending} onClick={() => respond.mutate(true)}>
-                  {t("acceptRequest")}
-                </Button>
-                <Button variant="outline" loading={respond.isPending} onClick={() => respond.mutate(false)}>
-                  {t("declineRequest")}
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Button size="lg" onClick={() => withAuth(() => setRequestOpen(true))}>
-                  {t("requestWork")}
-                </Button>
-
-                {!fs && (
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    loading={addFriend.isPending}
-                    onClick={() => withAuth(() => addFriend.mutate())}
-                  >
-                    <UserPlus className="h-4 w-4" aria-hidden />
-                    {t("addFriend")}
-                  </Button>
+              <span
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold sm:mb-1",
+                  w.is_available ? "bg-brand-50 text-brand-800 ring-1 ring-brand-200" : "bg-slate-100 text-slate-500",
                 )}
-                {fs?.status === "pending" && iAmRequester && (
-                  <Button size="lg" variant="outline" loading={removeFriend.isPending} onClick={() => removeFriend.mutate()}>
-                    {t("cancelRequest")}
-                  </Button>
-                )}
-                {fs?.status === "accepted" && (
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    loading={removeFriend.isPending}
-                    onClick={() => {
-                      if (window.confirm(t("removeFriendConfirm"))) removeFriend.mutate();
-                    }}
-                  >
-                    <UserCheck className="h-4 w-4" aria-hidden />
-                    {t("alreadyFriends")}
-                  </Button>
-                )}
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-2">
-              {canCall ? (
-                <a href={`tel:${contact.data!.phone}`} className={secondaryActionClass}>
-                  <Phone className="h-4 w-4" aria-hidden />
-                  {t("callNow")}
-                </a>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() =>
-                    me ? toast(t("callNotAllowed")) : requestSignIn()
-                  }
-                  className={cn(secondaryActionClass, "opacity-60")}
-                >
-                  <Lock className="h-4 w-4" aria-hidden />
-                  {t("callNow")}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() =>
-                  withAuth(() => navigate({ to: "/chat/$otherId", params: { otherId: w.id } }))
-                }
-                className={secondaryActionClass}
               >
-                <MessageCircle className="h-4 w-4" aria-hidden />
-                {t("chat")}
-              </button>
-            </div>
-          </div>
-        )}
-
-        <Card className="mb-4">
-          <CardBody>
-            <SectionTitle>
-              <span className="inline-flex items-center gap-2">
-                <SectionIcon icon={Info} />
-                {t("about")}
+                <span className="relative flex h-2.5 w-2.5" aria-hidden>
+                  {w.is_available && (
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-50" />
+                  )}
+                  <span
+                    className={cn(
+                      "relative inline-flex h-2.5 w-2.5 rounded-full",
+                      w.is_available ? "bg-brand-500" : "bg-slate-400",
+                    )}
+                  />
+                </span>
+                {w.is_available ? t("availableForWork") : t("notAvailable")}
               </span>
-            </SectionTitle>
-            {w.bio && <p className="mb-2 text-sm font-medium text-slate-800">{w.bio}</p>}
-            {w.about ? (
-              <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">{w.about}</p>
-            ) : (
-              <p className="text-sm italic text-slate-400">{t("noAboutYetOther")}</p>
+            </div>
+
+            {/* ---- Someone asked to be your friend ------------------ */}
+            {!isMe && incomingRequest && (
+              <div className="animate-in-up mt-5 flex flex-col gap-3 rounded-2xl border border-brand-200 bg-brand-50/70 px-4 py-3.5 sm:flex-row sm:items-center">
+                <span className="flex min-w-0 flex-1 items-center gap-2.5 text-sm font-semibold text-brand-900">
+                  <UserPlus className="h-5 w-5 shrink-0 text-brand-700" aria-hidden />
+                  {t("sentYouFriendRequest", { name: w.full_name.split(/\s+/)[0] })}
+                </span>
+                <div className="flex gap-2">
+                  <Button size="sm" className="flex-1 sm:flex-none" loading={respond.isPending} onClick={() => respond.mutate(true)}>
+                    {t("acceptRequest")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 sm:flex-none"
+                    loading={respond.isPending}
+                    onClick={() => respond.mutate(false)}
+                  >
+                    {t("declineRequest")}
+                  </Button>
+                </div>
+              </div>
             )}
-            {(w.age != null || w.education) && (
-              <div className="mt-3 flex flex-wrap gap-3 text-sm text-slate-600">
+
+            {/* ---- Actions --------------------------------------------- */}
+            {!isMe && (
+              <div ref={actionsRef} className="mt-5 grid gap-2 sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
+                <Button size="lg" className="w-full" onClick={() => withAuth(() => setRequestOpen(true))}>
+                  <Send className="h-4 w-4" aria-hidden />
+                  {t("requestWork")}
+                </Button>
+                <div className={cn("grid gap-2 sm:contents", friendButton ? "grid-cols-3" : "grid-cols-2")}>
+                  {chatButton}
+                  {callButton}
+                  {friendButton}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Hairline dividers from the 1px gaps over a grey backing. */}
+          <dl className="grid grid-cols-2 gap-px border-t border-slate-100 bg-slate-100 sm:grid-cols-4">
+            <StatItem icon={Briefcase} label={t("skills")} value={formatNumber(skillList.length, lang)} />
+            <StatItem
+              icon={Star}
+              label={t("ratingLabel")}
+              value={w.rating_count > 0 ? formatNumber(Number(w.rating).toFixed(1), lang) : "–"}
+            />
+            <StatItem icon={MessageSquare} label={t("reviews")} value={formatNumber(w.rating_count, lang)} />
+            <StatItem
+              icon={CalendarDays}
+              label={t("memberSince")}
+              value={formatDate(w.created_at.slice(0, 10), lang)}
+              small
+            />
+          </dl>
+        </section>
+
+        {/* ==============================================================
+            Content beside a details column on desktop
+            ============================================================== */}
+        <div className="grid gap-5 lg:grid-cols-3 lg:items-start">
+          <div className="min-w-0 space-y-5 lg:col-span-2">
+            <SectionCard icon={Info} title={t("about")}>
+              {w.about ? (
+                <p className="whitespace-pre-line text-[15px] leading-7 text-slate-700">{w.about}</p>
+              ) : (
+                <p className="text-sm italic text-slate-400">{t("noAboutYetOther")}</p>
+              )}
+            </SectionCard>
+
+            <SectionCard
+              icon={Briefcase}
+              title={t("skillsAndRates")}
+              badge={skillList.length > 0 ? skillList.length : undefined}
+            >
+              {/* These can only be fetched once the handle in the URL has
+                  resolved to a profile, so there is a real gap before they
+                  arrive - show placeholders rather than claiming there is
+                  nothing here. */}
+              {skills.isPending ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[0, 1].map((i) => (
+                    <div key={i} className="skeleton h-[70px] rounded-2xl" />
+                  ))}
+                </div>
+              ) : skillList.length === 0 ? (
+                <p className="text-sm italic text-slate-400">{t("noSkillsYetProfile")}</p>
+              ) : (
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {skillList.map((s) => {
+                    const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
+                    const rate =
+                      s.rate_amount != null
+                        ? `${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}`
+                        : null;
+                    return (
+                      <li
+                        key={s.id}
+                        className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 transition-all duration-200 hover:border-brand-200 hover:shadow-sm"
+                      >
+                        <SkillTile
+                          skillId={s.id}
+                          className="h-11 w-11 rounded-xl bg-brand-50 transition-colors group-hover:bg-brand-100"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-semibold text-slate-900">{label}</p>
+                          {s.custom_note ? (
+                            <p className="mt-0.5 truncate text-xs text-slate-500">{s.custom_note}</p>
+                          ) : null}
+                        </div>
+                        {rate && (
+                          <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-800">
+                            {rate}
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </SectionCard>
+
+            {certList.length > 0 && (
+              <SectionCard icon={Award} title={t("certificates")} badge={certList.length}>
+                <ul className="grid gap-2.5 sm:grid-cols-2">
+                  {certList.map((c) => (
+                    <li key={c.id}>
+                      <a
+                        href={c.file_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3.5 py-3 transition-colors hover:border-brand-200"
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sun-400/15 text-sun-500">
+                          <Award className="h-5 w-5" aria-hidden />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-slate-800 group-hover:text-brand-700">
+                            {c.title}
+                          </span>
+                          <span className="block text-xs text-slate-500">{formatDate(c.created_at.slice(0, 10), lang)}</span>
+                        </span>
+                        <ExternalLink className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-brand-600" aria-hidden />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </SectionCard>
+            )}
+
+            <ReviewsCard
+              reviews={reviews.data?.pages.flat() ?? []}
+              isPending={reviews.isPending}
+              hasMore={reviews.hasNextPage}
+              loadingMore={reviews.isFetchingNextPage}
+              onLoadMore={() => reviews.fetchNextPage()}
+              rating={Number(w.rating)}
+              ratingCount={w.rating_count}
+            />
+          </div>
+
+          <aside className="space-y-5 lg:sticky lg:top-24">
+            <SectionCard icon={UserRound} title={t("profileDetails")}>
+              <dl className="space-y-3.5">
+                {place && <DetailRow icon={MapPin} label={t("whereYouAre")} value={place} />}
                 {w.age != null && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <Cake className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-                    {t("yearsOld", { count: formatNumber(w.age, lang) })}
-                  </span>
+                  <DetailRow icon={Cake} label={t("age")} value={t("yearsOld", { count: formatNumber(w.age, lang) })} />
                 )}
                 {w.education && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <GraduationCap className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-                    {w.education}
-                  </span>
+                  <DetailRow icon={GraduationCap} label={t("highestEducation")} value={w.education} />
                 )}
-              </div>
+                {canCall && contact.data?.alt_phone && (
+                  <DetailRow icon={Phone} label={t("altPhone")} value={contact.data.alt_phone} />
+                )}
+                <DetailRow
+                  icon={CalendarDays}
+                  label={t("memberSince")}
+                  value={formatDate(w.created_at.slice(0, 10), lang)}
+                />
+              </dl>
+            </SectionCard>
+
+            {!isMe && (
+              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                <h3 className="flex items-center gap-2.5 text-base font-semibold text-slate-900">
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+                    <ShieldCheck className="h-4 w-4" aria-hidden />
+                  </span>
+                  {t("stayingSafeTitle")}
+                </h3>
+                <ul className="mt-3 space-y-2.5 text-sm text-slate-600">
+                  {(["stayingSafeTip1", "stayingSafeTip2", "stayingSafeTip3"] as const).map((key) => (
+                    <li key={key} className="flex gap-2.5">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+                      <span>{t(key)}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => withAuth(() => setReportOpen(true))}
+                  className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                >
+                  <Flag className="h-4 w-4" aria-hidden />
+                  {t("reportProfile")}
+                </button>
+              </section>
             )}
-            {canCall && contact.data?.alt_phone && (
-              <p className="mt-3 flex items-center gap-1.5 text-sm text-slate-600">
-                <Phone className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-                {t("altPhone")}: {contact.data.alt_phone}
+          </aside>
+        </div>
+      </PageContainer>
+
+      {/* ---- Phones: the main action follows you once the hero's buttons
+           have scrolled away - sits just above the tab bar. ------------ */}
+      {!isMe && (
+        <div
+          className={cn(
+            "fixed inset-x-0 bottom-[calc(3.5rem+var(--sab))] z-30 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)] backdrop-blur transition-all duration-300 md:hidden",
+            showStickyBar ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0",
+          )}
+          aria-hidden={!showStickyBar}
+        >
+          <div className="mx-auto flex max-w-md items-center gap-2">
+            <Avatar name={w.full_name} src={w.avatar_url} size={40} online={online} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-slate-900">{w.full_name}</p>
+              <p className="truncate text-xs text-slate-500">
+                {w.is_available ? t("availableForWork") : t("notAvailable")}
               </p>
-            )}
-          </CardBody>
-        </Card>
-
-        <Card className="mb-4">
-          <CardBody>
-            <SectionTitle>
-              <span className="inline-flex items-center gap-2">
-                <SectionIcon icon={Briefcase} />
-                {t("skills")}
-              </span>
-            </SectionTitle>
-            {/* These can only be fetched once the handle in the URL has
-                resolved to a profile, so there is a real gap before they
-                arrive - say "loading" rather than claiming there is
-                nothing here. */}
-            {skills.isPending ? (
-              <p className="text-sm text-slate-400">{t("loading")}</p>
-            ) : (skills.data?.length ?? 0) === 0 ? (
-              <p className="text-sm italic text-slate-400">{t("noSkillsYetProfile")}</p>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {(skills.data ?? []).map((s) => {
-                  const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
-                  const rate = s.rate_amount != null ? `${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}` : null;
-                  return (
-                    <SkillChip key={s.id} skillId={s.id}>
-                      {label}
-                      {rate ? <span className="text-slate-500">{` · ${rate}`}</span> : null}
-                    </SkillChip>
-                  );
-                })}
-              </div>
-            )}
-          </CardBody>
-        </Card>
-
-        {(certificates.data?.length ?? 0) > 0 && (
-          <Card className="mb-4">
-            <CardBody>
-              <SectionTitle>
-                <span className="inline-flex items-center gap-2">
-                  <SectionIcon icon={Award} />
-                  {t("certificates")}
-                </span>
-              </SectionTitle>
-              <ul className="space-y-2">
-                {(certificates.data ?? []).map((c) => (
-                  <li key={c.id}>
-                    <a
-                      href={c.file_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-800 transition-colors duration-200 hover:bg-slate-100"
-                    >
-                      <Award className="h-4 w-4 shrink-0 text-brand-700" aria-hidden />
-                      <span className="truncate">{c.title}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </CardBody>
-          </Card>
-        )}
-
-        <ReviewsCard
-          reviews={reviews.data?.pages.flat() ?? []}
-          isPending={reviews.isPending}
-          hasMore={reviews.hasNextPage}
-          loadingMore={reviews.isFetchingNextPage}
-          onLoadMore={() => reviews.fetchNextPage()}
-          rating={Number(w.rating)}
-          ratingCount={w.rating_count}
-        />
-
-        {!isMe && (
-          <div className="flex justify-center pb-4 text-sm">
+            </div>
             <button
               type="button"
-              onClick={() => withAuth(() => setReportOpen(true))}
-              className="inline-flex items-center gap-1.5 text-slate-500 hover:text-red-600"
+              tabIndex={showStickyBar ? 0 : -1}
+              onClick={() => withAuth(() => navigate({ to: "/chat/$otherId", params: { otherId: w.id } }))}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600"
+              aria-label={t("chat")}
             >
-              <Flag className="h-4 w-4" aria-hidden />
-              {t("report")}
+              <MessageCircle className="h-4.5 w-4.5" aria-hidden />
             </button>
+            <Button className="h-10 shrink-0 px-4" tabIndex={showStickyBar ? 0 : -1} onClick={() => withAuth(() => setRequestOpen(true))}>
+              {t("requestWork")}
+            </Button>
           </div>
-        )}
-      </PageContainer>
+        </div>
+      )}
 
       {me && (
         <>

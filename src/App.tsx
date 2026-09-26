@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useRouterState } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { Capacitor } from "@capacitor/core";
 import { AlertTriangle } from "lucide-react";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +10,8 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { AuthScreen } from "@/routes/AuthScreen";
 import { OnboardingScreen } from "@/routes/OnboardingScreen";
 import { WelcomeChoiceScreen } from "@/components/duleko/WelcomeChoiceScreen";
+import { SiteActionsProvider, type SiteActions } from "@/components/duleko/Site";
+import { LandingPage } from "@/routes/site/LandingPage";
 import {
   BottomNav,
   DesktopSidebar,
@@ -44,7 +47,20 @@ const WELCOMED_THIS_SESSION_KEY = "duleko_welcomed_this_session";
 
 /** Fully static pages - no session, no Supabase call - that render for
  * anyone regardless of auth state. See the early-return below. */
-const STATIC_PATHS = ["/privacy", "/about", "/mission", "/motivation"];
+const STATIC_PATHS = [
+  "/privacy",
+  "/terms",
+  "/about",
+  "/mission",
+  "/motivation",
+  "/individuals",
+  "/businesses",
+  "/partners",
+  "/safety",
+];
+
+/** The Android app keeps its compact welcome screen; the web gets the full website. */
+const IS_NATIVE_APP = Capacitor.isNativePlatform();
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
@@ -62,29 +78,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // as a guest) is transient - backing out of it just returns to wherever
   // it was triggered from.
   const [guestMode, setGuestMode] = useState(readGuestMode);
-  const [authIntent, setAuthIntent] = useState(false);
+  const [authIntent, setAuthIntent] = useState<"signin" | "signup" | null>(null);
 
   // Routes someone can be sent straight to from outside the app.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isSharedProfileLink = pathname.startsWith("/worker/");
-
-  // Fully public, no matter what: an app-store reviewer or a signed-out
-  // visitor following a shared link (Play Store listing, site footer) has
-  // no session and shouldn't need one. Every check below this - Supabase
-  // configured, session loading, signed in or not - is irrelevant to a
-  // static page, so it renders before any of that runs rather than after.
-  if (STATIC_PATHS.includes(pathname)) return children;
+  const isStaticPage = STATIC_PATHS.includes(pathname);
+  const navigate = useNavigate();
 
   function enterGuest() {
     setGuestMode(true);
     persistGuestMode(true);
-    setAuthIntent(false);
+    setAuthIntent(null);
   }
+
+  // How the public website's buttons get into the app.
+  const siteActions: SiteActions = {
+    signedIn: Boolean(session),
+    explore: (to = "/") => {
+      if (!session) enterGuest();
+      window.scrollTo({ top: 0 });
+      void navigate({ to });
+    },
+    createProfile: () => {
+      window.scrollTo({ top: 0 });
+      if (session) {
+        void navigate({ to: profile ? "/profile" : "/" });
+        return;
+      }
+      setAuthIntent("signup");
+      void navigate({ to: "/" });
+    },
+  };
 
   // A "Welcome back" toast once per app session (not on every screen change
   // within it), plus a one-time feature walkthrough for brand-new devices.
   useEffect(() => {
-    if (!profile) return;
+    if (!profile || isStaticPage) return;
     if (!hasSeenWalkthrough()) {
       setShowWalkthrough(true);
       return;
@@ -99,7 +129,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     toast(t("welcomeBack", { name: firstName }), "info");
     // Only meant to fire once, right when a profile first becomes available.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Boolean(profile)]);
+  }, [Boolean(profile), isStaticPage]);
+
+  // Fully public, no matter what: an app-store reviewer or a signed-out
+  // visitor following a shared link (Play Store listing, site footer) has
+  // no session and shouldn't need one. Every check below this - Supabase
+  // configured, session loading, signed in or not - is irrelevant to a
+  // static page, so it renders before any of that runs rather than after.
+  // (After every hook, so moving between a static page and the app doesn't
+  // change the hook count.)
+  if (isStaticPage) return <SiteActionsProvider value={siteActions}>{children}</SiteActionsProvider>;
 
   if (!isSupabaseConfigured) return <SetupScreen />;
   if (loadingSession) return <FullPageLoader label={t("loading")} />;
@@ -120,17 +159,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   if (!session) {
-    if (authIntent) return <AuthScreen onBack={() => setAuthIntent(false)} />;
+    if (authIntent) return <AuthScreen initialMode={authIntent} onBack={() => setAuthIntent(null)} />;
     // A shared profile link has to land on the profile. Showing a
     // first-time visitor the sign-up choice instead throws away the deep
     // link and makes every shared link look like a wall.
     if (!guestMode && !isSharedProfileLink) {
-      return <WelcomeChoiceScreen onExplore={enterGuest} onSignIn={() => setAuthIntent(true)} />;
+      if (IS_NATIVE_APP) {
+        return <WelcomeChoiceScreen onExplore={enterGuest} onSignIn={() => setAuthIntent("signin")} />;
+      }
+      return (
+        <SiteActionsProvider value={siteActions}>
+          <LandingPage />
+        </SiteActionsProvider>
+      );
     }
     // Explored, hasn't signed in: the real app, read-only until they try
     // something that needs an account - see useGuestMode().requestSignIn.
     return (
-      <GuestModeProvider value={{ isGuest: true, requestSignIn: () => setAuthIntent(true) }}>
+      <GuestModeProvider value={{ isGuest: true, requestSignIn: () => setAuthIntent("signin") }}>
         <div className={cn("min-h-dvh", SIDEBAR_WIDTH_CLASS)}>
           <DesktopSidebar />
           {children}

@@ -233,7 +233,7 @@ export function BottomNav() {
     >
       <div className="mx-auto flex max-w-3xl">
         {NAV.map(({ to, key, icon: Icon }) => {
-          const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
+          const active = to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
           const badge = navBadgeFor(to, badges);
           return (
             <Link
@@ -279,7 +279,7 @@ export function DesktopSidebar() {
       </Link>
       <nav className="flex-1 space-y-1 px-3" aria-label="Main">
         {NAV.map(({ to, key, icon: Icon }) => {
-          const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
+          const active = to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
           const badge = navBadgeFor(to, badges);
           return (
             <Link
