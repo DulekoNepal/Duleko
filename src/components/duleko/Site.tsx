@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, ChevronRight, Compass, LogIn, UserPlus } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import seo from "@/lib/seo-pages.json";
 import { cn } from "@/lib/utils";
 import { NEPALI_TAGLINE, useSiteActions } from "./site/actions";
 import { STORY, type SitePath, type StoryKey } from "./site/nav";
@@ -27,15 +28,22 @@ export { Container, SiteButton } from "./site/ui";
 export type { StoryKey } from "./site/nav";
 
 export function SiteLayout({ title, children }: { title?: string; children: React.ReactNode }) {
+  const { lang } = useI18n();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // In English, use the same search-friendly title the page's static HTML
+  // carries (lib/seo-pages.json); in Nepali, the translated page name.
+  const seoTitle = lang === "en" ? (seo.pages as Record<string, { title: string }>)[pathname]?.title : undefined;
+  const fullTitle = seoTitle ?? (title ? `${title} | Duleko` : undefined);
+
   // The app's own screens don't set a title, so hand back whatever was there.
   useEffect(() => {
-    if (!title) return;
+    if (!fullTitle) return;
     const previous = document.title;
-    document.title = `${title} | Duleko`;
+    document.title = fullTitle;
     return () => {
       document.title = previous;
     };
-  }, [title]);
+  }, [fullTitle]);
 
   return (
     <div className="flex min-h-dvh flex-col bg-white text-slate-900">
