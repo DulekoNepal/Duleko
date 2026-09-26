@@ -8,26 +8,28 @@
       name="description"
       content="Duleko connects people who have skills with people who need them - making it easier to turn skills into work, income, and opportunity in Nepal."
     />
-    <link rel="canonical" href="https://duleko.com/" />
+    <link rel="canonical" href="https://www.duleko.com/" />
     <meta name="robots" content="index, follow" />
 
     <!-- Open Graph / social previews -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Duleko" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="ne_NP" />
     <meta property="og:title" content="Duleko - Your skills deserve an opportunity" />
     <meta
       property="og:description"
       content="Duleko connects people who have skills with people who need them - making it easier to turn skills into work, income, and opportunity."
     />
-    <meta property="og:url" content="https://duleko.com/" />
-    <meta property="og:image" content="https://duleko.com/og-image.png" />
+    <meta property="og:url" content="https://www.duleko.com/" />
+    <meta property="og:image" content="https://www.duleko.com/og-image.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Duleko - Your skills deserve an opportunity" />
     <meta
       name="twitter:description"
       content="Duleko connects people who have skills with people who need them - making it easier to turn skills into work, income, and opportunity."
     />
-    <meta name="twitter:image" content="https://duleko.com/og-image.png" />
+    <meta name="twitter:image" content="https://www.duleko.com/og-image.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -41,10 +43,32 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Duleko",
-        "url": "https://duleko.com/",
-        "description": "Duleko connects people who have skills with people who need them - making it easier to turn skills into work, income, and opportunity."
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://www.duleko.com/#website",
+            "name": "Duleko",
+            "alternateName": "डुलेको",
+            "url": "https://www.duleko.com/",
+            "inLanguage": ["en", "ne"],
+            "description": "Duleko connects people who have skills with people who need them - making it easier to turn skills into work, income, and opportunity.",
+            "publisher": { "@id": "https://www.duleko.com/#organization" },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://www.duleko.com/search?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://www.duleko.com/#organization",
+            "name": "Duleko",
+            "url": "https://www.duleko.com/",
+            "logo": "https://www.duleko.com/apple-touch-icon.png",
+            "email": "dulekonepal@gmail.com",
+            "areaServed": { "@type": "Country", "name": "Nepal" }
+          }
+        ]
       }
     </script>
   </head>

@@ -88,7 +88,7 @@ export function AvailabilityCalendar({
   return (
     <div>
       {monthView && (
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between">
           <button
             type="button"
             onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1))}
@@ -145,15 +145,32 @@ export function AvailabilityCalendar({
               onClick={handleClick}
               title={booked ? t("bookedDay") : t("freeDay")}
               className={cn(
-                "flex aspect-square flex-col items-center justify-center rounded-lg text-sm transition-colors duration-200",
-                outsideMonth && "opacity-30",
-                past && "cursor-default text-slate-300",
-                !past && !booked && "bg-brand-50 text-brand-800",
-                !past && booked && "bg-slate-200 text-slate-500 line-through",
-                lockedByJob && "bg-amber-100 text-amber-800 no-underline",
-                isToday && !isSelected && "ring-2 ring-brand-600 ring-offset-1",
-                isSelected && "ring-2 ring-brand-700 ring-offset-1 bg-brand-600 text-white",
-                clickable && "hover:brightness-95",
+                "flex aspect-square flex-col items-center justify-center text-sm transition-colors duration-200",
+                monthView
+                  ? // Month view (Profile): minimal - open days are plain numbers,
+                    // only busy and job days get a fill.
+                    cn(
+                      "mx-auto w-full max-w-11 rounded-full",
+                      outsideMonth && "opacity-40",
+                      past && "cursor-default text-slate-300",
+                      !past && !booked && "text-slate-800",
+                      !past && booked && !lockedByJob && "bg-slate-800 font-medium text-white",
+                      lockedByJob && "bg-amber-100 font-medium text-amber-900",
+                      isToday && !booked && "font-semibold text-brand-700 ring-1 ring-brand-600",
+                      clickable && !booked && "hover:bg-slate-100",
+                      clickable && booked && !lockedByJob && "hover:bg-slate-700",
+                    )
+                  : cn(
+                      "rounded-lg",
+                      outsideMonth && "opacity-30",
+                      past && "cursor-default text-slate-300",
+                      !past && !booked && "bg-brand-50 text-brand-800",
+                      !past && booked && "bg-slate-200 text-slate-500 line-through",
+                      lockedByJob && "bg-amber-100 text-amber-800 no-underline",
+                      isToday && !isSelected && "ring-2 ring-brand-600 ring-offset-1",
+                      isSelected && "ring-2 ring-brand-700 ring-offset-1 bg-brand-600 text-white",
+                      clickable && "hover:brightness-95",
+                    ),
               )}
             >
               {formatNumber(date.getDate(), lang)}
@@ -161,17 +178,31 @@ export function AvailabilityCalendar({
           );
         })}
       </div>
-      <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-slate-500">
-        <span className="inline-flex items-center gap-1">
-          <i className="h-2.5 w-2.5 rounded-sm bg-brand-100" /> {t("freeDay")}
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <i className="h-2.5 w-2.5 rounded-sm bg-slate-300" /> {t("bookedDay")}
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <i className="h-2.5 w-2.5 rounded-sm bg-amber-200" /> {t("statusConfirmed")}
-        </span>
-      </div>
+      {monthView ? (
+        <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-500">
+          <span className="inline-flex items-center gap-1.5">
+            <i className="h-2.5 w-2.5 rounded-full ring-1 ring-slate-300" /> {t("freeDay")}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <i className="h-2.5 w-2.5 rounded-full bg-slate-800" /> {t("bookedDay")}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <i className="h-2.5 w-2.5 rounded-full bg-amber-200" /> {t("statusConfirmed")}
+          </span>
+        </div>
+      ) : (
+        <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-slate-500">
+          <span className="inline-flex items-center gap-1">
+            <i className="h-2.5 w-2.5 rounded-sm bg-brand-100" /> {t("freeDay")}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <i className="h-2.5 w-2.5 rounded-sm bg-slate-300" /> {t("bookedDay")}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <i className="h-2.5 w-2.5 rounded-sm bg-amber-200" /> {t("statusConfirmed")}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { Briefcase, Calendar, Compass, LogIn, MapPin, Users } from "lucide-react";
-import { LanguageToggle } from "./Layout";
+import { LanguageToggleButton } from "./Layout";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import dulekoMark from "@/assets/duleko-mark.png";
 
@@ -44,7 +44,7 @@ export function WelcomeChoiceScreen({
         />
 
         <div className="relative mx-auto flex max-w-sm justify-end px-5 pt-4 sm:max-w-2xl lg:max-w-4xl">
-          <LanguageToggle />
+          <LanguageToggleButton />
         </div>
 
         <div className="animate-in-up relative mx-auto mt-5 max-w-sm px-7 text-center sm:max-w-lg">

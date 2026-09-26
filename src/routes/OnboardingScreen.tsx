@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, SectionIcon } from "@/components/ui/card";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Avatar } from "@/components/ui/avatar";
-import { LanguageToggle } from "@/components/duleko/Layout";
+import { LanguageToggleButton } from "@/components/duleko/Layout";
 import { LocationFields, type LocationValue } from "@/components/duleko/LocationFields";
 import { SkillPicker } from "@/components/duleko/SkillGrid";
 import { useI18n } from "@/lib/i18n";
@@ -149,7 +149,7 @@ export function OnboardingScreen() {
               {t("stepOf", { current: step, total: TOTAL_STEPS })}
             </p>
           </div>
-          <LanguageToggle />
+          <LanguageToggleButton />
         </div>
 
         {/* Step dots - a clearer sense of progress and what's left than a bare bar. */}

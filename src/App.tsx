@@ -14,14 +14,12 @@ import { SiteActionsProvider, type SiteActions } from "@/components/duleko/Site"
 import { LandingPage } from "@/routes/site/LandingPage";
 import {
   BottomNav,
-  DesktopSidebar,
-  SIDEBAR_WIDTH_CLASS,
+  TopNav,
   useNotificationsBadgeSync,
 } from "@/components/duleko/Layout";
 import { WelcomeWalkthrough, hasSeenWalkthrough } from "@/components/duleko/WelcomeWalkthrough";
 import { AutoShareLocation } from "@/components/duleko/AutoShareLocation";
 import { FullPageLoader } from "@/components/ui/states";
-import { cn } from "@/lib/utils";
 
 /** Shown when .env.local has not been filled in yet - the most common first-run trip-up. */
 function SetupScreen() {
@@ -57,6 +55,8 @@ const STATIC_PATHS = [
   "/businesses",
   "/partners",
   "/safety",
+  "/registration-policy",
+  "/welcome",
 ];
 
 /** The Android app keeps its compact welcome screen; the web gets the full website. */
@@ -70,7 +70,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [showWalkthrough, setShowWalkthrough] = useState(false);
 
   // One realtime subscription for the whole app, regardless of how many nav
-  // components (bottom bar, desktop sidebar) are mounted at once.
+  // components (bottom bar, top bar) are mounted at once.
   useNotificationsBadgeSync();
 
   // Pre-account browsing: "Explore" persists across a refresh; "sign in
@@ -95,6 +95,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // How the public website's buttons get into the app.
   const siteActions: SiteActions = {
     signedIn: Boolean(session),
+    inApp: Boolean(session) || guestMode || IS_NATIVE_APP,
+    back: () => {
+      // TanStack keeps its position in history.state: above zero means
+      // there's an in-app page to return to (Profile -> About -> Mission
+      // unwinds one step at a time). A cold open has nowhere to go back to.
+      const state = window.history.state as { __TSR_index?: number; idx?: number } | null;
+      const idx = state?.__TSR_index ?? state?.idx;
+      if (typeof idx === "number" && idx > 0) {
+        window.history.back();
+        return;
+      }
+      void navigate({ to: session ? "/profile" : "/" });
+    },
     explore: (to = "/") => {
       if (!session) enterGuest();
       window.scrollTo({ top: 0 });
@@ -107,6 +120,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         return;
       }
       setAuthIntent("signup");
+      void navigate({ to: "/" });
+    },
+    signIn: () => {
+      window.scrollTo({ top: 0 });
+      if (session) {
+        void navigate({ to: "/" });
+        return;
+      }
+      // Same screen as "Create profile", on its sign-in step; its Back
+      // returns to the website.
+      setAuthIntent("signin");
       void navigate({ to: "/" });
     },
   };
@@ -177,8 +201,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     // something that needs an account - see useGuestMode().requestSignIn.
     return (
       <GuestModeProvider value={{ isGuest: true, requestSignIn: () => setAuthIntent("signin") }}>
-        <div className={cn("min-h-dvh", SIDEBAR_WIDTH_CLASS)}>
-          <DesktopSidebar />
+        <div className="min-h-dvh">
+          <TopNav />
           {children}
           <BottomNav />
         </div>
@@ -190,8 +214,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (!profile) return <OnboardingScreen />;
 
   return (
-    <div className={cn("min-h-dvh", SIDEBAR_WIDTH_CLASS)}>
-      <DesktopSidebar />
+    <div className="min-h-dvh">
+      <TopNav />
       {children}
       <BottomNav />
       {showWalkthrough && <WelcomeWalkthrough onDone={() => setShowWalkthrough(false)} />}

@@ -187,7 +187,7 @@ function TeamProfileCard({ member, reversed }: { member: Member; reversed: boole
               {member.phone}
             </ContactPill>
             <ContactPill href={member.profileUrl} icon={UserRound}>
-              Duleko profile
+              {t("aboutDulekoProfile")}
             </ContactPill>
             {member.portfolioUrl && (
               <ContactPill href={member.portfolioUrl} icon={Globe} external>
@@ -231,12 +231,12 @@ function TeamProfileCard({ member, reversed }: { member: Member; reversed: boole
             aria-controls={`${member.id}-bio`}
             className="mt-3 inline-flex items-center gap-1 self-start text-sm font-semibold text-brand-700 hover:text-brand-800 lg:hidden"
           >
-            {expanded ? "Show less" : "Read full story"}
+            {expanded ? t("showLess") : t("aboutReadFullStory")}
             <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} aria-hidden />
           </button>
 
           <div className="mt-auto pt-6">
-            <p className="mb-2.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Focus areas</p>
+            <p className="mb-2.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{t("aboutFocusAreas")}</p>
             <ul className="flex flex-wrap gap-2">
               {member.skillKeys.map((key) => (
                 <li
@@ -255,26 +255,18 @@ function TeamProfileCard({ member, reversed }: { member: Member; reversed: boole
 }
 
 export function AboutPage() {
-  // The website copy is English; the longer About content (how it works,
-  // team bios, contact) predates it and is still bilingual via i18n.
   const { t } = useI18n();
 
   return (
-    <SiteLayout title="About Duleko">
-      <PageHero story="about" eyebrow="About Duleko" title="Why Duleko?">
+    <SiteLayout title={t("navAboutDuleko")}>
+      <PageHero story="about" eyebrow={t("navAboutDuleko")} title={t("aboutHeroTitle")}>
         <Prose>
-          <p>
-            People with valuable skills and people who need those skills often live in the same communities,
-            yet finding one another can still be difficult.
-          </p>
-          <p>We built Duleko to bridge that gap.</p>
-          <p>
-            Our goal is to make skills more visible, opportunities more accessible, and local connections
-            more useful.
-          </p>
+          <p>{t("aboutHeroP1")}</p>
+          <p>{t("aboutHeroP2")}</p>
+          <p>{t("aboutHeroP3")}</p>
         </Prose>
         <p className="mt-8 text-xl font-semibold text-brand-700 sm:text-2xl">
-          Connecting local skills with local opportunities.
+          {t("siteTagline")}
         </p>
       </PageHero>
 
@@ -286,7 +278,7 @@ export function AboutPage() {
               <p>{t("aboutDescription")}</p>
             </Prose>
             <StoryLink to="/mission" className="mt-6">
-              Read our mission
+              {t("readOurMission")}
             </StoryLink>
           </div>
           <ul className="space-y-3">
@@ -306,12 +298,12 @@ export function AboutPage() {
       <SiteSection id="team" tone="cream">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <Eyebrow>Our Team</Eyebrow>
-            <SectionHeading>The People Behind Duleko</SectionHeading>
+            <Eyebrow>{t("navOurTeam")}</Eyebrow>
+            <SectionHeading>{t("aboutTeamTitle")}</SectionHeading>
           </div>
           {/* Quick jump to each profile - most useful on a phone, where the
               three cards run long. */}
-          <ul className="flex flex-wrap gap-2" aria-label="Jump to a team member">
+          <ul className="flex flex-wrap gap-2" aria-label={t("aboutJumpToMember")}>
             {TEAM.map((member) => (
               <li key={member.id}>
                 <a
@@ -356,7 +348,7 @@ export function AboutPage() {
               className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 font-semibold text-white shadow-sm transition-colors hover:bg-brand-800"
             >
               <Mail className="h-4 w-4" aria-hidden />
-              Email us
+              {t("emailUs")}
             </a>
           </div>
         </div>

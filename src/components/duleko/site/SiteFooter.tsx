@@ -1,57 +1,66 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowUp, ArrowUpRight, ChevronDown, Globe, Mail, MapPin } from "lucide-react";
+import { useI18n, type StringKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { CONTACT_EMAIL, NEPALI_TAGLINE, mailto, useSiteActions } from "./actions";
 import type { SitePath } from "./nav";
 import { Brand, Container } from "./ui";
 
 type FooterLink =
-  | { label: string; to: SitePath; hash?: string }
-  | { label: string; href: string; external?: boolean }
-  | { label: string; action: "explore" | "create" };
+  | { labelKey: StringKey; to: SitePath; hash?: string }
+  | { labelKey: StringKey; href: string; external?: boolean }
+  | { labelKey: StringKey; action: "explore" | "create" | "signin" };
 
-const COLUMNS: { title: string; links: FooterLink[] }[] = [
+// Links shown as a literal (the domain) use a key whose text is the same in both languages.
+const COLUMNS: { id: string; titleKey: StringKey; links: FooterLink[] }[] = [
   {
-    title: "Platform",
+    id: "platform",
+    titleKey: "footerPlatform",
     links: [
-      { label: "Explore Skills", action: "explore" },
-      { label: "Create Profile", action: "create" },
-      { label: "Find Work", to: "/individuals" },
+      { labelKey: "footerExploreSkills", action: "explore" },
+      { labelKey: "footerCreateProfile", action: "create" },
+      { labelKey: "siteLogIn", action: "signin" },
+      { labelKey: "footerFindWork", to: "/individuals" },
     ],
   },
   {
-    title: "About",
+    id: "about",
+    titleKey: "navAbout",
     links: [
-      { label: "Our Mission", to: "/mission" },
-      { label: "About Duleko", to: "/about" },
-      { label: "Our Team", to: "/about", hash: "team" },
-      { label: "Our Motivation", to: "/motivation" },
+      { labelKey: "ourMission", to: "/mission" },
+      { labelKey: "navAboutDuleko", to: "/about" },
+      { labelKey: "navOurTeam", to: "/about", hash: "team" },
+      { labelKey: "motivationEyebrow", to: "/motivation" },
     ],
   },
   {
-    title: "Partnerships",
+    id: "partnerships",
+    titleKey: "footerPartnerships",
     links: [
-      { label: "For Businesses", to: "/businesses" },
-      { label: "For Municipalities", to: "/partners" },
-      { label: "Training Providers", to: "/partners" },
+      { labelKey: "navForBusinesses", to: "/businesses" },
+      { labelKey: "footerForMunicipalities", to: "/partners" },
+      { labelKey: "footerTrainingProviders", to: "/partners" },
     ],
   },
   {
-    title: "Trust",
+    id: "trust",
+    titleKey: "siteTrust",
     links: [
-      { label: "Safety", to: "/safety" },
-      { label: "Privacy Policy", to: "/privacy" },
-      { label: "Terms of Service", to: "/terms" },
-      { label: "Report an Issue", href: mailto("Report an issue") },
+      { labelKey: "footerSafety", to: "/safety" },
+      { labelKey: "privacyPolicy", to: "/privacy" },
+      { labelKey: "termsOfService", to: "/terms" },
+      { labelKey: "registrationPolicyShort", to: "/registration-policy" },
+      { labelKey: "footerReportIssue", href: mailto("Report an issue") },
     ],
   },
   {
-    title: "Contact",
+    id: "contact",
+    titleKey: "contactUs",
     links: [
-      { label: "Contact Us", href: mailto("Hello Duleko") },
-      { label: "Support", href: mailto("Support request") },
-      { label: "duleko.com", href: "https://duleko.com", external: true },
+      { labelKey: "footerContactUs", href: mailto("Hello Duleko") },
+      { labelKey: "footerSupport", href: mailto("Support request") },
+      { labelKey: "footerDomain", href: "https://duleko.com", external: true },
     ],
   },
 ];
@@ -60,10 +69,11 @@ const linkClass =
   "group inline-flex items-center gap-1 text-[15px] text-teal-50/70 transition-colors hover:text-white sm:text-sm";
 
 function FooterLinkItem({ link }: { link: FooterLink }) {
-  const { explore, createProfile } = useSiteActions();
+  const { explore, createProfile, signIn } = useSiteActions();
+  const { t } = useI18n();
   const underline = (
     <span className="bg-gradient-to-r from-brand-300 to-brand-300 bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-0.5 transition-[background-size] duration-300 group-hover:bg-[length:100%_1px]">
-      {link.label}
+      {t(link.labelKey)}
     </span>
   );
 
@@ -72,7 +82,9 @@ function FooterLinkItem({ link }: { link: FooterLink }) {
       <button
         type="button"
         className={linkClass}
-        onClick={() => (link.action === "explore" ? explore("/search") : createProfile())}
+        onClick={() =>
+          link.action === "explore" ? explore("/search") : link.action === "signin" ? signIn() : createProfile()
+        }
       >
         {underline}
       </button>
@@ -97,10 +109,21 @@ function FooterLinkItem({ link }: { link: FooterLink }) {
   );
 }
 
+/** One footer link; "Log in" is left out for people already signed in. */
+function FooterLinkRow({ link }: { link: FooterLink }) {
+  const { signedIn } = useSiteActions();
+  if (signedIn && "action" in link && link.action === "signin") return null;
+  return (
+    <li>
+      <FooterLinkItem link={link} />
+    </li>
+  );
+}
+
 /** Accordion on phones, a plain titled column from sm up. */
-function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) {
+function FooterColumn({ id: columnId, title, links }: { id: string; title: string; links: FooterLink[] }) {
   const [open, setOpen] = useState(false);
-  const id = `footer-${title.toLowerCase()}`;
+  const id = `footer-${columnId}`;
   return (
     <div className="border-b border-white/10 sm:border-0">
       <h3>
@@ -120,9 +143,7 @@ function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) 
       </h3>
       <ul id={id} className={cn("space-y-3 pb-5 sm:block sm:pb-0", open ? "block" : "hidden")}>
         {links.map((link) => (
-          <li key={link.label}>
-            <FooterLinkItem link={link} />
-          </li>
+          <FooterLinkRow key={link.labelKey} link={link} />
         ))}
       </ul>
     </div>
@@ -130,6 +151,7 @@ function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) 
 }
 
 export function SiteFooter() {
+  const { t } = useI18n();
   return (
     <footer className="relative overflow-hidden bg-teal-800 text-white">
       <div
@@ -147,11 +169,11 @@ export function SiteFooter() {
       <Container className="relative pt-14 sm:pt-20">
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="lg:col-span-4">
-            <Link to="/" aria-label="Duleko home" className="inline-block">
+            <Link to="/" aria-label={t("siteHomeAria")} className="inline-block">
               <Brand inverted />
             </Link>
             <p className="mt-5 max-w-xs text-base leading-relaxed text-teal-50/75">
-              Connecting local skills with local opportunities.
+              {t("siteTagline")}
             </p>
             <p lang="ne" className="mt-2 text-base font-semibold text-brand-300">
               {NEPALI_TAGLINE}
@@ -167,7 +189,7 @@ export function SiteFooter() {
               </a>
               <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-2 text-sm text-white/90 ring-1 ring-white/15">
                 <MapPin className="h-4 w-4 text-brand-300" aria-hidden />
-                Nepal
+                {t("footerNepal")}
               </span>
               <a
                 href="https://duleko.com"
@@ -181,31 +203,31 @@ export function SiteFooter() {
 
           <div className="grid sm:grid-cols-3 sm:gap-x-8 sm:gap-y-10 lg:col-span-8 lg:grid-cols-5 lg:gap-x-6">
             {COLUMNS.map((column) => (
-              <FooterColumn key={column.title} title={column.title} links={column.links} />
+              <FooterColumn key={column.id} id={column.id} title={t(column.titleKey)} links={column.links} />
             ))}
           </div>
         </div>
 
         <div className="mt-12 flex flex-col gap-5 border-t border-white/10 pb-[calc(var(--sab)+1.5rem)] pt-6 sm:mt-16 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-teal-50/60">
-            © {new Date().getFullYear()} Duleko. All rights reserved.
+            {t("footerRights", { year: new Date().getFullYear() })}
             <span className="mx-2 text-white/20" aria-hidden>
               ·
             </span>
-            Made in Nepal, for Nepal.
+            {t("footerMadeIn")}
           </p>
           <div className="flex items-center gap-5 text-sm">
             <Link to="/privacy" className="text-teal-50/60 transition-colors hover:text-white">
-              Privacy
+              {t("footerPrivacy")}
             </Link>
             <Link to="/terms" className="text-teal-50/60 transition-colors hover:text-white">
-              Terms
+              {t("footerTerms")}
             </Link>
             <button
               type="button"
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/15 transition-all hover:-translate-y-0.5 hover:bg-white/20 sm:ml-2"
-              aria-label="Back to top"
+              aria-label={t("footerBackToTop")}
             >
               <ArrowUp className="h-4 w-4" aria-hidden />
             </button>

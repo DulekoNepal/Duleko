@@ -1,20 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import type { ProfileTab } from "@/router";
 import {
   Award,
-  Bell,
   Briefcase,
   Cake,
   CalendarDays,
   Camera,
   Check,
-  ChevronRight,
+  CircleDot,
   Download,
   Eye,
   GraduationCap,
   Info,
-  LayoutDashboard,
   Link2 as LinkIcon,
   LogOut,
   Mail,
@@ -24,14 +23,10 @@ import {
   Navigation,
   Pencil,
   Phone,
-  Settings as SettingsIcon,
   Share2,
   ShieldCheck,
-  Sparkles,
-  Star,
   Trash2,
   Upload,
-  UserRound,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -44,12 +39,13 @@ import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { LocationFields, type LocationValue } from "@/components/duleko/LocationFields";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { DetailRow, ProfileCover, SectionCard, StatItem } from "@/components/duleko/ProfileParts";
-import { ContactPrivacyCard } from "@/components/duleko/ContactPrivacyCard";
+import { ProfileCover, SectionCard } from "@/components/duleko/ProfileParts";
+import { ContactPrivacyRows } from "@/components/duleko/ContactPrivacyRows";
+import { ListGroup, ListRow } from "@/components/duleko/SettingsList";
+import { DulekoPagesHub } from "@/components/duleko/DulekoPagesHub";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { MenuItem, MenuPanel } from "@/components/ui/menu";
-import { EmptyState } from "@/components/ui/states";
 import { Switch } from "@/components/ui/switch";
 import { SkillTile } from "@/components/duleko/SkillIcon";
 import { getCurrentPosition } from "@/lib/geolocation";
@@ -108,7 +104,7 @@ interface SkillDraft {
 const emptyDraft: SkillDraft = { rate_amount: "", rate_unit: "", custom_label: "", custom_note: "" };
 
 export function ProfileScreen() {
-  const { t, lang, setLang } = useI18n();
+  const { t, lang } = useI18n();
   const { profile, user, refreshProfile, signOut } = useSession();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -139,7 +135,8 @@ export function ProfileScreen() {
   const [skillDrafts, setSkillDrafts] = useState<Record<string, SkillDraft>>({});
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [tab, setTab] = useState<ProfileTab>("overview");
+  // Lives in the URL (?tab=) so Back from a page opened here returns to the same tab.
+  const tab: ProfileTab = (useSearch({ strict: false }) as { tab?: ProfileTab }).tab ?? "overview";
 
   const allSkills = useQuery({ queryKey: ["skills"], queryFn: listSkills, staleTime: 30 * 60_000 });
   const mySkills = useQuery({
@@ -169,6 +166,19 @@ export function ProfileScreen() {
     queryFn: () => getNotificationPrefs(profile!.id),
     enabled: Boolean(profile?.id),
   });
+
+  // The tab row scrolls sideways on a narrow phone: keep the open tab in
+  // view (tapped, or landed on via Back / ?tab=), moving only the row.
+  const tabRowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = tabRowRef.current;
+    const active = row?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (!row || !active) return;
+    // Centre it; the browser clamps at either end.
+    const r = row.getBoundingClientRect();
+    const a = active.getBoundingClientRect();
+    row.scrollLeft += a.left + a.width / 2 - (r.left + r.width / 2);
+  }, [tab, editing]);
 
   // The ⋯ menu closes on a tap anywhere else, or Escape.
   useEffect(() => {
@@ -449,7 +459,13 @@ export function ProfileScreen() {
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
-  if (!profile) return <SignInRequiredScreen title={t("myProfile")} />;
+  if (!profile) {
+    return (
+      <SignInRequiredScreen title={t("myProfile")}>
+        <DulekoPagesHub />
+      </SignInRequiredScreen>
+    );
+  }
 
   const place = locationLine(profile, lang);
   const skillList = mySkills.data ?? [];
@@ -479,24 +495,42 @@ export function ProfileScreen() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const tabs: { id: ProfileTab; label: string; icon: LucideIcon; badge?: number }[] = [
-    { id: "overview", label: t("profileTabOverview"), icon: LayoutDashboard },
-    { id: "calendar", label: t("profileTabCalendar"), icon: CalendarDays, badge: busyDaysCount },
-    { id: "settings", label: t("profileTabSettings"), icon: SettingsIcon },
+  function selectTab(next: ProfileTab) {
+    // Replace, not push: switching tabs shouldn't pile up Back steps. The
+    // page stays where it is - the tab bar is mid-page on a phone.
+    void navigate({
+      to: ".",
+      search: { tab: next === "overview" ? undefined : next },
+      replace: true,
+      resetScroll: false,
+    });
+  }
+
+  const tabs: { id: ProfileTab; label: string; badge?: number }[] = [
+    { id: "overview", label: t("profileTabOverview") },
+    { id: "calendar", label: t("profileTabCalendar"), badge: busyDaysCount },
+    { id: "settings", label: t("profileTabSettings") },
+    { id: "about", label: t("aboutTitle") },
   ];
 
   return (
     <>
       <AppHeader title={t("myProfile")} />
-      <PageContainer className="space-y-5 md:space-y-6">
+      <PageContainer className="space-y-4 md:space-y-5">
         {/* ================================================================
-            Identity: cover, photo, name, actions, availability, stats
+            Profile header, Facebook-style: wide cover, a big round photo
+            overlapping its bottom-left edge, name and actions beside it,
+            then the tab row. Edge to edge on a phone, a card from sm up.
+            Only the photo reaches into the cover - the name, buttons and
+            everything else start below it, so nothing ever overlaps. The
+            card itself doesn't clip (the cover does), so the ⋯ menu can
+            open past its bottom edge.
             ================================================================ */}
-        <section className="animate-in-up overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <ProfileCover src={coverSrc}>
-            <label className="absolute right-3 top-3 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full bg-white/90 px-3 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 backdrop-blur transition-colors hover:bg-white sm:right-4 sm:top-4">
+        <section className="@container animate-in-up relative z-10 -mx-4 -mt-3 border-b border-slate-200 bg-white shadow-sm sm:mx-0 sm:mt-0 sm:rounded-3xl sm:border">
+          <ProfileCover src={coverSrc} className="h-40 overflow-hidden sm:rounded-t-3xl @md:h-52 @2xl:h-64 @4xl:h-80">
+            <label className="absolute bottom-3 right-3 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg bg-white/90 px-3 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 backdrop-blur transition-colors hover:bg-white @2xl:bottom-4 @2xl:right-4">
               <Camera className="h-4 w-4" aria-hidden />
-              <span className="sr-only sm:not-sr-only">{t("changeCover")}</span>
+              <span className="sr-only @lg:not-sr-only">{t("changeCover")}</span>
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -515,18 +549,17 @@ export function ProfileScreen() {
             </label>
           </ProfileCover>
 
-          <div className="px-4 pb-5 sm:px-6 sm:pb-6">
-            {/* Centred on a phone, photo-left with actions on the right
-                from sm up. */}
-            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-end sm:gap-5 sm:text-left">
-              <div className="relative z-10 -mt-14 shrink-0 sm:-mt-16">
+          <div className="px-4 @2xl:px-8">
+            <div className="flex flex-col gap-3 @2xl:flex-row @2xl:items-end @2xl:gap-6">
+              {/* Photo: the only thing pulled up into the cover. */}
+              <div className="relative z-10 -mt-[4.5rem] h-[7.5rem] w-[7.5rem] shrink-0 self-start rounded-full bg-white p-1 shadow-md @2xl:-mt-[5.5rem] @2xl:h-[10.5rem] @2xl:w-[10.5rem]">
                 <Avatar
                   name={profile.full_name}
                   src={avatarPreview ?? profile.avatar_url}
-                  size={112}
-                  className="shadow-lg ring-4 ring-white"
+                  size={160}
+                  className="h-full! w-full!"
                 />
-                <label className="absolute bottom-1 right-1 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-brand-700 text-white shadow-md ring-4 ring-white transition-colors hover:bg-brand-800">
+                <label className="absolute bottom-1 right-1 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow ring-2 ring-white transition-colors hover:bg-slate-200 @2xl:bottom-2 @2xl:right-2">
                   <Camera className="h-4 w-4" aria-hidden />
                   <span className="sr-only">{t("changePhoto")}</span>
                   <input
@@ -547,66 +580,68 @@ export function ProfileScreen() {
                 </label>
               </div>
 
-              <div className="min-w-0 max-w-full flex-1 sm:pb-1">
-                <h2 className="flex min-w-0 items-center justify-center gap-1.5 text-2xl font-bold leading-tight tracking-tight text-slate-900 sm:justify-start sm:text-[1.75rem]">
+              <div className="min-w-0 flex-1 @2xl:pb-4">
+                <h2 className="flex min-w-0 items-center gap-2 text-2xl font-bold leading-tight tracking-tight text-slate-900 @2xl:text-[2rem]">
                   <span className="truncate">{profile.full_name}</span>
                   <VerifiedBadge staffRole={profile.staff_role} verified={profile.is_verified} size={22} />
                 </h2>
-                {profile.bio && (
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600 sm:text-base">{profile.bio}</p>
-                )}
-                <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-sm text-slate-500 sm:justify-start">
-                  {place && (
-                    <span className="inline-flex min-w-0 items-center gap-1">
-                      <MapPin className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
-                      <span className="truncate">{place}</span>
+                {profile.bio && <p className="mt-1 text-[15px] leading-snug text-slate-600">{profile.bio}</p>}
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+                  <RatingLine rating={profile.rating} count={profile.rating_count} className="text-sm" />
+                  <span aria-hidden className="text-slate-300">
+                    ·
+                  </span>
+                  <span className="font-medium text-slate-600">
+                    {t("skillsCount", { count: formatNumber(skillList.length, lang) })}
+                  </span>
+                  {profile.is_available && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-800 ring-1 ring-brand-200">
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden />
+                      {t("availableForWork")}
                     </span>
                   )}
-                  <RatingLine rating={profile.rating} count={profile.rating_count} className="text-sm" />
                 </div>
               </div>
 
               {!editing && (
-                <div className="relative flex w-full items-center gap-2 sm:w-auto sm:pb-1" data-profile-menu>
-                  <Button className="flex-1 sm:flex-none" onClick={startEditing}>
+                <div className="relative flex w-full items-center gap-2 @2xl:w-auto @2xl:pb-4" data-profile-menu>
+                  <Button className="flex-1 @2xl:flex-none" onClick={startEditing}>
                     <Pencil className="h-4 w-4" aria-hidden />
                     {t("editProfile")}
                   </Button>
                   <Button
                     variant="outline"
-                    size="icon"
-                    className="h-11 w-11 shrink-0"
+                    className="flex-1 @2xl:flex-none"
                     onClick={() => share.mutate()}
                     aria-label={t("shareProfile")}
-                    title={t("shareProfile")}
                   >
-                    <Share2 className="h-4.5 w-4.5" aria-hidden />
+                    <Share2 className="h-4 w-4" aria-hidden />
+                    <span className="hidden @xs:inline">{t("shareShort")}</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="icon"
                     className="h-11 w-11 shrink-0"
                     loading={downloadCard.isPending}
-                    onClick={() => downloadCard.mutate()}
-                    aria-label={downloadCard.isPending ? t("generatingCard") : t("downloadCard")}
-                    title={t("downloadCard")}
-                  >
-                    {!downloadCard.isPending && <Download className="h-4.5 w-4.5" aria-hidden />}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-11 w-11 shrink-0"
                     onClick={() => setMenuOpen((v) => !v)}
                     aria-haspopup="menu"
                     aria-expanded={menuOpen}
                     aria-label={t("profileOptions")}
+                    title={t("profileOptions")}
                   >
-                    <MoreHorizontal className="h-4.5 w-4.5" aria-hidden />
+                    {!downloadCard.isPending && <MoreHorizontal className="h-4.5 w-4.5" aria-hidden />}
                   </Button>
 
                   {menuOpen && (
-                    <MenuPanel className="w-56">
+                    <MenuPanel className="w-60">
+                      <MenuItem
+                        icon={Download}
+                        label={t("downloadCard")}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          downloadCard.mutate();
+                        }}
+                      />
                       <MenuItem
                         icon={LinkIcon}
                         label={t("copyLink")}
@@ -638,79 +673,68 @@ export function ProfileScreen() {
                 </div>
               )}
             </div>
-
-            {/* The one switch people flip most - right under their name,
-                with what it actually changes spelled out. */}
-            <div
-              className={cn(
-                "mt-5 flex items-center gap-3 rounded-2xl border px-4 py-3.5 transition-colors duration-300",
-                profile.is_available ? "border-brand-200 bg-brand-50/70" : "border-slate-200 bg-slate-50",
-              )}
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200/70">
-                <span className="relative flex h-3 w-3" aria-hidden>
-                  {profile.is_available && (
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-50" />
-                  )}
-                  <span
-                    className={cn(
-                      "relative inline-flex h-3 w-3 rounded-full",
-                      profile.is_available ? "bg-brand-500" : "bg-slate-300",
-                    )}
-                  />
-                </span>
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold text-slate-900">
-                  {profile.is_available ? t("availableForWork") : t("notAvailable")}
-                </p>
-                <p className="mt-0.5 text-sm leading-snug text-slate-500">
-                  {profile.is_available ? t("availabilityOnHint") : t("availabilityOffHint")}
-                </p>
-              </div>
-              <Switch
-                checked={profile.is_available}
-                disabled={toggleAvailable.isPending}
-                onChange={(next) => toggleAvailable.mutate(next)}
-                aria-label={t("availableForWork")}
-              />
-            </div>
           </div>
 
-          {/* Hairline dividers from the 1px gaps over a grey backing. */}
-          <dl className="grid grid-cols-2 gap-px border-t border-slate-100 bg-slate-100 sm:grid-cols-4">
-            <StatItem icon={Briefcase} label={t("skills")} value={formatNumber(skillList.length, lang)} />
-            <StatItem
-              icon={Star}
-              label={t("ratingLabel")}
-              value={profile.rating_count > 0 ? formatNumber(Number(profile.rating).toFixed(1), lang) : "–"}
-            />
-            <StatItem icon={MessageSquare} label={t("reviews")} value={formatNumber(profile.rating_count, lang)} />
-            <StatItem
-              icon={CalendarDays}
-              label={t("memberSince")}
-              value={formatDate(profile.created_at.slice(0, 10), lang)}
-              small
-            />
-          </dl>
+          {/* Tab row - scrolls sideways instead of wrapping on a narrow phone. */}
+          {editing ? (
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-200 bg-brand-50/60 px-4 py-3 sm:rounded-b-3xl @2xl:px-8">
+              <span className="inline-flex min-w-0 items-center gap-2 text-sm font-semibold text-brand-900">
+                <Pencil className="h-4 w-4 shrink-0" aria-hidden />
+                <span className="truncate">{t("editingProfile")}</span>
+              </span>
+              <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
+                {t("cancel")}
+              </Button>
+            </div>
+          ) : (
+            <div
+              ref={tabRowRef}
+              role="tablist"
+              aria-label={t("profileSectionsNav")}
+              className="mt-4 flex overflow-x-auto border-t border-slate-200 px-2 [scrollbar-width:none] @2xl:px-6 [&::-webkit-scrollbar]:hidden"
+            >
+              {tabs.map(({ id, label, badge }) => {
+                const selected = tab === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    id={`profile-tab-${id}`}
+                    aria-selected={selected}
+                    aria-controls={`profile-panel-${id}`}
+                    onClick={() => selectTab(id)}
+                    className="group relative shrink-0 px-1 py-1.5"
+                  >
+                    <span
+                      className={cn(
+                        "flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
+                        selected ? "text-brand-700" : "text-slate-600 group-hover:bg-slate-100 group-hover:text-slate-900",
+                      )}
+                    >
+                      {label}
+                      {badge ? (
+                        <span className="rounded-full bg-amber-100 px-1.5 text-[11px] font-bold leading-5 text-amber-800">
+                          {formatNumber(badge, lang)}
+                        </span>
+                      ) : null}
+                    </span>
+                    {selected && (
+                      <span className="absolute inset-x-1 bottom-0 h-[3px] rounded-t-full bg-brand-700" aria-hidden />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {editing ? (
           /* ==============================================================
              Edit mode
              ============================================================== */
-          <>
-            <div className="animate-in-up flex items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-50/80 px-4 py-3">
-              <span className="inline-flex items-center gap-2 text-sm font-semibold text-brand-900">
-                <Pencil className="h-4 w-4" aria-hidden />
-                {t("editingProfile")}
-              </span>
-              <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
-                {t("cancel")}
-              </Button>
-            </div>
-
-            <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+          <div className="@container space-y-4 md:space-y-5">
+            <div className="grid grid-cols-1 gap-4 md:gap-5 @3xl:grid-cols-2 @3xl:items-start">
               <SectionCard icon={Info} title={t("basicInfo")}>
                 <Field label={t("yourName")}>
                   <Input value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={80} />
@@ -721,7 +745,7 @@ export function ProfileScreen() {
                 <Field label={t("aboutYou")}>
                   <Textarea value={about} onChange={(e) => setAbout(e.target.value)} rows={4} maxLength={600} />
                 </Field>
-                <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-x-3 @md:grid-cols-2">
                   <Field label={`${t("age")} (${t("optional")})`}>
                     <Input
                       type="number"
@@ -738,7 +762,7 @@ export function ProfileScreen() {
                 </div>
               </SectionCard>
 
-              <div className="space-y-5">
+              <div className="space-y-4 md:space-y-5">
                 <SectionCard icon={Phone} title={t("phoneNumber")}>
                   <Field label={t("phoneNumber")} hint={t("phoneHint")}>
                     <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" />
@@ -758,13 +782,13 @@ export function ProfileScreen() {
               <SkillPicker skills={allSkills.data ?? []} selected={skillIds} onToggle={toggleSkill} />
 
               {skillIds.length > 0 && (
-                <div className="mt-5 grid gap-3 md:grid-cols-2">
+                <div className="mt-5 grid grid-cols-1 gap-3 @2xl:grid-cols-2">
                   {skillIds.map((id) => {
                     const skill = (allSkills.data ?? []).find((s) => s.id === id);
                     if (!skill) return null;
                     const d = draftFor(id);
                     return (
-                      <div key={id} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5 sm:p-4">
+                      <div key={id} className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5 sm:p-4">
                         <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
                           <SkillTile skillId={skill.id} className="h-8 w-8 rounded-lg bg-white ring-1 ring-slate-200" />
                           {skillName(skill, lang)}
@@ -830,228 +854,146 @@ export function ProfileScreen() {
                 {t("saveChanges")}
               </Button>
             </div>
-          </>
+          </div>
         ) : (
-          <>
-            {/* ============================================================
-                Tabs
-                ============================================================ */}
-            <div
-              role="tablist"
-              aria-label={t("profileSectionsNav")}
-              className="grid grid-cols-3 gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm"
-            >
-              {tabs.map(({ id, label, icon: Icon, badge }) => {
-                const selected = tab === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    role="tab"
-                    id={`profile-tab-${id}`}
-                    aria-selected={selected}
-                    aria-controls={`profile-panel-${id}`}
-                    onClick={() => setTab(id)}
-                    className={cn(
-                      "flex min-w-0 items-center justify-center gap-2 rounded-xl px-2 py-2.5 text-sm font-semibold transition-all duration-200",
-                      selected
-                        ? "bg-brand-700 text-white shadow-sm"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
-                    )}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" aria-hidden />
-                    <span className="truncate">{label}</span>
-                    {badge ? (
-                      <span
-                        className={cn(
-                          "hidden rounded-full px-1.5 text-[11px] font-bold leading-5 sm:inline",
-                          selected ? "bg-white/20 text-white" : "bg-amber-100 text-amber-800",
-                        )}
-                      >
-                        {formatNumber(badge, lang)}
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
-
+          <div className="@container">
             {tab === "overview" && (
+              /* Same plain list style as Settings. Intro on the left, the
+                 work on the right once there's room; stacked on a phone. */
               <div
                 id="profile-panel-overview"
                 role="tabpanel"
                 aria-labelledby="profile-tab-overview"
-                className="animate-in-up space-y-5"
+                className="animate-in-up grid grid-cols-1 gap-6 @2xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @2xl:items-start"
               >
-                {strengthPercent < 100 && (
-                  <ProfileStrength percent={strengthPercent} checks={strengthChecks} onComplete={startEditing} />
-                )}
-
-                <div className="grid gap-5 lg:grid-cols-5 lg:items-start">
-                  <SectionCard
-                    className="lg:col-span-3"
-                    icon={Info}
-                    title={t("aboutYou")}
-                    action={<CardAction onClick={startEditing} icon={Pencil} label={t("editProfile")} />}
-                  >
-                    {profile.about ? (
-                      <p className="whitespace-pre-line text-[15px] leading-7 text-slate-700">{profile.about}</p>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={startEditing}
-                        className="flex w-full items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 px-4 py-4 text-left text-sm text-slate-500 transition-colors hover:border-brand-300 hover:text-brand-800"
-                      >
-                        <Pencil className="h-4 w-4 shrink-0" aria-hidden />
-                        {t("noAboutYet")}
-                      </button>
-                    )}
-                  </SectionCard>
-
-                  <SectionCard className="lg:col-span-2" icon={UserRound} title={t("profileDetails")}>
-                    <dl className="space-y-3.5">
-                      {myPhone.data?.phone && (
-                        <DetailRow icon={Phone} label={t("phoneNumber")} value={myPhone.data.phone} />
-                      )}
-                      {myPhone.data?.alt_phone && (
-                        <DetailRow icon={Phone} label={t("altPhone")} value={myPhone.data.alt_phone} />
-                      )}
-                      {place && <DetailRow icon={MapPin} label={t("whereYouAre")} value={place} />}
-                      {profile.age != null && (
-                        <DetailRow
-                          icon={Cake}
-                          label={t("age")}
-                          value={t("yearsOld", { count: formatNumber(profile.age, lang) })}
+                <div className="@container min-w-0 space-y-6">
+                  <ListGroup>
+                    <ListRow
+                      icon={CircleDot}
+                      title={profile.is_available ? t("availableForWork") : t("notAvailable")}
+                      hint={profile.is_available ? t("availabilityOnHint") : t("availabilityOffHint")}
+                      trailing={
+                        <Switch
+                          checked={profile.is_available}
+                          disabled={toggleAvailable.isPending}
+                          onChange={(next) => toggleAvailable.mutate(next)}
+                          aria-label={t("availableForWork")}
                         />
-                      )}
-                      {profile.education && (
-                        <DetailRow icon={GraduationCap} label={t("highestEducation")} value={profile.education} />
-                      )}
-                      <DetailRow
-                        icon={CalendarDays}
-                        label={t("memberSince")}
-                        value={formatDate(profile.created_at.slice(0, 10), lang)}
-                      />
-                    </dl>
-                  </SectionCard>
-                </div>
-
-                <SectionCard
-                  icon={Briefcase}
-                  title={t("skillsAndRates")}
-                  badge={skillList.length > 0 ? skillList.length : undefined}
-                  action={
-                    skillList.length > 0 ? (
-                      <CardAction onClick={startEditing} icon={Pencil} label={t("editSkills")} />
-                    ) : undefined
-                  }
-                >
-                  {skillList.length === 0 ? (
-                    <EmptyState
-                      icon={<Briefcase className="h-7 w-7" />}
-                      title={t("noSkillsYetProfile")}
-                      hint={t("noSkillsYetProfileHint")}
-                      action={
-                        <Button size="sm" onClick={startEditing}>
-                          {t("addYourSkills")}
-                        </Button>
                       }
                     />
-                  ) : (
-                    <ul className="grid gap-3 sm:grid-cols-2">
-                      {skillList.map((s) => {
+                  </ListGroup>
+
+                  <ListGroup title={t("profileIntro")} action={{ label: t("edit"), onClick: startEditing }}>
+                    {profile.about ? (
+                      <p className="whitespace-pre-line px-4 py-3.5 text-[15px] leading-7 text-slate-700">
+                        {profile.about}
+                      </p>
+                    ) : (
+                      <ListRow icon={Pencil} title={t("noAboutYet")} onClick={startEditing} />
+                    )}
+                    {place && <ListRow icon={MapPin} title={t("livesIn", { place })} />}
+                    {myPhone.data?.phone && <ListRow icon={Phone} title={myPhone.data.phone} />}
+                    {myPhone.data?.alt_phone && <ListRow icon={Phone} title={myPhone.data.alt_phone} />}
+                    {profile.education && <ListRow icon={GraduationCap} title={profile.education} />}
+                    {profile.age != null && (
+                      <ListRow icon={Cake} title={t("yearsOld", { count: formatNumber(profile.age, lang) })} />
+                    )}
+                    <ListRow
+                      icon={CalendarDays}
+                      title={t("joinedOn", { date: formatDate(profile.created_at.slice(0, 10), lang) })}
+                    />
+                  </ListGroup>
+                </div>
+
+                <div className="@container min-w-0 space-y-6">
+                  {strengthPercent < 100 && (
+                    <ProfileStrength percent={strengthPercent} checks={strengthChecks} onComplete={startEditing} />
+                  )}
+
+                  <ListGroup
+                    title={
+                      skillList.length > 0
+                        ? `${t("skillsAndRates")} · ${formatNumber(skillList.length, lang)}`
+                        : t("skillsAndRates")
+                    }
+                    action={skillList.length > 0 ? { label: t("edit"), onClick: startEditing } : undefined}
+                  >
+                    {skillList.length === 0 ? (
+                      <ListRow
+                        icon={Briefcase}
+                        title={t("addYourSkills")}
+                        hint={t("noSkillsYetProfileHint")}
+                        onClick={startEditing}
+                      />
+                    ) : (
+                      skillList.map((s) => {
                         const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
                         const rate =
                           s.rate_amount != null
                             ? `${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}`
                             : null;
                         return (
-                          <li
-                            key={s.id}
-                            className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 transition-all duration-200 hover:border-brand-200 hover:shadow-sm"
-                          >
-                            <SkillTile
-                              skillId={s.id}
-                              className="h-11 w-11 rounded-xl bg-brand-50 transition-colors group-hover:bg-brand-100"
-                            />
+                          <div key={s.id} className="flex min-h-14 items-center gap-3 px-4 py-2.5">
+                            <SkillTile skillId={s.id} className="h-9 w-9 shrink-0 rounded-lg bg-slate-50" />
+                            {/* The rate gets its own line so it never has to be cut short. */}
                             <div className="min-w-0 flex-1">
-                              <p className="truncate font-semibold text-slate-900">{label}</p>
-                              {s.custom_note ? (
-                                <p className="mt-0.5 truncate text-xs text-slate-500">{s.custom_note}</p>
-                              ) : null}
+                              <p className="truncate text-[15px] font-medium text-slate-900">{label}</p>
+                              {rate && <p className="text-sm font-medium text-brand-700">{rate}</p>}
+                              {s.custom_note && <p className="truncate text-xs text-slate-500">{s.custom_note}</p>}
                             </div>
-                            {rate && (
-                              <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-800">
-                                {rate}
-                              </span>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </SectionCard>
-
-                <SectionCard
-                  icon={Award}
-                  title={t("certificates")}
-                  badge={certificates.length > 0 ? certificates.length : undefined}
-                >
-                  <p className="-mt-1 mb-4 text-sm text-slate-500">{t("certificatesHint")}</p>
-
-                  {certificates.length > 0 ? (
-                    <ul className="mb-4 grid gap-2.5 sm:grid-cols-2">
-                      {certificates.map((c) => (
-                        <li
-                          key={c.id}
-                          className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3.5 py-3 transition-colors hover:border-brand-200"
-                        >
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sun-400/15 text-sun-500">
-                            <Award className="h-5 w-5" aria-hidden />
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <a
-                              href={c.file_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="block truncate text-sm font-semibold text-slate-800 hover:text-brand-700 hover:underline"
-                            >
-                              {c.title}
-                            </a>
-                            <p className="text-xs text-slate-500">{formatDate(c.created_at.slice(0, 10), lang)}</p>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => deleteCert.mutate(c.id)}
-                            aria-label={t("delete")}
-                            className="shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" aria-hidden />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="mb-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-6 text-center">
-                      <Award className="mx-auto h-7 w-7 text-slate-300" aria-hidden />
-                      <p className="mt-2 text-sm font-medium text-slate-600">{t("noCertificatesYet")}</p>
-                      <p className="mt-1 text-xs text-slate-500">{t("noCertificatesYetHint")}</p>
-                    </div>
-                  )}
+                        );
+                      })
+                    )}
+                  </ListGroup>
 
-                  <div className="rounded-2xl bg-slate-50 p-3 sm:p-3.5">
-                    <p className="mb-2 text-sm font-semibold text-slate-800">{t("addCertificate")}</p>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <ListGroup
+                    title={
+                      certificates.length > 0
+                        ? `${t("certificates")} · ${formatNumber(certificates.length, lang)}`
+                        : t("certificates")
+                    }
+                    footer={`${t("certificatesHint")} ${t("uploadCertificateHint")}`}
+                  >
+                    {certificates.map((c) => (
+                      <div key={c.id} className="flex min-h-14 items-center gap-3 px-4 py-2.5">
+                        <Award className="h-5 w-5 shrink-0 text-slate-400" aria-hidden />
+                        <div className="min-w-0 flex-1">
+                          <a
+                            href={c.file_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block truncate text-[15px] font-medium text-slate-900 hover:text-brand-700 hover:underline"
+                          >
+                            {c.title}
+                          </a>
+                          <p className="text-xs text-slate-500">{formatDate(c.created_at.slice(0, 10), lang)}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => deleteCert.mutate(c.id)}
+                          aria-label={t("delete")}
+                          title={t("delete")}
+                          className="-mr-1.5 shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Add one: name it, then pick the file. */}
+                    <div className="flex flex-col gap-2 p-3 @md:flex-row @md:items-center">
                       <Input
                         value={certTitle}
                         onChange={(e) => setCertTitle(e.target.value)}
                         placeholder={t("certificateTitlePlaceholder")}
                         maxLength={100}
-                        className="flex-1 bg-white"
+                        aria-label={t("addCertificate")}
+                        className="min-w-0 flex-1"
                       />
                       <label
                         className={cn(
-                          "inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-800",
+                          "inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50",
                           (!certTitle.trim() || addCert.isPending) && "pointer-events-none opacity-50",
                         )}
                       >
@@ -1075,9 +1017,8 @@ export function ProfileScreen() {
                         />
                       </label>
                     </div>
-                    <p className="mt-1.5 text-xs text-slate-400">{t("uploadCertificateHint")}</p>
-                  </div>
-                </SectionCard>
+                  </ListGroup>
+                </div>
               </div>
             )}
 
@@ -1086,29 +1027,18 @@ export function ProfileScreen() {
                 id="profile-panel-calendar"
                 role="tabpanel"
                 aria-labelledby="profile-tab-calendar"
-                className="animate-in-up"
+                className="animate-in-up mx-auto max-w-2xl"
               >
-                <SectionCard
-                  icon={CalendarDays}
-                  title={t("markCalendar")}
-                  badge={busyDaysCount > 0 ? busyDaysCount : undefined}
-                >
-                  <p className="-mt-1 text-sm text-slate-500">{t("calendarHint")}</p>
-                  <p
-                    className={cn(
-                      "mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium",
-                      busyDaysCount > 0 ? "bg-amber-50 text-amber-800" : "bg-brand-50 text-brand-800",
-                    )}
-                  >
-                    <span
-                      className={cn("h-2 w-2 rounded-full", busyDaysCount > 0 ? "bg-amber-500" : "bg-brand-500")}
-                      aria-hidden
-                    />
-                    {busyDaysCount > 0
-                      ? t("daysMarkedBusy", { count: formatNumber(busyDaysCount, lang) })
-                      : t("noBusyDays")}
-                  </p>
-                  <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-2 sm:p-4">
+                <ListGroup title={t("markCalendar")} footer={t("calendarHint")}>
+                  <ListRow
+                    icon={CalendarDays}
+                    title={
+                      busyDaysCount > 0
+                        ? t("daysMarkedBusy", { count: formatNumber(busyDaysCount, lang) })
+                        : t("noBusyDays")
+                    }
+                  />
+                  <div className="p-3 sm:p-5">
                     <AvailabilityCalendar
                       days={availability.data ?? []}
                       editable
@@ -1116,183 +1046,122 @@ export function ProfileScreen() {
                       onToggle={(day, status) => changeDay.mutate({ day, status })}
                     />
                   </div>
-                </SectionCard>
+                </ListGroup>
               </div>
             )}
 
+            {/* Settings and About share one plain list style and a readable
+                column width, on every screen size. */}
             {tab === "settings" && (
               <div
                 id="profile-panel-settings"
                 role="tabpanel"
                 aria-labelledby="profile-tab-settings"
-                className="animate-in-up grid gap-5 lg:grid-cols-2 lg:items-start"
+                className="animate-in-up mx-auto max-w-2xl space-y-6"
               >
-                <div className="space-y-5">
-                  <SectionCard icon={Eye} title={t("visibilityTitle")}>
-                    <SettingRow
-                      icon={Navigation}
-                      title={t("shareLocation")}
-                      description={
-                        <>
-                          <span className="block font-medium text-slate-700">
-                            {profile.location_consent === "granted"
-                              ? profile.location_shared_at
-                                ? t("locationShared", { time: relativeTime(profile.location_shared_at, lang) })
-                                : t("locationSharedPending")
-                              : t("locationNotShared")}
-                          </span>
-                          <span className="mt-1 block">{t("shareLocationHint")}</span>
-                        </>
-                      }
-                      control={
-                        <Switch
-                          checked={profile.location_consent === "granted"}
-                          disabled={toggleLocationSharing.isPending}
-                          onChange={(next) => toggleLocationSharing.mutate(next)}
-                          aria-label={t("shareLocation")}
-                        />
-                      }
-                    />
-                  </SectionCard>
-
-                  <SectionCard icon={Bell} title={t("alertsOutsideApp")}>
-                    <div className="space-y-2">
-                      <SettingRow
-                        icon={Mail}
-                        title={t("emailAlerts")}
-                        description={t("emailAlertsHint")}
-                        control={
-                          <Switch
-                            checked={alertPrefs.data?.email_enabled ?? true}
-                            onChange={(next) => saveAlerts.mutate({ email_enabled: next })}
-                            aria-label={t("emailAlerts")}
-                          />
-                        }
+                <ListGroup title={t("settingsPreferences")}>
+                  <ListRow
+                    icon={Mail}
+                    title={t("emailAlerts")}
+                    hint={t("emailAlertsHint")}
+                    trailing={
+                      <Switch
+                        checked={alertPrefs.data?.email_enabled ?? true}
+                        onChange={(next) => saveAlerts.mutate({ email_enabled: next })}
+                        aria-label={t("emailAlerts")}
                       />
-                      <SettingRow
-                        icon={MessageSquare}
-                        title={t("smsAlerts")}
-                        description={t("smsAlertsHint")}
-                        control={
-                          <Switch
-                            checked={alertPrefs.data?.sms_enabled ?? false}
-                            onChange={(next) => saveAlerts.mutate({ sms_enabled: next })}
-                            aria-label={t("smsAlerts")}
-                          />
-                        }
+                    }
+                  />
+                  <ListRow
+                    icon={MessageSquare}
+                    title={t("smsAlerts")}
+                    hint={t("smsAlertsHint")}
+                    trailing={
+                      <Switch
+                        checked={alertPrefs.data?.sms_enabled ?? false}
+                        onChange={(next) => saveAlerts.mutate({ sms_enabled: next })}
+                        aria-label={t("smsAlerts")}
                       />
-                    </div>
-                  </SectionCard>
+                    }
+                  />
+                </ListGroup>
 
-                  <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                    <ContactPrivacyCard />
-                  </section>
-                </div>
+                <ListGroup title={t("settingsPrivacy")}>
+                  <ListRow
+                    icon={Navigation}
+                    title={t("shareLocation")}
+                    hint={
+                      profile.location_consent === "granted"
+                        ? profile.location_shared_at
+                          ? t("locationShared", { time: relativeTime(profile.location_shared_at, lang) })
+                          : t("locationSharedPending")
+                        : t("shareLocationHint")
+                    }
+                    trailing={
+                      <Switch
+                        checked={profile.location_consent === "granted"}
+                        disabled={toggleLocationSharing.isPending}
+                        onChange={(next) => toggleLocationSharing.mutate(next)}
+                        aria-label={t("shareLocation")}
+                      />
+                    }
+                  />
+                  <ContactPrivacyRows />
+                </ListGroup>
 
-                <div className="space-y-5">
-                  <SectionCard icon={UserRound} title={t("accountTitle")}>
-                    <div className="space-y-2">
-                      <LinkRow to="/friends" icon={Users} label={t("myFriends")} />
-                      <Link
-                        to="/worker/$workerId"
-                        params={{ workerId: profile.id }}
-                        className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3.5 py-3 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-100"
-                      >
-                        <span className="inline-flex items-center gap-3">
-                          <RowIcon icon={Eye} />
-                          {t("viewPublicProfile")}
-                        </span>
-                        <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden />
-                      </Link>
-                      <div className="rounded-xl bg-slate-50 px-3.5 py-3">
-                        <div className="flex items-start gap-3">
-                          <RowIcon icon={LinkIcon} />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-slate-800">{t("yourProfileLink")}</p>
-                            <p className="mt-0.5 break-all text-xs text-slate-500">
-                              {profileUrl(profile.public_slug)}
-                            </p>
-                            <p className="mt-1 text-xs text-slate-400">{t("shareProfileHint")}</p>
-                          </div>
-                        </div>
-                        <div className="mt-3 flex gap-2 pl-11">
-                          <Button size="sm" variant="outline" onClick={() => copy.mutate()}>
-                            <LinkIcon className="h-4 w-4" aria-hidden />
-                            {t("copyLink")}
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => share.mutate()}>
-                            <Share2 className="h-4 w-4" aria-hidden />
-                            {t("shareProfile")}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      className="mt-4 w-full border-red-200 text-red-600 hover:bg-red-50"
-                      onClick={() => setSignOutConfirmOpen(true)}
-                    >
-                      <LogOut className="h-4 w-4" aria-hidden />
-                      {t("signOut")}
-                    </Button>
-                  </SectionCard>
+                <ListGroup title={t("accountTitle")}>
+                  <ListRow icon={Users} title={t("myFriends")} to="/friends" />
+                  <ListRow
+                    icon={Eye}
+                    title={t("viewPublicProfile")}
+                    to="/worker/$workerId"
+                    params={{ workerId: profile.id }}
+                  />
+                  <ListRow
+                    icon={LinkIcon}
+                    title={t("copyLink")}
+                    hint={<span className="break-all">{profileUrl(profile.public_slug)}</span>}
+                    onClick={() => copy.mutate()}
+                    trailing={null}
+                  />
+                  <ListRow
+                    icon={Share2}
+                    title={t("shareProfile")}
+                    hint={t("shareProfileHint")}
+                    onClick={() => share.mutate()}
+                    trailing={null}
+                  />
+                </ListGroup>
 
-                  <section className="rounded-2xl border border-red-200 bg-red-50/40 p-4 sm:p-5">
-                    <h3 className="flex items-center gap-2.5 text-base font-semibold text-red-700">
-                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-red-100 text-red-600">
-                        <Trash2 className="h-4 w-4" aria-hidden />
-                      </span>
-                      {t("deleteAccount")}
-                    </h3>
-                    <p className="mt-2 text-sm text-slate-600">{t("deleteAccountHint")}</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-3 border-red-300 bg-white text-red-600 hover:bg-red-50"
-                      onClick={() => {
-                        setDeleteConfirm("");
-                        setDeletePassword("");
-                        setDeleteOpen(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden />
-                      {t("deleteAccount")}
-                    </Button>
-                  </section>
-                </div>
+                <ListGroup>
+                  <ListRow icon={LogOut} title={t("signOut")} tone="danger" onClick={() => setSignOutConfirmOpen(true)} />
+                  <ListRow
+                    icon={Trash2}
+                    title={t("deleteAccount")}
+                    hint={t("deleteAccountHint")}
+                    tone="danger"
+                    onClick={() => {
+                      setDeleteConfirm("");
+                      setDeletePassword("");
+                      setDeleteOpen(true);
+                    }}
+                  />
+                </ListGroup>
               </div>
             )}
-          </>
-        )}
 
-        {/* ---- About Duleko links ------------------------------------- */}
-        <nav
-          className="rounded-2xl border border-slate-200 bg-white px-4 py-5 text-center shadow-sm sm:px-6"
-          aria-label={t("staticPagesNav")}
-        >
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t("aboutTitle")}</p>
-          <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-slate-500 sm:text-[13px]">
-            {t("profileStaticPagesHint")}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-            {(
-              [
-                { to: "/about" as const, labelKey: "navAbout" as const },
-                { to: "/mission" as const, labelKey: "navMission" as const },
-                { to: "/motivation" as const, labelKey: "navMotivation" as const },
-                { to: "/privacy" as const, labelKey: "navPrivacy" as const },
-              ] as const
-            ).map((page) => (
-              <Link
-                key={page.to}
-                to={page.to}
-                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 sm:text-[13px]"
+            {tab === "about" && (
+              <div
+                id="profile-panel-about"
+                role="tabpanel"
+                aria-labelledby="profile-tab-about"
+                className="animate-in-up mx-auto max-w-2xl"
               >
-                {t(page.labelKey)}
-              </Link>
-            ))}
+                <DulekoPagesHub />
+              </div>
+            )}
           </div>
-        </nav>
+        )}
       </PageContainer>
 
       {/* One tap on the button should never be the whole action - a
@@ -1376,70 +1245,7 @@ export function ProfileScreen() {
   );
 }
 
-type ProfileTab = "overview" | "calendar" | "settings";
-
-/** Small text action in a card's header ("Edit", "Edit skills"). */
-function CardAction({ onClick, icon: Icon, label }: { onClick: () => void; icon: LucideIcon; label: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50 hover:text-brand-800"
-    >
-      <Icon className="h-3.5 w-3.5" aria-hidden />
-      <span className="hidden sm:inline">{label}</span>
-      <span className="sr-only sm:hidden">{label}</span>
-    </button>
-  );
-}
-
-function RowIcon({ icon: Icon }: { icon: LucideIcon }) {
-  return (
-    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-slate-600 shadow-sm ring-1 ring-slate-200">
-      <Icon className="h-4 w-4" aria-hidden />
-    </span>
-  );
-}
-
-function SettingRow({
-  icon,
-  title,
-  description,
-  control,
-}: {
-  icon: LucideIcon;
-  title: string;
-  description?: React.ReactNode;
-  control: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-3 rounded-xl bg-slate-50 px-3.5 py-3">
-      <RowIcon icon={icon} />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-slate-800">{title}</p>
-        {description && <div className="mt-0.5 text-xs leading-relaxed text-slate-500">{description}</div>}
-      </div>
-      <div className="shrink-0 pt-0.5">{control}</div>
-    </div>
-  );
-}
-
-function LinkRow({ to, icon, label }: { to: "/friends"; icon: LucideIcon; label: string }) {
-  return (
-    <Link
-      to={to}
-      className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3.5 py-3 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-100"
-    >
-      <span className="inline-flex items-center gap-3">
-        <RowIcon icon={icon} />
-        {label}
-      </span>
-      <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden />
-    </Link>
-  );
-}
-
-/** How complete the profile is, and what's still missing. */
+/** How complete the profile is, and what's still missing - one slim line and a bar. */
 function ProfileStrength({
   percent,
   checks,
@@ -1450,47 +1256,32 @@ function ProfileStrength({
   onComplete: () => void;
 }) {
   const { t, lang } = useI18n();
-  const missing = checks.filter((c) => !c.done);
+  const missing = checks.filter((c) => !c.done).map((c) => c.label);
   return (
-    <section className="overflow-hidden rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-4 shadow-sm sm:p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="font-semibold text-slate-900">
-              {t("profileCompleteTitle", { percent: formatNumber(percent, lang) })}
-            </p>
-            <span className="text-sm font-bold text-brand-700 sm:hidden">{formatNumber(percent, lang)}%</span>
-          </div>
-          <p className="mt-0.5 text-sm text-slate-600">{t("profileCompleteHint")}</p>
-          <div
-            className="mt-3 h-2 overflow-hidden rounded-full bg-brand-100"
-            role="progressbar"
-            aria-valuenow={percent}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-[width] duration-700"
-              style={{ width: `${percent}%` }}
-            />
-          </div>
-          <ul className="mt-3 flex flex-wrap gap-1.5">
-            {missing.map(({ label, icon: Icon }) => (
-              <li
-                key={label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-brand-300 bg-white px-2.5 py-1 text-xs font-medium text-brand-800"
-              >
-                <Icon className="h-3.5 w-3.5" aria-hidden />
-                {label}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <Button className="w-full shrink-0 sm:w-auto" onClick={onComplete}>
-          <Sparkles className="h-4 w-4" aria-hidden />
+    <section className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="min-w-0 text-[15px] font-medium text-slate-900">
+          {t("profileCompleteTitle", { percent: formatNumber(percent, lang) })}
+        </p>
+        <button
+          type="button"
+          onClick={onComplete}
+          className="-my-1 shrink-0 rounded-md px-1.5 py-1 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50 hover:text-brand-800"
+        >
           {t("completeProfile")}
-        </Button>
+        </button>
       </div>
+      <div
+        className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100"
+        role="progressbar"
+        aria-valuenow={percent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={t("profileCompleteTitle", { percent: formatNumber(percent, lang) })}
+      >
+        <div className="h-full rounded-full bg-brand-600 transition-[width] duration-700" style={{ width: `${percent}%` }} />
+      </div>
+      {missing.length > 0 && <p className="mt-2.5 text-xs leading-relaxed text-slate-500">{missing.join(" · ")}</p>}
     </section>
   );
 }

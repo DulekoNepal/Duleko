@@ -1,6 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ArrowRight, ChevronDown, Compass, Home, Mail, Menu, ShieldCheck, Target, UserPlus, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ChevronDown,
+  Compass,
+  Home,
+  LogIn,
+  Mail,
+  Menu,
+  ShieldCheck,
+  Target,
+  UserPlus,
+  X,
+} from "lucide-react";
+import { LanguageToggleButton } from "@/components/duleko/Layout";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { CONTACT_EMAIL, useSiteActions } from "./actions";
 import { NAV, type NavEntry, type NavItem } from "./nav";
@@ -23,11 +38,13 @@ function isGroupActive(entry: Extract<NavEntry, { kind: "group" }>, pathname: st
  * Desktop (lg+): inline links plus two dropdowns - a wide "Who it's for"
  * panel and a compact "About" one - that open on hover or click.
  * Below lg: a hamburger opening a slide-in drawer with the same entries,
- * grouped, and the two primary actions pinned to its bottom.
+ * grouped, and the two primary actions pinned to its bottom. The language
+ * button sits in the header bar only, at every size - never twice.
  */
 export function SiteHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { createProfile, explore, signedIn } = useSiteActions();
+  const { createProfile, explore, signIn, signedIn, inApp, back } = useSiteActions();
+  const { t } = useI18n();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
@@ -113,8 +130,8 @@ export function SiteHeader() {
   };
 
   const primaryCta = signedIn
-    ? { label: "Open Duleko", onClick: () => explore("/") }
-    : { label: "Create Your Profile", onClick: createProfile };
+    ? { label: t("headerOpenDuleko"), onClick: () => explore("/") }
+    : { label: t("footerCreateProfile"), onClick: createProfile };
 
   return (
     <>
@@ -127,11 +144,24 @@ export function SiteHeader() {
         )}
       >
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6 lg:h-[72px] lg:px-8">
-          <Link to="/" aria-label="Duleko home" className="shrink-0 rounded-xl" onClick={closeAll}>
-            <Brand />
+          {inApp && (
+            <button
+              type="button"
+              onClick={back}
+              className="-ml-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-700 transition-colors hover:bg-slate-100"
+              aria-label={t("back")}
+              title={t("back")}
+            >
+              <ArrowLeft className="h-5 w-5" aria-hidden />
+            </button>
+          )}
+          <Link to="/" aria-label={t("siteHomeAria")} className="shrink-0 rounded-xl" onClick={closeAll}>
+            {/* Visitors also get Log in in the bar, so the Nepali half of
+                the name gives way below sm; in-app it only goes below 360px. */}
+            <Brand compact={signedIn || inApp ? true : "sm"} />
           </Link>
 
-          <nav ref={navRef} className="mx-auto hidden items-center gap-1 lg:flex" aria-label="Website">
+          <nav ref={navRef} className="mx-auto hidden items-center gap-1 lg:flex" aria-label={t("siteWebsiteNav")}>
             {NAV.map((entry) =>
               entry.kind === "link" ? (
                 <Link
@@ -144,7 +174,7 @@ export function SiteHeader() {
                       : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900",
                   )}
                 >
-                  {entry.label}
+                  {t(entry.labelKey)}
                 </Link>
               ) : (
                 <div
@@ -175,7 +205,7 @@ export function SiteHeader() {
                         : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900",
                     )}
                   >
-                    {entry.label}
+                    {t(entry.labelKey)}
                     <ChevronDown
                       className={cn(
                         "h-4 w-4 transition-transform duration-200",
@@ -200,10 +230,29 @@ export function SiteHeader() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2 lg:ml-0">
+            <LanguageToggleButton />
             {!signedIn && (
               <SiteButton variant="ghost" size="sm" className="hidden xl:inline-flex" onClick={() => explore("/")}>
                 <Compass className="h-4 w-4" aria-hidden />
-                Explore
+                {t("headerExplore")}
+              </SiteButton>
+            )}
+            {/* Log in for anyone signed out. Icon-only on the narrowest
+                phones; a guest already in the app (who also has the back
+                arrow) finds it in the menu until sm. */}
+            {!signedIn && (
+              <SiteButton
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "border border-slate-200 bg-white px-3 shadow-sm",
+                  inApp ? "hidden sm:inline-flex" : "inline-flex",
+                )}
+                onClick={signIn}
+                aria-label={t("siteLogIn")}
+              >
+                <LogIn className="h-4 w-4" aria-hidden />
+                <span className={cn(!inApp && "hidden min-[360px]:inline")}>{t("siteLogIn")}</span>
               </SiteButton>
             )}
             <SiteButton size="sm" className="hidden sm:inline-flex" onClick={primaryCta.onClick}>
@@ -214,7 +263,7 @@ export function SiteHeader() {
               type="button"
               onClick={() => setDrawerOpen(true)}
               className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-50 lg:hidden"
-              aria-label="Open menu"
+              aria-label={t("headerOpenMenu")}
               aria-expanded={drawerOpen}
               aria-controls="site-drawer"
             >
@@ -241,6 +290,10 @@ export function SiteHeader() {
           setDrawerOpen(false);
           explore("/");
         }}
+        onSignIn={() => {
+          setDrawerOpen(false);
+          signIn();
+        }}
         signedIn={signedIn}
       />
     </>
@@ -256,6 +309,7 @@ function DropdownItem({
   pathname: string;
   onNavigate: () => void;
 }) {
+  const { t } = useI18n();
   const Icon = item.icon;
   const active = isItemActive(item, pathname);
   return (
@@ -278,13 +332,13 @@ function DropdownItem({
       </span>
       <span className="min-w-0">
         <span className="flex items-center gap-1 text-sm font-semibold text-slate-900">
-          {item.label}
+          {t(item.labelKey)}
           <ArrowRight
             className="h-3.5 w-3.5 -translate-x-1 text-brand-600 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100"
             aria-hidden
           />
         </span>
-        <span className="mt-0.5 block text-sm text-slate-500">{item.description}</span>
+        <span className="mt-0.5 block text-sm text-slate-500">{t(item.descriptionKey)}</span>
       </span>
     </Link>
   );
@@ -303,6 +357,7 @@ function DropdownPanel({
   onNavigate: () => void;
   onExplore: () => void;
 }) {
+  const { t } = useI18n();
   const wide = entry.id === "audiences";
   return (
     // pt-3 bridges the gap under the trigger so the pointer can travel into
@@ -321,7 +376,7 @@ function DropdownPanel({
       >
         <div className="p-2">
           {entry.items.map((item) => (
-            <DropdownItem key={item.label} item={item} pathname={pathname} onNavigate={onNavigate} />
+            <DropdownItem key={item.labelKey} item={item} pathname={pathname} onNavigate={onNavigate} />
           ))}
         </div>
 
@@ -332,9 +387,9 @@ function DropdownPanel({
               aria-hidden
             />
             <div className="relative">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-300">Duleko is for everyone</p>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-300">{t("headerForEveryone")}</p>
               <p className="mt-2 text-sm leading-relaxed text-white/85">
-                You can need a service, provide a service, or do both.
+                {t("serviceEitherWay")}
               </p>
             </div>
             <button
@@ -343,7 +398,7 @@ function DropdownPanel({
               className="relative mt-5 inline-flex items-center gap-1.5 self-start rounded-lg bg-white/15 px-3 py-2 text-sm font-semibold ring-1 ring-white/25 transition-colors hover:bg-white/25"
             >
               <Compass className="h-4 w-4" aria-hidden />
-              Explore Duleko
+              {t("exploreDuleko")}
             </button>
           </div>
         ) : (
@@ -366,6 +421,7 @@ function MobileDrawer({
   onClose,
   primaryCta,
   onExplore,
+  onSignIn,
   signedIn,
 }: {
   open: boolean;
@@ -373,8 +429,10 @@ function MobileDrawer({
   onClose: () => void;
   primaryCta: { label: string; onClick: () => void };
   onExplore: () => void;
+  onSignIn: () => void;
   signedIn: boolean;
 }) {
+  const { t } = useI18n();
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -408,7 +466,7 @@ function MobileDrawer({
         id="site-drawer"
         role="dialog"
         aria-modal="true"
-        aria-label="Menu"
+        aria-label={t("headerMenu")}
         className={cn(
           "absolute inset-y-0 right-0 flex w-full max-w-sm flex-col bg-white shadow-2xl transition-transform duration-300 ease-out",
           open ? "translate-x-0" : "translate-x-full",
@@ -416,7 +474,7 @@ function MobileDrawer({
       >
         <div className="border-b border-slate-100 pt-[var(--sat)]">
           <div className="flex h-16 items-center justify-between px-4">
-            <Link to="/" onClick={onClose} aria-label="Duleko home">
+            <Link to="/" onClick={onClose} aria-label={t("siteHomeAria")}>
               <Brand />
             </Link>
             <button
@@ -424,17 +482,17 @@ function MobileDrawer({
               type="button"
               onClick={onClose}
               className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100"
-              aria-label="Close menu"
+              aria-label={t("headerCloseMenu")}
             >
               <X className="h-5 w-5" aria-hidden />
             </button>
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Website">
+        <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label={t("siteWebsiteNav")}>
           <Link to="/" onClick={onClose} className={rowClass(pathname === "/")}>
             <Home className="h-5 w-5 text-brand-700" aria-hidden />
-            Home
+            {t("siteHome")}
           </Link>
 
           {NAV.map((entry) => {
@@ -443,21 +501,21 @@ function MobileDrawer({
               return (
                 <Link key={entry.to} to={entry.to} onClick={onClose} className={rowClass(pathname === entry.to)}>
                   <Icon className="h-5 w-5 text-brand-700" aria-hidden />
-                  {entry.label}
+                  {t(entry.labelKey)}
                 </Link>
               );
             }
             return (
               <div key={entry.id} className="mt-4 border-t border-slate-100 pt-4">
                 <p className="px-3 pb-2 text-xs font-bold uppercase tracking-[0.14em] text-accent-600">
-                  {entry.label}
+                  {t(entry.labelKey)}
                 </p>
                 {entry.items.map((item) => {
                   const Icon = item.icon;
                   const active = isItemActive(item, pathname);
                   return (
                     <Link
-                      key={item.label}
+                      key={item.labelKey}
                       to={item.to}
                       hash={item.hash}
                       onClick={onClose}
@@ -470,8 +528,8 @@ function MobileDrawer({
                         <Icon className="h-4.5 w-4.5" />
                       </span>
                       <span className="min-w-0">
-                        <span className="block text-[15px] font-semibold text-slate-900">{item.label}</span>
-                        <span className="block text-sm text-slate-500">{item.description}</span>
+                        <span className="block text-[15px] font-semibold text-slate-900">{t(item.labelKey)}</span>
+                        <span className="block text-sm text-slate-500">{t(item.descriptionKey)}</span>
                       </span>
                     </Link>
                   );
@@ -483,14 +541,20 @@ function MobileDrawer({
 
         <div className="space-y-2.5 border-t border-slate-100 bg-slate-50/70 px-4 pb-[calc(var(--sab)+1rem)] pt-4">
           <SiteButton className="w-full" onClick={primaryCta.onClick}>
-            <UserPlus className="h-4.5 w-4.5" aria-hidden />
+            {signedIn ? <Compass className="h-4.5 w-4.5" aria-hidden /> : <UserPlus className="h-4.5 w-4.5" aria-hidden />}
             {primaryCta.label}
           </SiteButton>
           {!signedIn && (
-            <SiteButton variant="outline" className="w-full" onClick={onExplore}>
-              <Compass className="h-4.5 w-4.5" aria-hidden />
-              Explore Duleko
-            </SiteButton>
+            <div className="grid grid-cols-2 gap-2.5">
+              <SiteButton variant="outline" className="w-full" onClick={onSignIn}>
+                <LogIn className="h-4.5 w-4.5" aria-hidden />
+                {t("siteLogIn")}
+              </SiteButton>
+              <SiteButton variant="ghost" className="w-full border border-slate-200 bg-white" onClick={onExplore}>
+                <Compass className="h-4.5 w-4.5" aria-hidden />
+                {t("headerExplore")}
+              </SiteButton>
+            </div>
           )}
           <a
             href={`mailto:${CONTACT_EMAIL}`}

@@ -1,4 +1,13 @@
 User-agent: *
 Allow: /
+# Signed-in screens - nothing public to index.
+Disallow: /profile
+Disallow: /work
+Disallow: /notifications
+Disallow: /friends
+Disallow: /chat/
+Disallow: /chats
+Disallow: /moderation
+Disallow: /welcome
 
-Sitemap: https://duleko.com/sitemap.xml
+Sitemap: https://www.duleko.com/sitemap.xml

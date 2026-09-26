@@ -11,16 +11,15 @@ import {
   StoryLink,
   StoryNav,
 } from "@/components/duleko/Site";
+import { useI18n } from "@/lib/i18n";
 
 export function MissionPage() {
+  const { t } = useI18n();
   return (
-    <SiteLayout title="Our Mission">
-      <PageHero story="mission" eyebrow="Our Mission" title="A skill should not need a shop to become a business.">
+    <SiteLayout title={t("ourMission")}>
+      <PageHero story="mission" eyebrow={t("ourMission")} title={t("missionTeaser")}>
         <Prose>
-          <p>
-            For many people, the biggest barrier to turning a skill into income is not the lack of ability.
-            It is the cost and difficulty of becoming visible to customers.
-          </p>
+          <p>{t("missionHeroBody")}</p>
         </Prose>
       </PageHero>
 
@@ -29,22 +28,18 @@ export function MissionPage() {
           <div className="rounded-2xl border border-slate-200 bg-cream-50 p-8">
             <Store className="mb-4 h-8 w-8 text-slate-400" aria-hidden />
             <p className="text-lg leading-relaxed text-slate-700">
-              A physical business may require a shop, rent, equipment, a prime location, and ongoing
-              expenses.
+              {t("missionShopCosts")}
             </p>
           </div>
           <div>
             <Prose>
-              <p>Duleko is built around a different possibility:</p>
+              <p>{t("missionDifferent")}</p>
             </Prose>
             <p className="mt-4 text-2xl font-bold leading-snug text-teal-800 sm:text-3xl">
-              What if your skill itself could be the beginning of your business?
+              {t("missionWhatIf")}
             </p>
             <Prose className="mt-6">
-              <p>
-                Duleko provides a virtual space where people can showcase their skills, become discoverable,
-                and connect with people who need their services.
-              </p>
+              <p>{t("missionVirtualSpace")}</p>
             </Prose>
           </div>
         </div>
@@ -52,56 +47,53 @@ export function MissionPage() {
 
       <SiteSection tone="cream">
         <div className="max-w-3xl">
-          <Eyebrow>What We Do</Eyebrow>
-          <SectionHeading>Making Skills Economically Discoverable</SectionHeading>
+          <Eyebrow>{t("missionWhatWeDo")}</Eyebrow>
+          <SectionHeading>{t("missionDiscoverableTitle")}</SectionHeading>
           <Prose className="mt-6">
-            <p>
-              Skills exist everywhere—among students, professionals, trained workers, farmers, tradespeople,
-              business owners, and people who learned through years of experience.
-            </p>
-            <p>
-              Our mission is to make those skills easier to discover and connect them with real
-              opportunities.
-            </p>
+            <p>{t("missionSkillsEverywhere")}</p>
+            <p>{t("missionOurMissionIs")}</p>
           </Prose>
-          <Flow className="mt-8" steps={["Skill", "Visibility", "Opportunity", "Income"]} />
+          <Flow
+            className="mt-8"
+            steps={[t("stageSkill"), t("stageVisibility"), t("stageOpportunity"), t("stageIncome")]}
+          />
         </div>
       </SiteSection>
 
       <SiteSection>
         <div className="max-w-3xl">
-          <Eyebrow>Beyond the Certificate</Eyebrow>
-          <SectionHeading>Training Should Lead Somewhere</SectionHeading>
+          <Eyebrow>{t("missionBeyondCert")}</Eyebrow>
+          <SectionHeading>{t("missionTrainingTitle")}</SectionHeading>
           <Prose className="mt-6">
-            <p>
-              Every year, people develop skills through government programs, educational institutions, private
-              training, apprenticeships, and personal experience.
-            </p>
-            <p>But training alone does not guarantee work.</p>
-            <p>
-              A certificate can show that someone completed training. Duleko aims to help connect that skill
-              with the people who may need it.
-            </p>
+            <p>{t("missionTrainingP1")}</p>
+            <p>{t("missionTrainingP2")}</p>
+            <p>{t("missionTrainingP3")}</p>
           </Prose>
           <Flow
             className="mt-8"
-            steps={["Training", "Profile", "Discovery", "Work", "Reputation", "Opportunity"]}
+            steps={[
+              t("stageTraining"),
+              t("stageProfile"),
+              t("stageDiscovery"),
+              t("stageWork"),
+              t("stageReputation"),
+              t("stageOpportunity"),
+            ]}
           />
           <blockquote className="mt-10 border-l-4 border-accent-500 pl-5 text-xl font-semibold leading-snug text-teal-800 sm:text-2xl">
-            We don't want skills to end with certificates. We want them to reach the people who need them.
+            {t("missionQuote")}
           </blockquote>
           <StoryLink to="/partners" className="mt-8">
-            For Municipalities &amp; Training Providers
+            {t("partnersTitle")}
           </StoryLink>
         </div>
       </SiteSection>
 
       <SiteSection tone="brand">
         <div className="mx-auto max-w-3xl text-center">
-          <Eyebrow>Our Vision</Eyebrow>
+          <Eyebrow>{t("missionVisionEyebrow")}</Eyebrow>
           <p className="text-balance text-2xl font-semibold leading-snug text-teal-800 sm:text-3xl sm:leading-snug">
-            A Nepal where skills don't remain hidden, training doesn't end with certificates, and starting a
-            service-based business doesn't always require a physical shop or large investment.
+            {t("missionVision")}
           </p>
         </div>
       </SiteSection>

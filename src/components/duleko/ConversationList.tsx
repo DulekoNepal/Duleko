@@ -8,7 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { usePresence } from "@/hooks/use-presence";
-import { listConversations } from "@/lib/queries";
+import { listConversations, reconcileMessageNotifications } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { cn, formatNumber, relativeTime } from "@/lib/utils";
 import type { ConversationSummary } from "@/lib/types";
@@ -335,6 +335,21 @@ export function ChatSidebar({
   const [division, setDivision] = useState<Division>("chats");
   const conversations = useConversations(profile?.id);
   const unread = (conversations.data ?? []).filter((c) => c.unread).length;
+  const queryClient = useQueryClient();
+
+  // Keep the Chats badge honest: drop leftover counts for threads this list
+  // already shows as read.
+  useEffect(() => {
+    const myId = profile?.id;
+    if (!myId || !conversations.data) return;
+    reconcileMessageNotifications(myId, conversations.data)
+      .then((changed) => {
+        if (changed) queryClient.invalidateQueries({ queryKey: ["unread-messages", myId] });
+      })
+      .catch(() => {
+        // Best-effort, same as the read receipt in ChatScreen.
+      });
+  }, [profile?.id, conversations.data, queryClient]);
 
   return (
     <div className={cn("flex min-h-0 flex-col", className)}>

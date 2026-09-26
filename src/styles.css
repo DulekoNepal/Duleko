@@ -54,6 +54,9 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  /* Always reserve the scrollbar's width, so centred page content sits at
+     exactly the same left/right edges on short and long pages alike. */
+  scrollbar-gutter: stable;
 }
 
 body {

@@ -10,43 +10,20 @@ import { supabase } from "@/lib/supabase";
 import { cn, formatNumber } from "@/lib/utils";
 import dulekoMark from "@/assets/duleko-mark.png";
 
-/** Shared width for the desktop sidebar and the left inset it leaves on content. */
-export const SIDEBAR_WIDTH_CLASS = "md:pl-60";
-
-export function LanguageToggle({ className }: { className?: string }) {
-  const { lang, setLang } = useI18n();
-  return (
-    <div
-      className={cn("inline-flex rounded-full bg-slate-100 p-0.5 text-xs font-medium", className)}
-      role="group"
-      aria-label="Language"
-    >
-      {(["en", "ne"] as const).map((code) => (
-        <button
-          key={code}
-          type="button"
-          onClick={() => setLang(code)}
-          aria-pressed={lang === code}
-          className={cn(
-            "rounded-full px-2.5 py-1 transition-colors duration-200",
-            lang === code ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
-          )}
-        >
-          {code === "en" ? "EN" : "नेपाली"}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 /**
- * Compact one-tap language switch, small enough to sit in a header
- * alongside whatever else that screen already puts in `right` (a share
- * icon, a filter toggle, "mark all read"). Shows the language you are
- * currently in and flips on tap - the full two-segment picker below is
- * for the handful of screens with room to spare and a reason to make
- * the choice explicit (auth, onboarding, the welcome screen).
+ * The one language switch, used everywhere (app headers, auth, onboarding,
+ * the welcome screen, the website header): shows the language you are in
+ * and flips on tap. Each screen shows it exactly once.
  */
+/**
+ * One content width and side gutter for every app screen - page content,
+ * page titles and the chat card all use these, so the left and right edges
+ * line up exactly from Home to Work, Alerts, Profile and Chats.
+ */
+export const PAGE_WIDTH = "max-w-5xl";
+export const PAGE_GUTTER = "px-4 lg:px-6";
+
 export function LanguageToggleButton({ className }: { className?: string }) {
   const { lang, toggleLang, t } = useI18n();
   return (
@@ -93,30 +70,37 @@ export function AppHeader({
       className={cn(
         "sticky top-0 z-30 border-b border-slate-200 pt-[var(--sat)] backdrop-blur",
         gradient ? "bg-gradient-to-r from-brand-50/60 via-white/95 to-white/95" : "bg-white/95",
+        // From md up the top bar (TopNav) is the one and only bar: this
+        // becomes a plain page-title row that scrolls with the page, and a
+        // header with nothing but the logo (Home) isn't shown at all.
+        "md:static md:border-0 md:bg-transparent md:bg-none md:pt-0 md:backdrop-blur-none",
+        logo && !subtitle && !right && !below && !back && "md:hidden",
       )}
     >
-      <div className="mx-auto max-w-4xl px-4 py-2 md:py-4">
+      <div className={cn("mx-auto py-2 md:pb-1 md:pt-6", PAGE_WIDTH, PAGE_GUTTER)}>
         <div className="flex items-center gap-3">
           {back}
           {leading}
           {logo ? (
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
-              <img src={dulekoMark} alt="" className="h-8 w-8 shrink-0 rounded-xl object-cover shadow-sm" />
+              {/* The top bar already shows the logo from md up. */}
+              <img src={dulekoMark} alt="" className="h-8 w-8 shrink-0 rounded-xl object-cover shadow-sm md:hidden" />
               {/* Still announced to screen readers/tab title - just not spelled out visually next to its own mark. */}
               <h1 className="sr-only">{title}</h1>
               {subtitle && <p className="truncate text-xs text-slate-500 md:text-sm">{subtitle}</p>}
             </div>
           ) : (
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-base font-semibold text-slate-900 md:text-xl">{title}</h1>
+              <h1 className="truncate text-base font-semibold text-slate-900 md:text-2xl md:font-bold md:tracking-tight">
+                {title}
+              </h1>
               {subtitle && <p className="truncate text-xs text-slate-500 md:text-sm">{subtitle}</p>}
             </div>
           )}
           {right}
-          {/* Always present, on every screen that uses this header - not
-              something you have to remember to wire up per route, and
-              not something a screen can accidentally leave out. */}
-          <LanguageToggleButton />
+          {/* On every phone screen that uses this header - from md up it
+              lives in the top bar instead, so it's never shown twice. */}
+          <LanguageToggleButton className="md:hidden" />
         </div>
         {below}
       </div>
@@ -126,7 +110,7 @@ export function AppHeader({
 
 export function PageContainer({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <main className={cn("mx-auto w-full max-w-4xl px-4 pb-20 pt-3 md:pb-10", className)}>
+    <main className={cn("mx-auto w-full pb-20 pt-3 md:pb-10", PAGE_WIDTH, PAGE_GUTTER, className)}>
       {children}
     </main>
   );
@@ -145,7 +129,7 @@ const NAV = [
 /**
  * Unread counts for the two badged nav items. Read-only and safe to call from
  * multiple components at once - react-query dedupes by queryKey, so
- * BottomNav and DesktopSidebar (both always mounted, just CSS-hidden per
+ * BottomNav and TopNav (both always mounted, just CSS-hidden per
  * breakpoint) share one cached result instead of firing duplicate requests.
  */
 function useNavBadges() {
@@ -175,7 +159,7 @@ function useNavBadges() {
  * the app - not just while the Notifications/Chats screen itself is open.
  * Mount exactly once (in AppShell) - unlike useNavBadges, a realtime channel
  * isn't safe to open from multiple components at once: since BottomNav and
- * DesktopSidebar are both always mounted, giving each its own subscription
+ * TopNav are both always mounted, giving each its own subscription
  * used to open two channels for the same topic, and Supabase's client
  * reuses the existing channel object for a repeated topic name - so the
  * second `.on()` call landed on an already-subscribed channel and threw.
@@ -217,7 +201,7 @@ function navBadgeFor(to: (typeof NAV)[number]["to"], badges: { notifications: nu
   return 0;
 }
 
-/** Phones/small tablets: a fixed tab bar, hidden once the sidebar takes over. */
+/** Phones: a fixed tab bar at the bottom, hidden once the top bar takes over. */
 export function BottomNav() {
   const { t, lang } = useI18n();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -229,7 +213,7 @@ export function BottomNav() {
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[var(--sab)] md:hidden"
-      aria-label="Main"
+      aria-label={t("mainNavLabel")}
     >
       <div className="mx-auto flex max-w-3xl">
         {NAV.map(({ to, key, icon: Icon }) => {
@@ -262,45 +246,64 @@ export function BottomNav() {
 }
 
 /**
- * Tablets and up: a persistent left sidebar replaces the bottom tab bar, so
- * navigation reads as a real desktop app rather than a stretched phone UI.
- * Pair with SIDEBAR_WIDTH_CLASS on the content wrapper so nothing sits under it.
+ * Tablets and up: a top navigation bar replaces the phone's bottom tab bar -
+ * logo on the left, the five sections centred. From lg the links sit in the
+ * exact middle of the bar (a 1fr | auto | 1fr grid); on a tablet they centre
+ * in the room beside the logo so the two can never collide. It sits in the page
+ * flow (sticky, not fixed), so nothing needs padding to clear it; screen
+ * headers become plain title rows beneath it (see AppHeader), so it's the
+ * only bar on desktop. It carries the language switch.
  */
-export function DesktopSidebar() {
+export function TopNav() {
   const { t, lang } = useI18n();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const badges = useNavBadges();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-slate-200 bg-white md:flex">
-      <Link to="/" className="flex items-center gap-2.5 px-5 py-5">
-        <img src={dulekoMark} alt="" className="h-8 w-8 rounded-lg object-cover" />
-        <span className="text-lg font-semibold text-slate-900">{t("appName")}</span>
-      </Link>
-      <nav className="flex-1 space-y-1 px-3" aria-label="Main">
-        {NAV.map(({ to, key, icon: Icon }) => {
-          const active = to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
-          const badge = navBadgeFor(to, badges);
-          return (
-            <Link
-              key={to}
-              to={to}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200",
-                active ? "bg-brand-50 text-brand-800" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
-              )}
-            >
-              <Icon className="h-5 w-5 shrink-0" aria-hidden />
-              <span className="flex-1">{t(key)}</span>
-              {badge > 0 && (
-                <span className="min-w-5 rounded-full bg-red-500 px-1.5 text-center text-[11px] font-bold leading-5 text-white">
-                  {formatNumber(badge > 9 ? "9+" : badge, lang)}
+    <header className="sticky top-0 z-40 hidden border-b border-slate-200 bg-white/95 pt-[var(--sat)] backdrop-blur md:block">
+      <div className="flex h-16 items-center gap-4 px-4 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-6">
+        <Link
+          to="/"
+          className="flex shrink-0 items-center gap-2.5 justify-self-start rounded-xl"
+          aria-label={t("appName")}
+        >
+          <img src={dulekoMark} alt="" className="h-9 w-9 rounded-xl object-cover" />
+          <span className="text-lg font-bold tracking-tight text-slate-900">{t("appName")}</span>
+        </Link>
+        <nav className="flex flex-1 items-center justify-center gap-1" aria-label={t("mainNavLabel")}>
+          {NAV.map(({ to, key, icon: Icon }) => {
+            const active = to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
+            const badge = navBadgeFor(to, badges);
+            return (
+              <Link
+                key={to}
+                to={to}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand-500 lg:px-3.5",
+                  active ? "bg-brand-50 text-brand-800" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                )}
+              >
+                <span className="relative">
+                  <Icon className="h-5 w-5 shrink-0" aria-hidden />
+                  {badge > 0 && (
+                    <span className="absolute -right-2 -top-1.5 min-w-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-4 text-white">
+                      {formatNumber(badge > 9 ? "9+" : badge, lang)}
+                    </span>
+                  )}
                 </span>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-    </aside>
+                <span className="whitespace-nowrap">{t(key)}</span>
+              </Link>
+            );
+          })}
+        </nav>
+        {/* Right column: the language switch - here on desktop instead of
+            in each screen's header. It also balances the logo column so
+            the links stay truly centred. */}
+        <div className="flex shrink-0 justify-end">
+          <LanguageToggleButton />
+        </div>
+      </div>
+    </header>
   );
 }

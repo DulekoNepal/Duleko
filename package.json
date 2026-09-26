@@ -6,7 +6,7 @@
   "description": "Duleko - a simple local skills marketplace connecting workers with people who need work.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node scripts/seo-build.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },

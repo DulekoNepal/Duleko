@@ -13,26 +13,25 @@ import {
   StoryNav,
   useSiteActions,
 } from "@/components/duleko/Site";
+import { useI18n, type StringKey } from "@/lib/i18n";
 
-const INDIVIDUAL_STEPS = [
-  "Create your profile",
-  "Showcase your skills",
-  "Set your availability",
-  "Be discovered by people nearby",
-  "Connect with people who need your services",
-  "Build your reputation",
+const INDIVIDUAL_STEPS: StringKey[] = [
+  "stepCreateProfile",
+  "stepShowcase",
+  "indStepAvailability",
+  "indStepDiscovered",
+  "indStepConnect",
+  "stepReputation",
 ];
 
 export function ForIndividualsPage() {
   const { createProfile } = useSiteActions();
+  const { t } = useI18n();
   return (
-    <SiteLayout title="For Individuals">
-      <PageHero story="individuals" eyebrow="For Individuals" title="Turn Your Skills Into Opportunities">
+    <SiteLayout title={t("navForIndividuals")}>
+      <PageHero story="individuals" eyebrow={t("navForIndividuals")} title={t("indTitle")}>
         <Prose>
-          <p>
-            Whether you are a student, professional, trained worker, farmer, tradesperson, or someone with
-            skills learned through experience, Duleko gives you a place to showcase what you can do.
-          </p>
+          <p>{t("indBody")}</p>
         </Prose>
       </PageHero>
 
@@ -44,16 +43,16 @@ export function ForIndividualsPage() {
               className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
             >
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />
-              <span className="text-base font-medium text-slate-800 sm:text-lg">{step}</span>
+              <span className="text-base font-medium text-slate-800 sm:text-lg">{t(step)}</span>
             </li>
           ))}
         </ul>
         <div className="mt-12 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:gap-8">
           <SiteButton size="lg" onClick={createProfile}>
             <UserPlus className="h-5 w-5" aria-hidden />
-            Create Your Duleko Profile
+            {t("indCta")}
           </SiteButton>
-          <StoryLink to="/safety">How we keep it safe</StoryLink>
+          <StoryLink to="/safety">{t("howWeKeepItSafe")}</StoryLink>
         </div>
       </SiteSection>
       <StoryNav current="individuals" />
@@ -64,20 +63,18 @@ export function ForIndividualsPage() {
 
 export function ForBusinessesPage() {
   const { explore } = useSiteActions();
+  const { t } = useI18n();
   return (
-    <SiteLayout title="For Businesses">
-      <PageHero story="businesses" eyebrow="For Businesses" title="Find the Skills Your Business Needs">
+    <SiteLayout title={t("navForBusinesses")}>
+      <PageHero story="businesses" eyebrow={t("navForBusinesses")} title={t("bizTitle")}>
         <Prose>
-          <p>
-            Businesses don't always need permanent employees. Sometimes they need someone with a specific
-            skill for a specific job.
-          </p>
-          <p>Duleko helps businesses discover skilled people and connect with them directly.</p>
+          <p>{t("bizP1")}</p>
+          <p>{t("bizP2")}</p>
         </Prose>
         <div className="mt-9">
           <SiteButton size="lg" onClick={() => explore("/search")}>
             <Search className="h-5 w-5" aria-hidden />
-            Find Skilled People
+            {t("bizCta")}
           </SiteButton>
         </div>
       </PageHero>
@@ -88,39 +85,35 @@ export function ForBusinessesPage() {
 }
 
 export function PartnersPage() {
+  const { t } = useI18n();
   const partnerMail = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Partnering with Duleko")}`;
   return (
-    <SiteLayout title="For Municipalities & Training Providers">
-      <PageHero
-        story="partners"
-        eyebrow="For Municipalities & Training Providers"
-        title="From Skill Training to Skill Utilization"
-      >
+    <SiteLayout title={t("partnersTitle")}>
+      <PageHero story="partners" eyebrow={t("partnersTitle")} title={t("partnersHeroTitle")}>
         <Prose>
-          <p>
-            Duleko provides a digital platform where people who receive skill training can showcase what they
-            have learned and become discoverable for relevant opportunities.
-          </p>
+          <p>{t("partnersBody")}</p>
         </Prose>
       </PageHero>
 
       <SiteSection>
-        <Flow steps={["Training", "Skills", "Duleko", "Work", "Income"]} />
+        <Flow
+          steps={[t("stageTraining"), t("stageSkills"), t("stageDuleko"), t("stageWork"), t("stageIncome")]}
+        />
 
         <div className="mt-14 max-w-3xl">
-          <SectionHeading>Training should not end when a certificate is issued.</SectionHeading>
+          <SectionHeading>{t("partnersCertTitle")}</SectionHeading>
           <div className="mt-8 rounded-2xl border border-accent-500/40 bg-accent-50 p-6 sm:p-8">
             <p className="text-sm font-semibold uppercase tracking-wider text-accent-600">
-              The next question should be
+              {t("partnersNextQuestion")}
             </p>
-            <p className="mt-2 text-2xl font-bold text-teal-800 sm:text-3xl">Where can this person use the skill?</p>
+            <p className="mt-2 text-2xl font-bold text-teal-800 sm:text-3xl">{t("partnersWhere")}</p>
           </div>
           <a
             href={partnerMail}
             className="mt-10 inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-brand-700 px-7 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
           >
             <Mail className="h-5 w-5" aria-hidden />
-            Partner With Duleko
+            {t("partnerWithDuleko")}
             <ArrowRight className="h-4 w-4" aria-hidden />
           </a>
         </div>

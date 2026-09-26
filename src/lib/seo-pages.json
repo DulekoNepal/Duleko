@@ -1,0 +1,77 @@
+{
+  "origin": "https://www.duleko.com",
+  "pages": {
+    "/": {
+      "title": "Duleko - Your skills deserve an opportunity",
+      "description": "Duleko connects people who have skills with people who need them - making it easier to turn skills into work, income, and opportunity in Nepal.",
+      "priority": "1.0",
+      "changefreq": "weekly"
+    },
+    "/search": {
+      "title": "Find skilled workers near you | Duleko",
+      "description": "Search plumbers, electricians, tailors, tutors, cooks and other skilled workers across Nepal by skill, district and availability.",
+      "priority": "0.8",
+      "changefreq": "daily"
+    },
+    "/mission": {
+      "title": "Our Mission | Duleko",
+      "description": "A skill should not need a shop to become a business. Learn why Duleko helps skilled people in Nepal find work, income and opportunity.",
+      "priority": "0.7",
+      "changefreq": "monthly"
+    },
+    "/about": {
+      "title": "About Duleko | Duleko",
+      "description": "Why we built Duleko, the team behind it, and how it connects skilled workers with the people and businesses who need them in Nepal.",
+      "priority": "0.7",
+      "changefreq": "monthly"
+    },
+    "/individuals": {
+      "title": "For Individuals - Turn your skills into opportunities | Duleko",
+      "description": "Create a free Duleko profile, show your skills and availability, and get contacted by people nearby who need your work.",
+      "priority": "0.7",
+      "changefreq": "monthly"
+    },
+    "/businesses": {
+      "title": "For Businesses - Find the skills your business needs | Duleko",
+      "description": "Find reliable skilled workers in Nepal for short jobs or ongoing work. Search by skill and district and contact them directly on Duleko.",
+      "priority": "0.7",
+      "changefreq": "monthly"
+    },
+    "/partners": {
+      "title": "For Municipalities & Training Providers | Duleko",
+      "description": "From skill training to skill utilization: how municipalities and training providers in Nepal can use Duleko to connect trainees with real work.",
+      "priority": "0.6",
+      "changefreq": "monthly"
+    },
+    "/safety": {
+      "title": "Trust & Safety | Duleko",
+      "description": "Built for connection, designed with safety in mind. How Duleko verifies profiles, protects contact details and handles reports.",
+      "priority": "0.6",
+      "changefreq": "monthly"
+    },
+    "/motivation": {
+      "title": "Our Motivation - Why we built Duleko | Duleko",
+      "description": "The story behind Duleko and why skilled people in Nepal deserve an easier way to be found.",
+      "priority": "0.5",
+      "changefreq": "monthly"
+    },
+    "/privacy": {
+      "title": "Privacy Policy | Duleko",
+      "description": "How Duleko collects, uses and protects your information. Your data is never sold.",
+      "priority": "0.3",
+      "changefreq": "yearly"
+    },
+    "/terms": {
+      "title": "Terms of Use & User Policy | Duleko",
+      "description": "The terms and user policy for using Duleko as a worker, employer or visitor.",
+      "priority": "0.3",
+      "changefreq": "yearly"
+    },
+    "/registration-policy": {
+      "title": "Registration Policy | Duleko",
+      "description": "Duleko's user registration policy: who can register, what information is required and how profiles are verified.",
+      "priority": "0.3",
+      "changefreq": "yearly"
+    }
+  }
+}

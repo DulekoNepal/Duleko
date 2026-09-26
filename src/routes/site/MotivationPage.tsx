@@ -29,15 +29,13 @@ const FOUNDERS: { id: string; nameKey: StringKey; roleKey: StringKey; quoteKey: 
 ];
 
 export function MotivationPage() {
-  // Like About, the motivation copy predates the English website and stays
-  // bilingual through i18n.
   const { t } = useI18n();
 
   return (
-    <SiteLayout title="Our Motivation">
+    <SiteLayout title={t("motivationEyebrow")}>
       <PageHero
-        crumb={{ group: "About", title: "Our Motivation" }}
-        eyebrow="Our Motivation"
+        crumb={{ group: t("navAbout"), title: t("motivationEyebrow") }}
+        eyebrow={t("motivationEyebrow")}
         title={t("motivationTitle")}
       >
         <Prose>
@@ -76,7 +74,7 @@ export function MotivationPage() {
                     to="/about"
                     hash={founder.id}
                     className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-brand-700 transition-colors hover:bg-brand-50"
-                    aria-label={`Read ${t(founder.nameKey)}'s story`}
+                    aria-label={t("readMemberStory", { name: t(founder.nameKey) })}
                   >
                     <ArrowRight className="h-4 w-4" aria-hidden />
                   </Link>
@@ -90,7 +88,7 @@ export function MotivationPage() {
       <SiteSection>
         <div className="grid gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16">
           <div>
-            <Eyebrow>Why it matters</Eyebrow>
+            <Eyebrow>{t("motivationWhyItMatters")}</Eyebrow>
             <SectionHeading>{t("whatKeepsUsBuilding")}</SectionHeading>
           </div>
           <div>
@@ -98,7 +96,7 @@ export function MotivationPage() {
               <p>{t("whatKeepsUsBuildingDesc")}</p>
             </Prose>
             <StoryLink to="/mission" className="mt-6">
-              Read our mission
+              {t("readOurMission")}
             </StoryLink>
           </div>
         </div>
@@ -106,17 +104,17 @@ export function MotivationPage() {
 
       <SiteSection tone="brand">
         <div className="mx-auto max-w-3xl text-center">
-          <Eyebrow>What drives us</Eyebrow>
+          <Eyebrow>{t("motivationWhatDrivesUs")}</Eyebrow>
           <p className="text-balance text-2xl font-semibold leading-snug text-teal-800 sm:text-3xl sm:leading-snug">
-            Connecting local skills with local opportunities.
+            {t("siteTagline")}
           </p>
         </div>
       </SiteSection>
 
       <ReadNext
         links={[
-          { to: "/about", hash: "team", title: "Meet the team", teaser: "The people behind Duleko, in full." },
-          { to: "/mission", title: "Our Mission", teaser: "A skill should not need a shop to become a business." },
+          { to: "/about", hash: "team", title: t("meetTheTeam"), teaser: t("meetTheTeamTeaser") },
+          { to: "/mission", title: t("ourMission"), teaser: t("missionTeaser") },
         ]}
       />
       <FinalCta />

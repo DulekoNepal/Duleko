@@ -705,6 +705,39 @@ export async function markMessageNotificationsRead(
   if (error) throw error;
 }
 
+/**
+ * Clears message notifications for threads the Chats list already shows as
+ * read - e.g. a message that landed while the thread was open, then got a
+ * reply. Without this the Chats badge keeps counting it with nothing unread
+ * to tap. Returns whether anything changed.
+ */
+export async function reconcileMessageNotifications(
+  myProfileId: string,
+  conversations: ConversationSummary[],
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("related_profile_id")
+    .eq("profile_id", myProfileId)
+    .eq("kind", "message")
+    .eq("is_read", false);
+  if (error || !data?.length) return false;
+
+  const readThreads = new Set(conversations.filter((c) => !c.unread).map((c) => c.otherProfileId));
+  const stale = [...new Set(data.map((n) => n.related_profile_id as string | null))].filter(
+    (id): id is string => id != null && readThreads.has(id),
+  );
+  if (!stale.length) return false;
+
+  await Promise.all(
+    stale.flatMap((otherId) => [
+      markThreadRead(myProfileId, otherId),
+      markMessageNotificationsRead(myProfileId, otherId),
+    ]),
+  );
+  return true;
+}
+
 // ---------------------------------------------------------------------
 // Friends
 // ---------------------------------------------------------------------

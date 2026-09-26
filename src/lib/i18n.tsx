@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Lang } from "./types";
+import { siteStrings } from "./i18n-site";
 
 /**
  * Every user-visible string lives here, in English and Nepali.
@@ -25,15 +26,18 @@ const strings = {
   loadMore: ["Load more", "थप हेर्नुहोस्"],
   loadOlderMessages: ["Load older messages", "पुराना सन्देश हेर्नुहोस्"],
   showLess: ["Show less", "कम देखाउनुहोस्"],
+  seeMore: ["See more", "थप हेर्नुहोस्"],
   somethingWrong: ["Something went wrong.", "केही गडबड भयो।"],
   noInternet: ["Check your internet connection.", "इन्टरनेट जडान जाँच्नुहोस्।"],
   confirm: ["Confirm", "पुष्टि गर्नुहोस्"],
   yes: ["Yes", "हो"],
   no: ["No", "होइन"],
+  mainNavLabel: ["Main", "मुख्य"],
 
   // ---- auth ----------------------------------------------------------
   signIn: ["Sign in", "लगइन गर्नुहोस्"],
   signUp: ["Create account", "खाता खोल्नुहोस्"],
+  signInOrSignUp: ["Sign in or create account", "लगइन गर्नुहोस् वा खाता खोल्नुहोस्"],
   signOut: ["Sign out", "लगआउट"],
   signOutConfirmTitle: ["Sign out?", "लगआउट गर्ने हो?"],
   signOutConfirmBody: [
@@ -684,11 +688,6 @@ const strings = {
   noAboutYetOther: ["Hasn't added a bio yet.", "अझै चिनारी थपेका छैनन्।"],
   editingProfile: ["Editing your profile", "तपाईंको प्रोफाइल सम्पादन गर्दै"],
   daysMarkedBusy: ["{count} days marked busy", "{count} दिन व्यस्त चिन्ह लागेको"],
-  noCertificatesYet: ["No certificates yet", "अझै कुनै प्रमाणपत्र छैन"],
-  noCertificatesYetHint: [
-    "Add training or licenses to build trust with employers.",
-    "काम दिनेहरूको विश्वास जित्न तालिम वा लाइसेन्स थप्नुहोस्।",
-  ],
   uploadCertificateHint: ["PNG, JPG, or PDF up to 5 MB", "PNG, JPG, वा PDF (५ MB सम्म)"],
 
   // ---- nav -----------------------------------------------------------
@@ -837,13 +836,6 @@ const strings = {
   // ---- static pages (About, Mission, Motivation, Privacy) ---------------
   navAbout: ["About", "बारेमा"],
   navMission: ["Mission", "उद्देश्य"],
-  navMotivation: ["Motivation", "प्रेरणा"],
-  navPrivacy: ["Privacy policy", "गोपनीयता नीति"],
-  staticPagesNav: ["Related pages", "सम्बन्धित पृष्ठहरू"],
-  profileStaticPagesHint: [
-    "Learn more about Duleko, our mission, and how we handle your data.",
-    "डुलेको, हाम्रो उद्देश्य, र तपाईंको डेटा कसरी ह्यान्डल हुन्छ भन्ने बारे थप जान्नुहोस्।",
-  ],
 
   aboutTitle: ["About Duleko", "डुलेकोको बारेमा"],
   aboutSubtitle: ["Who we are and what we're building", "हामी को हौं र के बनाउँदैछौं"],
@@ -1292,6 +1284,9 @@ const strings = {
     "How do we make sure that every individual's unique skills are recognized and turned into real, local opportunities?",
     "हामी कसरी सुनिश्चित गर्छौं कि हरेक व्यक्तिको अद्वितीय सीपहरू पहिचान गरिन्छ र वास्तविक, स्थानीय अवसरहरूमा परिवर्तन हुन्छ?",
   ],
+
+  // ---- public website (see i18n-site.ts) -----------------------------
+  ...siteStrings,
 } as const;
 
 export type StringKey = keyof typeof strings;
@@ -1317,6 +1312,12 @@ export function translateStatic(key: StringKey): string {
   return lang === "ne" ? pair[1] : pair[0];
 }
 
+/** One key in a specific language, whatever the current setting is. */
+export function translateIn(lang: Lang, key: StringKey): string {
+  const pair = strings[key] as readonly [string, string];
+  return lang === "ne" ? pair[1] : pair[0];
+}
+
 interface I18nValue {
   lang: Lang;
   setLang: (lang: Lang) => void;
@@ -1324,7 +1325,12 @@ interface I18nValue {
   t: (key: StringKey, vars?: Record<string, string | number>) => string;
 }
 
-const I18nContext = createContext<I18nValue | null>(null);
+// Kept across hot reloads: editing the string tables re-runs this module,
+// and a fresh context would orphan the mounted provider ("useI18n must be
+// used inside <I18nProvider>") until a full page reload.
+const I18nContext: React.Context<I18nValue | null> =
+  import.meta.hot?.data.i18nContext ?? createContext<I18nValue | null>(null);
+if (import.meta.hot) import.meta.hot.data.i18nContext = I18nContext;
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>(detectInitialLang);

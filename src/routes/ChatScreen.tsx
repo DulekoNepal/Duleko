@@ -14,7 +14,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { LanguageToggleButton } from "@/components/duleko/Layout";
+import { LanguageToggleButton, PAGE_GUTTER, PAGE_WIDTH } from "@/components/duleko/Layout";
 import { ALL_REACTIONS, ChatBubble, type BubblePanel } from "@/components/duleko/ChatBubble";
 import { useConversationsLive } from "@/components/duleko/ConversationList";
 import { ChatsPane } from "@/routes/ChatsScreen";
@@ -174,24 +174,36 @@ export function ChatScreen() {
     if (otherTyping && atBottom) scrollToEnd("smooth");
   }, [otherTyping, atBottom]);
 
+  // The other person's newest unread message - a new one arriving while the
+  // thread is open has to be marked too, or it keeps the Chats badge at 1.
+  const newestUnreadId =
+    (messages.data ?? []).filter((m) => m.sender_profile_id !== me?.id && !m.read_at).pop()?.id ?? null;
+
   // Opening this thread marks the other person's messages seen, and clears
-  // this sender's contribution to the Chats badge.
+  // this sender's contribution to the Chats badge. Waits while the app is in
+  // the background so the other side doesn't get a false "Seen".
   useEffect(() => {
     if (!me) return;
-    Promise.all([markThreadRead(me.id, otherId), markMessageNotificationsRead(me.id, otherId)])
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: ["unread-messages", me.id] });
-        queryClient.invalidateQueries({ queryKey: ["messages", pairKey] });
-        // The Chats list's unread bolding is stale otherwise - it isn't
-        // watching this thread directly.
-        queryClient.invalidateQueries({ queryKey: ["conversations", me.id] });
-      })
-      .catch(() => {
-        // Best-effort - a failed read-receipt shouldn't block the chat itself.
-      });
-    // Only re-run when the thread identity changes, not on every render.
+    const markRead = () => {
+      if (document.visibilityState === "hidden") return;
+      Promise.all([markThreadRead(me.id, otherId), markMessageNotificationsRead(me.id, otherId)])
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ["unread-messages", me.id] });
+          queryClient.invalidateQueries({ queryKey: ["messages", pairKey] });
+          // The Chats list's unread bolding is stale otherwise - it isn't
+          // watching this thread directly.
+          queryClient.invalidateQueries({ queryKey: ["conversations", me.id] });
+        })
+        .catch(() => {
+          // Best-effort - a failed read-receipt shouldn't block the chat itself.
+        });
+    };
+    markRead();
+    document.addEventListener("visibilitychange", markRead);
+    return () => document.removeEventListener("visibilitychange", markRead);
+    // Re-run per thread and per new incoming message, not on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me?.id, otherId]);
+  }, [me?.id, otherId, newestUnreadId]);
 
   const refreshThread = () => {
     queryClient.invalidateQueries({ queryKey: ["messages", pairKey] });
@@ -398,13 +410,19 @@ export function ChatScreen() {
     // h-dvh, not min-h-dvh: the thread itself has to be the scroller, and a
     // wrapper that can grow past the viewport would hand scrolling to the
     // page instead - which silently breaks opening on the newest message.
-    // The tab bar hides itself on /chat/, so the full height is ours.
-    <div className="flex h-dvh overflow-hidden bg-white">
+    // The tab bar hides itself on /chat/, so the full height is ours - less
+    // the top bar from md up.
+    // From md up the chat sits in a card with the same width and gutters as
+    // every other screen (PAGE_WIDTH/PAGE_GUTTER), 1.5rem under the top bar.
+    // Phones stay edge to edge.
+    <div className="h-dvh md:h-[calc(100dvh-4rem-1px-var(--sat))] md:py-6">
+      <div className={cn("mx-auto h-full w-full max-md:px-0", PAGE_WIDTH, PAGE_GUTTER)}>
+      <div className="flex h-full overflow-hidden bg-white md:rounded-2xl md:border md:border-slate-200 md:shadow-sm">
       {split && <ChatsPane typingFrom={typingFrom} activeId={otherId} showDivisions={false} />}
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* ---- Thread header ------------------------------------------- */}
-        <header className="z-20 border-b border-slate-200 bg-white/95 pt-[var(--sat)] backdrop-blur">
+        <header className="z-20 border-b border-slate-200 bg-white/95 pt-[var(--sat)] backdrop-blur md:pt-0">
           <div className="flex h-16 items-center gap-2 px-2 sm:gap-3 sm:px-4 lg:h-[72px]">
             {!split && (
               <button
@@ -457,7 +475,8 @@ export function ChatScreen() {
               {t("viewProfile")}
             </Link>
             {/* The list pane beside it already has one on desktop. */}
-            {!split && <LanguageToggleButton />}
+            {/* Phones only - the top bar has it from md up. */}
+            {!split && <LanguageToggleButton className="md:hidden" />}
           </div>
         </header>
 
@@ -720,6 +739,8 @@ export function ChatScreen() {
             <p className="mt-1.5 hidden px-4 text-[11px] text-slate-400 lg:block">{t("shiftEnterHint")}</p>
           </div>
         </form>
+      </div>
+      </div>
       </div>
     </div>
   );

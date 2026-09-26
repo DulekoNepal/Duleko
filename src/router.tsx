@@ -21,8 +21,10 @@ import { MissionPage } from "@/routes/site/MissionPage";
 import { ForBusinessesPage, ForIndividualsPage, PartnersPage } from "@/routes/site/AudiencePages";
 import { SafetyPage } from "@/routes/site/SafetyPage";
 import { MotivationPage } from "@/routes/site/MotivationPage";
-import { RegistrationPolicyScreen } from "@/routes/RegistrationPolicyScreen";
-import { TermsOfUseScreen } from "@/routes/TermsOfUseScreen";
+import { RegistrationPolicyPage } from "@/routes/site/RegistrationPolicyPage";
+import { LandingPage } from "@/routes/site/LandingPage";
+import { TermsPage } from "@/routes/site/TermsPage";
+import { syncSeoTags } from "@/lib/seo";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -83,9 +85,21 @@ const notificationsRoute = createRoute({
   component: NotificationsScreen,
 });
 
+export type ProfileTab = "overview" | "calendar" | "settings" | "about";
+
+const PROFILE_TABS: ProfileTab[] = ["overview", "calendar", "settings", "about"];
+
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/profile",
+  // ?tab= keeps the open tab across Back - opening a Duleko page from the
+  // About tab and coming back lands on About again, not Overview.
+  validateSearch: (search: Record<string, unknown>): { tab?: ProfileTab } => ({
+    tab:
+      typeof search.tab === "string" && PROFILE_TABS.includes(search.tab as ProfileTab) && search.tab !== "overview"
+        ? (search.tab as ProfileTab)
+        : undefined,
+  }),
   component: ProfileScreen,
 });
 
@@ -164,13 +178,21 @@ const motivationRoute = createRoute({
 const registrationPolicyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/registration-policy",
-  component: RegistrationPolicyScreen,
+  component: RegistrationPolicyPage,
+});
+
+// The website's home page, for people already inside the app - "/" is the
+// app's own Home for them. Reached from Profile.
+const welcomeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/welcome",
+  component: LandingPage,
 });
 
 const termsOfUseRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/terms",
-  component: TermsOfUseScreen,
+  component: TermsPage,
 });
 
 const routeTree = rootRoute.addChildren([
@@ -194,13 +216,21 @@ const routeTree = rootRoute.addChildren([
   motivationRoute,
   registrationPolicyRoute,
   termsOfUseRoute,
+  welcomeRoute,
 ]);
 
 export const router = createRouter({
   routeTree,
   defaultPreload: "intent",
   scrollRestoration: true,
+  // styles.css makes the page scroll smoothly (for in-page anchors and
+  // back-to-top). A page change shouldn't animate from the old page's
+  // position - open at the top, or right back where you were.
+  scrollRestorationBehavior: "instant",
 });
+
+syncSeoTags(router.state.location.pathname);
+router.subscribe("onResolved", ({ toLocation }) => syncSeoTags(toLocation.pathname));
 
 declare module "@tanstack/react-router" {
   interface Register {

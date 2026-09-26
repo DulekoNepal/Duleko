@@ -1,5 +1,6 @@
 import { MessageCircle } from "lucide-react";
-import { AppHeader, LanguageToggleButton, PageContainer } from "@/components/duleko/Layout";
+import { AppHeader, PAGE_GUTTER, PAGE_WIDTH, PageContainer } from "@/components/duleko/Layout";
+import { cn } from "@/lib/utils";
 import { ChatSidebar, useConversationsLive } from "@/components/duleko/ConversationList";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { useI18n } from "@/lib/i18n";
@@ -29,7 +30,7 @@ export function ChatsScreen() {
     return (
       <>
         <AppHeader title={t("chatsTitle")} />
-        <PageContainer className="px-0 pt-4">
+        <PageContainer className="pt-4 max-md:px-0">
           <ChatSidebar typingFrom={typingFrom} />
         </PageContainer>
       </>
@@ -37,7 +38,11 @@ export function ChatsScreen() {
   }
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-cream-50">
+    // Same width and gutters as every other screen (PAGE_WIDTH/PAGE_GUTTER),
+    // starting 1.5rem under the top bar like their titles.
+    <div className="h-dvh md:h-[calc(100dvh-4rem-1px-var(--sat))] md:py-6">
+      <div className={cn("mx-auto h-full w-full", PAGE_WIDTH, PAGE_GUTTER)}>
+      <div className="flex h-full overflow-hidden bg-cream-50/60 md:rounded-2xl md:border md:border-slate-200 md:shadow-sm">
       <ChatsPane typingFrom={typingFrom} />
       <main className="flex min-w-0 flex-1 flex-col items-center justify-center p-8 text-center">
         <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white text-brand-700 shadow-sm ring-1 ring-slate-200">
@@ -46,6 +51,8 @@ export function ChatsScreen() {
         <h2 className="mt-5 text-xl font-bold text-slate-900">{t("selectConversation")}</h2>
         <p className="mt-2 max-w-sm text-sm text-slate-500">{t("selectConversationHint")}</p>
       </main>
+      </div>
+      </div>
     </div>
   );
 }
@@ -62,10 +69,9 @@ export function ChatsPane({
 }) {
   const { t } = useI18n();
   return (
-    <aside className="flex w-[340px] shrink-0 flex-col border-r border-slate-200 bg-white pt-[var(--sat)] xl:w-[380px]">
+    <aside className="flex w-[340px] shrink-0 flex-col border-r border-slate-200 bg-white pt-[var(--sat)] md:pt-0 xl:w-[380px]">
       <div className="flex h-[72px] items-center justify-between gap-3 px-4">
         <h1 className="text-xl font-bold text-slate-900">{t("chatsTitle")}</h1>
-        <LanguageToggleButton />
       </div>
       <ChatSidebar typingFrom={typingFrom} activeId={activeId} showDivisions={showDivisions} className="flex-1" />
     </aside>

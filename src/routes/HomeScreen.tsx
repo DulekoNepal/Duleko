@@ -39,9 +39,8 @@ import { cn, formatNumber, locationLine, skillName, todayKey } from "@/lib/utils
 import type { Profile, Skill, WorkerCardData } from "@/lib/types";
 import dulekoMark from "@/assets/duleko-mark.png";
 
-// Same "there's more" treatment the skill browser uses for its own
-// see-all toggle - one orange accent for "tap for more", used nowhere
-// else on the page, so every such affordance reads as one family.
+// One orange accent for "tap for more" (the section "See all" links),
+// used nowhere else on the page, so every such link reads as one family.
 const seeAllLinkClass =
   "inline-flex shrink-0 items-center gap-0.5 text-xs font-semibold text-accent-600 hover:text-accent-700";
 
@@ -136,7 +135,9 @@ export function HomeScreen() {
     <>
       <AppHeader title={t("appName")} logo />
 
-      <PageContainer className="space-y-7 md:space-y-9">
+      {/* No title row on desktop (the top bar has the logo), so the content
+          starts where other screens' titles do. */}
+      <PageContainer className="space-y-7 md:space-y-9 md:pt-6">
         {profile ? (
           <MemberHero profile={profile} popular={popular} />
         ) : (
@@ -191,20 +192,22 @@ export function HomeScreen() {
             }
           />
           {skills.isLoading ? (
-            <div className="rounded-2xl border border-slate-200 bg-white">
-              <div className="flex gap-1 border-b border-slate-100 p-1.5">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="skeleton h-9 flex-1 rounded-xl" />
-                ))}
-              </div>
-              <div className="grid grid-cols-4 gap-1 p-2 sm:grid-cols-6 lg:grid-cols-8">
-                {Array.from({ length: 8 }).map((_, j) => (
-                  <div key={j} className="flex flex-col items-center gap-1.5 py-3">
-                    <div className="skeleton h-6 w-6 rounded-md" />
-                    <div className="skeleton h-2.5 w-10 rounded" />
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                  <div className="px-4 pt-3.5">
+                    <div className="skeleton h-4 w-40 rounded" />
                   </div>
-                ))}
-              </div>
+                  <div className="grid grid-cols-4 gap-1 px-2 pb-2 pt-1 sm:grid-cols-6 lg:grid-cols-8">
+                    {Array.from({ length: 8 }).map((_, j) => (
+                      <div key={j} className="flex flex-col items-center gap-1.5 py-3">
+                        <div className="skeleton h-6 w-6 rounded-md" />
+                        <div className="skeleton h-2.5 w-10 rounded" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <SkillCategoryBrowser skillsByCategory={skillsByCategory} counts={counts.data} />

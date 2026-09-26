@@ -1,4 +1,5 @@
 import { Building2, Info, Landmark, Lightbulb, UserRound, Users } from "lucide-react";
+import type { StringKey } from "@/lib/i18n";
 
 export type SitePath =
   | "/"
@@ -10,43 +11,45 @@ export type SitePath =
   | "/safety"
   | "/motivation"
   | "/privacy"
-  | "/terms";
+  | "/terms"
+  | "/registration-policy"
+  | "/welcome";
 
 export interface NavItem {
   to: SitePath;
   hash?: string;
-  label: string;
-  description: string;
+  labelKey: StringKey;
+  descriptionKey: StringKey;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 export type NavEntry =
-  | { kind: "link"; to: SitePath; label: string }
-  | { kind: "group"; id: "audiences" | "about"; label: string; items: NavItem[] };
+  | { kind: "link"; to: SitePath; labelKey: StringKey }
+  | { kind: "group"; id: "audiences" | "about"; labelKey: StringKey; items: NavItem[] };
 
 export const NAV: NavEntry[] = [
-  { kind: "link", to: "/mission", label: "Mission" },
+  { kind: "link", to: "/mission", labelKey: "navMission" },
   {
     kind: "group",
     id: "audiences",
-    label: "Who it's for",
+    labelKey: "navWhoFor",
     items: [
       {
         to: "/individuals",
-        label: "For Individuals",
-        description: "Turn your skills into opportunities.",
+        labelKey: "navForIndividuals",
+        descriptionKey: "navForIndividualsDesc",
         icon: UserRound,
       },
       {
         to: "/businesses",
-        label: "For Businesses",
-        description: "Find the skills your business needs.",
+        labelKey: "navForBusinesses",
+        descriptionKey: "navForBusinessesDesc",
         icon: Building2,
       },
       {
         to: "/partners",
-        label: "Municipalities & Training Providers",
-        description: "From skill training to skill utilization.",
+        labelKey: "navForPartners",
+        descriptionKey: "navForPartnersDesc",
         icon: Landmark,
       },
     ],
@@ -54,14 +57,19 @@ export const NAV: NavEntry[] = [
   {
     kind: "group",
     id: "about",
-    label: "About",
+    labelKey: "navAbout",
     items: [
-      { to: "/about", label: "About Duleko", description: "Why we built Duleko.", icon: Info },
-      { to: "/about", hash: "team", label: "Our Team", description: "The people behind Duleko.", icon: Users },
-      { to: "/motivation", label: "Our Motivation", description: "What keeps us building.", icon: Lightbulb },
+      { to: "/about", labelKey: "navAboutDuleko", descriptionKey: "navAboutDulekoDesc", icon: Info },
+      { to: "/about", hash: "team", labelKey: "navOurTeam", descriptionKey: "navOurTeamDesc", icon: Users },
+      {
+        to: "/motivation",
+        labelKey: "motivationEyebrow",
+        descriptionKey: "navOurMotivationDesc",
+        icon: Lightbulb,
+      },
     ],
   },
-  { kind: "link", to: "/safety", label: "Trust & Safety" },
+  { kind: "link", to: "/safety", labelKey: "trustAndSafety" },
 ];
 
 /**
@@ -73,52 +81,36 @@ export type StoryKey = "home" | "mission" | "individuals" | "businesses" | "part
 export interface StoryChapter {
   key: StoryKey;
   to: SitePath;
-  title: string;
-  teaser: string;
+  titleKey: StringKey;
+  teaserKey: StringKey;
   /** Breadcrumb parent, matching the navbar group the page sits in. */
-  group?: string;
+  groupKey?: StringKey;
 }
 
 export const STORY: StoryChapter[] = [
-  { key: "home", to: "/", title: "Home", teaser: "Your skills deserve an opportunity." },
-  {
-    key: "mission",
-    to: "/mission",
-    title: "Our Mission",
-    teaser: "A skill should not need a shop to become a business.",
-  },
+  { key: "home", to: "/", titleKey: "siteHome", teaserKey: "homeHeroTitle" },
+  { key: "mission", to: "/mission", titleKey: "ourMission", teaserKey: "missionTeaser" },
   {
     key: "individuals",
     to: "/individuals",
-    title: "For Individuals",
-    teaser: "Turn your skills into opportunities.",
-    group: "Who it's for",
+    titleKey: "navForIndividuals",
+    teaserKey: "navForIndividualsDesc",
+    groupKey: "navWhoFor",
   },
   {
     key: "businesses",
     to: "/businesses",
-    title: "For Businesses",
-    teaser: "Find the skills your business needs.",
-    group: "Who it's for",
+    titleKey: "navForBusinesses",
+    teaserKey: "navForBusinessesDesc",
+    groupKey: "navWhoFor",
   },
   {
     key: "partners",
     to: "/partners",
-    title: "For Municipalities & Training Providers",
-    teaser: "From skill training to skill utilization.",
-    group: "Who it's for",
+    titleKey: "partnersTitle",
+    teaserKey: "navForPartnersDesc",
+    groupKey: "navWhoFor",
   },
-  {
-    key: "safety",
-    to: "/safety",
-    title: "Trust & Safety",
-    teaser: "Built for connection. Designed with safety in mind.",
-  },
-  {
-    key: "about",
-    to: "/about",
-    title: "About Duleko",
-    teaser: "Why we built Duleko, and the people behind it.",
-    group: "About",
-  },
+  { key: "safety", to: "/safety", titleKey: "trustAndSafety", teaserKey: "safetyTeaser" },
+  { key: "about", to: "/about", titleKey: "navAboutDuleko", teaserKey: "aboutTeaser", groupKey: "navAbout" },
 ];

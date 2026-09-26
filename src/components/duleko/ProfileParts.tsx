@@ -9,9 +9,18 @@ import { cn, formatNumber } from "@/lib/utils";
  */
 
 /** Cover banner: the photo when there is one, a soft patterned wash when not. */
-export function ProfileCover({ src, children }: { src?: string | null; children?: React.ReactNode }) {
+export function ProfileCover({
+  src,
+  className,
+  children,
+}: {
+  src?: string | null;
+  /** Height override - defaults to growing with the screen. */
+  className?: string;
+  children?: React.ReactNode;
+}) {
   return (
-    <div className="relative h-32 sm:h-44 lg:h-52">
+    <div className={cn("relative", className ?? "h-32 sm:h-44 lg:h-52")}>
       <div className="absolute inset-0 bg-gradient-to-br from-brand-100 via-brand-50 to-cream-50" aria-hidden />
       <div
         className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgb(21_128_61/0.14)_1px,transparent_0)] [background-size:18px_18px]"

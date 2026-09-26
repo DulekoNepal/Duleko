@@ -29,7 +29,10 @@ interface SessionValue {
   signOut: () => Promise<void>;
 }
 
-const SessionContext = createContext<SessionValue | null>(null);
+// Kept across hot reloads, like the i18n and site-actions contexts.
+const SessionContext: React.Context<SessionValue | null> =
+  import.meta.hot?.data.sessionContext ?? createContext<SessionValue | null>(null);
+if (import.meta.hot) import.meta.hot.data.sessionContext = SessionContext;
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);

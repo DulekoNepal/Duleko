@@ -6,7 +6,7 @@ import { AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, ChevronDown, Chevron
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { OtpInput } from "@/components/ui/otp-input";
-import { LanguageToggle } from "@/components/duleko/Layout";
+import { LanguageToggleButton } from "@/components/duleko/Layout";
 import { PolicyDialog } from "@/components/duleko/PolicyDialog";
 import { siteOrigin } from "@/lib/share";
 import { cn } from "@/lib/utils";
@@ -309,7 +309,7 @@ export function AuthScreen({
         ) : (
           <span />
         )}
-        <LanguageToggle />
+        <LanguageToggleButton />
       </div>
 
       <div className="mx-auto w-full max-w-sm flex-1 px-5 pb-10">
@@ -465,7 +465,7 @@ export function AuthScreen({
               <div
                 className="mb-5 grid grid-cols-2 rounded-xl bg-slate-100 p-1 text-sm font-medium"
                 role="tablist"
-                aria-label="Sign in or create account"
+                aria-label={t("signInOrSignUp")}
               >
                 <button
                   type="button"

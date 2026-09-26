@@ -42,7 +42,7 @@ export function SignInPromptDialog({ open, onClose }: { open: boolean; onClose: 
  * Friends) when a guest reaches it directly - via the bottom nav or a
  * direct link - rather than through one specific action.
  */
-export function SignInRequiredScreen({ title }: { title: string }) {
+export function SignInRequiredScreen({ title, children }: { title: string; children?: React.ReactNode }) {
   const { t } = useI18n();
   const { requestSignIn } = useGuestMode();
 
@@ -68,6 +68,7 @@ export function SignInRequiredScreen({ title }: { title: string }) {
             </Link>
           </div>
         </div>
+        {children && <div className="mt-5">{children}</div>}
       </PageContainer>
     </>
   );

@@ -5,7 +5,19 @@ export function Container({ className, children }: { className?: string; childre
   return <div className={cn("mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8", className)}>{children}</div>;
 }
 
-export function Brand({ inverted = false, className }: { inverted?: boolean; className?: string }) {
+export function Brand({
+  inverted = false,
+  compact = false,
+  className,
+}: {
+  inverted?: boolean;
+  /**
+   * Drop the "| डुलेको" half where the header is tight: `true` below 360px,
+   * "sm" below the sm breakpoint.
+   */
+  compact?: boolean | "sm";
+  className?: string;
+}) {
   return (
     <span className={cn("flex items-center gap-2.5", className)}>
       <img
@@ -23,11 +35,13 @@ export function Brand({ inverted = false, className }: { inverted?: boolean; cla
         )}
       >
         Duleko
-        <span className={cn("mx-1.5 font-normal", inverted ? "text-white/30" : "text-slate-300")} aria-hidden>
-          |
-        </span>
-        <span lang="ne" className={cn("font-semibold", inverted ? "text-white/80" : "text-navy-600")}>
-          डुलेको
+        <span className={cn(compact === true && "hidden min-[360px]:inline", compact === "sm" && "hidden sm:inline")}>
+          <span className={cn("mx-1.5 font-normal", inverted ? "text-white/30" : "text-slate-300")} aria-hidden>
+            |
+          </span>
+          <span lang="ne" className={cn("font-semibold", inverted ? "text-white/80" : "text-navy-600")}>
+            डुलेको
+          </span>
         </span>
       </span>
     </span>
