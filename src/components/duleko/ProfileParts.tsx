@@ -43,6 +43,7 @@ export function SectionCard({
   title,
   badge,
   action,
+  compact = false,
   className,
   children,
 }: {
@@ -50,14 +51,27 @@ export function SectionCard({
   title: string;
   badge?: number;
   action?: React.ReactNode;
+  /** Tighter padding and a smaller heading - your own Profile, where cards sit densely. */
+  compact?: boolean;
   className?: string;
   children: React.ReactNode;
 }) {
   const { lang } = useI18n();
   return (
-    <section className={cn("rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5", className)}>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="flex min-w-0 items-center gap-2.5 text-base font-semibold text-slate-900">
+    <section
+      className={cn(
+        "rounded-2xl border border-slate-200 bg-white shadow-sm",
+        compact ? "p-3.5 sm:p-4" : "p-4 sm:p-5",
+        className,
+      )}
+    >
+      <div className={cn("flex items-center justify-between gap-3", compact ? "mb-3" : "mb-4")}>
+        <h3
+          className={cn(
+            "flex min-w-0 items-center gap-2.5 font-semibold text-slate-900",
+            compact ? "text-sm" : "text-base",
+          )}
+        >
           <SectionIcon icon={icon} />
           <span className="truncate">{title}</span>
           {badge != null && (

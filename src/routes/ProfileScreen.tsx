@@ -519,7 +519,7 @@ export function ProfileScreen() {
   return (
     <>
       <AppHeader title={t("myProfile")} />
-      <PageContainer className="space-y-4 md:space-y-5">
+      <PageContainer className="space-y-3 md:space-y-4">
         {/* ================================================================
             Profile header, Facebook-style: wide cover, a big round photo
             overlapping its bottom-left edge, name and actions beside it,
@@ -530,9 +530,9 @@ export function ProfileScreen() {
             open past its bottom edge.
             ================================================================ */}
         <section className="@container animate-in-up relative z-10 -mx-4 -mt-3 border-b border-slate-200 bg-white shadow-sm sm:mx-0 sm:mt-0 sm:rounded-3xl sm:border">
-          <ProfileCover src={coverSrc} className="h-40 overflow-hidden sm:rounded-t-3xl @md:h-52 @2xl:h-64 @4xl:h-80">
-            <label className="absolute bottom-3 right-3 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg bg-white/90 px-3 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 backdrop-blur transition-colors hover:bg-white @2xl:bottom-4 @2xl:right-4">
-              <Camera className="h-4 w-4" aria-hidden />
+          <ProfileCover src={coverSrc} className="h-32 overflow-hidden sm:rounded-t-3xl @md:h-40 @2xl:h-48 @4xl:h-56">
+            <label className="absolute bottom-3 right-3 inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-white/90 px-2.5 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 backdrop-blur transition-colors hover:bg-white @2xl:bottom-4 @2xl:right-4">
+              <Camera className="h-3.5 w-3.5" aria-hidden />
               <span className="sr-only @lg:not-sr-only">{t("changeCover")}</span>
               <input
                 type="file"
@@ -552,18 +552,18 @@ export function ProfileScreen() {
             </label>
           </ProfileCover>
 
-          <div className="px-4 @2xl:px-8">
-            <div className="flex flex-col gap-3 @4xl:flex-row @4xl:items-end @4xl:gap-6">
+          <div className="px-4 @2xl:px-6">
+            <div className="flex flex-col gap-2.5 @4xl:flex-row @4xl:items-end @4xl:gap-5">
               {/* Photo: the only thing pulled up into the cover. */}
-              <div className="relative z-10 -mt-[4.5rem] h-[7.5rem] w-[7.5rem] shrink-0 self-start rounded-full bg-white p-1 shadow-md @2xl:-mt-[5.5rem] @2xl:h-[10.5rem] @2xl:w-[10.5rem]">
+              <div className="relative z-10 -mt-14 h-24 w-24 shrink-0 self-start rounded-full bg-white p-1 shadow-md @2xl:-mt-16 @2xl:h-32 @2xl:w-32">
                 <Avatar
                   name={profile.full_name}
                   src={avatarPreview ?? profile.avatar_url}
-                  size={160}
+                  size={128}
                   className="h-full! w-full!"
                 />
-                <label className="absolute bottom-1 right-1 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow ring-2 ring-white transition-colors hover:bg-slate-200 @2xl:bottom-2 @2xl:right-2">
-                  <Camera className="h-4 w-4" aria-hidden />
+                <label className="absolute bottom-0 right-0 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow ring-2 ring-white transition-colors hover:bg-slate-200 @2xl:bottom-1 @2xl:right-1">
+                  <Camera className="h-3.5 w-3.5" aria-hidden />
                   <span className="sr-only">{t("changePhoto")}</span>
                   <input
                     type="file"
@@ -583,15 +583,15 @@ export function ProfileScreen() {
                 </label>
               </div>
 
-              <div className="min-w-0 flex-1 @4xl:pb-4">
+              <div className="min-w-0 flex-1 @4xl:pb-3">
                 {/* Wraps rather than truncates - a name is never cut short. */}
-                <h2 className="flex min-w-0 items-center gap-2 text-2xl font-bold leading-tight tracking-tight text-slate-900 @2xl:text-[2rem]">
+                <h2 className="flex min-w-0 items-center gap-2 text-xl font-bold leading-tight tracking-tight text-slate-900 @2xl:text-2xl">
                   <span className="min-w-0 break-words">{profile.full_name}</span>
-                  <VerifiedBadge staffRole={profile.staff_role} verified={profile.is_verified} size={22} />
+                  <VerifiedBadge staffRole={profile.staff_role} verified={profile.is_verified} size={18} />
                 </h2>
-                {profile.bio && <p className="mt-1 text-[15px] leading-snug text-slate-600">{profile.bio}</p>}
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
-                  <RatingLine rating={profile.rating} count={profile.rating_count} className="text-sm" />
+                {profile.bio && <p className="mt-0.5 text-sm leading-snug text-slate-600">{profile.bio}</p>}
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-slate-500">
+                  <RatingLine rating={profile.rating} count={profile.rating_count} className="text-[13px]" />
                   <span aria-hidden className="text-slate-300">
                     ·
                   </span>
@@ -599,7 +599,7 @@ export function ProfileScreen() {
                     {t("skillsCount", { count: formatNumber(skillList.length, lang) })}
                   </span>
                   {profile.is_available && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-800 ring-1 ring-brand-200">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-800 ring-1 ring-brand-200">
                       <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden />
                       {t("availableForWork")}
                     </span>
@@ -608,24 +608,25 @@ export function ProfileScreen() {
               </div>
 
               {!editing && (
-                <div className="relative flex w-full items-center gap-2 @xl:max-w-md @4xl:w-auto @4xl:max-w-none @4xl:pb-4" data-profile-menu>
-                  <Button className="flex-1 @4xl:flex-none" onClick={startEditing}>
-                    <Pencil className="h-4 w-4" aria-hidden />
+                <div className="relative flex w-full items-center gap-2 @xl:max-w-sm @4xl:w-auto @4xl:max-w-none @4xl:pb-3" data-profile-menu>
+                  <Button size="sm" className="flex-1 @4xl:flex-none" onClick={startEditing}>
+                    <Pencil className="h-3.5 w-3.5" aria-hidden />
                     {t("editProfile")}
                   </Button>
                   <Button
                     variant="outline"
+                    size="sm"
                     className="flex-1 @4xl:flex-none"
                     onClick={() => share.mutate()}
                     aria-label={t("shareProfile")}
                   >
-                    <Share2 className="h-4 w-4" aria-hidden />
+                    <Share2 className="h-3.5 w-3.5" aria-hidden />
                     <span className="hidden @xs:inline">{t("shareShort")}</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-11 w-11 shrink-0"
+                    className="h-9 w-9 shrink-0"
                     loading={downloadCard.isPending}
                     onClick={() => setMenuOpen((v) => !v)}
                     aria-haspopup="menu"
@@ -633,7 +634,7 @@ export function ProfileScreen() {
                     aria-label={t("profileOptions")}
                     title={t("profileOptions")}
                   >
-                    {!downloadCard.isPending && <MoreHorizontal className="h-4.5 w-4.5" aria-hidden />}
+                    {!downloadCard.isPending && <MoreHorizontal className="h-4 w-4" aria-hidden />}
                   </Button>
 
                   {menuOpen && (
@@ -681,7 +682,7 @@ export function ProfileScreen() {
 
           {/* Tab row - scrolls sideways instead of wrapping on a narrow phone. */}
           {editing ? (
-            <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-200 bg-brand-50/60 px-4 py-3 sm:rounded-b-3xl @2xl:px-8">
+            <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-200 bg-brand-50/60 px-4 py-2 sm:rounded-b-3xl @2xl:px-6">
               <span className="inline-flex min-w-0 items-center gap-2 text-sm font-semibold text-brand-900">
                 <Pencil className="h-4 w-4 shrink-0" aria-hidden />
                 <span className="truncate">{t("editingProfile")}</span>
@@ -695,7 +696,7 @@ export function ProfileScreen() {
               ref={tabRowRef}
               role="tablist"
               aria-label={t("profileSectionsNav")}
-              className="mt-4 flex overflow-x-auto border-t border-slate-200 px-2 [scrollbar-width:none] @2xl:px-6 [&::-webkit-scrollbar]:hidden"
+              className="mt-3 flex overflow-x-auto border-t border-slate-200 px-2 [scrollbar-width:none] @2xl:px-4 [&::-webkit-scrollbar]:hidden"
             >
               {tabs.map(({ id, label, badge }) => {
                 const selected = tab === id;
@@ -708,11 +709,11 @@ export function ProfileScreen() {
                     aria-selected={selected}
                     aria-controls={`profile-panel-${id}`}
                     onClick={() => selectTab(id)}
-                    className="group relative shrink-0 px-1 py-1.5"
+                    className="group relative shrink-0 px-0.5 py-1"
                   >
                     <span
                       className={cn(
-                        "flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
+                        "flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-semibold transition-colors",
                         selected ? "text-brand-700" : "text-slate-600 group-hover:bg-slate-100 group-hover:text-slate-900",
                       )}
                     >
@@ -724,7 +725,7 @@ export function ProfileScreen() {
                       ) : null}
                     </span>
                     {selected && (
-                      <span className="absolute inset-x-1 bottom-0 h-[3px] rounded-t-full bg-brand-700" aria-hidden />
+                      <span className="absolute inset-x-1 bottom-0 h-0.5 rounded-t-full bg-brand-700" aria-hidden />
                     )}
                   </button>
                 );
@@ -739,7 +740,7 @@ export function ProfileScreen() {
              ============================================================== */
           <div className="@container space-y-4 md:space-y-5">
             <div className="grid grid-cols-1 gap-4 md:gap-5 @3xl:grid-cols-2 @3xl:items-start">
-              <SectionCard icon={Info} title={t("basicInfo")}>
+              <SectionCard compact icon={Info} title={t("basicInfo")}>
                 <Field label={t("yourName")}>
                   <Input value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={80} />
                 </Field>
@@ -767,7 +768,7 @@ export function ProfileScreen() {
               </SectionCard>
 
               <div className="space-y-4 md:space-y-5">
-                <SectionCard icon={Phone} title={t("phoneNumber")}>
+                <SectionCard compact icon={Phone} title={t("phoneNumber")}>
                   <Field label={t("phoneNumber")} hint={t("phoneHint")}>
                     <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" />
                   </Field>
@@ -776,13 +777,13 @@ export function ProfileScreen() {
                   </Field>
                 </SectionCard>
 
-                <SectionCard icon={MapPin} title={t("whereYouAre")}>
+                <SectionCard compact icon={MapPin} title={t("whereYouAre")}>
                   <LocationFields value={location} onChange={setLocation} />
                 </SectionCard>
               </div>
             </div>
 
-            <SectionCard icon={Briefcase} title={t("yourSkills")}>
+            <SectionCard compact icon={Briefcase} title={t("yourSkills")}>
               <SkillPicker skills={allSkills.data ?? []} selected={skillIds} onToggle={toggleSkill} />
 
               {skillIds.length > 0 && (
@@ -869,16 +870,16 @@ export function ProfileScreen() {
                 id="profile-panel-overview"
                 role="tabpanel"
                 aria-labelledby="profile-tab-overview"
-                className="animate-in-up space-y-4 md:space-y-5"
+                className="animate-in-up space-y-3 md:space-y-4"
               >
-                <div className="grid grid-cols-1 gap-4 md:gap-5 @3xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+                <div className="grid grid-cols-1 gap-3 md:gap-4 @3xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
                   <AvailabilityCard
                     on={profile.is_available}
                     pending={toggleAvailable.isPending}
                     onChange={(next) => toggleAvailable.mutate(next)}
                   />
 
-                  <div className="grid grid-cols-2 gap-3 @xl:grid-cols-4">
+                  <div className="grid grid-cols-4 gap-2 @xl:gap-2.5">
                     <StatTile
                       icon={Star}
                       label={t("ratingLabel")}
@@ -911,31 +912,32 @@ export function ProfileScreen() {
                   <ProfileStrength percent={strengthPercent} checks={strengthChecks} onComplete={startEditing} />
                 )}
 
-                <div className="grid grid-cols-1 gap-4 md:gap-5 @3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @3xl:items-start">
+                <div className="grid grid-cols-1 gap-3 md:gap-4 @3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @3xl:items-start">
                   <SectionCard
+                    compact
                     icon={Info}
                     title={t("profileIntro")}
                     action={
-                      <Button variant="ghost" size="sm" className="-my-1.5 text-brand-700" onClick={startEditing}>
+                      <Button variant="ghost" size="sm" className="-my-1.5 h-8 px-2 text-xs text-brand-700" onClick={startEditing}>
                         <Pencil className="h-3.5 w-3.5" aria-hidden />
                         {t("edit")}
                       </Button>
                     }
                   >
                     {profile.about ? (
-                      <p className="whitespace-pre-line text-[15px] leading-7 text-slate-700">{profile.about}</p>
+                      <p className="whitespace-pre-line text-sm leading-6 text-slate-700">{profile.about}</p>
                     ) : (
                       <button
                         type="button"
                         onClick={startEditing}
-                        className="flex w-full items-center gap-3 rounded-xl border border-dashed border-slate-300 p-3.5 text-left text-sm text-slate-500 transition-colors hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-800"
+                        className="flex w-full items-center gap-2.5 rounded-xl border border-dashed border-slate-300 p-3 text-left text-sm text-slate-500 transition-colors hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-800"
                       >
                         <Pencil className="h-4 w-4 shrink-0" aria-hidden />
                         {t("noAboutYet")}
                       </button>
                     )}
 
-                    <dl className="mt-5 space-y-3.5 border-t border-slate-100 pt-5">
+                    <dl className="mt-4 space-y-3 border-t border-slate-100 pt-4">
                       {place && <DetailRow icon={MapPin} label={t("whereYouAre")} value={place} />}
                       {myPhone.data?.phone && (
                         <DetailRow icon={Phone} label={t("phoneNumber")} value={myPhone.data.phone} />
@@ -961,36 +963,37 @@ export function ProfileScreen() {
                     </dl>
                   </SectionCard>
 
-                  <div className="@container min-w-0 space-y-4 md:space-y-5">
+                  <div className="@container min-w-0 space-y-3 md:space-y-4">
                     <SectionCard
+                      compact
                       icon={Briefcase}
                       title={t("skillsAndRates")}
                       badge={skillList.length > 0 ? skillList.length : undefined}
                     >
-                      <ul className="grid grid-cols-1 gap-3 @lg:grid-cols-2">
+                      <ul className="grid grid-cols-1 gap-2 @lg:grid-cols-2">
                         {skillList.map((s) => {
                           const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
                           return (
                             <li
                               key={s.id}
-                              className="flex min-w-0 items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3.5"
+                              className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5"
                             >
-                              <SkillTile skillId={s.id} className="h-11 w-11 rounded-xl bg-white ring-1 ring-slate-200" />
+                              <SkillTile skillId={s.id} className="h-9 w-9 rounded-lg bg-white ring-1 ring-slate-200" />
                               {/* The rate gets its own line so it never has to be cut short. */}
                               <div className="min-w-0 flex-1">
-                                <p className="truncate text-[15px] font-semibold text-slate-900">{label}</p>
+                                <p className="truncate text-sm font-semibold text-slate-900">{label}</p>
                                 {s.rate_amount != null ? (
-                                  <p className="mt-0.5 text-sm font-semibold text-brand-700">
+                                  <p className="text-xs font-semibold text-brand-700">
                                     {formatMoney(s.rate_amount, lang)}
                                     {s.rate_unit && (
                                       <span className="font-medium text-slate-500"> / {s.rate_unit}</span>
                                     )}
                                   </p>
                                 ) : (
-                                  <p className="mt-0.5 text-sm text-slate-400">{t("rateNotSet")}</p>
+                                  <p className="text-xs text-slate-400">{t("rateNotSet")}</p>
                                 )}
                                 {s.custom_note && (
-                                  <p className="mt-1 line-clamp-2 text-xs text-slate-500">{s.custom_note}</p>
+                                  <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{s.custom_note}</p>
                                 )}
                               </div>
                             </li>
@@ -1000,17 +1003,17 @@ export function ProfileScreen() {
                           <button
                             type="button"
                             onClick={startEditing}
-                            className="flex h-full min-h-[4.5rem] w-full items-center gap-3 rounded-xl border border-dashed border-slate-300 p-3.5 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/50"
+                            className="flex h-full min-h-14 w-full items-center gap-2.5 rounded-xl border border-dashed border-slate-300 p-2.5 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/50"
                           >
-                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
-                              <Plus className="h-5 w-5" aria-hidden />
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                              <Plus className="h-4 w-4" aria-hidden />
                             </span>
                             <span className="min-w-0">
-                              <span className="block text-[15px] font-semibold text-slate-900">
+                              <span className="block text-sm font-semibold text-slate-900">
                                 {skillList.length > 0 ? t("editSkills") : t("addYourSkills")}
                               </span>
                               {skillList.length === 0 && (
-                                <span className="block text-sm text-slate-500">{t("noSkillsYetProfileHint")}</span>
+                                <span className="block text-xs text-slate-500">{t("noSkillsYetProfileHint")}</span>
                               )}
                             </span>
                           </button>
@@ -1019,26 +1022,27 @@ export function ProfileScreen() {
                     </SectionCard>
 
                     <SectionCard
+                      compact
                       icon={Award}
                       title={t("certificates")}
                       badge={certificates.length > 0 ? certificates.length : undefined}
                     >
                       {certificates.length > 0 && (
-                        <ul className="mb-4 grid grid-cols-1 gap-3 @lg:grid-cols-2">
+                        <ul className="mb-3 grid grid-cols-1 gap-2 @lg:grid-cols-2">
                           {certificates.map((c) => (
                             <li
                               key={c.id}
-                              className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-3"
+                              className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5"
                             >
-                              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
-                                <Award className="h-5 w-5" aria-hidden />
+                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                                <Award className="h-4 w-4" aria-hidden />
                               </span>
                               <div className="min-w-0 flex-1">
                                 <a
                                   href={c.file_url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="block truncate text-[15px] font-semibold text-slate-900 hover:text-brand-700 hover:underline"
+                                  className="block truncate text-sm font-semibold text-slate-900 hover:text-brand-700 hover:underline"
                                 >
                                   {c.title}
                                 </a>
@@ -1049,9 +1053,9 @@ export function ProfileScreen() {
                                 onClick={() => deleteCert.mutate(c.id)}
                                 aria-label={t("delete")}
                                 title={t("delete")}
-                                className="shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                                className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
                               >
-                                <Trash2 className="h-4 w-4" aria-hidden />
+                                <Trash2 className="h-3.5 w-3.5" aria-hidden />
                               </button>
                             </li>
                           ))}
@@ -1059,7 +1063,7 @@ export function ProfileScreen() {
                       )}
 
                       {/* Add one: name it, then pick the file. */}
-                      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-3">
+                      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-2.5">
                         <div className="flex flex-col gap-2 @md:flex-row @md:items-center">
                           <Input
                             value={certTitle}
@@ -1067,15 +1071,15 @@ export function ProfileScreen() {
                             placeholder={t("certificateTitlePlaceholder")}
                             maxLength={100}
                             aria-label={t("addCertificate")}
-                            className="min-w-0 flex-1 bg-white"
+                            className="h-9 min-w-0 flex-1 bg-white text-sm"
                           />
                           <label
                             className={cn(
-                              "inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50",
+                              "inline-flex h-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50",
                               (!certTitle.trim() || addCert.isPending) && "pointer-events-none opacity-50",
                             )}
                           >
-                            <Upload className="h-4 w-4" aria-hidden />
+                            <Upload className="h-3.5 w-3.5" aria-hidden />
                             {t("upload")}
                             <input
                               type="file"
@@ -1095,7 +1099,7 @@ export function ProfileScreen() {
                             />
                           </label>
                         </div>
-                        <p className="mt-2 px-1 text-xs leading-relaxed text-slate-500">
+                        <p className="mt-1.5 px-1 text-[11px] leading-relaxed text-slate-500">
                           {t("certificatesHint")} {t("uploadCertificateHint")}
                         </p>
                       </div>
@@ -1110,17 +1114,17 @@ export function ProfileScreen() {
                 id="profile-panel-calendar"
                 role="tabpanel"
                 aria-labelledby="profile-tab-calendar"
-                className="animate-in-up grid grid-cols-1 gap-4 md:gap-5 @3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @3xl:items-start"
+                className="animate-in-up grid grid-cols-1 gap-3 md:gap-4 @3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @3xl:items-start"
               >
                 {/* What the calendar means, beside it once there's room. */}
-                <SectionCard icon={CalendarDays} title={t("markCalendar")}>
-                  <p className="text-[15px] font-medium text-slate-900">
+                <SectionCard compact icon={CalendarDays} title={t("markCalendar")}>
+                  <p className="text-sm font-medium text-slate-900">
                     {busyDaysCount > 0
                       ? t("daysMarkedBusy", { count: formatNumber(busyDaysCount, lang) })
                       : t("noBusyDays")}
                   </p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{t("calendarHint")}</p>
-                  <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">{t("calendarHint")}</p>
+                  <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
                     <li className="flex items-center gap-2">
                       <span className="h-3.5 w-3.5 rounded-full ring-1 ring-slate-300" aria-hidden />
                       {t("freeDay")}
@@ -1132,7 +1136,7 @@ export function ProfileScreen() {
                   </ul>
                 </SectionCard>
 
-                <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5">
+                <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
                   <AvailabilityCalendar
                     days={availability.data ?? []}
                     editable
@@ -1150,9 +1154,9 @@ export function ProfileScreen() {
                 id="profile-panel-settings"
                 role="tabpanel"
                 aria-labelledby="profile-tab-settings"
-                className="animate-in-up grid grid-cols-1 gap-6 @3xl:grid-cols-2 @3xl:items-start"
+                className="animate-in-up grid grid-cols-1 gap-5 @3xl:grid-cols-2 @3xl:items-start"
               >
-                <div className="min-w-0 space-y-6">
+                <div className="min-w-0 space-y-5">
                   <ListGroup title={t("settingsPreferences")}>
                     <ListRow
                       icon={Mail}
@@ -1160,6 +1164,7 @@ export function ProfileScreen() {
                       hint={t("emailAlertsHint")}
                       trailing={
                         <Switch
+                          size="sm"
                           checked={alertPrefs.data?.email_enabled ?? true}
                           onChange={(next) => saveAlerts.mutate({ email_enabled: next })}
                           aria-label={t("emailAlerts")}
@@ -1172,6 +1177,7 @@ export function ProfileScreen() {
                       hint={t("smsAlertsHint")}
                       trailing={
                         <Switch
+                          size="sm"
                           checked={alertPrefs.data?.sms_enabled ?? false}
                           onChange={(next) => saveAlerts.mutate({ sms_enabled: next })}
                           aria-label={t("smsAlerts")}
@@ -1193,6 +1199,7 @@ export function ProfileScreen() {
                       }
                       trailing={
                         <Switch
+                          size="sm"
                           checked={profile.location_consent === "granted"}
                           disabled={toggleLocationSharing.isPending}
                           onChange={(next) => toggleLocationSharing.mutate(next)}
@@ -1204,7 +1211,7 @@ export function ProfileScreen() {
                   </ListGroup>
                 </div>
 
-                <div className="min-w-0 space-y-6">
+                <div className="min-w-0 space-y-5">
 
                   <ListGroup title={t("accountTitle")}>
                     <ListRow icon={Users} title={t("myFriends")} to="/friends" />
@@ -1357,27 +1364,27 @@ function AvailabilityCard({
   return (
     <section
       className={cn(
-        "relative flex items-center gap-4 overflow-hidden rounded-2xl border p-4 shadow-sm transition-colors sm:p-5",
+        "flex items-center gap-3 rounded-2xl border p-3.5 shadow-sm transition-colors",
         "border-slate-200 bg-white",
       )}
     >
       <span
         className={cn(
-          "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
           on ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-400",
         )}
       >
-        <CircleDot className="h-6 w-6" aria-hidden />
+        <CircleDot className="h-4.5 w-4.5" aria-hidden />
       </span>
       <div className="min-w-0 flex-1">
-        <h3 className="text-base font-semibold text-slate-900">
+        <h3 className="text-sm font-semibold text-slate-900">
           {on ? t("availableForWork") : t("notAvailable")}
         </h3>
-        <p className="mt-0.5 text-sm leading-snug text-slate-600">
+        <p className="mt-0.5 text-xs leading-snug text-slate-500">
           {on ? t("availabilityOnHint") : t("availabilityOffHint")}
         </p>
       </div>
-      <Switch checked={on} disabled={pending} onChange={onChange} aria-label={t("availableForWork")} />
+      <Switch size="sm" checked={on} disabled={pending} onChange={onChange} aria-label={t("availableForWork")} />
     </section>
   );
 }
@@ -1396,17 +1403,17 @@ function StatTile({
 }) {
   const body = (
     <>
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
-        <Icon className="h-[18px] w-[18px]" aria-hidden />
+      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+        <Icon className="h-3.5 w-3.5" aria-hidden />
       </span>
-      <span className="mt-3 truncate text-2xl font-bold tabular-nums leading-none text-slate-900">{value}</span>
-      <span className="mt-1.5 flex items-center gap-1 truncate text-xs font-medium text-slate-500">
+      <span className="mt-2 truncate text-lg font-bold tabular-nums leading-none text-slate-900">{value}</span>
+      <span className="mt-1 flex items-center gap-0.5 truncate text-[11px] font-medium text-slate-500 @xl:text-xs">
         {label}
-        {onClick && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />}
+        {onClick && <ChevronRight className="hidden h-3.5 w-3.5 shrink-0 text-slate-400 @xl:block" aria-hidden />}
       </span>
     </>
   );
-  const box = "flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm";
+  const box = "flex min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-2.5 text-left shadow-sm @xl:rounded-2xl @xl:p-3";
   return onClick ? (
     <button
       type="button"
@@ -1434,11 +1441,11 @@ function ProfileStrength({
   const radius = 26;
   const circumference = 2 * Math.PI * radius;
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-      <div className="flex flex-col gap-4 @2xl:flex-row @2xl:items-center @2xl:gap-6">
-        <div className="flex min-w-0 items-center gap-4 @2xl:w-80 @2xl:shrink-0">
+    <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+      <div className="flex flex-col gap-3 @2xl:flex-row @2xl:items-center @2xl:gap-5">
+        <div className="flex min-w-0 items-center gap-3 @2xl:w-72 @2xl:shrink-0">
           <div
-            className="relative h-16 w-16 shrink-0"
+            className="relative h-12 w-12 shrink-0"
             role="progressbar"
             aria-valuenow={percent}
             aria-valuemin={0}
@@ -1459,33 +1466,33 @@ function ProfileStrength({
                 className="stroke-brand-600 transition-[stroke-dashoffset] duration-700"
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-900">
+            <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-slate-900">
               {formatNumber(percent, lang)}%
             </span>
           </div>
           <div className="min-w-0">
-            <h3 className="text-base font-bold text-slate-900">
+            <h3 className="text-sm font-semibold text-slate-900">
               {t("profileCompleteTitle", { percent: formatNumber(percent, lang) })}
             </h3>
-            <p className="mt-0.5 text-sm leading-snug text-slate-500">{t("profileCompleteHint")}</p>
+            <p className="mt-0.5 text-xs leading-snug text-slate-500">{t("profileCompleteHint")}</p>
           </div>
         </div>
 
-        <ul className="flex flex-wrap gap-2 @2xl:flex-1">
+        <ul className="flex flex-wrap gap-1.5 @2xl:flex-1">
           {checks.map(({ done, label, icon: Icon }) => (
             <li key={label}>
               {done ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500">
-                  <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden />
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500">
+                  <Check className="h-3 w-3 text-brand-600" aria-hidden />
                   {label}
                 </span>
               ) : (
                 <button
                   type="button"
                   onClick={onComplete}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-brand-400 hover:bg-brand-50 hover:text-brand-800"
+                  className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition-colors hover:border-brand-400 hover:bg-brand-50 hover:text-brand-800"
                 >
-                  <Icon className="h-3.5 w-3.5" aria-hidden />
+                  <Icon className="h-3 w-3" aria-hidden />
                   {label}
                 </button>
               )}
