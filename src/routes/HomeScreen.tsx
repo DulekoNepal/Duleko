@@ -64,8 +64,8 @@ function SectionHeader({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="mb-3 flex items-center justify-between gap-3">
-      <h2 className="inline-flex min-w-0 items-center gap-2 text-base font-semibold text-slate-900 md:text-lg">
+    <div className="mb-2.5 flex items-center justify-between gap-3">
+      <h2 className="inline-flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-900 md:text-base">
         <SectionIcon icon={icon} />
         <span className="truncate">{title}</span>
         {children}
@@ -137,7 +137,7 @@ export function HomeScreen() {
 
       {/* No title row on desktop (the top bar has the logo), so the content
           starts where other screens' titles do. */}
-      <PageContainer className="space-y-7 md:space-y-9 md:pt-6">
+      <PageContainer className="space-y-5 md:space-y-6 md:pt-5">
         {profile ? (
           <MemberHero profile={profile} popular={popular} />
         ) : (
@@ -151,14 +151,14 @@ export function HomeScreen() {
               interactive
               className="bg-gradient-to-r from-amber-50 to-orange-50 hover:border-amber-300"
             >
-              <CardBody className="flex items-center gap-3 py-3.5">
-                <span className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                  <Clock className="h-5 w-5" aria-hidden />
+              <CardBody className="flex items-center gap-3 py-2.5">
+                <span className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                  <Clock className="h-4 w-4" aria-hidden />
                   <span className="absolute right-0 top-0 h-2.5 w-2.5 animate-ping rounded-full bg-amber-500" aria-hidden />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-amber-900">{t("yourWorkToday")}</p>
-                  <p className="truncate text-sm text-amber-800">
+                  <p className="text-sm font-semibold text-amber-900">{t("yourWorkToday")}</p>
+                  <p className="truncate text-xs text-amber-800">
                     {t("pendingRequests", { count: formatNumber(pendingCount, lang) })}
                   </p>
                 </div>
@@ -217,9 +217,9 @@ export function HomeScreen() {
         {/* No outer card here - each person is already their own card, and
             nesting a card of cards just doubles the borders. */}
         <section className="animate-in-up" style={{ "--delay": "90ms" } as CSSProperties}>
-          <div className="mb-4 flex items-end justify-between gap-3">
+          <div className="mb-2.5 flex items-end justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="inline-flex min-w-0 items-center gap-2 text-base font-semibold text-slate-900 md:text-lg">
+              <h2 className="inline-flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-900 md:text-base">
                 <SectionIcon icon={Users} />
                 <span className="truncate">{t("availableToday")}</span>
                 {workersToday > 0 && (
@@ -232,7 +232,7 @@ export function HomeScreen() {
                   </span>
                 )}
               </h2>
-              <p className="mt-1 truncate pl-9 text-sm text-slate-500">
+              <p className="mt-0.5 truncate pl-9 text-xs text-slate-500">
                 {profile?.district
                   ? t("availableTodayNear", { place: districtLabel(profile.district, lang) })
                   : t("availableTodayHint")}
@@ -306,8 +306,8 @@ export function HomeScreen() {
  */
 function HeroShell({ children }: { children: React.ReactNode }) {
   return (
-    <section className="animate-in-up relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-      <div className="h-1 bg-gradient-to-r from-brand-500 via-brand-600 to-accent-500" aria-hidden />
+    <section className="animate-in-up relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="h-0.5 bg-gradient-to-r from-brand-500 via-brand-600 to-accent-500" aria-hidden />
       <div
         className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-brand-100/60 blur-3xl"
         aria-hidden
@@ -323,7 +323,7 @@ function HeroSearch({ popular }: { popular: Skill[] }) {
   const [query, setQuery] = useState("");
 
   return (
-    <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-5 sm:px-6">
+    <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-3.5 sm:px-5">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -331,25 +331,25 @@ function HeroSearch({ popular }: { popular: Skill[] }) {
         }}
         role="search"
       >
-        <label htmlFor="home-search" className="mb-2 block text-sm font-semibold text-slate-800">
+        <label htmlFor="home-search" className="mb-1.5 block text-[13px] font-semibold text-slate-800">
           {t("homeHeroPrompt")}
         </label>
-        <div className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm transition-all focus-within:border-brand-400 focus-within:ring-4 focus-within:ring-brand-100">
-          <Search className="ml-2.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden />
+        <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm transition-all focus-within:border-brand-400 focus-within:ring-4 focus-within:ring-brand-100">
+          <Search className="ml-2 h-4 w-4 shrink-0 text-slate-400" aria-hidden />
           <input
             id="home-search"
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="h-11 min-w-0 flex-1 bg-transparent px-2 text-slate-900 placeholder:text-slate-400 focus:outline-none"
+            className="h-9 min-w-0 flex-1 bg-transparent px-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
           />
           <button
             type="submit"
-            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-700 px-3.5 font-semibold text-white transition-colors hover:bg-brand-800 sm:px-5"
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-700 px-3 font-semibold text-white transition-colors hover:bg-brand-800 sm:px-4"
             aria-label={t("search")}
           >
-            <ArrowRight className="h-5 w-5 sm:hidden" aria-hidden />
+            <ArrowRight className="h-4 w-4 sm:hidden" aria-hidden />
             <span className="hidden text-sm sm:inline">{t("search")}</span>
           </button>
         </div>
@@ -357,8 +357,8 @@ function HeroSearch({ popular }: { popular: Skill[] }) {
 
       {popular.length > 0 && (
         // Swipes sideways on a phone rather than wrapping into a tall block.
-        <div className="no-scrollbar -mx-5 mt-3.5 flex items-center gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:px-0">
-          <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-slate-400">
+        <div className="no-scrollbar -mx-4 mt-2.5 flex items-center gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
             {t("popularSkills")}
           </span>
           {popular.map((skill) => (
@@ -366,9 +366,9 @@ function HeroSearch({ popular }: { popular: Skill[] }) {
               key={skill.id}
               to="/search"
               search={{ skill: skill.id }}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800"
             >
-              <SkillIcon skillId={skill.id} className="h-3.5 w-3.5" />
+              <SkillIcon skillId={skill.id} className="h-3 w-3" />
               {skillName(skill, lang)}
             </Link>
           ))}
@@ -384,7 +384,7 @@ function MemberHero({ profile, popular }: { profile: Profile; popular: Skill[] }
 
   return (
     <HeroShell>
-      <div className="flex items-center gap-4 px-5 py-5 sm:px-6">
+      <div className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
         <Link
           to="/profile"
           aria-label={t("myProfile")}
@@ -393,12 +393,12 @@ function MemberHero({ profile, popular }: { profile: Profile; popular: Skill[] }
           <Avatar
             name={profile.full_name}
             src={profile.avatar_url}
-            size={64}
-            className="ring-4 ring-brand-50 transition-transform duration-200 group-hover:scale-105"
+            size={48}
+            className="ring-2 ring-brand-50 transition-transform duration-200 group-hover:scale-105"
           />
           <span
             className={cn(
-              "absolute bottom-0.5 right-0.5 h-4 w-4 rounded-full border-[3px] border-white",
+              "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white",
               profile.is_available ? "bg-brand-500" : "bg-slate-300",
             )}
             aria-hidden
@@ -406,22 +406,22 @@ function MemberHero({ profile, popular }: { profile: Profile; popular: Skill[] }
         </Link>
 
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-slate-500">{t(timeGreetingKey())}</p>
-          <h2 className="flex min-w-0 items-center gap-1.5 text-xl font-bold leading-tight text-slate-900 sm:text-2xl">
+          <p className="text-xs text-slate-500">{t(timeGreetingKey())}</p>
+          <h2 className="flex min-w-0 items-center gap-1.5 text-base font-bold leading-tight text-slate-900 sm:text-lg">
             <span className="truncate">{t("greeting", { name: firstName })}</span>
-            <VerifiedBadge staffRole={profile.staff_role} verified={profile.is_verified} size={20} />
+            <VerifiedBadge staffRole={profile.staff_role} verified={profile.is_verified} size={16} />
           </h2>
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-slate-600">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-600">
             {profile.district && (
               <span className="inline-flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5 text-brand-600" aria-hidden />
+                <MapPin className="h-3 w-3 text-brand-600" aria-hidden />
                 {districtLabel(profile.district, lang)}
               </span>
             )}
-            <RatingLine rating={profile.rating} count={profile.rating_count} />
+            <RatingLine rating={profile.rating} count={profile.rating_count} className="text-xs" />
             <span
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold",
+                "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold",
                 profile.is_available ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-500",
               )}
             >
@@ -436,10 +436,10 @@ function MemberHero({ profile, popular }: { profile: Profile; popular: Skill[] }
 
         <Link
           to="/profile"
-          className="hidden h-10 shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-800 sm:inline-flex"
+          className="hidden h-8 shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-800 sm:inline-flex"
         >
           {t("myProfile")}
-          <ChevronRight className="h-4 w-4" aria-hidden />
+          <ChevronRight className="h-3.5 w-3.5" aria-hidden />
         </Link>
       </div>
 
@@ -460,20 +460,20 @@ function GuestHero({
   const { t } = useI18n();
   return (
     <HeroShell>
-      <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:px-6">
-        <div className="flex min-w-0 flex-1 items-center gap-3.5">
+      <div className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:px-5">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <img
             src={dulekoMark}
             alt=""
-            className="h-14 w-14 shrink-0 rounded-2xl object-cover shadow-sm ring-4 ring-brand-50"
+            className="h-11 w-11 shrink-0 rounded-xl object-cover shadow-sm ring-2 ring-brand-50"
           />
           <div className="min-w-0">
-            <h2 className="text-xl font-bold leading-tight text-slate-900 sm:text-2xl">{t("guestHeroTitle")}</h2>
-            <p className="mt-1 text-sm text-slate-500">{t("tagline")}</p>
+            <h2 className="text-base font-bold leading-tight text-slate-900 sm:text-lg">{t("guestHeroTitle")}</h2>
+            <p className="mt-0.5 text-xs text-slate-500">{t("tagline")}</p>
           </div>
         </div>
         {showSignIn && (
-          <Button onClick={onSignIn} className="w-full shrink-0 sm:w-auto">
+          <Button size="sm" onClick={onSignIn} className="w-full shrink-0 sm:w-auto">
             <LogIn className="h-4 w-4" aria-hidden />
             {t("signUpOrLogIn")}
           </Button>
@@ -536,29 +536,29 @@ function QuickActions({ pending, unreadMessages }: { pending: number; unreadMess
     // 240px, leaving the content column narrower than just below it.
     <nav
       aria-label={t("quickActions")}
-      className="animate-in-up grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-2 lg:grid-cols-4"
+      className="animate-in-up grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-2 lg:grid-cols-4"
       style={{ "--delay": "30ms" } as CSSProperties}
     >
       {actions.map(({ to, icon: Icon, label, hint, badge, tone }) => (
         <Link
           key={to}
           to={to}
-          className="group relative flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+          className="group relative flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
         >
           <span
             className={cn(
-              "inline-flex h-11 w-11 items-center justify-center rounded-xl transition-colors duration-200",
+              "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200",
               tone,
             )}
           >
-            <Icon className="h-5 w-5" aria-hidden />
+            <Icon className="h-4 w-4" aria-hidden />
           </span>
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold text-slate-900 md:text-[15px]">{label}</span>
-            <span className="mt-0.5 block truncate text-xs text-slate-500">{hint}</span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13px] font-semibold text-slate-900">{label}</span>
+            <span className="block truncate text-[11px] text-slate-500">{hint}</span>
           </span>
           {badge ? (
-            <span className="absolute right-3 top-3 min-w-5 rounded-full bg-red-500 px-1.5 text-center text-[11px] font-bold leading-5 text-white shadow-sm">
+            <span className="absolute -right-1 -top-1 min-w-4.5 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-[18px] text-white shadow-sm ring-2 ring-white">
               {formatNumber(badge > 9 ? "9+" : badge, lang)}
             </span>
           ) : null}
@@ -590,10 +590,10 @@ function ProfileProgress({ profile }: { profile: Profile }) {
 
   return (
     <Card tone="primary" className="animate-in-up overflow-hidden" style={{ "--delay": "45ms" } as CSSProperties}>
-      <CardBody className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
-        <div className="flex items-center gap-4 sm:contents">
-          <div className="relative h-16 w-16 shrink-0" aria-hidden>
-            <svg viewBox="0 0 64 64" className="h-16 w-16 -rotate-90">
+      <CardBody className="flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:gap-4">
+        <div className="flex items-center gap-3 sm:contents">
+          <div className="relative h-12 w-12 shrink-0" aria-hidden>
+            <svg viewBox="0 0 64 64" className="h-12 w-12 -rotate-90">
               <circle cx="32" cy="32" r={radius} className="fill-none stroke-brand-100" strokeWidth="6" />
               <circle
                 cx="32"
@@ -606,24 +606,24 @@ function ProfileProgress({ profile }: { profile: Profile }) {
                 strokeDashoffset={circumference * (1 - percent / 100)}
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-brand-800">
+            <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-brand-800">
               {formatNumber(percent, lang)}%
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-slate-900">
+            <p className="text-sm font-semibold text-slate-900">
               {t("profileCompleteTitle", { percent: formatNumber(percent, lang) })}
             </p>
-            <p className="mt-0.5 text-sm text-slate-600">{t("profileCompleteHint")}</p>
-            <ul className="mt-2.5 flex flex-wrap gap-1.5">
+            <p className="mt-0.5 text-xs text-slate-600">{t("profileCompleteHint")}</p>
+            <ul className="mt-2 flex flex-wrap gap-1.5">
               {checks
                 .filter((c) => !c.done)
                 .map(({ label, icon: Icon }) => (
                   <li
                     key={label}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-white px-2.5 py-1 text-xs font-medium text-brand-800"
+                    className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-white px-2 py-0.5 text-[11px] font-medium text-brand-800"
                   >
-                    <Icon className="h-3.5 w-3.5" aria-hidden />
+                    <Icon className="h-3 w-3" aria-hidden />
                     {label}
                   </li>
                 ))}
@@ -632,9 +632,9 @@ function ProfileProgress({ profile }: { profile: Profile }) {
         </div>
         <Link
           to="/profile"
-          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-800"
+          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 self-start rounded-lg bg-brand-700 ml-15 px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-brand-800 sm:ml-0 sm:self-auto"
         >
-          <UserRound className="h-4 w-4" aria-hidden />
+          <UserRound className="h-3.5 w-3.5" aria-hidden />
           {t("completeProfile")}
         </Link>
       </CardBody>
