@@ -30,14 +30,14 @@ export function SafetyPage() {
       </PageHero>
 
       <SiteSection>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {FEATURES.map(({ icon, titleKey, bodyKey }) => (
             <IconCard key={titleKey} icon={icon} title={t(titleKey)}>
               {t(bodyKey)}
             </IconCard>
           ))}
         </div>
-        <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3">
+        <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
           <StoryLink to="/privacy">{t("privacyPolicy")}</StoryLink>
           <StoryLink to="/terms">{t("termsOfService")}</StoryLink>
         </div>

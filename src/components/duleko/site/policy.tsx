@@ -22,10 +22,10 @@ function stripNumber(title: string): string {
 export function PolicyBullets({ keys }: { keys: StringKey[] }) {
   const { t } = useI18n();
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-1.5">
       {keys.map((key) => (
         <li key={key} className="flex gap-3">
-          <span className="mt-[0.7em] h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden />
+          <span className="mt-[0.65em] h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden />
           <span className="min-w-0 flex-1">{t(key)}</span>
         </li>
       ))}
@@ -55,7 +55,7 @@ export function PolicyMeta({
   children: React.ReactNode;
 }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-medium text-slate-600 shadow-sm">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-[13px] font-medium text-slate-600 shadow-sm sm:text-sm">
       <Icon className="h-4 w-4 text-brand-600" aria-hidden />
       {children}
     </span>
@@ -69,15 +69,15 @@ export function PolicyMeta({
 export function PolicySections({ sections }: { sections: PolicySection[] }) {
   const { t } = useI18n();
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-16">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12">
       <nav aria-label={t("onThisPage")} className="min-w-0 lg:sticky lg:top-24 lg:self-start">
-        <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{t("onThisPage")}</p>
-        <ol className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:pb-0">
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{t("onThisPage")}</p>
+        <ol className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:flex-col lg:gap-0 lg:overflow-visible lg:px-0">
           {sections.map((section, i) => (
             <li key={section.id} className="shrink-0">
               <a
                 href={`#${section.id}`}
-                className="flex items-center gap-2.5 whitespace-nowrap rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition-colors hover:border-brand-300 hover:text-brand-800 lg:whitespace-normal lg:rounded-lg lg:border-0 lg:px-2.5 lg:py-2 lg:hover:bg-brand-50"
+                className="flex items-center gap-2.5 whitespace-nowrap rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition-colors hover:border-brand-300 hover:text-brand-800 lg:whitespace-normal lg:rounded-lg lg:border-0 lg:px-2.5 lg:py-1.5 lg:hover:bg-brand-50"
               >
                 <span className="text-xs font-semibold tabular-nums text-brand-600">{i + 1}</span>
                 {stripNumber(section.title)}
@@ -89,14 +89,14 @@ export function PolicySections({ sections }: { sections: PolicySection[] }) {
 
       <div className="divide-y divide-slate-100">
         {sections.map((section, i) => (
-          <article key={section.id} id={section.id} className="scroll-mt-24 py-8 first:pt-0 last:pb-0 sm:py-10">
-            <h2 className="flex items-center gap-3 text-xl font-bold tracking-tight text-teal-800 sm:text-2xl">
-              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-sm font-bold tabular-nums text-brand-700">
+          <article key={section.id} id={section.id} className="scroll-mt-24 py-6 first:pt-0 last:pb-0 sm:py-8">
+            <h2 className="flex items-center gap-2.5 text-lg font-bold tracking-tight text-teal-800 sm:text-xl">
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-sm font-bold tabular-nums text-brand-700">
                 {i + 1}
               </span>
               {stripNumber(section.title)}
             </h2>
-            <div className="mt-5 space-y-4 text-base leading-relaxed text-slate-600 sm:text-[17px] sm:leading-8">
+            <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-slate-600 sm:text-base sm:leading-7">
               {section.body}
             </div>
           </article>
@@ -109,15 +109,15 @@ export function PolicySections({ sections }: { sections: PolicySection[] }) {
 export function PolicyContact({ questionKey }: { questionKey: StringKey }) {
   const { t } = useI18n();
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-6 sm:p-10">
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-4">
-          <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-700 text-white shadow-sm">
+    <div className="relative overflow-hidden rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-5 sm:p-7">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-700 text-white shadow-sm">
             <Mail className="h-5 w-5" aria-hidden />
           </span>
           <div>
-            <h2 className="text-2xl font-bold text-teal-800">{t("contactUs")}</h2>
-            <p className="mt-1.5 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
+            <h2 className="text-xl font-bold text-teal-800 sm:text-2xl">{t("contactUs")}</h2>
+            <p className="mt-1 max-w-xl text-[15px] leading-relaxed text-slate-600 sm:text-base">
               {t(questionKey)}{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-brand-700 hover:underline">
                 {t("contactEmail")}
@@ -128,7 +128,7 @@ export function PolicyContact({ questionKey }: { questionKey: StringKey }) {
         </div>
         <a
           href={`mailto:${CONTACT_EMAIL}`}
-          className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 font-semibold text-white shadow-sm transition-colors hover:bg-brand-800"
+          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 font-semibold text-white shadow-sm transition-colors hover:bg-brand-800"
         >
           <Mail className="h-4 w-4" aria-hidden />
           {t("emailUs")}

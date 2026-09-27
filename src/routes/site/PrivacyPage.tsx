@@ -133,7 +133,7 @@ export function PrivacyPage() {
               .map((line) => (
                 <li
                   key={line}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-teal-800 shadow-sm"
+                  className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-teal-800 shadow-sm"
                 >
                   {line}
                 </li>
@@ -194,7 +194,7 @@ export function PrivacyPage() {
         <Prose>
           <p>{t("privacyIntro")}</p>
         </Prose>
-        <div className="mt-6">
+        <div className="mt-4">
           <PolicyMeta icon={CalendarDays}>{t("privacyLastUpdated")}</PolicyMeta>
         </div>
       </PageHero>
@@ -202,7 +202,7 @@ export function PrivacyPage() {
       <SiteSection tone="cream">
         <Eyebrow>{t("atAGlance")}</Eyebrow>
         <SectionHeading>{t("privacyGlanceTitle")}</SectionHeading>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           <IconCard icon={Lock} title={t("privacyGlanceNeverSold")}>
             {t("privacyNoSell")}
           </IconCard>

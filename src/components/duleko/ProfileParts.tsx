@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { SectionIcon } from "@/components/ui/card";
+import { BrandWatermark } from "@/components/duleko/site/ui";
 import { useI18n } from "@/lib/i18n";
 import { cn, formatNumber } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ export function ProfileCover({
         className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgb(21_128_61/0.14)_1px,transparent_0)] [background-size:18px_18px]"
         aria-hidden
       />
+      <BrandWatermark tone="light" className="inset-y-3 right-6 aspect-square" />
       {src && (
         <>
           <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />

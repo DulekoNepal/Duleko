@@ -117,7 +117,7 @@ export function TermsPage() {
       body: (
         <>
           <p className="flex gap-3 rounded-xl border border-accent-500/30 bg-accent-50 px-4 py-3 font-medium text-slate-800">
-            <ShieldAlert className="mt-1 h-5 w-5 shrink-0 text-accent-600" aria-hidden />
+            <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-accent-600" aria-hidden />
             <span className="min-w-0 flex-1">{t("termsSafetyDesc")}</span>
           </p>
           <p>{t("termsReportSuspicious")}</p>
@@ -137,7 +137,7 @@ export function TermsPage() {
         <Prose>
           <p>{t("termsIntro")}</p>
         </Prose>
-        <div className="mt-6 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           <PolicyMeta icon={CalendarDays}>{t("termsEffectiveDate")}</PolicyMeta>
           <PolicyMeta icon={Scale}>{t("termsJurisdiction")}</PolicyMeta>
         </div>
@@ -146,7 +146,7 @@ export function TermsPage() {
       <SiteSection tone="cream">
         <Eyebrow>{t("atAGlance")}</Eyebrow>
         <SectionHeading>{t("termsGlanceTitle")}</SectionHeading>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           <IconCard icon={Handshake} title={t("termsGlanceEmployer")}>
             {t("termsAboutDesc")}
           </IconCard>

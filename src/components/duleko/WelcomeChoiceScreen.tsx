@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { Briefcase, Calendar, Compass, LogIn, MapPin, Users } from "lucide-react";
 import { LanguageToggleButton } from "./Layout";
+import { BrandWatermark } from "./site/ui";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import dulekoMark from "@/assets/duleko-mark.png";
 
@@ -42,6 +43,7 @@ export function WelcomeChoiceScreen({
           className="pointer-events-none absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-brand-300/20 blur-2xl"
           aria-hidden
         />
+        <BrandWatermark className="bottom-2 -right-10 h-40 w-40 md:h-52 md:w-52" />
 
         <div className="relative mx-auto flex max-w-sm justify-end px-5 pt-4 sm:max-w-2xl lg:max-w-4xl">
           <LanguageToggleButton />

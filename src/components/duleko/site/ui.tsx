@@ -1,5 +1,36 @@
 import { cn } from "@/lib/utils";
 import dulekoMark from "@/assets/duleko-mark.png";
+import dulekoSilhouette from "@/assets/duleko-mark-silhouette.png";
+
+const WATERMARK_MASK: React.CSSProperties = {
+  WebkitMaskImage: `url(${dulekoSilhouette})`,
+  maskImage: `url(${dulekoSilhouette})`,
+  WebkitMaskSize: "contain",
+  maskSize: "contain",
+  WebkitMaskRepeat: "no-repeat",
+  maskRepeat: "no-repeat",
+  WebkitMaskPosition: "center",
+  maskPosition: "center",
+};
+
+/**
+ * The Duleko mark as a see-through watermark for brand-coloured surfaces:
+ * white on the dark greens, green on the light tints. The parent must be
+ * positioned; size and place the mark with `className`.
+ */
+export function BrandWatermark({ tone = "dark", className }: { tone?: "dark" | "light"; className?: string }) {
+  return (
+    <span
+      aria-hidden
+      style={WATERMARK_MASK}
+      className={cn(
+        "pointer-events-none absolute select-none",
+        tone === "dark" ? "bg-white opacity-[0.09]" : "bg-brand-700 opacity-[0.07]",
+        className,
+      )}
+    />
+  );
+}
 
 export function Container({ className, children }: { className?: string; children: React.ReactNode }) {
   return <div className={cn("mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8", className)}>{children}</div>;
@@ -78,8 +109,8 @@ export function SiteButton({
         variant === "ghostLight" &&
           "border-2 border-white/70 text-white hover:bg-white/10 focus-visible:ring-white",
         size === "sm" && "h-10 px-4 text-sm",
-        size === "md" && "h-12 px-5 text-sm sm:text-base",
-        size === "lg" && "h-14 px-7 text-base",
+        size === "md" && "h-11 px-5 text-sm sm:text-base",
+        size === "lg" && "h-12 px-6 text-[15px] sm:text-base",
         className,
       )}
       {...props}

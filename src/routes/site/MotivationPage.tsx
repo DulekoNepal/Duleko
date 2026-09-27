@@ -57,22 +57,22 @@ export function MotivationPage() {
           <SectionHeading>{t("motivationSubtitle")}</SectionHeading>
         </div>
 
-        <ul className="mt-10 grid gap-5 md:grid-cols-3">
+        <ul className="mt-6 grid gap-4 md:grid-cols-3">
           {FOUNDERS.map((founder) => (
             <li key={founder.id}>
-              <figure className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow duration-300 hover:shadow-xl hover:shadow-teal-900/5 sm:p-7">
-                <Quote className="h-8 w-8 text-accent-500" aria-hidden />
-                <blockquote className="mt-4 flex-1">
-                  <p className="text-balance text-lg font-semibold leading-snug text-teal-800 sm:text-xl">
+              <figure className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow duration-300 hover:shadow-xl hover:shadow-teal-900/5 sm:p-6">
+                <Quote className="h-6 w-6 text-accent-500" aria-hidden />
+                <blockquote className="mt-3 flex-1">
+                  <p className="text-balance text-base font-semibold leading-snug text-teal-800 sm:text-lg">
                     {t(founder.quoteKey)}
                   </p>
                 </blockquote>
-                <figcaption className="mt-6 flex items-center gap-3 border-t border-slate-100 pt-5">
+                <figcaption className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-4">
                   <img
                     src={founder.image}
                     alt=""
                     loading="lazy"
-                    className="h-12 w-12 shrink-0 rounded-2xl object-cover ring-2 ring-brand-100"
+                    className="h-11 w-11 shrink-0 rounded-2xl object-cover ring-2 ring-brand-100"
                   />
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-slate-900">{t(founder.nameKey)}</p>
@@ -94,7 +94,7 @@ export function MotivationPage() {
       </SiteSection>
 
       <SiteSection>
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12">
           <div>
             <Eyebrow>{t("motivationWhyItMatters")}</Eyebrow>
             <SectionHeading>{t("whatKeepsUsBuilding")}</SectionHeading>
@@ -103,7 +103,7 @@ export function MotivationPage() {
             <Prose>
               <p>{t("whatKeepsUsBuildingDesc")}</p>
             </Prose>
-            <StoryLink to="/mission" className="mt-6">
+            <StoryLink to="/mission" className="mt-4">
               {t("readOurMission")}
             </StoryLink>
           </div>
@@ -113,7 +113,7 @@ export function MotivationPage() {
       <SiteSection tone="brand">
         <div className="mx-auto max-w-3xl text-center">
           <Eyebrow>{t("motivationWhatDrivesUs")}</Eyebrow>
-          <p className="text-balance text-2xl font-semibold leading-snug text-teal-800 sm:text-3xl sm:leading-snug">
+          <p className="text-balance text-xl font-semibold leading-snug text-teal-800 sm:text-2xl sm:leading-snug">
             {t("siteTagline")}
           </p>
         </div>

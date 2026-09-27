@@ -8,7 +8,7 @@ import { NEPALI_TAGLINE, useSiteActions } from "./site/actions";
 import { STORY, type SitePath, type StoryKey } from "./site/nav";
 import { SiteFooter } from "./site/SiteFooter";
 import { SiteHeader } from "./site/SiteHeader";
-import { Container, SiteButton } from "./site/ui";
+import { BrandWatermark, Container, SiteButton } from "./site/ui";
 
 /**
  * The public website (Home for signed-out visitors, Mission, About, the
@@ -24,7 +24,7 @@ export {
   useSiteActions,
   type SiteActions,
 } from "./site/actions";
-export { Container, SiteButton } from "./site/ui";
+export { BrandWatermark, Container, SiteButton } from "./site/ui";
 export type { StoryKey } from "./site/nav";
 
 export function SiteLayout({ title, children }: { title?: string; children: React.ReactNode }) {
@@ -67,7 +67,7 @@ export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: bool
 
   if (signedIn) {
     return (
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:justify-center">
         <SiteButton size="lg" variant={onDark ? "light" : "primary"} onClick={() => explore("/home")}>
           <Compass className="h-5 w-5" aria-hidden />
           {t("headerOpenDuleko")}
@@ -78,7 +78,7 @@ export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: bool
 
   return (
     <div>
-      <div className={cn("flex flex-col gap-3 sm:flex-row", closing && "sm:justify-center")}>
+      <div className={cn("flex flex-col gap-2.5 sm:flex-row", closing && "sm:justify-center")}>
         <SiteButton size="lg" variant={onDark ? "light" : "primary"} onClick={() => explore("/home")}>
           <Compass className="h-5 w-5" aria-hidden />
           {t("exploreDuleko")}
@@ -96,7 +96,7 @@ export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: bool
         )}
       </div>
       {!closing && (
-        <p className={cn("mt-4 text-sm", onDark ? "text-brand-50/80" : "text-slate-600")}>
+        <p className={cn("mt-3 text-sm", onDark ? "text-brand-50/80" : "text-slate-600")}>
           {t("haveAccount")}{" "}
           <button
             type="button"
@@ -116,7 +116,7 @@ export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: bool
 
 export function Eyebrow({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className={cn("mb-3 text-xs font-bold uppercase tracking-[0.14em] text-accent-600", className)}>
+    <p className={cn("mb-2 text-xs font-bold uppercase tracking-[0.14em] text-accent-600", className)}>
       {children}
     </p>
   );
@@ -126,7 +126,7 @@ export function SectionHeading({ children, className }: { children: React.ReactN
   return (
     <h2
       className={cn(
-        "text-balance text-3xl font-bold leading-tight tracking-tight text-teal-800 sm:text-4xl",
+        "text-balance text-2xl font-bold leading-tight tracking-tight text-teal-800 sm:text-3xl",
         className,
       )}
     >
@@ -137,7 +137,7 @@ export function SectionHeading({ children, className }: { children: React.ReactN
 
 export function Prose({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("space-y-4 text-base leading-relaxed text-slate-600 sm:text-lg sm:leading-8", className)}>
+    <div className={cn("space-y-3 text-[15px] leading-relaxed text-slate-600 sm:text-base sm:leading-7", className)}>
       {children}
     </div>
   );
@@ -158,13 +158,16 @@ export function SiteSection({
     <section
       id={id}
       className={cn(
-        "scroll-mt-20 py-16 sm:py-24",
+        "scroll-mt-20 py-10 sm:py-14 lg:py-16",
         tone === "cream" && "bg-cream-50",
-        tone === "brand" && "bg-brand-50/60",
+        tone === "brand" && "relative overflow-hidden bg-brand-50/60",
         className,
       )}
     >
-      <Container>{children}</Container>
+      {tone === "brand" && (
+        <BrandWatermark tone="light" className="-bottom-8 -right-10 h-44 w-44 sm:h-60 sm:w-60 lg:-bottom-12 lg:h-72 lg:w-72" />
+      )}
+      <Container className={cn(tone === "brand" && "relative")}>{children}</Container>
     </section>
   );
 }
@@ -186,7 +189,7 @@ export function StoryLink({
       to={to}
       hash={hash}
       className={cn(
-        "group inline-flex items-center gap-1.5 text-base font-semibold text-brand-700 hover:text-brand-800",
+        "group inline-flex items-center gap-1.5 py-1 text-sm font-semibold text-brand-700 hover:text-brand-800 sm:text-base",
         className,
       )}
     >
@@ -248,7 +251,7 @@ export function PageHero({
   const breadcrumb =
     crumb ?? (chapter && { title: t(chapter.titleKey), group: chapter.groupKey && t(chapter.groupKey) });
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-brand-50 via-white to-cream-50 pb-16 pt-10 sm:pb-24 sm:pt-14">
+    <section className="relative overflow-hidden bg-gradient-to-br from-brand-50 via-white to-cream-50 pb-10 pt-6 sm:pb-14 sm:pt-8">
       <div
         className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand-200/40 blur-3xl"
         aria-hidden
@@ -257,18 +260,22 @@ export function PageHero({
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgb(15_76_92/0.07)_1px,transparent_0)] [background-size:22px_22px] [mask-image:linear-gradient(to_bottom,black,transparent)]"
         aria-hidden
       />
+      <BrandWatermark
+        tone="light"
+        className="-bottom-6 -right-8 h-36 w-36 sm:-bottom-10 sm:h-56 sm:w-56 lg:bottom-auto lg:right-[4%] lg:top-1/2 lg:h-80 lg:w-80 lg:-translate-y-1/2"
+      />
       <Container className="relative">
         {breadcrumb && (
-          <div className="mb-6">
+          <div className="mb-4">
             <Breadcrumbs crumb={breadcrumb} />
           </div>
         )}
         <div className="animate-in-up max-w-3xl">
           <Eyebrow>{eyebrow}</Eyebrow>
-          <h1 className="text-balance text-4xl font-bold leading-[1.1] tracking-tight text-teal-800 sm:text-5xl">
+          <h1 className="text-balance text-3xl font-bold leading-[1.12] tracking-tight text-teal-800 sm:text-4xl lg:text-[2.75rem]">
             {title}
           </h1>
-          {children && <div className="mt-6">{children}</div>}
+          {children && <div className="mt-4">{children}</div>}
         </div>
       </Container>
     </section>
@@ -278,14 +285,14 @@ export function PageHero({
 /** A chain of stages - "Skill → Visibility → Opportunity → Income". */
 export function Flow({ steps, className }: { steps: string[]; className?: string }) {
   return (
-    <ol className={cn("flex flex-wrap items-center gap-x-2 gap-y-3", className)}>
+    <ol className={cn("flex flex-wrap items-center gap-x-1.5 gap-y-2", className)}>
       {steps.map((step, i) => {
         const last = i === steps.length - 1;
         return (
-          <li key={step} className="flex items-center gap-2">
+          <li key={step} className="flex items-center gap-1.5">
             <span
               className={cn(
-                "rounded-full px-4 py-2 text-sm font-semibold sm:text-base",
+                "rounded-full px-3 py-1.5 text-sm font-semibold",
                 last
                   ? "bg-brand-700 text-white shadow-sm"
                   : "border border-brand-200 bg-white text-brand-800",
@@ -315,10 +322,10 @@ export function IconCard({
 }) {
   const body = (
     <>
-      <span className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition-colors group-hover:bg-brand-700 group-hover:text-white">
+      <span className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition-colors group-hover:bg-brand-700 group-hover:text-white">
         <Icon className="h-5 w-5" />
       </span>
-      <h3 className="flex items-center gap-1.5 text-lg font-semibold text-slate-900">
+      <h3 className="flex items-center gap-1.5 text-base font-semibold text-slate-900 sm:text-lg">
         {title}
         {to && (
           <ArrowRight
@@ -327,11 +334,11 @@ export function IconCard({
           />
         )}
       </h3>
-      <p className="mt-2 text-sm leading-relaxed text-slate-600 sm:text-base">{children}</p>
+      <p className="mt-1.5 text-sm leading-relaxed text-slate-600 sm:text-[15px]">{children}</p>
     </>
   );
   const className =
-    "group block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md";
+    "group block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 transition-all duration-200 hover:shadow-md";
   return to ? (
     <Link to={to} className={cn(className, "hover:-translate-y-0.5 hover:border-brand-300")}>
       {body}
@@ -352,7 +359,7 @@ export function StoryNav({ current }: { current: StoryKey }) {
   const next = index < STORY.length - 1 ? STORY[index + 1] : null;
 
   return (
-    <section className="border-t border-slate-100 bg-white py-14 sm:py-20" aria-label={t("storyContinue")}>
+    <section className="border-t border-slate-100 bg-white py-8 sm:py-12" aria-label={t("storyContinue")}>
       <Container>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -363,7 +370,7 @@ export function StoryNav({ current }: { current: StoryKey }) {
           </div>
         </div>
 
-        <ol className="mt-4 flex gap-1.5" aria-label={t("storyChapters")}>
+        <ol className="mt-3 flex gap-1.5" aria-label={t("storyChapters")}>
           {STORY.map((chapter, i) => (
             <li key={chapter.key} className="flex-1">
               <Link
@@ -382,17 +389,17 @@ export function StoryNav({ current }: { current: StoryKey }) {
           ))}
         </ol>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
           {prev ? (
             <Link
               to={prev.to}
-              className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md sm:p-6"
+              className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md sm:p-5"
             >
               <span className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500">
                 <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" aria-hidden />
                 {t("storyPrevious")}
               </span>
-              <span className="mt-2 text-lg font-semibold text-slate-900">{t(prev.titleKey)}</span>
+              <span className="mt-1 text-base font-semibold text-slate-900 sm:text-lg">{t(prev.titleKey)}</span>
               <span className="mt-1 text-sm text-slate-500">{t(prev.teaserKey)}</span>
             </Link>
           ) : (
@@ -401,13 +408,13 @@ export function StoryNav({ current }: { current: StoryKey }) {
           {next && (
             <Link
               to={next.to}
-              className="group flex flex-col rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 to-white p-5 transition-all hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md sm:items-end sm:p-6 sm:text-right"
+              className="group flex flex-col rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 to-white p-4 transition-all hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md sm:items-end sm:p-5 sm:text-right"
             >
               <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700">
                 {t("storyNext")}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
               </span>
-              <span className="mt-2 text-lg font-semibold text-slate-900">{t(next.titleKey)}</span>
+              <span className="mt-1 text-base font-semibold text-slate-900 sm:text-lg">{t(next.titleKey)}</span>
               <span className="mt-1 text-sm text-slate-600">{t(next.teaserKey)}</span>
             </Link>
           )}
@@ -424,18 +431,18 @@ export function StoryNav({ current }: { current: StoryKey }) {
 export function ReadNext({ links }: { links: { to: SitePath; hash?: string; title: string; teaser: string }[] }) {
   const { t } = useI18n();
   return (
-    <section className="border-t border-slate-100 bg-white py-14 sm:py-20" aria-label={t("keepReading")}>
+    <section className="border-t border-slate-100 bg-white py-8 sm:py-12" aria-label={t("keepReading")}>
       <Container>
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent-600">{t("keepReading")}</p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4">
           {links.map((link) => (
             <Link
               key={`${link.to}${link.hash ?? ""}`}
               to={link.to}
               hash={link.hash}
-              className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md sm:p-6"
+              className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md sm:p-5"
             >
-              <span className="inline-flex items-center gap-1.5 text-lg font-semibold text-slate-900">
+              <span className="inline-flex items-center gap-1.5 text-base font-semibold text-slate-900 sm:text-lg">
                 {link.title}
                 <ArrowRight
                   className="h-4 w-4 text-brand-600 transition-transform group-hover:translate-x-1"
@@ -455,22 +462,23 @@ export function ReadNext({ links }: { links: { to: SitePath; hash?: string; titl
 export function FinalCta() {
   const { t } = useI18n();
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-800 to-teal-800 py-20 text-white sm:py-24">
+    <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-800 to-teal-800 py-12 text-white sm:py-16">
       <div
         className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl"
         aria-hidden
       />
+      <BrandWatermark className="-bottom-10 -right-12 h-48 w-48 sm:h-64 sm:w-64 lg:bottom-auto lg:right-[5%] lg:top-1/2 lg:h-72 lg:w-72 lg:-translate-y-1/2" />
       <Container className="relative flex flex-col items-center text-center">
-        <h2 className="max-w-2xl text-balance text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+        <h2 className="max-w-2xl text-balance text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
           {t("finalCtaTitle")}
         </h2>
-        <p className="mt-5 max-w-xl text-base leading-relaxed text-brand-50/90 sm:text-lg">
+        <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-brand-50/90 sm:text-base">
           {t("finalCtaBody")}
         </p>
-        <div className="mt-8 w-full sm:w-auto">
+        <div className="mt-6 w-full sm:w-auto">
           <PrimaryCtas onDark closing />
         </div>
-        <p lang="ne" className="mt-8 text-lg font-semibold text-brand-200">
+        <p lang="ne" className="mt-5 text-base font-semibold text-brand-200 sm:text-lg">
           {NEPALI_TAGLINE}
         </p>
       </Container>

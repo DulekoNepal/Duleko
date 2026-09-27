@@ -36,18 +36,18 @@ export function ForIndividualsPage() {
       </PageHero>
 
       <SiteSection>
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {INDIVIDUAL_STEPS.map((step) => (
             <li
               key={step}
-              className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
             >
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />
-              <span className="text-base font-medium text-slate-800 sm:text-lg">{t(step)}</span>
+              <span className="text-[15px] font-medium text-slate-800 sm:text-base">{t(step)}</span>
             </li>
           ))}
         </ul>
-        <div className="mt-12 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:gap-8">
+        <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
           <SiteButton size="lg" onClick={createProfile}>
             <UserPlus className="h-5 w-5" aria-hidden />
             {t("indCta")}
@@ -71,7 +71,7 @@ export function ForBusinessesPage() {
           <p>{t("bizP1")}</p>
           <p>{t("bizP2")}</p>
         </Prose>
-        <div className="mt-9">
+        <div className="mt-6">
           <SiteButton size="lg" onClick={() => explore("/search")}>
             <Search className="h-5 w-5" aria-hidden />
             {t("bizCta")}
@@ -100,17 +100,17 @@ export function PartnersPage() {
           steps={[t("stageTraining"), t("stageSkills"), t("stageDuleko"), t("stageWork"), t("stageIncome")]}
         />
 
-        <div className="mt-14 max-w-3xl">
+        <div className="mt-10 max-w-3xl">
           <SectionHeading>{t("partnersCertTitle")}</SectionHeading>
-          <div className="mt-8 rounded-2xl border border-accent-500/40 bg-accent-50 p-6 sm:p-8">
+          <div className="mt-5 rounded-2xl border border-accent-500/40 bg-accent-50 p-5 sm:p-6">
             <p className="text-sm font-semibold uppercase tracking-wider text-accent-600">
               {t("partnersNextQuestion")}
             </p>
-            <p className="mt-2 text-2xl font-bold text-teal-800 sm:text-3xl">{t("partnersWhere")}</p>
+            <p className="mt-1.5 text-xl font-bold text-teal-800 sm:text-2xl">{t("partnersWhere")}</p>
           </div>
           <a
             href={partnerMail}
-            className="mt-10 inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-brand-700 px-7 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
+            className="mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-6 text-[15px] sm:text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
           >
             <Mail className="h-5 w-5" aria-hidden />
             {t("partnerWithDuleko")}

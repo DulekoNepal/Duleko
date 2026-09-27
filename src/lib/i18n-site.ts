@@ -106,8 +106,8 @@ export const siteStrings = {
   // ---- Home ---------------------------------------------------------------
   homeHeroTitle: ["Your skills deserve an opportunity.", "तपाईंको सीपले अवसर पाउनुपर्छ।"],
   homeHeroBody: [
-    "Duleko connects people who have skills with people who need them—making it easier to turn skills into work, income, and opportunity.",
-    "डुलेकोले सीप भएका मानिसहरूलाई ती सीप चाहिने मानिसहरूसँग जोड्छ—जसले गर्दा सीपलाई काम, आम्दानी र अवसरमा बदल्न सजिलो हुन्छ।",
+    "Duleko connects people who have skills with people who need them, making it easier to turn skills into work, income, and opportunity.",
+    "डुलेकोले सीप भएका मानिसहरूलाई ती सीप चाहिने मानिसहरूसँग जोड्छ, जसले गर्दा सीपलाई काम, आम्दानी र अवसरमा बदल्न सजिलो हुन्छ।",
   ],
   homeCardSkill: ["Your skill", "तपाईंको सीप"],
   homeCardVisible: ["Visible to people nearby", "नजिकैका मानिसहरूले देख्न सक्ने"],
@@ -127,8 +127,8 @@ export const siteStrings = {
   homeSolutionEyebrow: ["Our Solution", "हाम्रो समाधान"],
   homeSolutionTitle: ["What if your skill itself could become your business?", "यदि तपाईंको सीप नै तपाईंको व्यवसाय बन्न सक्थ्यो भने?"],
   homeSolutionBody: [
-    "Duleko gives skilled people a virtual space to showcase what they can do and connect with people who need their services—without requiring a traditional shop or office.",
-    "डुलेकोले सीपालु मानिसहरूलाई आफूले गर्न सक्ने काम देखाउन र आफ्नो सेवा चाहिने मानिसहरूसँग जोडिन भर्चुअल ठाउँ दिन्छ—परम्परागत पसल वा अफिस बिना नै।",
+    "Duleko gives skilled people a virtual space to showcase what they can do and connect with people who need their services, without requiring a traditional shop or office.",
+    "डुलेकोले सीपालु मानिसहरूलाई आफूले गर्न सक्ने काम देखाउन र आफ्नो सेवा चाहिने मानिसहरूसँग जोडिन भर्चुअल ठाउँ दिन्छ, परम्परागत पसल वा अफिस बिना नै।",
   ],
   homeYouBring: ["You bring the skill.", "सीप तपाईंको।"],
   homeDulekoFinds: ["Duleko helps people find it.", "त्यसलाई भेट्टाउन डुलेकोले मद्दत गर्छ।"],
@@ -179,8 +179,8 @@ export const siteStrings = {
   missionWhatWeDo: ["What We Do", "हामी के गर्छौं"],
   missionDiscoverableTitle: ["Making Skills Economically Discoverable", "सीपलाई आर्थिक अवसरसम्म पुर्‍याउँदै"],
   missionSkillsEverywhere: [
-    "Skills exist everywhere—among students, professionals, trained workers, farmers, tradespeople, business owners, and people who learned through years of experience.",
-    "सीप जताततै छ—विद्यार्थी, पेशाविद्, तालिमप्राप्त कामदार, किसान, कालिगड, व्यवसायी र वर्षौंको अनुभवबाट सिकेका मानिसहरूमाझ।",
+    "Skills exist everywhere: among students, professionals, trained workers, farmers, tradespeople, business owners, and people who learned through years of experience.",
+    "सीप जताततै छ: विद्यार्थी, पेशाविद्, तालिमप्राप्त कामदार, किसान, कालिगड, व्यवसायी र वर्षौंको अनुभवबाट सिकेका मानिसहरूमाझ।",
   ],
   missionOurMissionIs: [
     "Our mission is to make those skills easier to discover and connect them with real opportunities.",

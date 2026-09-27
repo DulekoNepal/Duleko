@@ -19,7 +19,7 @@ import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { CONTACT_EMAIL, useSiteActions } from "./actions";
 import { NAV, type NavEntry, type NavItem } from "./nav";
-import { Brand, SiteButton } from "./ui";
+import { Brand, BrandWatermark, SiteButton } from "./ui";
 
 const LINK_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   "/mission": Target,
@@ -387,6 +387,7 @@ function DropdownPanel({
               className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand-400/20 blur-2xl"
               aria-hidden
             />
+            <BrandWatermark className="-bottom-6 -right-6 h-28 w-28" />
             <div className="relative">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-300">{t("headerForEveryone")}</p>
               <p className="mt-2 text-sm leading-relaxed text-white/85">
