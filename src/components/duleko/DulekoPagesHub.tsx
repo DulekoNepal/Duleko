@@ -70,7 +70,8 @@ export function DulekoPagesHub({ wide = false }: { wide?: boolean }) {
   const { t } = useI18n();
   return (
     <div className="space-y-5">
-      <p className="px-1 text-xs leading-relaxed text-slate-500">{t("hubHint")}</p>
+      {/* The Profile tab is already labelled About Duleko - no intro line there. */}
+      {!wide && <p className="px-1 text-xs leading-relaxed text-slate-500">{t("hubHint")}</p>}
 
       {/* Two-up in a wide @container (Profile's About tab). */}
       <div className={cn("space-y-5", wide && "@3xl:grid @3xl:grid-cols-2 @3xl:items-start @3xl:gap-5 @3xl:space-y-0")}>
