@@ -1,0 +1,16 @@
+{
+  "name": "Duleko - Local skills, local opportunities",
+  "short_name": "Duleko",
+  "description": "Find skilled people nearby in Nepal, or turn your skill into work and income.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#15803d",
+  "lang": "en",
+  "categories": ["business", "lifestyle", "productivity"],
+  "icons": [
+    { "src": "/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

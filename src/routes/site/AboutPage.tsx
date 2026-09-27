@@ -300,6 +300,7 @@ export function AboutPage() {
           <div>
             <Eyebrow>{t("navOurTeam")}</Eyebrow>
             <SectionHeading>{t("aboutTeamTitle")}</SectionHeading>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-600">{t("aboutFoundedBy")}</p>
           </div>
           {/* Quick jump to each profile - most useful on a phone, where the
               three cards run long. */}

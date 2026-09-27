@@ -97,6 +97,7 @@ export const siteStrings = {
   footerDomain: ["duleko.com", "duleko.com"],
   footerNepal: ["Nepal", "नेपाल"],
   footerRights: ["© {year} Duleko. All rights reserved.", "© {year} डुलेको। सर्वाधिकार सुरक्षित।"],
+  footerBuiltBy: ["Built by", "निर्माण:"],
   footerMadeIn: ["Made in Nepal, for Nepal.", "नेपालमा, नेपालका लागि बनाइएको।"],
   footerPrivacy: ["Privacy", "गोपनीयता"],
   footerTerms: ["Terms", "सर्तहरू"],
@@ -266,6 +267,10 @@ export const siteStrings = {
     "हाम्रो लक्ष्य सीपलाई अझ देखिने, अवसरलाई अझ पहुँचयोग्य, र स्थानीय सम्बन्धलाई अझ उपयोगी बनाउनु हो।",
   ],
   aboutTeamTitle: ["The People Behind Duleko", "डुलेको पछाडिका मानिसहरू"],
+  aboutFoundedBy: [
+    "Duleko was co-founded by Sunil K. Chaudhary, Sanjay Gupta and Dipendra Chaudhary. The platform - the web app, the Android app and everything behind them - was designed and built by Sanjay Gupta.",
+    "डुलेको सुनिल के. चौधरी, संजय गुप्ता र दिपेन्द्र चौधरीले सह-स्थापना गरेका हुन्। वेब एप, एन्ड्रोइड एप र तिनका पछाडिका सबै प्रणालीसहित यो प्लेटफर्म संजय गुप्ताले डिजाइन र निर्माण गरेका हुन्।",
+  ],
   aboutJumpToMember: ["Jump to a team member", "टोली सदस्यमा जानुहोस्"],
   aboutDulekoProfile: ["Duleko profile", "डुलेको प्रोफाइल"],
   aboutReadFullStory: ["Read full story", "पूरा कथा पढ्नुहोस्"],

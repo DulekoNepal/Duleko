@@ -60,7 +60,7 @@ const COLUMNS: { id: string; titleKey: StringKey; links: FooterLink[] }[] = [
     links: [
       { labelKey: "footerContactUs", href: mailto("Hello Duleko") },
       { labelKey: "footerSupport", href: mailto("Support request") },
-      { labelKey: "footerDomain", href: "https://duleko.com", external: true },
+      { labelKey: "footerDomain", href: "https://www.duleko.com", external: true },
     ],
   },
 ];
@@ -192,7 +192,7 @@ export function SiteFooter() {
                 {t("footerNepal")}
               </span>
               <a
-                href="https://duleko.com"
+                href="https://www.duleko.com"
                 className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-2 text-sm text-white/90 ring-1 ring-white/15 transition-colors hover:bg-white/15"
               >
                 <Globe className="h-4 w-4 text-brand-300" aria-hidden />
@@ -215,6 +215,18 @@ export function SiteFooter() {
               ·
             </span>
             {t("footerMadeIn")}
+            <span className="mx-2 text-white/20" aria-hidden>
+              ·
+            </span>
+            {t("footerBuiltBy")}{" "}
+            <a
+              href="https://guptasanjay.com.np"
+              target="_blank"
+              rel="noopener"
+              className="font-medium text-teal-50/80 underline-offset-4 transition-colors hover:text-white hover:underline"
+            >
+              Sanjay Gupta
+            </a>
           </p>
           <div className="flex items-center gap-5 text-sm">
             <Link to="/privacy" className="text-teal-50/60 transition-colors hover:text-white">
