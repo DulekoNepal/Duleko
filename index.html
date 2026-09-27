@@ -22,9 +22,12 @@
     <link rel="canonical" href="https://www.duleko.com/" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <!-- The static page text inside #root is for crawlers; the Android app
-         shows its splash screen instead, so hide it there. -->
+    <!-- The static page text inside #root is for crawlers (they read it from
+         the HTML source) and visitors without JavaScript. When JS runs, React
+         replaces it moments later, so hide it rather than flash it. The
+         Android app shows its splash screen instead. -->
     <script>
+      document.documentElement.classList.add("js");
       if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())
         document.documentElement.classList.add("native");
     </script>

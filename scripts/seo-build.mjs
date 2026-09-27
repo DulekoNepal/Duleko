@@ -256,7 +256,7 @@ function bodyHtml(path) {
   const page = content[path];
   if (!page) throw new Error(`seo-build: no content for ${path}`);
   return `<div id="seo-static">
-<style>#seo-static{font-family:"Noto Sans",system-ui,sans-serif;max-width:48rem;margin:0 auto;padding:1.25rem 1rem 3rem;color:#0f172a;line-height:1.6}#seo-static a{color:#15803d}#seo-static nav a{margin-right:.75rem;display:inline-block}#seo-static img{border-radius:1rem;height:auto}#seo-static blockquote{margin:1rem 0;padding-left:1rem;border-left:3px solid #15803d;font-style:italic}html.native #seo-static{display:none}</style>
+<style>#seo-static{font-family:"Noto Sans",system-ui,sans-serif;max-width:48rem;margin:0 auto;padding:1.25rem 1rem 3rem;color:#0f172a;line-height:1.6}#seo-static a{color:#15803d}#seo-static nav a{margin-right:.75rem;display:inline-block}#seo-static img{border-radius:1rem;height:auto}#seo-static blockquote{margin:1rem 0;padding-left:1rem;border-left:3px solid #15803d;font-style:italic}html.js #seo-static,html.native #seo-static{display:none}</style>
 <header><a href="/"><strong>Duleko</strong></a> - ${esc(organization.tagline)} <span lang="ne">${esc(organization.nepaliTagline)}</span>
 <nav aria-label="Website">${navLinks.map(([p, n]) => `<a href="${p}">${esc(n)}</a>`).join("")}</nav></header>
 <main>
