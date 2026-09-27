@@ -285,14 +285,15 @@ export function WorkerScreen() {
   // makes no sense; revoke their role first if that's ever really needed).
   const showModerationMenu = isStaffViewer && !isMe && !w.staff_role;
 
+  // Chat, Call and the friend button share one small outline look - the same
+  // size as the buttons on your own Profile.
   const tileClass =
-    // Icon over label on a phone, where three sit side by side; one line from sm up.
-    "inline-flex h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold sm:h-11 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm text-slate-700 transition-colors duration-200 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 disabled:opacity-60";
+    "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 transition-colors duration-200 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 disabled:opacity-60 @xl:text-sm";
 
   const callButton = canCall ? (
     <a href={`tel:${contact.data!.phone}`} className={tileClass}>
-      <Phone className="h-4 w-4" aria-hidden />
-      {t("callNow")}
+      <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      <span className="truncate">{t("callNow")}</span>
     </a>
   ) : (
     <button
@@ -300,8 +301,8 @@ export function WorkerScreen() {
       onClick={() => (me ? toast(t("callNotAllowed")) : requestSignIn())}
       className={cn(tileClass, "text-slate-400 hover:text-slate-500")}
     >
-      <Lock className="h-4 w-4" aria-hidden />
-      {t("callNow")}
+      <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      <span className="truncate">{t("callNow")}</span>
     </button>
   );
 
@@ -311,8 +312,8 @@ export function WorkerScreen() {
       onClick={() => withAuth(() => navigate({ to: "/chat/$otherId", params: { otherId: w.id } }))}
       className={tileClass}
     >
-      <MessageCircle className="h-4 w-4" aria-hidden />
-      {t("chat")}
+      <MessageCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      <span className="truncate">{t("chat")}</span>
     </button>
   );
 
@@ -325,7 +326,7 @@ export function WorkerScreen() {
       onClick={() => withAuth(() => addFriend.mutate())}
       className={tileClass}
     >
-      <UserPlus className="h-4 w-4" aria-hidden />
+      <UserPlus className="h-3.5 w-3.5 shrink-0" aria-hidden />
       <span className="truncate">{t("addFriend")}</span>
     </button>
   ) : fs.status === "pending" && iAmRequester ? (
@@ -335,7 +336,7 @@ export function WorkerScreen() {
       onClick={() => removeFriend.mutate()}
       className={tileClass}
     >
-      <Clock className="h-4 w-4" aria-hidden />
+      <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
       <span className="truncate">{t("friendRequestPending")}</span>
     </button>
   ) : fs.status === "accepted" ? (
@@ -347,7 +348,7 @@ export function WorkerScreen() {
       }}
       className={cn(tileClass, "border-brand-200 bg-brand-50 text-brand-800")}
     >
-      <UserCheck className="h-4 w-4" aria-hidden />
+      <UserCheck className="h-3.5 w-3.5 shrink-0" aria-hidden />
       <span className="truncate">{t("alreadyFriends")}</span>
     </button>
   ) : null;
@@ -442,80 +443,99 @@ export function WorkerScreen() {
         }
       />
 
-      <PageContainer className={cn("space-y-5 md:space-y-6", !isMe && "pb-40 md:pb-10")}>
+      <PageContainer className={cn("space-y-3 md:space-y-4", !isMe && "pb-36 md:pb-10")}>
         {/* ==============================================================
-            Identity: cover, photo, name, actions, stats
+            Identity, laid out like your own Profile: wide cover, round
+            photo overlapping its bottom-left edge, name and actions beside
+            it, then the stats strip. Edge to edge on a phone, a card from
+            sm up.
             ============================================================== */}
-        <section className="animate-in-up overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <ProfileCover src={w.cover_url} />
+        <section className="@container animate-in-up -mx-4 -mt-3 border-b border-slate-200 bg-white shadow-sm sm:mx-0 sm:mt-0 sm:rounded-3xl sm:border">
+          <ProfileCover src={w.cover_url} className="h-32 overflow-hidden sm:rounded-t-3xl @md:h-40 @2xl:h-48 @4xl:h-56" />
 
-          <div className="px-4 pb-5 sm:px-6 sm:pb-6">
-            {/* Centred on a phone, photo-left from sm up. */}
-            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-end sm:gap-5 sm:text-left">
-              <div className="relative z-10 -mt-14 shrink-0 sm:-mt-16">
-                <Avatar
-                  name={w.full_name}
-                  src={w.avatar_url}
-                  size={112}
-                  online={online}
-                  className="shadow-lg ring-4 ring-white"
-                />
+          <div className="px-4 @2xl:px-6">
+            <div className="flex flex-col gap-2.5 @4xl:flex-row @4xl:items-end @4xl:gap-5">
+              {/* Photo: the only thing pulled up into the cover. */}
+              <div className="relative z-10 -mt-14 h-24 w-24 shrink-0 self-start rounded-full bg-white p-1 shadow-md @2xl:-mt-16 @2xl:h-32 @2xl:w-32">
+                <Avatar name={w.full_name} src={w.avatar_url} size={128} className="h-full! w-full!" />
+                {online && (
+                  <span className="absolute bottom-1.5 right-1.5 h-4 w-4 rounded-full border-[3px] border-white bg-green-500 @2xl:bottom-2.5 @2xl:right-2.5">
+                    <span className="sr-only">{t("online")}</span>
+                  </span>
+                )}
               </div>
 
-              <div className="min-w-0 max-w-full flex-1 sm:pb-1">
-                {/* h2, not h1 - AppHeader already carries this name as the page h1. */}
-                <h2 className="flex min-w-0 items-center justify-center gap-1.5 text-2xl font-bold leading-tight tracking-tight text-slate-900 sm:justify-start sm:text-[1.75rem]">
-                  <span className="truncate">{w.full_name}</span>
-                  <VerifiedBadge staffRole={w.staff_role} verified={w.is_verified} size={22} />
+              <div className="min-w-0 flex-1 @4xl:pb-3">
+                {/* h2, not h1 - AppHeader already carries this name as the page h1.
+                    Wraps rather than truncates - a name is never cut short. */}
+                <h2 className="flex min-w-0 items-center gap-2 text-xl font-bold leading-tight tracking-tight text-slate-900 @2xl:text-2xl">
+                  <span className="min-w-0 break-words">{w.full_name}</span>
+                  <VerifiedBadge staffRole={w.staff_role} verified={w.is_verified} size={18} />
                 </h2>
-                {w.bio && <p className="mt-1 text-sm leading-relaxed text-slate-600 sm:text-base">{w.bio}</p>}
-                <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-sm text-slate-500 sm:justify-start">
+                {w.bio && <p className="mt-0.5 text-sm leading-snug text-slate-600">{w.bio}</p>}
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-slate-500">
+                  <RatingLine rating={w.rating} count={w.rating_count} className="text-[13px]" />
                   {place && (
                     <span className="inline-flex min-w-0 items-center gap-1">
-                      <MapPin className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+                      <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
                       <span className="truncate">{place}</span>
                     </span>
                   )}
-                  <RatingLine rating={w.rating} count={w.rating_count} className="text-sm" />
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                      w.is_available ? "bg-brand-50 text-brand-800 ring-1 ring-brand-200" : "bg-slate-100 text-slate-500",
+                    )}
+                  >
+                    <span
+                      className={cn("h-1.5 w-1.5 rounded-full", w.is_available ? "bg-brand-500" : "bg-slate-400")}
+                      aria-hidden
+                    />
+                    {w.is_available ? t("availableForWork") : t("notAvailable")}
+                  </span>
                 </div>
               </div>
 
-              <span
-                className={cn(
-                  "inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold sm:mb-1",
-                  w.is_available ? "bg-brand-50 text-brand-800 ring-1 ring-brand-200" : "bg-slate-100 text-slate-500",
-                )}
-              >
-                <span className="relative flex h-2.5 w-2.5" aria-hidden>
-                  {w.is_available && (
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-50" />
-                  )}
-                  <span
-                    className={cn(
-                      "relative inline-flex h-2.5 w-2.5 rounded-full",
-                      w.is_available ? "bg-brand-500" : "bg-slate-400",
-                    )}
-                  />
-                </span>
-                {w.is_available ? t("availableForWork") : t("notAvailable")}
-              </span>
+              {/* ---- Actions: one row from @xl, Request on its own row above
+                   the other three on a phone. ----------------------------- */}
+              {!isMe && (
+                <div
+                  ref={actionsRef}
+                  className="grid w-full gap-2 @xl:max-w-xl @xl:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))] @4xl:w-auto @4xl:max-w-none @4xl:grid-cols-[repeat(4,auto)] @4xl:pb-3"
+                >
+                  <Button size="sm" className="w-full" onClick={() => withAuth(() => setRequestOpen(true))}>
+                    <Send className="h-3.5 w-3.5" aria-hidden />
+                    {t("requestWork")}
+                  </Button>
+                  <div className={cn("grid gap-2 @xl:contents", friendButton ? "grid-cols-3" : "grid-cols-2")}>
+                    {chatButton}
+                    {callButton}
+                    {friendButton}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ---- Someone asked to be your friend ------------------ */}
             {!isMe && incomingRequest && (
-              <div className="animate-in-up mt-5 flex flex-col gap-3 rounded-2xl border border-brand-200 bg-brand-50/70 px-4 py-3.5 sm:flex-row sm:items-center">
-                <span className="flex min-w-0 flex-1 items-center gap-2.5 text-sm font-semibold text-brand-900">
-                  <UserPlus className="h-5 w-5 shrink-0 text-brand-700" aria-hidden />
+              <div className="animate-in-up mt-3 flex flex-col gap-2.5 rounded-xl border border-brand-200 bg-brand-50/70 px-3 py-2.5 @md:flex-row @md:items-center">
+                <span className="flex min-w-0 flex-1 items-center gap-2 text-[13px] font-semibold text-brand-900">
+                  <UserPlus className="h-4 w-4 shrink-0 text-brand-700" aria-hidden />
                   {t("sentYouFriendRequest", { name: w.full_name.split(/\s+/)[0] })}
                 </span>
                 <div className="flex gap-2">
-                  <Button size="sm" className="flex-1 sm:flex-none" loading={respond.isPending} onClick={() => respond.mutate(true)}>
+                  <Button
+                    size="sm"
+                    className="h-8 flex-1 text-xs @md:flex-none"
+                    loading={respond.isPending}
+                    onClick={() => respond.mutate(true)}
+                  >
                     {t("acceptRequest")}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 sm:flex-none"
+                    className="h-8 flex-1 text-xs @md:flex-none"
                     loading={respond.isPending}
                     onClick={() => respond.mutate(false)}
                   >
@@ -524,25 +544,11 @@ export function WorkerScreen() {
                 </div>
               </div>
             )}
-
-            {/* ---- Actions --------------------------------------------- */}
-            {!isMe && (
-              <div ref={actionsRef} className="mt-5 grid gap-2 sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
-                <Button size="lg" className="w-full" onClick={() => withAuth(() => setRequestOpen(true))}>
-                  <Send className="h-4 w-4" aria-hidden />
-                  {t("requestWork")}
-                </Button>
-                <div className={cn("grid gap-2 sm:contents", friendButton ? "grid-cols-3" : "grid-cols-2")}>
-                  {chatButton}
-                  {callButton}
-                  {friendButton}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Hairline dividers from the 1px gaps over a grey backing. */}
-          <dl className="grid grid-cols-2 gap-px border-t border-slate-100 bg-slate-100 sm:grid-cols-4">
+          {/* Stats strip - sits where the tab row does on your own Profile.
+              Member since lives in Details below, so it isn't repeated here. */}
+          <dl className="mt-3 grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-200">
             <StatItem icon={Briefcase} label={t("skills")} value={formatNumber(skillList.length, lang)} />
             <StatItem
               icon={Star}
@@ -550,29 +556,24 @@ export function WorkerScreen() {
               value={w.rating_count > 0 ? formatNumber(Number(w.rating).toFixed(1), lang) : "–"}
             />
             <StatItem icon={MessageSquare} label={t("reviews")} value={formatNumber(w.rating_count, lang)} />
-            <StatItem
-              icon={CalendarDays}
-              label={t("memberSince")}
-              value={formatDate(w.created_at.slice(0, 10), lang)}
-              small
-            />
           </dl>
         </section>
 
         {/* ==============================================================
             Content beside a details column on desktop
             ============================================================== */}
-        <div className="grid gap-5 lg:grid-cols-3 lg:items-start">
-          <div className="min-w-0 space-y-5 lg:col-span-2">
-            <SectionCard icon={Info} title={t("about")}>
+        <div className="grid gap-3 md:gap-4 lg:grid-cols-3 lg:items-start">
+          <div className="@container min-w-0 space-y-3 md:space-y-4 lg:col-span-2">
+            <SectionCard compact icon={Info} title={t("about")}>
               {w.about ? (
-                <p className="whitespace-pre-line text-[15px] leading-7 text-slate-700">{w.about}</p>
+                <p className="whitespace-pre-line text-sm leading-6 text-slate-700">{w.about}</p>
               ) : (
                 <p className="text-sm italic text-slate-400">{t("noAboutYetOther")}</p>
               )}
             </SectionCard>
 
             <SectionCard
+              compact
               icon={Briefcase}
               title={t("skillsAndRates")}
               badge={skillList.length > 0 ? skillList.length : undefined}
@@ -582,41 +583,38 @@ export function WorkerScreen() {
                   arrive - show placeholders rather than claiming there is
                   nothing here. */}
               {skills.isPending ? (
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2 @lg:grid-cols-2">
                   {[0, 1].map((i) => (
-                    <div key={i} className="skeleton h-[70px] rounded-2xl" />
+                    <div key={i} className="skeleton h-14 rounded-xl" />
                   ))}
                 </div>
               ) : skillList.length === 0 ? (
                 <p className="text-sm italic text-slate-400">{t("noSkillsYetProfile")}</p>
               ) : (
-                <ul className="grid gap-3 sm:grid-cols-2">
+                <ul className="grid grid-cols-1 gap-2 @lg:grid-cols-2">
                   {skillList.map((s) => {
                     const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
-                    const rate =
-                      s.rate_amount != null
-                        ? `${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}`
-                        : null;
                     return (
                       <li
                         key={s.id}
-                        className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 transition-all duration-200 hover:border-brand-200 hover:shadow-sm"
+                        className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5"
                       >
-                        <SkillTile
-                          skillId={s.id}
-                          className="h-11 w-11 rounded-xl bg-brand-50 transition-colors group-hover:bg-brand-100"
-                        />
+                        <SkillTile skillId={s.id} className="h-9 w-9 rounded-lg bg-white ring-1 ring-slate-200" />
+                        {/* The rate gets its own line so it never has to be cut short. */}
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-semibold text-slate-900">{label}</p>
-                          {s.custom_note ? (
-                            <p className="mt-0.5 truncate text-xs text-slate-500">{s.custom_note}</p>
-                          ) : null}
+                          <p className="truncate text-sm font-semibold text-slate-900">{label}</p>
+                          {s.rate_amount != null ? (
+                            <p className="text-xs font-semibold text-brand-700">
+                              {formatMoney(s.rate_amount, lang)}
+                              {s.rate_unit && <span className="font-medium text-slate-500"> / {s.rate_unit}</span>}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-slate-400">{t("rateNotSet")}</p>
+                          )}
+                          {s.custom_note && (
+                            <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{s.custom_note}</p>
+                          )}
                         </div>
-                        {rate && (
-                          <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-800">
-                            {rate}
-                          </span>
-                        )}
                       </li>
                     );
                   })}
@@ -625,26 +623,26 @@ export function WorkerScreen() {
             </SectionCard>
 
             {certList.length > 0 && (
-              <SectionCard icon={Award} title={t("certificates")} badge={certList.length}>
-                <ul className="grid gap-2.5 sm:grid-cols-2">
+              <SectionCard compact icon={Award} title={t("certificates")} badge={certList.length}>
+                <ul className="grid grid-cols-1 gap-2 @lg:grid-cols-2">
                   {certList.map((c) => (
                     <li key={c.id}>
                       <a
                         href={c.file_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3.5 py-3 transition-colors hover:border-brand-200"
+                        className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 transition-colors hover:border-brand-200"
                       >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sun-400/15 text-sun-500">
-                          <Award className="h-5 w-5" aria-hidden />
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                          <Award className="h-4 w-4" aria-hidden />
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold text-slate-800 group-hover:text-brand-700">
+                          <span className="block truncate text-sm font-semibold text-slate-900 group-hover:text-brand-700">
                             {c.title}
                           </span>
                           <span className="block text-xs text-slate-500">{formatDate(c.created_at.slice(0, 10), lang)}</span>
                         </span>
-                        <ExternalLink className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-brand-600" aria-hidden />
+                        <ExternalLink className="h-3.5 w-3.5 shrink-0 text-slate-300 group-hover:text-brand-600" aria-hidden />
                       </a>
                     </li>
                   ))}
@@ -663,9 +661,9 @@ export function WorkerScreen() {
             />
           </div>
 
-          <aside className="space-y-5 lg:sticky lg:top-24">
-            <SectionCard icon={UserRound} title={t("profileDetails")}>
-              <dl className="space-y-3.5">
+          <aside className="space-y-3 md:space-y-4 lg:sticky lg:top-24">
+            <SectionCard compact icon={UserRound} title={t("profileDetails")}>
+              <dl className="space-y-3">
                 {place && <DetailRow icon={MapPin} label={t("whereYouAre")} value={place} />}
                 {w.age != null && (
                   <DetailRow icon={Cake} label={t("age")} value={t("yearsOld", { count: formatNumber(w.age, lang) })} />
@@ -685,17 +683,11 @@ export function WorkerScreen() {
             </SectionCard>
 
             {!isMe && (
-              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                <h3 className="flex items-center gap-2.5 text-base font-semibold text-slate-900">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-                    <ShieldCheck className="h-4 w-4" aria-hidden />
-                  </span>
-                  {t("stayingSafeTitle")}
-                </h3>
-                <ul className="mt-3 space-y-2.5 text-sm text-slate-600">
+              <SectionCard compact icon={ShieldCheck} title={t("stayingSafeTitle")}>
+                <ul className="space-y-2 text-xs leading-relaxed text-slate-600">
                   {(["stayingSafeTip1", "stayingSafeTip2", "stayingSafeTip3"] as const).map((key) => (
-                    <li key={key} className="flex gap-2.5">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+                    <li key={key} className="flex gap-2">
+                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
                       <span>{t(key)}</span>
                     </li>
                   ))}
@@ -703,12 +695,12 @@ export function WorkerScreen() {
                 <button
                   type="button"
                   onClick={() => withAuth(() => setReportOpen(true))}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                  className="mt-3 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                 >
-                  <Flag className="h-4 w-4" aria-hidden />
+                  <Flag className="h-3.5 w-3.5" aria-hidden />
                   {t("reportProfile")}
                 </button>
-              </section>
+              </SectionCard>
             )}
           </aside>
         </div>
@@ -719,13 +711,13 @@ export function WorkerScreen() {
       {!isMe && (
         <div
           className={cn(
-            "fixed inset-x-0 bottom-[calc(3.5rem+var(--sab))] z-30 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)] backdrop-blur transition-all duration-300 md:hidden",
+            "fixed inset-x-0 bottom-[calc(3.5rem+var(--sab))] z-30 border-t border-slate-200 bg-white/95 px-4 py-2 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)] backdrop-blur transition-all duration-300 md:hidden",
             showStickyBar ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0",
           )}
           aria-hidden={!showStickyBar}
         >
           <div className="mx-auto flex max-w-md items-center gap-2">
-            <Avatar name={w.full_name} src={w.avatar_url} size={40} online={online} />
+            <Avatar name={w.full_name} src={w.avatar_url} size={36} online={online} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-slate-900">{w.full_name}</p>
               <p className="truncate text-xs text-slate-500">
@@ -736,12 +728,12 @@ export function WorkerScreen() {
               type="button"
               tabIndex={showStickyBar ? 0 : -1}
               onClick={() => withAuth(() => navigate({ to: "/chat/$otherId", params: { otherId: w.id } }))}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-slate-600"
               aria-label={t("chat")}
             >
-              <MessageCircle className="h-4.5 w-4.5" aria-hidden />
+              <MessageCircle className="h-4 w-4" aria-hidden />
             </button>
-            <Button className="h-10 shrink-0 px-4" tabIndex={showStickyBar ? 0 : -1} onClick={() => withAuth(() => setRequestOpen(true))}>
+            <Button size="sm" className="shrink-0" tabIndex={showStickyBar ? 0 : -1} onClick={() => withAuth(() => setRequestOpen(true))}>
               {t("requestWork")}
             </Button>
           </div>

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { ChevronRight, Star } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardBody, SectionIcon, SectionTitle } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
+import { SectionCard } from "./ProfileParts";
 import { RatingStars } from "./Rating";
 import { useI18n } from "@/lib/i18n";
 import { formatNumber, relativeTime } from "@/lib/utils";
@@ -36,19 +36,12 @@ export function ReviewsCard({
   const latest = reviews.find((r) => r.comment?.trim());
 
   return (
-    <Card className="mb-4">
-      <CardBody>
-        <SectionTitle>
-          <span className="inline-flex items-center gap-2">
-            <SectionIcon icon={Star} />
-            {t("reviews")}
-          </span>
-        </SectionTitle>
+    <SectionCard compact icon={Star} title={t("reviews")}>
 
         {isPending ? (
-          <p className="py-2 text-sm text-slate-400">{t("loading")}</p>
+          <p className="text-sm text-slate-400">{t("loading")}</p>
         ) : ratingCount === 0 ? (
-          <p className="py-2 text-sm text-slate-500">{t("noReviewsYet")}</p>
+          <p className="text-sm italic text-slate-400">{t("noReviewsYet")}</p>
         ) : (
           <button
             type="button"
@@ -57,7 +50,7 @@ export function ReviewsCard({
             className="-m-1 block w-full rounded-xl p-1 text-left transition-colors duration-200 hover:bg-slate-50"
           >
             <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold leading-none text-slate-900">
+              <span className="text-2xl font-bold leading-none text-slate-900">
                 {formatNumber(Number(rating).toFixed(1), lang)}
               </span>
               <span className="min-w-0 flex-1">
@@ -66,11 +59,11 @@ export function ReviewsCard({
                   {t("reviewCount", { count: formatNumber(ratingCount, lang) })}
                 </span>
               </span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300" aria-hidden />
             </div>
 
             {latest && (
-              <p className="mt-2.5 border-t border-slate-100 pt-2.5 text-sm text-slate-600">
+              <p className="mt-2.5 border-t border-slate-100 pt-2.5 text-[13px] text-slate-600">
                 <span className="font-medium text-slate-700">
                   {latest.reviewer?.full_name ?? ""}
                 </span>
@@ -79,8 +72,6 @@ export function ReviewsCard({
             )}
           </button>
         )}
-      </CardBody>
-
       <ReviewsDialog
         open={open}
         onClose={() => setOpen(false)}
@@ -91,7 +82,7 @@ export function ReviewsCard({
         loadingMore={loadingMore}
         onLoadMore={onLoadMore}
       />
-    </Card>
+    </SectionCard>
   );
 }
 

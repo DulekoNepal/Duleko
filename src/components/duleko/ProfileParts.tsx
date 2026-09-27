@@ -88,23 +88,12 @@ export function SectionCard({
 }
 
 /** One cell of the stats strip under a profile's identity. Use inside a <dl>. */
-export function StatItem({
-  icon: Icon,
-  label,
-  value,
-  small = false,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  /** For a longer value (a date) that shouldn't dwarf its neighbours. */
-  small?: boolean;
-}) {
+export function StatItem({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
-    <div className="flex flex-col items-center gap-1 bg-white px-3 py-4 text-center sm:py-5">
-      <Icon className="h-4 w-4 text-brand-600" aria-hidden />
-      <dt className="order-last text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</dt>
-      <dd className={cn("font-bold text-slate-900", small ? "text-sm sm:text-base" : "text-lg sm:text-xl")}>
+    <div className="flex min-w-0 flex-col items-center gap-0.5 px-2 py-2.5 text-center">
+      <dt className="order-last max-w-full truncate text-[11px] font-medium text-slate-500">{label}</dt>
+      <dd className="flex items-center gap-1.5 text-base font-bold tabular-nums leading-tight text-slate-900">
+        <Icon className="h-3.5 w-3.5 text-brand-600" aria-hidden />
         {value}
       </dd>
     </div>
