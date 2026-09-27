@@ -639,16 +639,38 @@ export async function countUnread(profileId: string): Promise<number> {
   return count ?? 0;
 }
 
-/** Unread count for the Chats tab badge - message notifications only. */
+/**
+ * Unread count for the Chats tab badge: conversations whose newest message
+ * is theirs and unread - the same rule as the Chats list's bolding and its
+ * Unread filter. Counted from the messages themselves, not from message
+ * notifications, so a leftover notification (a thread you can no longer
+ * see, one read on another device) can never keep the badge stuck at 1
+ * with nothing to open.
+ */
 export async function countUnreadMessages(profileId: string): Promise<number> {
-  const { count, error } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("profile_id", profileId)
-    .eq("is_read", false)
-    .eq("kind", "message");
+  const { data, error } = await supabase
+    .from("messages")
+    .select("profile_a,profile_b,sender_profile_id,read_at,a:profiles!messages_profile_a_fkey(id),b:profiles!messages_profile_b_fkey(id)")
+    .or(`profile_a.eq.${profileId},profile_b.eq.${profileId}`)
+    .order("created_at", { ascending: false })
+    .limit(300);
   if (error) return 0;
-  return count ?? 0;
+
+  const seen = new Set<string>();
+  let unread = 0;
+  for (const row of (data ?? []) as unknown as Pick<
+    ConversationRow,
+    "profile_a" | "profile_b" | "sender_profile_id" | "read_at" | "a" | "b"
+  >[]) {
+    const iAmA = row.profile_a === profileId;
+    const otherId = iAmA ? row.profile_b : row.profile_a;
+    // Same skips as listConversations: only a thread's newest message
+    // counts, and a thread whose other side is hidden isn't listed at all.
+    if (seen.has(otherId) || !one(iAmA ? row.b : row.a)) continue;
+    seen.add(otherId);
+    if (row.sender_profile_id !== profileId && !row.read_at) unread++;
+  }
+  return unread;
 }
 
 export async function markNotificationRead(id: string): Promise<void> {
