@@ -22,6 +22,27 @@
       "changefreq": "monthly",
       "lastmod": "2026-09-27"
     },
+    "/about/sanjay-gupta": {
+      "title": "Sanjay Gupta - Co-founder & Tech Lead of Duleko",
+      "description": "Sanjay Gupta is the co-founder and Tech Lead of Duleko who designed and built the platform - web app, Android app and backend. Software Engineer from Chitkara University. Portfolio: guptasanjay.com.np.",
+      "priority": "0.8",
+      "changefreq": "monthly",
+      "lastmod": "2026-09-27"
+    },
+    "/about/sunil-k-chaudhary": {
+      "title": "Sunil K. Chaudhary - Co-founder & Product Lead of Duleko",
+      "description": "Sunil K. Chaudhary from Kapilvastu, Nepal, co-founded Duleko and leads its product vision, strategy and partnerships. He studies Mathematics and Economics at Haverford College and the University of Oxford.",
+      "priority": "0.8",
+      "changefreq": "monthly",
+      "lastmod": "2026-09-27"
+    },
+    "/about/dipendra-chaudhary": {
+      "title": "Dipendra Chaudhary - Co-founder & Community Lead of Duleko",
+      "description": "Dipendra Chaudhary co-founded Duleko and leads community outreach, user support and communications. Hospital Pharmacist at Lumbini Provincial Hospital, B.Pharm from Tribhuvan University.",
+      "priority": "0.8",
+      "changefreq": "monthly",
+      "lastmod": "2026-09-27"
+    },
     "/mission": {
       "title": "Our Mission - Making skills discoverable | Duleko",
       "description": "A skill should not need a shop to become a business. Duleko gives skilled people in Nepal a virtual space to be discovered and connect with real opportunities.",

@@ -16,11 +16,19 @@ import sunilImage from "@/assets/sunil.jpg";
 import sanjayImage from "@/assets/sanjay.png";
 import dipendraImage from "@/assets/dipendra.jpg";
 
-const FOUNDERS: { id: string; nameKey: StringKey; roleKey: StringKey; quoteKey: StringKey; image: string }[] = [
-  { id: "sunil", nameKey: "sunilName", roleKey: "sunilRole", quoteKey: "sunilQuote", image: sunilImage },
-  { id: "sanjay", nameKey: "sanjayName", roleKey: "sanjayRole", quoteKey: "sanjayQuote", image: sanjayImage },
+const FOUNDERS: {
+  id: string;
+  slug: string;
+  nameKey: StringKey;
+  roleKey: StringKey;
+  quoteKey: StringKey;
+  image: string;
+}[] = [
+  { id: "sunil", slug: "sunil-k-chaudhary", nameKey: "sunilName", roleKey: "sunilRole", quoteKey: "sunilQuote", image: sunilImage },
+  { id: "sanjay", slug: "sanjay-gupta", nameKey: "sanjayName", roleKey: "sanjayRole", quoteKey: "sanjayQuote", image: sanjayImage },
   {
     id: "dipendra",
+    slug: "dipendra-chaudhary",
     nameKey: "dipendraName",
     roleKey: "dipendraRole",
     quoteKey: "dipendraQuote",
@@ -71,8 +79,8 @@ export function MotivationPage() {
                     <p className="text-sm text-slate-500">{t(founder.roleKey)}</p>
                   </div>
                   <Link
-                    to="/about"
-                    hash={founder.id}
+                    to="/about/$slug"
+                    params={{ slug: founder.slug }}
                     className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-brand-700 transition-colors hover:bg-brand-50"
                     aria-label={t("readMemberStory", { name: t(founder.nameKey) })}
                   >

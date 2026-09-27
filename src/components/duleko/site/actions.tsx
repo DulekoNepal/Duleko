@@ -9,7 +9,7 @@ export function mailto(subject: string): string {
 
 export interface SiteActions {
   /** Open the app to browse, as a guest if not signed in. */
-  explore: (to?: "/" | "/search") => void;
+  explore: (to?: "/home" | "/search") => void;
   /** Sign-up for visitors, their own profile for members. */
   createProfile: () => void;
   /** The sign-in screen for visitors who already have an account. */

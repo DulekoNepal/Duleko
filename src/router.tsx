@@ -3,7 +3,9 @@ import {
   createRoute,
   createRouter,
   Outlet,
+  redirect,
 } from "@tanstack/react-router";
+import { Capacitor } from "@capacitor/core";
 import { AppShell } from "@/App";
 import { HomeScreen } from "@/routes/HomeScreen";
 import { SearchScreen, type SearchFilters } from "@/routes/SearchScreen";
@@ -17,6 +19,7 @@ import { ChatsScreen } from "@/routes/ChatsScreen";
 import { ModerationScreen } from "@/routes/ModerationScreen";
 import { PrivacyPage } from "@/routes/site/PrivacyPage";
 import { AboutPage } from "@/routes/site/AboutPage";
+import { FounderPage } from "@/routes/site/FounderPage";
 import { MissionPage } from "@/routes/site/MissionPage";
 import { ForBusinessesPage, ForIndividualsPage, PartnersPage } from "@/routes/site/AudiencePages";
 import { SafetyPage } from "@/routes/site/SafetyPage";
@@ -34,9 +37,22 @@ const rootRoute = createRootRoute({
   ),
 });
 
+// "/" is the public website's home for everyone on the web. The Android
+// app has no website, so it opens straight into the app's Home.
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
+  beforeLoad: () => {
+    if (Capacitor.isNativePlatform()) throw redirect({ to: "/home", replace: true });
+  },
+  component: LandingPage,
+});
+
+// The app's Home (skills, nearby workers). Signed-out visitors browse it
+// as guests.
+const homeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/home",
   component: HomeScreen,
 });
 
@@ -139,6 +155,13 @@ const aboutRoute = createRoute({
   component: AboutPage,
 });
 
+// Each co-founder's own page: /about/sanjay-gupta, ...
+const founderRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/about/$slug",
+  component: FounderPage,
+});
+
 const missionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/mission",
@@ -181,12 +204,13 @@ const registrationPolicyRoute = createRoute({
   component: RegistrationPolicyPage,
 });
 
-// The website's home page, for people already inside the app - "/" is the
-// app's own Home for them. Reached from Profile.
+// Old address of the website home for members; "/" is that page now.
 const welcomeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/welcome",
-  component: LandingPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/", replace: true });
+  },
 });
 
 const termsOfUseRoute = createRoute({
@@ -197,6 +221,7 @@ const termsOfUseRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  homeRoute,
   searchRoute,
   workerRoute,
   workRoute,
@@ -208,6 +233,7 @@ const routeTree = rootRoute.addChildren([
   moderationRoute,
   privacyRoute,
   aboutRoute,
+  founderRoute,
   missionRoute,
   individualsRoute,
   businessesRoute,

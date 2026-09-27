@@ -32,7 +32,7 @@ const GROUPS: { id: string; titleKey: StringKey; pages: HubPage[] }[] = [
     id: "know",
     titleKey: "hubKnowDuleko",
     pages: [
-      { to: "/welcome", icon: Sparkles, titleKey: "hubWelcome" },
+      { to: "/", icon: Sparkles, titleKey: "hubWelcome" },
       { to: "/about", icon: Info, titleKey: "navAboutDuleko" },
       { to: "/about", hash: "team", icon: Users, titleKey: "navOurTeam" },
       { to: "/mission", icon: Target, titleKey: "ourMission" },

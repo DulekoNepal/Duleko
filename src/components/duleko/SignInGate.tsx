@@ -61,7 +61,7 @@ export function SignInRequiredScreen({ title, children }: { title: string; child
               {t("signUpOrLogIn")}
             </Button>
             <Link
-              to="/"
+              to="/home"
               className="inline-flex h-11 items-center justify-center rounded-xl text-sm font-medium text-slate-600 hover:text-slate-800"
             >
               {t("keepExploring")}

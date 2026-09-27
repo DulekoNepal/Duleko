@@ -130,7 +130,7 @@ export function SiteHeader() {
   };
 
   const primaryCta = signedIn
-    ? { label: t("headerOpenDuleko"), onClick: () => explore("/") }
+    ? { label: t("headerOpenDuleko"), onClick: () => explore("/home") }
     : { label: t("footerCreateProfile"), onClick: createProfile };
 
   return (
@@ -161,14 +161,14 @@ export function SiteHeader() {
             <Brand compact={signedIn || inApp ? true : "sm"} />
           </Link>
 
-          <nav ref={navRef} className="mx-auto hidden items-center gap-1 lg:flex" aria-label={t("siteWebsiteNav")}>
+          <nav ref={navRef} className="mx-auto hidden items-center gap-0.5 lg:flex xl:gap-1" aria-label={t("siteWebsiteNav")}>
             {NAV.map((entry) =>
               entry.kind === "link" ? (
                 <Link
                   key={entry.to}
                   to={entry.to}
                   className={cn(
-                    "rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
+                    "whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors xl:px-3.5",
                     pathname === entry.to
                       ? "bg-brand-50 text-brand-800"
                       : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900",
@@ -199,7 +199,7 @@ export function SiteHeader() {
                     aria-expanded={openGroup === entry.id}
                     aria-haspopup="true"
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
+                      "inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors xl:px-3.5",
                       isGroupActive(entry, pathname) || openGroup === entry.id
                         ? "bg-brand-50 text-brand-800"
                         : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900",
@@ -221,7 +221,7 @@ export function SiteHeader() {
                     onNavigate={closeAll}
                     onExplore={() => {
                       closeAll();
-                      explore("/");
+                      explore("/home");
                     }}
                   />
                 </div>
@@ -231,8 +231,9 @@ export function SiteHeader() {
 
           <div className="ml-auto flex items-center gap-2 lg:ml-0">
             <LanguageToggleButton />
-            {!signedIn && (
-              <SiteButton variant="ghost" size="sm" className="hidden xl:inline-flex" onClick={() => explore("/")}>
+            {/* In-app guests already have the back arrow into the app. */}
+            {!signedIn && !inApp && (
+              <SiteButton variant="ghost" size="sm" className="hidden xl:inline-flex" onClick={() => explore("/home")}>
                 <Compass className="h-4 w-4" aria-hidden />
                 {t("headerExplore")}
               </SiteButton>
@@ -288,7 +289,7 @@ export function SiteHeader() {
         primaryCta={primaryCta}
         onExplore={() => {
           setDrawerOpen(false);
-          explore("/");
+          explore("/home");
         }}
         onSignIn={() => {
           setDrawerOpen(false);

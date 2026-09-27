@@ -13,7 +13,8 @@ export function Brand({
   inverted?: boolean;
   /**
    * Drop the "| डुलेको" half where the header is tight: `true` below 360px,
-   * "sm" below the sm breakpoint.
+   * "sm" below the sm breakpoint. Both also drop it between lg and xl, where
+   * the desktop nav joins the bar.
    */
   compact?: boolean | "sm";
   className?: string;
@@ -35,7 +36,12 @@ export function Brand({
         )}
       >
         Duleko
-        <span className={cn(compact === true && "hidden min-[360px]:inline", compact === "sm" && "hidden sm:inline")}>
+        <span
+          className={cn(
+            compact === true && "hidden min-[360px]:inline lg:hidden xl:inline",
+            compact === "sm" && "hidden sm:inline lg:hidden xl:inline",
+          )}
+        >
           <span className={cn("mx-1.5 font-normal", inverted ? "text-white/30" : "text-slate-300")} aria-hidden>
             |
           </span>

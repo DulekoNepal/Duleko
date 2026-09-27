@@ -119,7 +119,7 @@ export function PageContainer({ children, className }: { children: React.ReactNo
 // The search bar at the top of Home/Search is enough on its own - no separate
 // nav item for it (it's still reachable via /search, just not pinned here).
 const NAV = [
-  { to: "/", key: "navHome", icon: Home },
+  { to: "/home", key: "navHome", icon: Home },
   { to: "/work", key: "navWork", icon: Briefcase },
   { to: "/notifications", key: "navAlerts", icon: Bell },
   { to: "/chats", key: "navChats", icon: MessageCircle },
@@ -217,7 +217,7 @@ export function BottomNav() {
     >
       <div className="mx-auto flex max-w-3xl">
         {NAV.map(({ to, key, icon: Icon }) => {
-          const active = to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
+          const active = pathname === to || pathname.startsWith(`${to}/`);
           const badge = navBadgeFor(to, badges);
           return (
             <Link
@@ -263,7 +263,7 @@ export function TopNav() {
     <header className="sticky top-0 z-40 hidden border-b border-slate-200 bg-white/95 pt-[var(--sat)] backdrop-blur md:block">
       <div className="flex h-16 items-center gap-4 px-4 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-6">
         <Link
-          to="/"
+          to="/home"
           className="flex shrink-0 items-center gap-2.5 justify-self-start rounded-xl"
           aria-label={t("appName")}
         >
@@ -272,7 +272,7 @@ export function TopNav() {
         </Link>
         <nav className="flex flex-1 items-center justify-center gap-1" aria-label={t("mainNavLabel")}>
           {NAV.map(({ to, key, icon: Icon }) => {
-            const active = to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
+            const active = pathname === to || pathname.startsWith(`${to}/`);
             const badge = navBadgeFor(to, badges);
             return (
               <Link

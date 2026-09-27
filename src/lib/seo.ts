@@ -19,7 +19,8 @@ const PRIVATE_PREFIXES = [
   "/chat",
   "/chats",
   "/moderation",
-  "/welcome",
+  // The app's Home; the website's home at "/" is the page to index.
+  "/home",
 ];
 
 function isPrivate(pathname: string) {
@@ -48,8 +49,7 @@ function setCanonical(href: string) {
 
 export function syncSeoTags(pathname: string) {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-  // /welcome is the same landing page as "/", shown to members.
-  const url = `${seo.origin}${path === "/welcome" ? "/" : path}`;
+  const url = `${seo.origin}${path}`;
 
   setCanonical(url);
   setMeta("property", "og:url", url);

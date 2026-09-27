@@ -23,9 +23,11 @@ export const organization = {
 export const team = [
   {
     id: "sunil",
+    slug: "sunil-k-chaudhary",
     name: "Sunil K. Chaudhary",
     jobTitle: "Co-founder & Product Lead",
     image: "sunil",
+    imageSize: [858, 1024],
     profilePath: "/worker/fc5757c4-cd73-4dc0-b3d6-441c4c1dad00",
     sameAs: [],
     homeLocation: "Kapilvastu, Nepal",
@@ -40,9 +42,11 @@ export const team = [
   },
   {
     id: "sanjay",
+    slug: "sanjay-gupta",
     name: "Sanjay Gupta",
     jobTitle: "Co-founder & Tech Lead",
     image: "sanjay",
+    imageSize: [1080, 1440],
     profilePath: "/worker/b7bc1f68-7f04-4eb4-addd-df5d71db8e98",
     url: "https://guptasanjay.com.np",
     sameAs: ["https://guptasanjay.com.np"],
@@ -66,9 +70,11 @@ export const team = [
   },
   {
     id: "dipendra",
+    slug: "dipendra-chaudhary",
     name: "Dipendra Chaudhary",
     jobTitle: "Co-founder & Community Lead",
     image: "dipendra",
+    imageSize: [720, 900],
     profilePath: "/worker/541bf85d-3b39-465f-b14d-f0267ab09b10",
     sameAs: [],
     homeLocation: "Nepal",
@@ -121,7 +127,7 @@ const glossary = {
 /**
  * Page body for crawlers. Each block is one of:
  *   { p: "text" } | { h2: "text" } | { ul: ["item", ...] } | { quote: "text" }
- *   { team: true } | { skills: true } | { features: true }
+ *   { team: true } | { founder: id } | { skills: true } | { features: true }
  */
 export const content = {
   "/": {
@@ -171,6 +177,9 @@ export const content = {
       { features: true },
     ],
   },
+  "/about/sanjay-gupta": { h1: "Sanjay Gupta", blocks: [{ founder: "sanjay" }] },
+  "/about/sunil-k-chaudhary": { h1: "Sunil K. Chaudhary", blocks: [{ founder: "sunil" }] },
+  "/about/dipendra-chaudhary": { h1: "Dipendra Chaudhary", blocks: [{ founder: "dipendra" }] },
   "/mission": {
     h1: "A skill should not need a shop to become a business.",
     blocks: [
@@ -285,6 +294,9 @@ export const content = {
 export const breadcrumbNames = {
   "/search": "Find skilled people",
   "/about": "About Duleko",
+  "/about/sanjay-gupta": "Sanjay Gupta",
+  "/about/sunil-k-chaudhary": "Sunil K. Chaudhary",
+  "/about/dipendra-chaudhary": "Dipendra Chaudhary",
   "/mission": "Our Mission",
   "/individuals": "For Individuals",
   "/businesses": "For Businesses",

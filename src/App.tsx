@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Capacitor } from "@capacitor/core";
 import { AlertTriangle } from "lucide-react";
@@ -11,7 +11,6 @@ import { AuthScreen } from "@/routes/AuthScreen";
 import { OnboardingScreen } from "@/routes/OnboardingScreen";
 import { WelcomeChoiceScreen } from "@/components/duleko/WelcomeChoiceScreen";
 import { SiteActionsProvider, type SiteActions } from "@/components/duleko/Site";
-import { LandingPage } from "@/routes/site/LandingPage";
 import {
   BottomNav,
   TopNav,
@@ -56,7 +55,6 @@ const STATIC_PATHS = [
   "/partners",
   "/safety",
   "/registration-policy",
-  "/welcome",
 ];
 
 /** The Android app keeps its compact welcome screen; the web gets the full website. */
@@ -83,8 +81,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Routes someone can be sent straight to from outside the app.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isSharedProfileLink = pathname.startsWith("/worker/");
-  const isStaticPage = STATIC_PATHS.includes(pathname);
+  // "/" is the website's home (the app's Home is /home), and /about/<founder>
+  // pages are part of the website too. The Android app redirects "/" to /home.
+  const isStaticPage =
+    STATIC_PATHS.includes(pathname) || pathname.startsWith("/about/") || (pathname === "/" && !IS_NATIVE_APP);
+  // Sign-in opened from a website page goes back there on Back.
+  const authFromSite = useRef(false);
   const navigate = useNavigate();
+
+  // The auth screens live in the app (/home), so signing in lands there.
+  function openAuth(mode: "signin" | "signup") {
+    authFromSite.current = isStaticPage;
+    setAuthIntent(mode);
+    if (isStaticPage) void navigate({ to: "/home" });
+  }
+
+  function closeAuth() {
+    setAuthIntent(null);
+    if (authFromSite.current) {
+      authFromSite.current = false;
+      window.history.back();
+    }
+  }
 
   function enterGuest() {
     setGuestMode(true);
@@ -106,9 +124,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         window.history.back();
         return;
       }
-      void navigate({ to: session ? "/profile" : "/" });
+      void navigate({ to: session ? "/profile" : "/home" });
     },
-    explore: (to = "/") => {
+    explore: (to = "/home") => {
       if (!session) enterGuest();
       window.scrollTo({ top: 0 });
       void navigate({ to });
@@ -116,22 +134,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     createProfile: () => {
       window.scrollTo({ top: 0 });
       if (session) {
-        void navigate({ to: profile ? "/profile" : "/" });
+        void navigate({ to: profile ? "/profile" : "/home" });
         return;
       }
-      setAuthIntent("signup");
-      void navigate({ to: "/" });
+      openAuth("signup");
     },
     signIn: () => {
       window.scrollTo({ top: 0 });
       if (session) {
-        void navigate({ to: "/" });
+        void navigate({ to: "/home" });
         return;
       }
       // Same screen as "Create profile", on its sign-in step; its Back
       // returns to the website.
-      setAuthIntent("signin");
-      void navigate({ to: "/" });
+      openAuth("signin");
     },
   };
 
@@ -183,22 +199,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   if (!session) {
-    if (authIntent) return <AuthScreen initialMode={authIntent} onBack={() => setAuthIntent(null)} />;
-    // A shared profile link has to land on the profile. Showing a
-    // first-time visitor the sign-up choice instead throws away the deep
-    // link and makes every shared link look like a wall.
-    if (!guestMode && !isSharedProfileLink) {
-      if (IS_NATIVE_APP) {
-        return <WelcomeChoiceScreen onExplore={enterGuest} onSignIn={() => setAuthIntent("signin")} />;
-      }
-      return (
-        <SiteActionsProvider value={siteActions}>
-          <LandingPage />
-        </SiteActionsProvider>
-      );
+    if (authIntent) return <AuthScreen initialMode={authIntent} onBack={closeAuth} />;
+    // The Android app opens on a sign-in / explore choice. A shared profile
+    // link has to land on the profile, though - showing the choice instead
+    // throws away the deep link and makes every shared link look like a wall.
+    if (IS_NATIVE_APP && !guestMode && !isSharedProfileLink) {
+      return <WelcomeChoiceScreen onExplore={enterGuest} onSignIn={() => setAuthIntent("signin")} />;
     }
-    // Explored, hasn't signed in: the real app, read-only until they try
-    // something that needs an account - see useGuestMode().requestSignIn.
+    // On the web any app address (/home, /search, ...) opens the real app
+    // for signed-out visitors too, read-only until they try something that
+    // needs an account - see useGuestMode().requestSignIn. The website is "/".
     return (
       <GuestModeProvider value={{ isGuest: true, requestSignIn: () => setAuthIntent("signin") }}>
         <div className="min-h-dvh">

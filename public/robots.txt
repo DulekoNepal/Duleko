@@ -9,5 +9,6 @@ Disallow: /chat/
 Disallow: /chats
 Disallow: /moderation
 Disallow: /welcome
+Disallow: /home
 
 Sitemap: https://www.duleko.com/sitemap.xml

@@ -12,7 +12,8 @@
 // Bump a page's "lastmod" in seo-pages.json when its content changes.
 //
 // Titles/descriptions: src/lib/seo-pages.json. Everything else: seo-content.mjs.
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { breadcrumbNames, content, features, organization, skills, team } from "./seo-content.mjs";
 
@@ -32,13 +33,17 @@ function assetUrl(base) {
   if (!file) throw new Error(`seo-build: no bundled image for "${base}"`);
   return abs(`/assets/${file}`);
 }
-for (const m of team) m.imageUrl = assetUrl(m.image);
+for (const m of team) {
+  m.imageUrl = assetUrl(m.image);
+  m.pagePath = `/about/${m.slug}`;
+}
+const founderAt = (path) => team.find((m) => m.pagePath === path);
 
 const builder = team.find((m) => m.id === organization.builtBy);
 const ORG_ID = `${origin}/#organization`;
 const SITE_ID = `${origin}/#website`;
 const APP_ID = `${origin}/#app`;
-const personId = (m) => `${origin}/about#${m.id}`;
+const personId = (m) => `${abs(m.pagePath)}#person`;
 const LOGO = abs("/favicon.png");
 const OG_IMAGE = abs("/og-image.png");
 
@@ -52,8 +57,9 @@ function personLd(m) {
     jobTitle: m.jobTitle,
     description: m.bio[0],
     image: m.imageUrl,
-    url: m.url ?? abs(`/about#${m.id}`),
-    sameAs: [...m.sameAs, abs(m.profilePath)],
+    url: m.url ?? abs(m.pagePath),
+    mainEntityOfPage: abs(m.pagePath),
+    sameAs: [...m.sameAs, abs(m.pagePath), abs(m.profilePath)],
     worksFor: { "@id": ORG_ID },
     homeLocation: { "@type": "Place", name: m.homeLocation },
     nationality: { "@type": "Country", name: "Nepal" },
@@ -135,7 +141,17 @@ const appLd = {
 
 function pageLd(path, meta) {
   const url = abs(path);
-  const type = path === "/about" ? "AboutPage" : path === "/search" ? "SearchResultsPage" : "WebPage";
+  const founder = founderAt(path);
+  const type = founder
+    ? "ProfilePage"
+    : path === "/about"
+      ? "AboutPage"
+      : path === "/search"
+        ? "SearchResultsPage"
+        : "WebPage";
+  const image = founder
+    ? { "@type": "ImageObject", url: founder.imageUrl, width: founder.imageSize[0], height: founder.imageSize[1] }
+    : { "@type": "ImageObject", url: OG_IMAGE, width: 1200, height: 630 };
   const graph = [
     organizationLd,
     websiteLd,
@@ -147,25 +163,29 @@ function pageLd(path, meta) {
       description: meta.description,
       inLanguage: "en",
       isPartOf: { "@id": SITE_ID },
-      about: { "@id": ORG_ID },
+      about: { "@id": founder ? personId(founder) : ORG_ID },
       publisher: { "@id": ORG_ID },
-      primaryImageOfPage: { "@type": "ImageObject", url: OG_IMAGE, width: 1200, height: 630 },
+      primaryImageOfPage: image,
       ...(path !== "/" && { breadcrumb: { "@id": `${url}#breadcrumb` } }),
       ...(path === "/about" && { mainEntity: { "@id": ORG_ID } }),
+      ...(founder && { mainEntity: { "@id": personId(founder) } }),
     },
   ];
   if (path !== "/") {
+    const trail = founder ? ["/about", path] : [path];
     graph.push({
       "@type": "BreadcrumbList",
       "@id": `${url}#breadcrumb`,
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Home", item: abs("/") },
-        { "@type": "ListItem", position: 2, name: breadcrumbNames[path], item: url },
-      ],
+      itemListElement: [["/", "Home"], ...trail.map((p) => [p, breadcrumbNames[p]])].map(([p, name], i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name,
+        item: abs(p),
+      })),
     });
   }
   // The founders' full profiles wherever the page shows them.
-  if (content[path]?.blocks.some((b) => b.team) || path === "/about") graph.push(...team.map(personLd));
+  if (founder || content[path]?.blocks.some((b) => b.team) || path === "/about") graph.push(...team.map(personLd));
   else graph.push(personLd(builder));
   if (path === "/") graph.push(appLd);
   return JSON.stringify({ "@context": "https://schema.org", "@graph": graph }, null, 2).replace(/</g, "\\u003c");
@@ -173,7 +193,32 @@ function pageLd(path, meta) {
 
 // ---------------------------------------------------------- crawlable body
 
-const navLinks = Object.keys(pages).map((path) => [path, path === "/" ? "Home" : breadcrumbNames[path]]);
+function founderHtml(id) {
+  const m = team.find((t) => t.id === id);
+  const others = team.filter((t) => t.id !== id);
+  const education = [...m.alumniOf, ...m.affiliation];
+  return `<p><strong>${esc(m.jobTitle)}, Duleko</strong></p>
+<img src="${m.imageUrl}" alt="${esc(m.name)}, ${esc(m.jobTitle)} of Duleko" width="240" loading="lazy">
+<blockquote>"${esc(m.quote)}"</blockquote>
+${m.bio.map((p) => `<p>${esc(p)}</p>`).join("\n")}
+<h2>Focus areas</h2>
+<ul>${m.knowsAbout.map((k) => `<li>${esc(k)}</li>`).join("")}</ul>
+${education.length ? `<h2>Education and work</h2><ul>${education.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : ""}
+<p>${siteLinks(m)}</p>
+<h2>The other co-founders</h2>
+<p>Duleko was co-founded by ${team.map((t) => esc(t.name)).join(", ").replace(/, ([^,]*)$/, " and $1")}.</p>
+<ul>${others.map((o) => `<li><a href="${o.pagePath}">${esc(o.name)}</a> - ${esc(o.jobTitle)}</li>`).join("")}</ul>
+<p><a href="/about">About Duleko and the team</a></p>`;
+}
+
+const navLinks = Object.keys(pages)
+  .filter((path) => !founderAt(path))
+  .map((path) => [path, path === "/" ? "Home" : breadcrumbNames[path]]);
+
+const siteLinks = (m) =>
+  `<a href="${m.profilePath}">${esc(m.name)} on Duleko</a>${
+    m.url ? ` · <a href="${m.url}" rel="me">${esc(m.url.replace(/^https?:\/\//, ""))}</a>` : ""
+  }`;
 
 function teamHtml() {
   return team
@@ -185,9 +230,7 @@ function teamHtml() {
 <blockquote>"${esc(m.quote)}"</blockquote>
 ${m.bio.map((p) => `<p>${esc(p)}</p>`).join("\n")}
 <p>Focus areas: ${esc(m.knowsAbout.slice(0, 3).join(", "))}.</p>
-<p><a href="${m.profilePath}">${esc(m.name)} on Duleko</a>${
-        m.url ? ` · <a href="${m.url}" rel="me">${esc(m.url.replace(/^https?:\/\//, ""))}</a>` : ""
-      }</p>
+<p><a href="${m.pagePath}">Read ${esc(m.name.split(" ")[0])}'s full profile</a> · ${siteLinks(m)}</p>
 </article>`,
     )
     .join("\n");
@@ -204,6 +247,7 @@ function blockHtml(b) {
       .map(([group, list]) => `<h3>${esc(group)}</h3><ul>${list.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>`)
       .join("\n");
   if (b.team) return teamHtml();
+  if (b.founder) return founderHtml(b.founder);
   throw new Error(`seo-build: unknown block ${JSON.stringify(b)}`);
 }
 
@@ -243,6 +287,17 @@ function render(path, meta) {
   html = setMeta(html, /(<meta\s+property="og:description"\s+content=")[^"]*(")/, `$1${esc(meta.description)}$2`);
   html = setMeta(html, /(<meta name="twitter:title" content=")[^"]*(")/, `$1${esc(meta.title)}$2`);
   html = setMeta(html, /(<meta\s+name="twitter:description"\s+content=")[^"]*(")/, `$1${esc(meta.description)}$2`);
+  const founder = founderAt(path);
+  if (founder) {
+    const alt = esc(`${founder.name}, ${founder.jobTitle} of Duleko`);
+    html = setMeta(html, /(<meta property="og:image" content=")[^"]*(")/, `$1${founder.imageUrl}$2`);
+    html = setMeta(html, /(<meta property="og:image:width" content=")[^"]*(")/, `$1${founder.imageSize[0]}$2`);
+    html = setMeta(html, /(<meta property="og:image:height" content=")[^"]*(")/, `$1${founder.imageSize[1]}$2`);
+    html = setMeta(html, /(<meta property="og:image:alt" content=")[^"]*(")/, `$1${alt}$2`);
+    html = setMeta(html, /(<meta name="twitter:image" content=")[^"]*(")/, `$1${founder.imageUrl}$2`);
+    html = setMeta(html, /(<meta name="twitter:image:alt" content=")[^"]*(")/, `$1${alt}$2`);
+    html = setMeta(html, /(<meta property="og:type" content=")[^"]*(")/, `$1profile$2`);
+  }
   html = setMeta(
     html,
     /<script type="application\/ld\+json">[\s\S]*?<\/script>/,
@@ -254,6 +309,7 @@ function render(path, meta) {
 
 for (const [path, meta] of Object.entries(pages)) {
   const file = path === "/" ? "index.html" : `${path.slice(1)}.html`;
+  mkdirSync(dirname(`${dist}/${file}`), { recursive: true });
   writeFileSync(`${dist}/${file}`, render(path, meta));
 }
 
@@ -261,9 +317,10 @@ for (const [path, meta] of Object.entries(pages)) {
 
 const urls = Object.entries(pages)
   .map(([path, { changefreq, priority, lastmod }]) => {
+    const founder = founderAt(path);
     const images =
-      path === "/about"
-        ? team
+      path === "/about" || founder
+        ? (founder ? [founder] : team)
             .map(
               (m) => `
     <image:image>

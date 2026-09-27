@@ -68,7 +68,7 @@ export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: bool
   if (signedIn) {
     return (
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <SiteButton size="lg" variant={onDark ? "light" : "primary"} onClick={() => explore("/")}>
+        <SiteButton size="lg" variant={onDark ? "light" : "primary"} onClick={() => explore("/home")}>
           <Compass className="h-5 w-5" aria-hidden />
           {t("headerOpenDuleko")}
         </SiteButton>
@@ -79,7 +79,7 @@ export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: bool
   return (
     <div>
       <div className={cn("flex flex-col gap-3 sm:flex-row", closing && "sm:justify-center")}>
-        <SiteButton size="lg" variant={onDark ? "light" : "primary"} onClick={() => explore("/")}>
+        <SiteButton size="lg" variant={onDark ? "light" : "primary"} onClick={() => explore("/home")}>
           <Compass className="h-5 w-5" aria-hidden />
           {t("exploreDuleko")}
         </SiteButton>

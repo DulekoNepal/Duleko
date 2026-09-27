@@ -12,8 +12,7 @@ export type SitePath =
   | "/motivation"
   | "/privacy"
   | "/terms"
-  | "/registration-policy"
-  | "/welcome";
+  | "/registration-policy";
 
 export interface NavItem {
   to: SitePath;

@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
+  ArrowRight,
   ArrowUpRight,
   Building2,
   CheckCircle2,
@@ -36,8 +38,10 @@ const HOW_IT_WORKS_KEYS = [
   "walkthroughBody4",
 ] as const;
 
-interface Member {
+export interface Member {
   id: string;
+  /** Their own page: /about/<slug>. */
+  slug: string;
   nameKey: StringKey;
   roleKey: StringKey;
   affiliationKey: StringKey;
@@ -51,9 +55,10 @@ interface Member {
   image: string;
 }
 
-const TEAM: Member[] = [
+export const TEAM: Member[] = [
   {
     id: "sunil",
+    slug: "sunil-k-chaudhary",
     nameKey: "sunilName",
     roleKey: "sunilRole",
     affiliationKey: "sunilUniversity",
@@ -67,6 +72,7 @@ const TEAM: Member[] = [
   },
   {
     id: "sanjay",
+    slug: "sanjay-gupta",
     nameKey: "sanjayName",
     roleKey: "sanjayRole",
     affiliationKey: "sanjayLocation",
@@ -81,6 +87,7 @@ const TEAM: Member[] = [
   },
   {
     id: "dipendra",
+    slug: "dipendra-chaudhary",
     nameKey: "dipendraName",
     roleKey: "dipendraRole",
     affiliationKey: "dipendraLocation",
@@ -130,9 +137,18 @@ function ContactPill({
  * "Read full story"; tablets put photo and name side by side; desktops
  * split the card and alternate sides down the page.
  */
-function TeamProfileCard({ member, reversed }: { member: Member; reversed: boolean }) {
+export function TeamProfileCard({
+  member,
+  reversed,
+  standalone = false,
+}: {
+  member: Member;
+  reversed: boolean;
+  /** On the member's own page: the full bio, and no link to that page. */
+  standalone?: boolean;
+}) {
   const { t } = useI18n();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(standalone);
   const AffiliationIcon = member.affiliationIcon;
   const name = t(member.nameKey);
   const paragraphs = bioParagraphs(t(member.bioKey));
@@ -174,7 +190,15 @@ function TeamProfileCard({ member, reversed }: { member: Member; reversed: boole
               <span className="inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide ring-1 ring-white/25">
                 {t(member.roleKey)}
               </span>
-              <h3 className="mt-3 text-2xl font-bold leading-tight sm:text-[1.7rem]">{name}</h3>
+              <h3 className="mt-3 text-2xl font-bold leading-tight sm:text-[1.7rem]">
+                {standalone ? (
+                  name
+                ) : (
+                  <Link to="/about/$slug" params={{ slug: member.slug }} className="hover:underline">
+                    {name}
+                  </Link>
+                )}
+              </h3>
               <p className="mt-2 inline-flex items-start gap-1.5 text-sm text-brand-50/85">
                 <AffiliationIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" aria-hidden />
                 {t(member.affiliationKey)}
@@ -224,16 +248,18 @@ function TeamProfileCard({ member, reversed }: { member: Member; reversed: boole
               />
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            aria-expanded={expanded}
-            aria-controls={`${member.id}-bio`}
-            className="mt-3 inline-flex items-center gap-1 self-start text-sm font-semibold text-brand-700 hover:text-brand-800 lg:hidden"
-          >
-            {expanded ? t("showLess") : t("aboutReadFullStory")}
-            <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} aria-hidden />
-          </button>
+          {!standalone && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              aria-controls={`${member.id}-bio`}
+              className="mt-3 inline-flex items-center gap-1 self-start text-sm font-semibold text-brand-700 hover:text-brand-800 lg:hidden"
+            >
+              {expanded ? t("showLess") : t("aboutReadFullStory")}
+              <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} aria-hidden />
+            </button>
+          )}
 
           <div className="mt-auto pt-6">
             <p className="mb-2.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{t("aboutFocusAreas")}</p>
@@ -247,6 +273,16 @@ function TeamProfileCard({ member, reversed }: { member: Member; reversed: boole
                 </li>
               ))}
             </ul>
+            {!standalone && (
+              <Link
+                to="/about/$slug"
+                params={{ slug: member.slug }}
+                className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+              >
+                {t("founderFullProfile", { name: name.split(" ")[0] })}
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            )}
           </div>
         </div>
       </div>
