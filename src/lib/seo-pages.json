@@ -16,29 +16,29 @@
       "lastmod": "2026-09-27"
     },
     "/about": {
-      "title": "About Duleko - Founders and team | Duleko",
-      "description": "Duleko was founded by Sunil K. Chaudhary, Sanjay Gupta and Dipendra Chaudhary to connect local skills with local opportunities in Nepal. Meet the team behind it.",
+      "title": "About Duleko - Founder and team | Duleko",
+      "description": "Duleko was founded by Sunil K. Chaudhary to connect local skills with local opportunities in Nepal. Meet Sunil, Sanjay Gupta and Dipendra Chaudhary, the team behind it.",
       "priority": "0.8",
       "changefreq": "monthly",
       "lastmod": "2026-09-27"
     },
     "/about/sanjay-gupta": {
-      "title": "Sanjay Gupta - Co-founder & Tech Lead of Duleko",
-      "description": "Sanjay Gupta is the co-founder and Tech Lead of Duleko who designed and built the platform - web app, Android app and backend. Software Engineer from Chitkara University. Portfolio: guptasanjay.com.np.",
+      "title": "Sanjay Gupta - Tech Lead of Duleko",
+      "description": "Sanjay Gupta is the Tech Lead of Duleko who designed and built the platform - web app, Android app and backend. Software Engineer from Chitkara University. Portfolio: guptasanjay.com.np.",
       "priority": "0.8",
       "changefreq": "monthly",
       "lastmod": "2026-09-27"
     },
     "/about/sunil-k-chaudhary": {
-      "title": "Sunil K. Chaudhary - Co-founder & Product Lead of Duleko",
-      "description": "Sunil K. Chaudhary from Kapilvastu, Nepal, co-founded Duleko and leads its product vision, strategy and partnerships. He studies Mathematics and Economics at Haverford College and the University of Oxford.",
+      "title": "Sunil K. Chaudhary - Founder & Product Lead of Duleko",
+      "description": "Sunil K. Chaudhary from Kapilvastu, Nepal, founded Duleko and leads its product vision, strategy and partnerships. He studies Mathematics and Economics at Haverford College and the University of Oxford.",
       "priority": "0.8",
       "changefreq": "monthly",
       "lastmod": "2026-09-27"
     },
     "/about/dipendra-chaudhary": {
-      "title": "Dipendra Chaudhary - Co-founder & Community Lead of Duleko",
-      "description": "Dipendra Chaudhary co-founded Duleko and leads community outreach, user support and communications. Hospital Pharmacist at Lumbini Provincial Hospital, B.Pharm from Tribhuvan University.",
+      "title": "Dipendra Chaudhary - Community Lead of Duleko",
+      "description": "Dipendra Chaudhary is the Community Lead of Duleko and leads community outreach, user support and communications. Hospital Pharmacist at Lumbini Provincial Hospital, B.Pharm from Tribhuvan University.",
       "priority": "0.8",
       "changefreq": "monthly",
       "lastmod": "2026-09-27"
@@ -80,7 +80,7 @@
     },
     "/motivation": {
       "title": "Our Motivation - Why we built Duleko | Duleko",
-      "description": "Why Duleko's founders Sunil K. Chaudhary, Sanjay Gupta and Dipendra Chaudhary built a platform to turn local skills in Nepal into local opportunities.",
+      "description": "Why founder Sunil K. Chaudhary and the Duleko team, Sanjay Gupta and Dipendra Chaudhary, built a platform to turn local skills in Nepal into local opportunities.",
       "priority": "0.6",
       "changefreq": "monthly",
       "lastmod": "2026-09-27"

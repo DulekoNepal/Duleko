@@ -16,6 +16,8 @@ export const organization = {
   foundingLocation: "Kapilvastu, Nepal",
   areaServed: "Nepal",
   languages: ["English", "Nepali"],
+  // The person who founded Duleko - the only founder.
+  founder: "sunil",
   // The person who designed and built the platform (web app, Android app, backend).
   builtBy: "sanjay",
 };
@@ -25,7 +27,7 @@ export const team = [
     id: "sunil",
     slug: "sunil-k-chaudhary",
     name: "Sunil K. Chaudhary",
-    jobTitle: "Co-founder & Product Lead",
+    jobTitle: "Founder & Product Lead",
     image: "sunil",
     imageSize: [858, 1024],
     profilePath: "/worker/fc5757c4-cd73-4dc0-b3d6-441c4c1dad00",
@@ -44,7 +46,7 @@ export const team = [
     id: "sanjay",
     slug: "sanjay-gupta",
     name: "Sanjay Gupta",
-    jobTitle: "Co-founder & Tech Lead",
+    jobTitle: "Tech Lead",
     image: "sanjay",
     imageSize: [1080, 1440],
     profilePath: "/worker/b7bc1f68-7f04-4eb4-addd-df5d71db8e98",
@@ -72,7 +74,7 @@ export const team = [
     id: "dipendra",
     slug: "dipendra-chaudhary",
     name: "Dipendra Chaudhary",
-    jobTitle: "Co-founder & Community Lead",
+    jobTitle: "Community Lead",
     image: "dipendra",
     imageSize: [720, 900],
     profilePath: "/worker/541bf85d-3b39-465f-b14d-f0267ab09b10",
@@ -171,7 +173,7 @@ export const content = {
       { p: "People with valuable skills and people who need those skills often live in the same communities, yet finding one another can still be difficult." },
       { p: "We built Duleko to bridge that gap. Our goal is to make skills more visible, opportunities more accessible, and local connections more useful." },
       { h2: "The people behind Duleko" },
-      { p: "Duleko was co-founded by Sunil K. Chaudhary, Sanjay Gupta and Dipendra Chaudhary. The platform - the web app, the Android app and everything behind them - was designed and built by Sanjay Gupta." },
+      { p: "Duleko was founded by Sunil K. Chaudhary. The platform - the web app, the Android app and everything behind them - was designed and built by Sanjay Gupta." },
       { team: true },
       { h2: "What Duleko does" },
       { features: true },
@@ -244,7 +246,7 @@ export const content = {
   "/motivation": {
     h1: "Why we built Duleko",
     blocks: [
-      { p: "In the founders' own words." },
+      { p: "In our own words." },
       { p: "Duleko started from a plain observation: skilled people and the people who need them are usually close by, but there is no easy way for them to find each other beyond asking around. In Nepal's local communities, that gap costs both sides time, whether it is a worker who could use the job or an employer who could use the help." },
       { team: true },
     ],

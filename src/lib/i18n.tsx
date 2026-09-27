@@ -889,7 +889,7 @@ const strings = {
 
   // Motivation page
   motivationTitle: ["Why we built Duleko", "हामीले डुलेको किन बनायौं"],
-  motivationSubtitle: ["In the founders' own words", "संस्थापकहरूकै शब्दहरूमा"],
+  motivationSubtitle: ["In our own words", "हाम्रै शब्दहरूमा"],
   motivationIntro: [
     "Duleko started from a plain observation: skilled people and the people who need them are usually close by, but there is no easy way for them to find each other beyond asking around. In Nepal's local communities, that gap costs both sides time, whether it is a worker who could use the job or an employer who could use the help.",
     "डुलेको एउटा सामान्य अवलोकनबाट सुरु भयो: सिपालु मानिसहरू र तिनीहरूलाई चाहिने मानिसहरू सामान्यतया नजिकै हुन्छन्, तर वरिपरि सोध्नु बाहेक तिनीहरूलाई एकअर्कालाई भेट्टाउन कुनै सजिलो तरिका छैन। नेपालका स्थानीय समुदायहरूमा, त्यो खाडलले दुवैपट्टिलाई समय खर्च गराउँछ, चाहे काम चाहिने कामदार होस् वा सहयोग चाहिने काम दिने होस्।",
@@ -1240,7 +1240,7 @@ const strings = {
 
   // Team member specific translations
   sunilName: ["Sunil K. Chaudhary", "सुनिल के. चौधरी"],
-  sunilRole: ["Co-founder & Product Lead", "सह-संस्थापक र उत्पादन प्रमुख"],
+  sunilRole: ["Founder & Product Lead", "संस्थापक र उत्पादन प्रमुख"],
   sunilLocation: ["Kapilvastu, Nepal", "कपिलवस्तु, नेपाल"],
   sunilUniversity: ["Haverford College & University of Oxford", "ह्याभरफोर्ड कलेज र अक्सफोर्ड विश्वविद्यालय"],
   sunilBio: [
@@ -1252,7 +1252,7 @@ const strings = {
   sunilSkill3: ["Community Development", "समुदाय विकास"],
 
   sanjayName: ["Sanjay Gupta", "संजय गुप्ता"],
-  sanjayRole: ["Co-founder & Tech Lead", "सह-संस्थापक र प्राविधिक नेता"],
+  sanjayRole: ["Tech Lead", "प्राविधिक नेता"],
   sanjayLocation: ["Chitkara University", "चितकारा विश्वविद्यालय"],
   sanjayBio: [
     '"If someone who isn\'t technical can\'t use and understand Duleko, it doesn\'t matter how well I build."\n\nThat\'s the standard Sanjay holds Duleko\'s engineering to. As Tech Lead, he owns the platform end to end, from the web app to the native Android build, the database, and everything that keeps requests, chats, and profiles clear and reliable for people who should never need to think about the tech underneath.\n\nHe\'s a Software Engineer, graduating in 2027 from Chitkara University, and has built Duleko\'s stack from the ground up: a bilingual (English/Nepali) app backed by Supabase, with real-time chat, distance-based search, and a native Android release. At Duleko, Sanjay leads all technical decisions, architecture, infrastructure, and app releases, working hands-on with Sunil and Dipendra to make sure what the community actually needs is what gets built.',
@@ -1263,7 +1263,7 @@ const strings = {
   sanjaySkill3: ["System Architecture", "प्रणाली आर्किटेक्चर"],
 
   dipendraName: ["Dipendra Chaudhary", "दिपेन्द्र चौधरी"],
-  dipendraRole: ["Co-founder & Community Lead", "सह-संस्थापक र समुदाय प्रमुख"],
+  dipendraRole: ["Community Lead", "समुदाय प्रमुख"],
   dipendraLocation: ["Lumbini Provincial Hospital", "लुम्बिनी प्रादेशिक अस्पताल"],
   dipendraBio: [
     '"How do we make sure that every individual\'s unique skills are recognized and turned into real, local opportunities?"\n\nThat conviction powers Dipendra\'s work as Community & Communications Coordinator at Duleko. He earned his Bachelor of Pharmacy degree (2021) as a Ministry of Education merit scholar from Universal College of Medical Sciences, Tribhuvan University, and has served as a Hospital Pharmacist at Lumbini Provincial Hospital (2022 to present), working closely with healthcare professionals and multidisciplinary teams on research, data management, and public health initiatives.\n\nAt Duleko, Dipendra leads community outreach, user support, product coordination, and social media communications. Drawing on his experience in health research, leadership, and community engagement, he runs educational initiatives to help users navigate the platform, manages direct communication channels, gathers vital user feedback to guide technical improvements, and takes part in core team meetings to shape the platform\'s strategy.',

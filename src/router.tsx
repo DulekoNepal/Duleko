@@ -155,7 +155,7 @@ const aboutRoute = createRoute({
   component: AboutPage,
 });
 
-// Each co-founder's own page: /about/sanjay-gupta, ...
+// Each team member's own page: /about/sanjay-gupta, ...
 const founderRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/about/$slug",

@@ -5,8 +5,8 @@ import { useI18n } from "@/lib/i18n";
 import { TEAM, TeamProfileCard } from "./AboutPage";
 
 /**
- * One co-founder's own page (/about/<slug>) - the About page's card with the
- * full story, so each founder can be found and shared on their own.
+ * One team member's own page (/about/<slug>) - the About page's card with the
+ * full story, so each of them can be found and shared on their own.
  */
 export function FounderPage() {
   const { slug } = useParams({ from: "/about/$slug" });

@@ -3,7 +3,7 @@
 // pointing at the home page, and an empty <div id="root">. This writes a copy
 // per public page (served by Vercel's cleanUrls: /about -> about.html) with:
 //   - its own title, description, keywords, canonical and social tags
-//   - JSON-LD: the organization and its founders, the site, the app, the
+//   - JSON-LD: the organization and its founder, the site, the app, the
 //     page itself and its breadcrumb
 //   - the page's text as plain HTML inside #root, for crawlers and link
 //     previews that don't run JS (React replaces it on first render)
@@ -40,6 +40,7 @@ for (const m of team) {
 const founderAt = (path) => team.find((m) => m.pagePath === path);
 
 const builder = team.find((m) => m.id === organization.builtBy);
+const founderOf = team.find((m) => m.id === organization.founder);
 const ORG_ID = `${origin}/#organization`;
 const SITE_ID = `${origin}/#website`;
 const APP_ID = `${origin}/#app`;
@@ -87,7 +88,7 @@ const organizationLd = {
   foundingLocation: { "@type": "Place", name: organization.foundingLocation },
   areaServed: { "@type": "Country", name: organization.areaServed },
   knowsLanguage: ["en", "ne"],
-  founder: team.map((m) => ({ "@id": personId(m) })),
+  founder: { "@id": personId(founderOf) },
   employee: team.map((m) => ({ "@id": personId(m) })),
   numberOfEmployees: { "@type": "QuantitativeValue", value: team.length },
   contactPoint: {
@@ -184,7 +185,7 @@ function pageLd(path, meta) {
       })),
     });
   }
-  // The founders' full profiles wherever the page shows them.
+  // The team's full profiles wherever the page shows them.
   if (founder || content[path]?.blocks.some((b) => b.team) || path === "/about") graph.push(...team.map(personLd));
   else graph.push(personLd(builder));
   if (path === "/") graph.push(appLd);
@@ -205,8 +206,8 @@ ${m.bio.map((p) => `<p>${esc(p)}</p>`).join("\n")}
 <ul>${m.knowsAbout.map((k) => `<li>${esc(k)}</li>`).join("")}</ul>
 ${education.length ? `<h2>Education and work</h2><ul>${education.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : ""}
 <p>${siteLinks(m)}</p>
-<h2>The other co-founders</h2>
-<p>Duleko was co-founded by ${team.map((t) => esc(t.name)).join(", ").replace(/, ([^,]*)$/, " and $1")}.</p>
+<h2>The rest of the team</h2>
+<p>Duleko was founded by ${esc(founderOf.name)}.</p>
 <ul>${others.map((o) => `<li><a href="${o.pagePath}">${esc(o.name)}</a> - ${esc(o.jobTitle)}</li>`).join("")}</ul>
 <p><a href="/about">About Duleko and the team</a></p>`;
 }
@@ -263,7 +264,7 @@ function bodyHtml(path) {
 ${page.blocks.map(blockHtml).join("\n")}
 </main>
 <footer>
-<p>Duleko - ${esc(organization.tagline)} Founded by ${team.map((m) => esc(m.name)).join(", ").replace(/, ([^,]*)$/, " and $1")}. Built by <a href="${builder.url}">${esc(builder.name)}</a>.</p>
+<p>Duleko - ${esc(organization.tagline)} Founded by ${esc(founderOf.name)}. Built by <a href="${builder.url}">${esc(builder.name)}</a>.</p>
 <p>Contact: <a href="mailto:${organization.email}">${organization.email}</a> · Nepal · Made in Nepal, for Nepal.</p>
 </footer>
 </div>`;
