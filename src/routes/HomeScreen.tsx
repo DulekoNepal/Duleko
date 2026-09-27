@@ -22,7 +22,7 @@ import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { SkillCategoryBrowser, groupSkillsByCategory } from "@/components/duleko/SkillGrid";
 import { SkillIcon } from "@/components/duleko/SkillIcon";
 import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
-import { RatingLine, WorkerList, WorkerListSkeleton, WorkerRow } from "@/components/duleko/WorkerList";
+import { WorkerList, WorkerListSkeleton, WorkerRow } from "@/components/duleko/WorkerList";
 import { RequestWorkDialog } from "@/components/duleko/RequestWorkDialog";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -137,7 +137,7 @@ export function HomeScreen() {
 
       {/* No title row on desktop (the top bar has the logo), so the content
           starts where other screens' titles do. */}
-      <PageContainer className="space-y-5 md:space-y-6 md:pt-5">
+      <PageContainer className="space-y-4 md:space-y-6 md:pt-5">
         {profile ? (
           <MemberHero profile={profile} popular={popular} />
         ) : (
@@ -299,21 +299,26 @@ export function HomeScreen() {
 /* ------------------------------------------------------------------ */
 
 /**
- * A light card rather than a block of brand colour: identity on top, the
- * search as its own tinted band below. Green is kept to accents (the top
- * rule, availability, the search button) so the page's content - skills and
- * workers - stays what draws the eye.
+ * One plain white card, three rows: who you are and the question, the
+ * search, then popular skills. No gradients or colour blocks - green is
+ * kept to the search button and the availability dot, so the skills and
+ * workers below stay what draws the eye.
  */
 function HeroShell({ children }: { children: React.ReactNode }) {
   return (
-    <section className="animate-in-up relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="h-0.5 bg-gradient-to-r from-brand-500 via-brand-600 to-accent-500" aria-hidden />
-      <div
-        className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-brand-100/60 blur-3xl"
-        aria-hidden
-      />
-      <div className="relative">{children}</div>
+    <section className="animate-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      {children}
     </section>
+  );
+}
+
+/** Small line over the question - the greeting, or the tagline for a guest. */
+function HeroHeading({ eyebrow, title }: { eyebrow: React.ReactNode; title: string }) {
+  return (
+    <div className="min-w-0 flex-1">
+      <p className="flex min-w-0 items-center gap-1 text-xs text-slate-500">{eyebrow}</p>
+      <h2 className="mt-0.5 text-base font-bold leading-snug tracking-tight text-slate-900 sm:text-lg">{title}</h2>
+    </div>
   );
 }
 
@@ -323,7 +328,7 @@ function HeroSearch({ popular }: { popular: Skill[] }) {
   const [query, setQuery] = useState("");
 
   return (
-    <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-3.5 sm:px-5">
+    <div className="mt-4">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -331,11 +336,12 @@ function HeroSearch({ popular }: { popular: Skill[] }) {
         }}
         role="search"
       >
-        <label htmlFor="home-search" className="mb-1.5 block text-[13px] font-semibold text-slate-800">
+        {/* The question above is the visible prompt; this names the field. */}
+        <label htmlFor="home-search" className="sr-only">
           {t("homeHeroPrompt")}
         </label>
-        <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm transition-all focus-within:border-brand-400 focus-within:ring-4 focus-within:ring-brand-100">
-          <Search className="ml-2 h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+        <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 transition-colors focus-within:border-brand-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-100">
+          <Search className="ml-2.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden />
           <input
             id="home-search"
             type="search"
@@ -346,27 +352,25 @@ function HeroSearch({ popular }: { popular: Skill[] }) {
           />
           <button
             type="submit"
-            className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-700 px-3 font-semibold text-white transition-colors hover:bg-brand-800 sm:px-4"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-brand-700 text-sm font-semibold text-white transition-colors hover:bg-brand-800 sm:w-auto sm:px-4"
             aria-label={t("search")}
           >
             <ArrowRight className="h-4 w-4 sm:hidden" aria-hidden />
-            <span className="hidden text-sm sm:inline">{t("search")}</span>
+            <span className="hidden sm:inline">{t("search")}</span>
           </button>
         </div>
       </form>
 
       {popular.length > 0 && (
         // Swipes sideways on a phone rather than wrapping into a tall block.
-        <div className="no-scrollbar -mx-4 mt-2.5 flex items-center gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
-          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-            {t("popularSkills")}
-          </span>
+        <div className="no-scrollbar -mx-4 mt-3 flex items-center gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+          <span className="mr-0.5 shrink-0 text-xs text-slate-400">{t("popularSkills")}</span>
           {popular.map((skill) => (
             <Link
               key={skill.id}
               to="/search"
               search={{ skill: skill.id }}
-              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-brand-50 hover:text-brand-800"
             >
               <SkillIcon skillId={skill.id} className="h-3 w-3" />
               {skillName(skill, lang)}
@@ -379,23 +383,18 @@ function HeroSearch({ popular }: { popular: Skill[] }) {
 }
 
 function MemberHero({ profile, popular }: { profile: Profile; popular: Skill[] }) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const firstName = profile.full_name?.split(/\s+/)[0] ?? "";
 
   return (
     <HeroShell>
-      <div className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
+      <div className="flex items-center gap-3">
         <Link
           to="/profile"
           aria-label={t("myProfile")}
-          className="group relative shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+          className="relative shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
         >
-          <Avatar
-            name={profile.full_name}
-            src={profile.avatar_url}
-            size={48}
-            className="ring-2 ring-brand-50 transition-transform duration-200 group-hover:scale-105"
-          />
+          <Avatar name={profile.full_name} src={profile.avatar_url} size={44} />
           <span
             className={cn(
               "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white",
@@ -405,41 +404,33 @@ function MemberHero({ profile, popular }: { profile: Profile; popular: Skill[] }
           />
         </Link>
 
-        <div className="min-w-0 flex-1">
-          <p className="text-xs text-slate-500">{t(timeGreetingKey())}</p>
-          <h2 className="flex min-w-0 items-center gap-1.5 text-base font-bold leading-tight text-slate-900 sm:text-lg">
-            <span className="truncate">{t("greeting", { name: firstName })}</span>
-            <VerifiedBadge staffRole={profile.staff_role} verified={profile.is_verified} size={16} />
-          </h2>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-600">
-            {profile.district && (
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="h-3 w-3 text-brand-600" aria-hidden />
-                {districtLabel(profile.district, lang)}
+        <HeroHeading
+          eyebrow={
+            <>
+              <span className="truncate">
+                {t(timeGreetingKey())}, <span className="font-semibold text-slate-700">{firstName}</span>
               </span>
-            )}
-            <RatingLine rating={profile.rating} count={profile.rating_count} className="text-xs" />
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold",
-                profile.is_available ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-500",
-              )}
-            >
-              <span
-                className={cn("h-1.5 w-1.5 rounded-full", profile.is_available ? "bg-brand-500" : "bg-slate-400")}
-                aria-hidden
-              />
-              {profile.is_available ? t("availableForWork") : t("notAvailable")}
-            </span>
-          </div>
-        </div>
+              <VerifiedBadge staffRole={profile.staff_role} verified={profile.is_verified} size={13} />
+            </>
+          }
+          title={t("homeHeroPrompt")}
+        />
 
+        {/* Your work status, one tap from changing it on Profile. */}
         <Link
           to="/profile"
-          className="hidden h-8 shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-800 sm:inline-flex"
+          className={cn(
+            "hidden shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors sm:inline-flex",
+            profile.is_available
+              ? "bg-brand-50 text-brand-800 hover:bg-brand-100"
+              : "bg-slate-100 text-slate-500 hover:bg-slate-200",
+          )}
         >
-          {t("myProfile")}
-          <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+          <span
+            className={cn("h-1.5 w-1.5 rounded-full", profile.is_available ? "bg-brand-500" : "bg-slate-400")}
+            aria-hidden
+          />
+          {profile.is_available ? t("availableForWork") : t("notAvailable")}
         </Link>
       </div>
 
@@ -460,25 +451,22 @@ function GuestHero({
   const { t } = useI18n();
   return (
     <HeroShell>
-      <div className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:px-5">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <img
-            src={dulekoMark}
-            alt=""
-            className="h-11 w-11 shrink-0 rounded-xl object-cover shadow-sm ring-2 ring-brand-50"
-          />
-          <div className="min-w-0">
-            <h2 className="text-base font-bold leading-tight text-slate-900 sm:text-lg">{t("guestHeroTitle")}</h2>
-            <p className="mt-0.5 text-xs text-slate-500">{t("tagline")}</p>
-          </div>
-        </div>
+      <div className="flex items-center gap-3">
+        <img src={dulekoMark} alt="" className="h-11 w-11 shrink-0 rounded-xl object-cover" />
+        <HeroHeading eyebrow={<span className="truncate">{t("tagline")}</span>} title={t("guestHeroTitle")} />
         {showSignIn && (
-          <Button size="sm" onClick={onSignIn} className="w-full shrink-0 sm:w-auto">
+          <Button size="sm" onClick={onSignIn} className="hidden shrink-0 sm:inline-flex">
             <LogIn className="h-4 w-4" aria-hidden />
             {t("signUpOrLogIn")}
           </Button>
         )}
       </div>
+      {showSignIn && (
+        <Button size="sm" onClick={onSignIn} className="mt-3 w-full sm:hidden">
+          <LogIn className="h-4 w-4" aria-hidden />
+          {t("signUpOrLogIn")}
+        </Button>
+      )}
       <HeroSearch popular={popular} />
     </HeroShell>
   );
@@ -488,6 +476,11 @@ function GuestHero({
 /* Quick actions                                                       */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Four shortcuts, always one row. On a phone they're app-style icons with
+ * a label in one card; from sm up each becomes its own small card with a
+ * hint line.
+ */
 function QuickActions({ pending, unreadMessages }: { pending: number; unreadMessages: number }) {
   const { t, lang } = useI18n();
 
@@ -497,71 +490,39 @@ function QuickActions({ pending, unreadMessages }: { pending: number; unreadMess
     label: string;
     hint: string;
     badge?: number;
-    tone: string;
   }[] = [
-    {
-      to: "/search",
-      icon: Search,
-      label: t("quickFindWorkers"),
-      hint: t("quickFindWorkersHint"),
-      tone: "bg-brand-50 text-brand-700 group-hover:bg-brand-700 group-hover:text-white",
-    },
-    {
-      to: "/work",
-      icon: Briefcase,
-      label: t("myWork"),
-      hint: t("quickWorkHint"),
-      badge: pending,
-      tone: "bg-accent-50 text-accent-600 group-hover:bg-accent-500 group-hover:text-white",
-    },
-    {
-      to: "/chats",
-      icon: MessageCircle,
-      label: t("chatsTitle"),
-      hint: t("quickChatsHint"),
-      badge: unreadMessages,
-      tone: "bg-sky-50 text-navy-600 group-hover:bg-navy-600 group-hover:text-white",
-    },
-    {
-      to: "/friends",
-      icon: Users,
-      label: t("callFriends"),
-      hint: t("quickFriendsHint"),
-      tone: "bg-teal-50 text-teal-700 group-hover:bg-teal-700 group-hover:text-white",
-    },
+    { to: "/search", icon: Search, label: t("quickFindWorkers"), hint: t("quickFindWorkersHint") },
+    { to: "/work", icon: Briefcase, label: t("myWork"), hint: t("quickWorkHint"), badge: pending },
+    { to: "/chats", icon: MessageCircle, label: t("chatsTitle"), hint: t("quickChatsHint"), badge: unreadMessages },
+    { to: "/friends", icon: Users, label: t("callFriends"), hint: t("quickFriendsHint") },
   ];
 
   return (
-    // Four across, except at md - that's where the desktop sidebar takes
-    // 240px, leaving the content column narrower than just below it.
     <nav
       aria-label={t("quickActions")}
-      className="animate-in-up grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-2 lg:grid-cols-4"
+      className="animate-in-up grid grid-cols-4 gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:gap-3 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none"
       style={{ "--delay": "30ms" } as CSSProperties}
     >
-      {actions.map(({ to, icon: Icon, label, hint, badge, tone }) => (
+      {actions.map(({ to, icon: Icon, label, hint, badge }) => (
         <Link
           key={to}
           to={to}
-          className="group relative flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+          className="group flex min-w-0 flex-col items-center gap-1.5 rounded-xl px-1 py-2 text-center transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 sm:flex-row sm:gap-2.5 sm:border sm:border-slate-200 sm:bg-white sm:p-3 sm:text-left sm:shadow-sm sm:hover:border-brand-300 sm:hover:bg-white"
         >
-          <span
-            className={cn(
-              "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200",
-              tone,
-            )}
-          >
-            <Icon className="h-4 w-4" aria-hidden />
+          <span className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition-colors group-hover:bg-brand-700 group-hover:text-white sm:h-9 sm:w-9 sm:rounded-lg">
+            <Icon className="h-4.5 w-4.5 sm:h-4 sm:w-4" aria-hidden />
+            {badge ? (
+              <span className="absolute -right-1.5 -top-1.5 min-w-4.5 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-[18px] text-white ring-2 ring-white">
+                {formatNumber(badge > 9 ? "9+" : badge, lang)}
+              </span>
+            ) : null}
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[13px] font-semibold text-slate-900">{label}</span>
-            <span className="block truncate text-[11px] text-slate-500">{hint}</span>
-          </span>
-          {badge ? (
-            <span className="absolute -right-1 -top-1 min-w-4.5 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-[18px] text-white shadow-sm ring-2 ring-white">
-              {formatNumber(badge > 9 ? "9+" : badge, lang)}
+          <span className="w-full min-w-0 sm:flex-1">
+            <span className="block truncate text-[11px] font-medium text-slate-700 sm:text-[13px] sm:font-semibold sm:text-slate-900">
+              {label}
             </span>
-          ) : null}
+            <span className="hidden truncate text-[11px] text-slate-500 sm:block">{hint}</span>
+          </span>
         </Link>
       ))}
     </nav>
