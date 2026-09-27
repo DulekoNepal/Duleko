@@ -908,9 +908,7 @@ export function ProfileScreen() {
                   </div>
                 </div>
 
-                {strengthPercent < 100 && (
-                  <ProfileStrength percent={strengthPercent} checks={strengthChecks} onComplete={startEditing} />
-                )}
+                <ProfileStrength percent={strengthPercent} checks={strengthChecks} onComplete={startEditing} />
 
                 <div className="grid grid-cols-1 gap-3 md:gap-4 @3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @3xl:items-start">
                   <SectionCard
@@ -1427,7 +1425,11 @@ function StatTile({
   );
 }
 
-/** How complete the profile is: a ring, and every check as a chip - the missing ones open the editor. */
+/**
+ * How complete the profile is: a ring, and every check as a chip - the
+ * missing ones open the editor. Stays on the page at 100% too, as a
+ * finished badge rather than disappearing.
+ */
 function ProfileStrength({
   percent,
   checks,
@@ -1474,7 +1476,9 @@ function ProfileStrength({
             <h3 className="text-sm font-semibold text-slate-900">
               {t("profileCompleteTitle", { percent: formatNumber(percent, lang) })}
             </h3>
-            <p className="mt-0.5 text-xs leading-snug text-slate-500">{t("profileCompleteHint")}</p>
+            <p className="mt-0.5 text-xs leading-snug text-slate-500">
+              {t(percent >= 100 ? "profileCompleteDoneHint" : "profileCompleteHint")}
+            </p>
           </div>
         </div>
 

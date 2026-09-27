@@ -223,6 +223,10 @@ const strings = {
     "A complete profile helps people nearby find and trust you.",
     "पूरा प्रोफाइलले नजिकका मानिसहरूलाई तपाईंलाई भेट्टाउन र विश्वास गर्न मद्दत गर्छ।",
   ],
+  profileCompleteDoneHint: [
+    "Everything people look for is filled in - keep it up to date.",
+    "मानिसहरूले खोज्ने सबै कुरा भरिएको छ - यसलाई अद्यावधिक राख्नुहोस्।",
+  ],
   profileItemPhoto: ["Add a profile photo", "प्रोफाइल फोटो थप्नुहोस्"],
   profileItemAbout: ["Write a short intro", "छोटो परिचय लेख्नुहोस्"],
   profileItemLocation: ["Set your location", "आफ्नो स्थान राख्नुहोस्"],
