@@ -57,7 +57,7 @@ export function WorkerRow({
   const unavailable = showAvailability && !worker.is_available;
 
   return (
-    <li className="relative flex items-center gap-3 px-4 py-3.5 transition-colors duration-150 hover:bg-slate-50 sm:gap-4 sm:px-5">
+    <li className="relative flex items-center gap-3 px-3.5 py-2.5 transition-colors duration-150 hover:bg-slate-50 sm:px-4">
       <Link
         to="/worker/$workerId"
         params={{ workerId: worker.id }}
@@ -65,19 +65,19 @@ export function WorkerRow({
         aria-label={worker.full_name}
       />
 
-      <Avatar name={worker.full_name} src={worker.avatar_url} size={48} online={online} />
+      <Avatar name={worker.full_name} src={worker.avatar_url} size={40} online={online} />
 
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1">
-          <h3 className="truncate font-semibold text-slate-900">{worker.full_name}</h3>
+          <h3 className="truncate text-sm font-semibold text-slate-900">{worker.full_name}</h3>
           <VerifiedBadge staffRole={worker.staff_role} verified={worker.is_verified} />
         </div>
 
         {skills.length > 0 && (
-          <p className="mt-0.5 truncate text-sm text-slate-600">{skills.slice(0, 3).join(" · ")}</p>
+          <p className="truncate text-xs text-slate-600">{skills.slice(0, 3).join(" · ")}</p>
         )}
 
-        <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-slate-500">
+        <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] text-slate-500">
           {worker.rating_count > 0 ? (
             <span className="inline-flex shrink-0 items-center gap-1">
               <Star className="h-3 w-3 fill-sun-400 text-sun-400" aria-hidden />
@@ -117,7 +117,7 @@ export function WorkerRow({
         <button
           type="button"
           onClick={onRequest}
-          className="relative z-10 h-9 shrink-0 rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-semibold text-brand-700 transition-colors hover:border-brand-600 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+          className="relative z-10 h-8 shrink-0 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-brand-700 transition-colors hover:border-brand-600 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
         >
           {t("requestShort")}
         </button>
@@ -141,14 +141,14 @@ export function WorkerListSkeleton({ rows = 3 }: { rows?: number }) {
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
       <ul className="divide-y divide-slate-100">
         {Array.from({ length: rows }).map((_, i) => (
-          <li key={i} className="flex items-center gap-3 px-4 py-3.5 sm:gap-4 sm:px-5">
-            <div className="skeleton h-12 w-12 shrink-0 rounded-full" />
+          <li key={i} className="flex items-center gap-3 px-3.5 py-2.5 sm:px-4">
+            <div className="skeleton h-10 w-10 shrink-0 rounded-full" />
             <div className="min-w-0 flex-1">
               <div className="skeleton h-4 w-36" />
               <div className="skeleton mt-2 h-3 w-44 max-w-full" />
               <div className="skeleton mt-1.5 h-3 w-28" />
             </div>
-            <div className="skeleton h-9 w-20 shrink-0 rounded-lg" />
+            <div className="skeleton h-8 w-16 shrink-0 rounded-lg" />
           </li>
         ))}
       </ul>

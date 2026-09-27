@@ -44,7 +44,7 @@ export function WelcomeWalkthrough({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 sm:items-center">
-      <div className="w-full max-w-sm rounded-t-3xl bg-white p-6 shadow-xl sm:rounded-2xl">
+      <div className="w-full max-w-sm rounded-t-3xl bg-white p-5 shadow-xl sm:rounded-2xl">
         <div className="flex justify-end">
           <button
             type="button"
@@ -56,11 +56,11 @@ export function WelcomeWalkthrough({ onDone }: { onDone: () => void }) {
         </div>
 
         <div className="mt-2 flex flex-col items-center text-center">
-          <span className="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
-            <Icon className="h-8 w-8" aria-hidden />
+          <span className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+            <Icon className="h-6 w-6" aria-hidden />
           </span>
-          <h2 className="text-lg font-bold text-slate-900">{t(slide.titleKey)}</h2>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">{t(slide.bodyKey)}</p>
+          <h2 className="text-base font-bold text-slate-900">{t(slide.titleKey)}</h2>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">{t(slide.bodyKey)}</p>
         </div>
 
         <div className="my-6 flex items-center justify-center gap-1.5">

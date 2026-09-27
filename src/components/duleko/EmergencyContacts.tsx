@@ -89,11 +89,11 @@ function EmergencyContactGrid({ contacts }: { contacts: EmergencyContact[] }) {
           <a
             key={contact.id}
             href={telHref(contact.number)}
-            className="group flex flex-col items-center gap-1.5 rounded-2xl px-1 py-3 text-center transition-colors duration-200 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
+            className="group flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-center transition-colors duration-200 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
             aria-label={`${t(contact.labelKey)}: ${contact.number}`}
           >
             <Icon
-              className="h-6 w-6 text-red-600 transition-transform duration-200 group-hover:scale-110"
+              className="h-5 w-5 text-red-600 transition-transform duration-200 group-hover:scale-110"
               aria-hidden
             />
             <span className="line-clamp-2 text-[11px] font-medium leading-tight text-slate-700">
@@ -144,13 +144,13 @@ export function EmergencyContactsSection() {
           }
         >
           <span className="inline-flex items-center gap-2">
-            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-700">
-              <Siren className="h-4 w-4" aria-hidden />
+            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-red-100 text-red-700">
+              <Siren className="h-3.5 w-3.5" aria-hidden />
             </span>
             {t("emergencyContacts")}
           </span>
         </SectionTitle>
-        <p className="-mt-2 mb-3 text-xs text-slate-500">{t("emergencyContactsHint")}</p>
+        <p className="-mt-1.5 mb-2 text-[11px] text-slate-500">{t("emergencyContactsHint")}</p>
         <EmergencyContactGrid contacts={visible} />
       </CardBody>
     </Card>

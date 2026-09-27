@@ -415,7 +415,7 @@ export function ChatScreen() {
     // From md up the chat sits in a card with the same width and gutters as
     // every other screen (PAGE_WIDTH/PAGE_GUTTER), 1.5rem under the top bar.
     // Phones stay edge to edge.
-    <div className="h-dvh md:h-[calc(100dvh-4rem-1px-var(--sat))] md:py-6">
+    <div className="h-dvh md:h-[calc(100dvh-3.5rem-1px-var(--sat))] md:py-4">
       <div className={cn("mx-auto h-full w-full max-md:px-0", PAGE_WIDTH, PAGE_GUTTER)}>
       <div className="flex h-full overflow-hidden bg-white md:rounded-2xl md:border md:border-slate-200 md:shadow-sm">
       {split && <ChatsPane typingFrom={typingFrom} activeId={otherId} showDivisions={false} />}
@@ -423,12 +423,12 @@ export function ChatScreen() {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* ---- Thread header ------------------------------------------- */}
         <header className="z-20 border-b border-slate-200 bg-white/95 pt-[var(--sat)] backdrop-blur md:pt-0">
-          <div className="flex h-16 items-center gap-2 px-2 sm:gap-3 sm:px-4 lg:h-[72px]">
+          <div className="flex h-14 items-center gap-2 px-2 sm:gap-3 sm:px-4 lg:h-16">
             {!split && (
               <button
                 type="button"
                 onClick={() => window.history.back()}
-                className="rounded-xl p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100"
+                className="rounded-lg p-1.5 text-slate-500 transition-colors duration-200 hover:bg-slate-100"
                 aria-label={t("back")}
               >
                 <ArrowLeft className="h-5 w-5" aria-hidden />
@@ -438,15 +438,15 @@ export function ChatScreen() {
             <Link
               to="/worker/$workerId"
               params={{ workerId: otherId }}
-              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1.5 py-1 transition-colors hover:bg-slate-50"
+              className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-1.5 py-1 transition-colors hover:bg-slate-50"
             >
-              <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={42} online={isOnline} />
+              <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={36} online={isOnline} />
               <span className="min-w-0">
                 <span className="flex min-w-0 items-center gap-1.5">
-                  <span className="truncate font-semibold text-slate-900">{otherName}</span>
+                  <span className="truncate text-sm font-semibold text-slate-900">{otherName}</span>
                   <VerifiedBadge staffRole={other.data?.staff_role} verified={other.data?.is_verified} size={15} />
                 </span>
-                <span className="block truncate text-xs">
+                <span className="block truncate text-[11px]">
                   {otherTyping ? (
                     <span className="inline-flex items-center gap-1.5 font-medium text-brand-700">
                       <TypingDots />
@@ -469,9 +469,9 @@ export function ChatScreen() {
             <Link
               to="/worker/$workerId"
               params={{ workerId: otherId }}
-              className="hidden h-10 shrink-0 items-center gap-2 rounded-xl border border-slate-200 px-3.5 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-800 sm:inline-flex"
+              className="hidden h-8 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-800 sm:inline-flex"
             >
-              <UserRound className="h-4 w-4" aria-hidden />
+              <UserRound className="h-3.5 w-3.5" aria-hidden />
               {t("viewProfile")}
             </Link>
             {/* The list pane beside it already has one on desktop. */}
@@ -496,7 +496,7 @@ export function ChatScreen() {
             }}
             className="relative h-full overflow-y-auto overflow-x-hidden"
           >
-            <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-3 py-4 sm:px-6">
+            <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-3 py-3 sm:px-5">
               {messages.isLoading ? (
                 <div className="space-y-3 py-4" aria-label={t("loading")}>
                   {[48, 64, 40, 56].map((w, i) => (
@@ -509,10 +509,10 @@ export function ChatScreen() {
                 // An empty thread gets a proper welcome - who you're talking
                 // to, and a few one-tap openers.
                 <div className="m-auto flex max-w-sm flex-col items-center py-10 text-center">
-                  <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={80} online={isOnline} className="ring-4 ring-white shadow-md" />
-                  <p className="mt-4 text-lg font-bold text-slate-900">{t("sayHelloTo", { name: otherName })}</p>
-                  <p className="mt-1 text-sm text-slate-500">{t("chatStarterHint")}</p>
-                  <div className="mt-5 flex flex-wrap justify-center gap-2">
+                  <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={64} online={isOnline} className="ring-4 ring-white shadow-md" />
+                  <p className="mt-3 text-base font-bold text-slate-900">{t("sayHelloTo", { name: otherName })}</p>
+                  <p className="mt-1 text-xs text-slate-500">{t("chatStarterHint")}</p>
+                  <div className="mt-4 flex flex-wrap justify-center gap-1.5">
                     {starters.map((s) => (
                       <button
                         key={s}
@@ -521,7 +521,7 @@ export function ChatScreen() {
                           onDraftChange(s);
                           inputRef.current?.focus();
                         }}
-                        className="rounded-full border border-brand-200 bg-white px-3.5 py-2 text-sm font-medium text-brand-800 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-50"
+                        className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-[13px] font-medium text-brand-800 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-50"
                       >
                         {s}
                       </button>
@@ -548,7 +548,7 @@ export function ChatScreen() {
                   {rows.map(({ m, newDay, firstInRun, lastInRun }) => (
                     <div key={m.id}>
                       {newDay && (
-                        <div className="my-4 flex items-center gap-3" role="separator">
+                        <div className="my-3 flex items-center gap-3" role="separator">
                           <span className="h-px flex-1 bg-slate-200" aria-hidden />
                           <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-500 shadow-sm ring-1 ring-slate-200">
                             {formatDayLabel(m.created_at, lang)}
@@ -619,8 +619,8 @@ export function ChatScreen() {
               className={cn(
                 "absolute bottom-4 z-20 inline-flex items-center gap-1.5 rounded-full shadow-lg transition-all duration-200",
                 unreadBelow
-                  ? "left-1/2 -translate-x-1/2 bg-brand-700 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-800"
-                  : "right-4 h-10 w-10 justify-center bg-white text-slate-600 ring-1 ring-slate-200 hover:text-brand-700",
+                  ? "left-1/2 -translate-x-1/2 bg-brand-700 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-brand-800"
+                  : "right-4 h-9 w-9 justify-center bg-white text-slate-600 ring-1 ring-slate-200 hover:text-brand-700",
               )}
             >
               <ArrowDown className="h-4 w-4" aria-hidden />
@@ -631,7 +631,7 @@ export function ChatScreen() {
 
         {/* ---- Composer ------------------------------------------------- */}
         <form
-          className="border-t border-slate-200 bg-white px-3 pb-[calc(0.75rem+var(--sab))] pt-3 sm:px-4"
+          className="border-t border-slate-200 bg-white px-3 pb-[calc(0.5rem+var(--sab))] pt-2 sm:px-4"
           onSubmit={(e) => {
             e.preventDefault();
             submit();
@@ -673,11 +673,11 @@ export function ChatScreen() {
                   aria-expanded={emojiOpen}
                   aria-label={t("addEmoji")}
                   className={cn(
-                    "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors",
+                    "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
                     emojiOpen ? "bg-brand-50 text-brand-700" : "text-slate-500 hover:bg-slate-100 hover:text-brand-700",
                   )}
                 >
-                  <Smile className="h-5 w-5" aria-hidden />
+                  <Smile className="h-4.5 w-4.5" aria-hidden />
                 </button>
                 {/* Deliberately not autofocused: on a phone the keyboard would
                     spring up and resize the viewport just as the thread is
@@ -698,21 +698,21 @@ export function ChatScreen() {
                   placeholder={editing ? t("editMessagePlaceholder") : t("chatPlaceholder")}
                   maxLength={1000}
                   aria-label={t("chatPlaceholder")}
-                  className="max-h-32 min-h-10 min-w-0 flex-1 resize-none bg-transparent py-2 text-[15px] leading-6 text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                  className="max-h-32 min-h-9 min-w-0 flex-1 resize-none bg-transparent py-1.5 text-[15px] leading-6 text-slate-900 placeholder:text-slate-400 focus:outline-none"
                 />
               </div>
               <button
                 type="submit"
                 disabled={!draft.trim() || send.isPending || saveEdit.isPending}
                 aria-label={editing ? t("save") : t("send")}
-                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-700 text-white shadow-md shadow-brand-900/15 transition-all duration-200 hover:bg-brand-800 active:scale-95 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-700 text-white shadow-md shadow-brand-900/15 transition-all duration-200 hover:bg-brand-800 active:scale-95 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
               >
                 {send.isPending || saveEdit.isPending ? (
-                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                 ) : editing ? (
-                  <Check className="h-5 w-5" aria-hidden />
+                  <Check className="h-4 w-4" aria-hidden />
                 ) : (
-                  <Send className="h-5 w-5 -translate-x-px translate-y-px" aria-hidden />
+                  <Send className="h-4 w-4 -translate-x-px translate-y-px" aria-hidden />
                 )}
               </button>
 

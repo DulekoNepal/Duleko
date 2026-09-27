@@ -50,7 +50,7 @@ export function FriendsPanel() {
 
   return (
     <>
-      <Card className="mb-4">
+      <Card className="mb-3">
         <CardBody>
           <SectionTitle>{t("friendRequests")}</SectionTitle>
           {requests.isLoading ? (
@@ -60,8 +60,8 @@ export function FriendsPanel() {
           ) : (
             <ul className="divide-y divide-slate-100">
               {(requests.data ?? []).map((r) => (
-                <li key={r.id} className="flex items-center gap-3 py-2.5">
-                  <Avatar name={r.other.full_name} src={r.other.avatar_url} size={40} profileId={r.other.id} />
+                <li key={r.id} className="flex items-center gap-3 py-2">
+                  <Avatar name={r.other.full_name} src={r.other.avatar_url} size={36} profileId={r.other.id} />
                   <span className="flex-1 truncate text-sm font-medium text-slate-800">
                     {r.other.full_name}
                   </span>
@@ -97,15 +97,15 @@ export function FriendsPanel() {
           ) : (
             <ul className="divide-y divide-slate-100">
               {(friends.data ?? []).map((f) => (
-                <li key={f.id} className="flex items-center gap-3 py-2.5">
+                <li key={f.id} className="flex items-center gap-3 py-2">
                   <button
                     type="button"
                     onClick={() => navigate({ to: "/worker/$workerId", params: { workerId: f.other.id } })}
                     className="flex min-w-0 flex-1 items-center gap-3 text-left"
                   >
-                    <Avatar name={f.other.full_name} src={f.other.avatar_url} size={40} />
+                    <Avatar name={f.other.full_name} src={f.other.avatar_url} size={36} />
                     <span className="flex min-w-0 items-center gap-1.5 truncate text-sm font-medium text-slate-800">
-                      <UserCheck className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+                      <UserCheck className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
                       <span className="truncate">{f.other.full_name}</span>
                     </span>
                   </button>

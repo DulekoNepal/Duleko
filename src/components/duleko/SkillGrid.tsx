@@ -63,13 +63,13 @@ export function SkillGrid({
           to="/search"
           search={{ skill: skill.id }}
           className={cn(
-            "group flex flex-col items-center gap-1.5 rounded-2xl px-1 py-3 text-center transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2",
+            "group flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-center transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2",
             twoRows && i >= 16 && "hidden",
             twoRows && i >= 12 && i < 16 && "max-lg:hidden",
             twoRows && i >= 8 && i < 12 && "max-sm:hidden",
           )}
         >
-          <SkillIcon skillId={skill.id} className="h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
+          <SkillIcon skillId={skill.id} className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
           <span className="line-clamp-2 text-[11px] font-medium leading-tight text-slate-700">
             {skillName(skill, lang)}
           </span>
@@ -102,7 +102,7 @@ export function SkillCategoryBrowser({
   if (categories.length === 0) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {categories.map((category) => (
         <SkillCategorySection
           key={category}
@@ -139,29 +139,29 @@ function SkillCategorySection({
     >
       <h3
         id={`skill-category-${category}`}
-        className="flex items-center gap-2 px-4 pt-3.5 text-sm font-semibold text-slate-800"
+        className="flex items-center gap-2 px-3.5 pt-3 text-[13px] font-semibold text-slate-800"
       >
-        <Icon className="h-4 w-4 shrink-0 text-brand-700" aria-hidden />
+        <Icon className="h-3.5 w-3.5 shrink-0 text-brand-700" aria-hidden />
         <span className="min-w-0 truncate">{t(SKILL_CATEGORY_LABEL[category])}</span>
-        <span className="shrink-0 text-xs font-medium text-slate-400">{formatNumber(n, lang)}</span>
+        <span className="shrink-0 text-[11px] font-medium text-slate-400">{formatNumber(n, lang)}</span>
       </h3>
       <SkillGrid
         skills={skills}
         counts={counts}
         twoRows={!expanded}
-        className="px-2 pb-2 pt-1 sm:grid-cols-6 lg:grid-cols-8"
+        className="px-1.5 pb-1.5 pt-0.5 sm:grid-cols-6 lg:grid-cols-8"
       />
       {toggleVisibility !== null && (
-        <div className={cn("flex justify-center border-t border-slate-100 py-1.5", toggleVisibility)}>
+        <div className={cn("flex justify-center border-t border-slate-100 py-1", toggleVisibility)}>
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
-            className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold text-brand-700 transition-colors duration-200 hover:bg-brand-50 hover:text-brand-800"
+            className="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-semibold text-brand-700 transition-colors duration-200 hover:bg-brand-50 hover:text-brand-800"
           >
             {expanded ? t("showLess") : t("seeMore")}
             <ChevronDown
-              className={cn("h-4 w-4 transition-transform duration-200", expanded && "rotate-180")}
+              className={cn("h-3.5 w-3.5 transition-transform duration-200", expanded && "rotate-180")}
               aria-hidden
             />
           </button>
@@ -185,16 +185,16 @@ export function SkillPicker({
   const groups = groupSkillsByCategory(skills);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {SKILL_CATEGORY_ORDER.map((category) => {
         const group = groups[category];
         if (group.length === 0) return null;
         return (
           <div key={category}>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
               {t(SKILL_CATEGORY_LABEL[category])}
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {group.map((skill) => {
                 const active = selected.includes(skill.id);
                 return (
@@ -204,7 +204,7 @@ export function SkillPicker({
                     onClick={() => onToggle(skill.id)}
                     aria-pressed={active}
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 active:scale-[0.97]",
+                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 active:scale-[0.97]",
                       active
                         ? "border-brand-600 bg-brand-600 text-white"
                         : "border-slate-300 bg-white text-slate-700 hover:border-brand-300",

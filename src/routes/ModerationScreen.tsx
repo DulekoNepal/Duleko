@@ -59,11 +59,11 @@ export function ModerationScreen() {
     <>
       <AppHeader title={t("moderation")} subtitle={t("moderationHint")} />
       <PageContainer>
-        <div className="mb-4 flex items-center gap-2">
-          <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-            <ClipboardList className="h-4 w-4" aria-hidden />
+        <div className="mb-3 flex items-center gap-2">
+          <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-700">
+            <ClipboardList className="h-3.5 w-3.5" aria-hidden />
           </span>
-          <h2 className="text-base font-semibold text-slate-900">{t("openReports")}</h2>
+          <h2 className="text-sm font-semibold text-slate-900">{t("openReports")}</h2>
         </div>
 
         {!profile.staff_role ? (
@@ -73,17 +73,17 @@ export function ModerationScreen() {
         ) : (reports.data?.length ?? 0) === 0 ? (
           <EmptyState icon={<Flag className="h-8 w-8" />} title={t("noOpenReports")} />
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {(reports.data ?? []).map((r) => (
               <Card key={r.id}>
                 <CardBody>
                   <div className="flex items-start gap-3">
-                    <Avatar name={r.reported.full_name} src={r.reported.avatar_url} size={40} />
+                    <Avatar name={r.reported.full_name} src={r.reported.avatar_url} size={36} />
                     <div className="min-w-0 flex-1">
                       <Link
                         to="/worker/$workerId"
                         params={{ workerId: r.reported.id }}
-                        className="inline-flex items-center gap-1 font-semibold text-slate-900 hover:text-brand-700"
+                        className="inline-flex items-center gap-1 text-sm font-semibold text-slate-900 hover:text-brand-700"
                       >
                         {r.reported.full_name}
                         <ChevronRight className="h-3.5 w-3.5" aria-hidden />
@@ -94,9 +94,9 @@ export function ModerationScreen() {
                       <div className="mt-2 flex items-center gap-2">
                         <Badge tone="warning">{t(REASON_KEY[r.reason])}</Badge>
                       </div>
-                      {r.details && <p className="mt-2 text-sm text-slate-600">{r.details}</p>}
+                      {r.details && <p className="mt-1.5 text-[13px] text-slate-600">{r.details}</p>}
 
-                      <div className="mt-3 flex gap-2">
+                      <div className="mt-2.5 flex gap-2">
                         <Button
                           size="sm"
                           variant="outline"

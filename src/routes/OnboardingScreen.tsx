@@ -174,7 +174,7 @@ export function OnboardingScreen() {
       <main className="mx-auto w-full max-w-lg px-4 py-5">
         <Card>
           <CardBody>
-            <div className="mb-5 flex items-center gap-2">
+            <div className="mb-4 flex items-center gap-2">
               <SectionIcon icon={STEP_ICONS[step - 1]} />
               <h2 className="text-base font-semibold text-slate-900">
                 {step === 1 ? t("basicInfo") : step === 2 ? t("whereYouAre") : t("yourSkills")}
@@ -183,9 +183,9 @@ export function OnboardingScreen() {
 
             {step === 1 && (
               <>
-                <div className="mb-6 flex justify-center">
+                <div className="mb-4 flex justify-center">
                   <div className="relative">
-                    <Avatar name={fullName || "?"} src={avatarPreview} size={88} className="shadow-md ring-4 ring-white" />
+                    <Avatar name={fullName || "?"} src={avatarPreview} size={72} className="shadow-md ring-4 ring-white" />
                     <label className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow ring-1 ring-slate-200 transition-transform hover:scale-105">
                       <Camera className="h-4 w-4" aria-hidden />
                       <span className="sr-only">{avatarPreview ? t("changePhoto") : t("addPhoto")}</span>
@@ -276,7 +276,7 @@ export function OnboardingScreen() {
           </CardBody>
         </Card>
 
-        <div className="mt-5">
+        <div className="mt-4">
           {step < TOTAL_STEPS ? (
             <Button
               size="lg"

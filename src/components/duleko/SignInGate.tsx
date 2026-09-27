@@ -19,13 +19,13 @@ export function SignInPromptDialog({ open, onClose }: { open: boolean; onClose: 
   return (
     <Dialog open={open} onClose={onClose} title={t("signInRequiredTitle")}>
       <div className="flex flex-col items-center py-2 text-center">
-        <span className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
-          <Sparkles className="h-6 w-6" aria-hidden />
+        <span className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+          <Sparkles className="h-5 w-5" aria-hidden />
         </span>
         <p className="text-sm leading-relaxed text-slate-600">{t("signInRequiredBody")}</p>
       </div>
       <div className="mt-2 flex flex-col gap-2">
-        <Button size="lg" onClick={requestSignIn}>
+        <Button onClick={requestSignIn}>
           <LogIn className="h-4 w-4" aria-hidden />
           {t("signUpOrLogIn")}
         </Button>
@@ -50,14 +50,14 @@ export function SignInRequiredScreen({ title, children }: { title: string; child
     <>
       <AppHeader title={title} />
       <PageContainer>
-        <div className="flex flex-col items-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-          <span className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
-            <LogIn className="h-6 w-6" aria-hidden />
+        <div className="flex flex-col items-center rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center">
+          <span className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+            <LogIn className="h-5 w-5" aria-hidden />
           </span>
-          <p className="font-medium text-slate-800">{t("signInRequiredTitle")}</p>
-          <p className="mt-1 max-w-xs text-sm text-slate-500">{t("signInRequiredBody")}</p>
-          <div className="mt-5 flex w-full max-w-xs flex-col gap-2">
-            <Button size="lg" onClick={requestSignIn}>
+          <p className="text-sm font-semibold text-slate-800">{t("signInRequiredTitle")}</p>
+          <p className="mt-1 max-w-xs text-xs text-slate-500">{t("signInRequiredBody")}</p>
+          <div className="mt-4 flex w-full max-w-xs flex-col gap-2">
+            <Button onClick={requestSignIn}>
               {t("signUpOrLogIn")}
             </Button>
             <Link
@@ -68,7 +68,7 @@ export function SignInRequiredScreen({ title, children }: { title: string; child
             </Link>
           </div>
         </div>
-        {children && <div className="mt-5">{children}</div>}
+        {children && <div className="mt-4">{children}</div>}
       </PageContainer>
     </>
   );

@@ -40,7 +40,7 @@ export function Card({
 }
 
 export function CardBody({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("p-4", className)} {...props} />;
+  return <div className={cn("p-3.5", className)} {...props} />;
 }
 
 export function SectionTitle({
@@ -51,8 +51,8 @@ export function SectionTitle({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-3 flex items-baseline justify-between gap-3">
-      <h2 className="text-base font-semibold text-slate-900">{children}</h2>
+    <div className="mb-2.5 flex items-baseline justify-between gap-3">
+      <h2 className="text-sm font-semibold text-slate-900 md:text-[15px]">{children}</h2>
       {action}
     </div>
   );
@@ -61,8 +61,8 @@ export function SectionTitle({
 /** A small icon badge that gives a section a consistent, scannable identity - pair with SectionTitle. */
 export function SectionIcon({ icon: Icon }: { icon: React.ComponentType<{ className?: string }> }) {
   return (
-    <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-      <Icon className="h-4 w-4" aria-hidden />
+    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-700">
+      <Icon className="h-3.5 w-3.5" aria-hidden />
     </span>
   );
 }

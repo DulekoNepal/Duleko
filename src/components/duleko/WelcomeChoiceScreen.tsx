@@ -51,9 +51,9 @@ export function WelcomeChoiceScreen({
           <img
             src={dulekoMark}
             alt=""
-            className="mx-auto mb-4 h-16 w-16 rounded-2xl object-cover shadow-lg md:h-20 md:w-20"
+            className="mx-auto mb-3 h-14 w-14 rounded-2xl object-cover shadow-lg md:h-16 md:w-16"
           />
-          <h1 className="text-2xl font-bold text-white md:text-3xl">{t("authWelcome")}</h1>
+          <h1 className="text-xl font-bold text-white md:text-2xl">{t("authWelcome")}</h1>
           <p className="mx-auto mt-2 max-w-xs text-sm text-brand-50/90 sm:max-w-sm md:text-base">
             {t("authBlurb")}
           </p>
@@ -84,14 +84,14 @@ export function WelcomeChoiceScreen({
         </div>
 
         {/* ---- The one decision this screen exists for - primary + secondary, both always available ---- */}
-        <div className="mx-auto mt-7 max-w-sm space-y-2.5 sm:flex sm:max-w-none sm:gap-3 sm:space-y-0">
+        <div className="mx-auto mt-5 max-w-sm space-y-2 sm:flex sm:max-w-none sm:gap-3 sm:space-y-0">
           <button
             type="button"
             onClick={onSignIn}
-            className="flex w-full flex-col items-center gap-0.5 rounded-2xl bg-brand-700 px-4 py-3.5 text-center shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-800 hover:shadow-lg active:translate-y-0 sm:flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
+            className="flex w-full flex-col items-center gap-0.5 rounded-xl bg-brand-700 px-4 py-2.5 text-center shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-800 hover:shadow-lg active:translate-y-0 sm:flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
           >
-            <span className="inline-flex items-center gap-2 text-base font-semibold text-white">
-              <LogIn className="h-4.5 w-4.5" aria-hidden />
+            <span className="inline-flex items-center gap-2 text-[15px] font-semibold text-white">
+              <LogIn className="h-4 w-4" aria-hidden />
               {t("signUpOrLogIn")}
             </span>
             <span className="text-xs text-brand-50/85">{t("signUpOrLogInHint")}</span>
@@ -100,10 +100,10 @@ export function WelcomeChoiceScreen({
           <button
             type="button"
             onClick={onExplore}
-            className="flex w-full flex-col items-center gap-0.5 rounded-2xl border-2 border-brand-700 bg-white px-4 py-3.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-50 hover:shadow-md active:translate-y-0 sm:flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
+            className="flex w-full flex-col items-center gap-0.5 rounded-xl border-2 border-brand-700 bg-white px-4 py-2.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-50 hover:shadow-md active:translate-y-0 sm:flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
           >
-            <span className="inline-flex items-center gap-2 text-base font-semibold text-brand-800">
-              <Compass className="h-4.5 w-4.5" aria-hidden />
+            <span className="inline-flex items-center gap-2 text-[15px] font-semibold text-brand-800">
+              <Compass className="h-4 w-4" aria-hidden />
               {t("exploreDuleko")}
             </span>
             <span className="text-xs text-slate-500">{t("exploreDulekoHint")}</span>

@@ -81,7 +81,7 @@ export function NegotiationPanel({
             <p className="truncate text-xs text-slate-500">
               {latestIsMine ? t("yourOffer") : t("offerFrom", { name: otherName })}
             </p>
-            <p className="text-xl font-bold leading-tight text-slate-900">
+            <p className="text-lg font-bold leading-tight text-slate-900">
               {formatMoney(currentAmount, lang)}
             </p>
           </div>

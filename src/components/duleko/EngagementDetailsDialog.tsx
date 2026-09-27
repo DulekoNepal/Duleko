@@ -176,7 +176,7 @@ export function EngagementDetailsDialog({
             beside it, the full address (never truncated here) under it. */}
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="shrink-0 text-xl font-bold leading-tight text-slate-900">
+            <span className="shrink-0 text-lg font-bold leading-tight text-slate-900">
               {formatMoney(engagement.payment_amount, lang)}
             </span>
             <span className="flex items-center gap-1 text-xs text-slate-500">

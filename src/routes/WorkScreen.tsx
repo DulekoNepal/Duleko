@@ -90,7 +90,7 @@ export function WorkScreen() {
     <>
       <AppHeader title={t("myWork")} />
       <PageContainer>
-        <div className="mb-4 inline-flex w-full gap-1 rounded-xl bg-slate-100 p-1" role="tablist">
+        <div className="mb-3 inline-flex w-full gap-1 rounded-xl bg-slate-100 p-1" role="tablist">
           {(["worker", "employer"] as const).map((r) => {
             const Icon = r === "worker" ? Wrench : Briefcase;
             return (
@@ -100,13 +100,13 @@ export function WorkScreen() {
                 aria-selected={role === r}
                 onClick={() => setRole(r)}
                 className={cn(
-                  "flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  "flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all duration-200",
                   role === r
                     ? "bg-white text-slate-900 shadow-sm"
                     : "text-slate-500 hover:text-slate-700",
                 )}
               >
-                <Icon className={cn("h-4 w-4", role === r ? "text-brand-600" : "text-slate-400")} aria-hidden />
+                <Icon className={cn("h-3.5 w-3.5", role === r ? "text-brand-600" : "text-slate-400")} aria-hidden />
                 {r === "worker" ? t("asWorker") : t("asEmployer")}
               </button>
             );
@@ -129,10 +129,10 @@ export function WorkScreen() {
           />
         ) : (
           <>
-            <div className="space-y-5">
+            <div className="space-y-4">
               {groups.map((g) => (
                 <div key={g.status}>
-                  <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <p className="mb-1.5 flex items-center gap-2 text-[13px] font-semibold text-slate-700">
                     <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", STATUS_ACCENT[g.status])} aria-hidden />
                     {t(STATUS_KEY[g.status])}
                     <span className="font-normal text-slate-400">{formatNumber(g.items.length, lang)}</span>
@@ -152,7 +152,7 @@ export function WorkScreen() {
             </div>
 
             {engagements.hasNextPage && (
-              <div className="mt-4 flex justify-center">
+              <div className="mt-3 flex justify-center">
                 <Button
                   variant="outline"
                   size="sm"

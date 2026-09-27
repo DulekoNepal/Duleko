@@ -30,7 +30,7 @@ export function EngagementRow({
       <button
         type="button"
         onClick={() => setDetailsOpen(true)}
-        className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600"
+        className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600"
       >
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-slate-900">{engagement.title}</p>
@@ -39,10 +39,10 @@ export function EngagementRow({
             {engagement.status === "completed" && engagement.my_review ? ` · ${t("reviewDone")}` : ""}
           </p>
         </div>
-        <span className="shrink-0 text-sm font-semibold text-slate-900">
+        <span className="shrink-0 text-[13px] font-semibold text-slate-900">
           {formatMoney(engagement.payment_amount, lang)}
         </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
       </button>
 
       <EngagementDetailsDialog

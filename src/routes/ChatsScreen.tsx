@@ -30,7 +30,7 @@ export function ChatsScreen() {
     return (
       <>
         <AppHeader title={t("chatsTitle")} />
-        <PageContainer className="pt-4 max-md:px-0">
+        <PageContainer className="pt-3 max-md:px-0">
           <ChatSidebar typingFrom={typingFrom} />
         </PageContainer>
       </>
@@ -40,16 +40,16 @@ export function ChatsScreen() {
   return (
     // Same width and gutters as every other screen (PAGE_WIDTH/PAGE_GUTTER),
     // starting 1.5rem under the top bar like their titles.
-    <div className="h-dvh md:h-[calc(100dvh-4rem-1px-var(--sat))] md:py-6">
+    <div className="h-dvh md:h-[calc(100dvh-3.5rem-1px-var(--sat))] md:py-4">
       <div className={cn("mx-auto h-full w-full", PAGE_WIDTH, PAGE_GUTTER)}>
       <div className="flex h-full overflow-hidden bg-cream-50/60 md:rounded-2xl md:border md:border-slate-200 md:shadow-sm">
       <ChatsPane typingFrom={typingFrom} />
-      <main className="flex min-w-0 flex-1 flex-col items-center justify-center p-8 text-center">
-        <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white text-brand-700 shadow-sm ring-1 ring-slate-200">
-          <MessageCircle className="h-9 w-9" aria-hidden />
+      <main className="flex min-w-0 flex-1 flex-col items-center justify-center p-6 text-center">
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-brand-700 shadow-sm ring-1 ring-slate-200">
+          <MessageCircle className="h-6 w-6" aria-hidden />
         </span>
-        <h2 className="mt-5 text-xl font-bold text-slate-900">{t("selectConversation")}</h2>
-        <p className="mt-2 max-w-sm text-sm text-slate-500">{t("selectConversationHint")}</p>
+        <h2 className="mt-4 text-base font-bold text-slate-900">{t("selectConversation")}</h2>
+        <p className="mt-1 max-w-sm text-xs text-slate-500">{t("selectConversationHint")}</p>
       </main>
       </div>
       </div>
@@ -69,9 +69,9 @@ export function ChatsPane({
 }) {
   const { t } = useI18n();
   return (
-    <aside className="flex w-[340px] shrink-0 flex-col border-r border-slate-200 bg-white pt-[var(--sat)] md:pt-0 xl:w-[380px]">
-      <div className="flex h-[72px] items-center justify-between gap-3 px-4">
-        <h1 className="text-xl font-bold text-slate-900">{t("chatsTitle")}</h1>
+    <aside className="flex w-[320px] shrink-0 flex-col border-r border-slate-200 bg-white pt-[var(--sat)] md:pt-0 xl:w-[360px]">
+      <div className="flex h-14 items-center justify-between gap-3 px-4 lg:h-16">
+        <h1 className="text-lg font-bold text-slate-900">{t("chatsTitle")}</h1>
       </div>
       <ChatSidebar typingFrom={typingFrom} activeId={activeId} showDivisions={showDivisions} className="flex-1" />
     </aside>

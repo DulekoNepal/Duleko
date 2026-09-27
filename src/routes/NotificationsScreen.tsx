@@ -214,7 +214,7 @@ export function NotificationsScreen() {
       <PageContainer>
         {/* All / Unread, with the count on the tab that has one - the
             fastest way to answer "what still needs me?" */}
-        <div className="mb-4 inline-flex w-full rounded-xl bg-slate-100 p-1" role="tablist">
+        <div className="mb-3 inline-flex w-full rounded-xl bg-slate-100 p-1" role="tablist">
           {(["all", "unread"] as const).map((f) => (
             <button
               key={f}
@@ -222,7 +222,7 @@ export function NotificationsScreen() {
               aria-selected={filter === f}
               onClick={() => setFilter(f)}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200",
+                "flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-200",
                 filter === f ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
               )}
             >
@@ -244,10 +244,10 @@ export function NotificationsScreen() {
             title={filter === "unread" ? t("noUnread") : t("noNotifications")}
           />
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {groups.map((group) => (
               <section key={group.day}>
-                <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <h2 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   {group.label}
                 </h2>
                 <ul className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -257,7 +257,7 @@ export function NotificationsScreen() {
                         type="button"
                         onClick={() => openTarget(n)}
                         className={cn(
-                          "relative flex w-full gap-3 p-3.5 text-left transition-colors duration-200 hover:bg-slate-50",
+                          "relative flex w-full gap-3 px-3.5 py-2.5 text-left transition-colors duration-200 hover:bg-slate-50",
                           !n.is_read && "bg-brand-50/40",
                         )}
                       >
@@ -272,18 +272,18 @@ export function NotificationsScreen() {
                           <span className="flex items-baseline justify-between gap-2">
                             <span
                               className={cn(
-                                "truncate",
+                                "truncate text-sm",
                                 n.is_read ? "font-medium text-slate-700" : "font-semibold text-slate-900",
                               )}
                             >
                               {lang === "ne" ? n.title_ne : n.title_en}
                             </span>
-                            <span className="flex shrink-0 items-center gap-1 text-xs text-slate-400">
+                            <span className="flex shrink-0 items-center gap-1 text-[11px] text-slate-400">
                               {linkIn(n) && <ExternalLink className="h-3 w-3" aria-hidden />}
                               {relativeTime(n.created_at, lang)}
                             </span>
                           </span>
-                          <span className="mt-0.5 line-clamp-2 block text-sm text-slate-500">
+                          <span className="mt-0.5 line-clamp-2 block text-[13px] leading-snug text-slate-500">
                             {lang === "ne" ? n.body_ne : n.body_en}
                           </span>
                         </span>
@@ -326,11 +326,11 @@ function NotificationIcon({ kind }: { kind: string }) {
     <span
       aria-hidden
       className={cn(
-        "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
         TONE_CLASS[tone],
       )}
     >
-      <Icon className="h-[18px] w-[18px]" />
+      <Icon className="h-4 w-4" />
     </span>
   );
 }

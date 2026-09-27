@@ -77,7 +77,7 @@ export function AppHeader({
         logo && !subtitle && !right && !below && !back && "md:hidden",
       )}
     >
-      <div className={cn("mx-auto py-2 md:pb-1 md:pt-6", PAGE_WIDTH, PAGE_GUTTER)}>
+      <div className={cn("mx-auto py-2 md:pb-1 md:pt-5", PAGE_WIDTH, PAGE_GUTTER)}>
         <div className="flex items-center gap-3">
           {back}
           {leading}
@@ -91,7 +91,7 @@ export function AppHeader({
             </div>
           ) : (
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-base font-semibold text-slate-900 md:text-2xl md:font-bold md:tracking-tight">
+              <h1 className="truncate text-base font-semibold text-slate-900 md:text-xl md:font-bold md:tracking-tight">
                 {title}
               </h1>
               {subtitle && <p className="truncate text-xs text-slate-500 md:text-sm">{subtitle}</p>}
@@ -261,14 +261,14 @@ export function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 hidden border-b border-slate-200 bg-white/95 pt-[var(--sat)] backdrop-blur md:block">
-      <div className="flex h-16 items-center gap-4 px-4 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-6">
+      <div className="flex h-14 items-center gap-4 px-4 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-6">
         <Link
           to="/home"
           className="flex shrink-0 items-center gap-2.5 justify-self-start rounded-xl"
           aria-label={t("appName")}
         >
-          <img src={dulekoMark} alt="" className="h-9 w-9 rounded-xl object-cover" />
-          <span className="text-lg font-bold tracking-tight text-slate-900">{t("appName")}</span>
+          <img src={dulekoMark} alt="" className="h-8 w-8 rounded-lg object-cover" />
+          <span className="text-base font-bold tracking-tight text-slate-900">{t("appName")}</span>
         </Link>
         <nav className="flex flex-1 items-center justify-center gap-1" aria-label={t("mainNavLabel")}>
           {NAV.map(({ to, key, icon: Icon }) => {
@@ -280,12 +280,12 @@ export function TopNav() {
                 to={to}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand-500 lg:px-3.5",
+                  "relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand-500",
                   active ? "bg-brand-50 text-brand-800" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
                 )}
               >
                 <span className="relative">
-                  <Icon className="h-5 w-5 shrink-0" aria-hidden />
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden />
                   {badge > 0 && (
                     <span className="absolute -right-2 -top-1.5 min-w-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-4 text-white">
                       {formatNumber(badge > 9 ? "9+" : badge, lang)}

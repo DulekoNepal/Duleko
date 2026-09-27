@@ -107,7 +107,7 @@ export function ConversationList({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* ---- Search + filter ------------------------------------------ */}
-      <div className={cn("space-y-2.5 pb-3", pad)}>
+      <div className={cn("space-y-2 pb-2.5", pad)}>
         <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition-all focus-within:border-brand-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-100">
           <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
           <input
@@ -116,7 +116,7 @@ export function ConversationList({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("searchChats")}
             aria-label={t("searchChats")}
-            className="h-10 min-w-0 flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+            className="h-9 min-w-0 flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
           />
           {query && (
             <button
@@ -139,7 +139,7 @@ export function ConversationList({
                 onClick={() => setFilter(f)}
                 aria-pressed={selected}
                 className={cn(
-                  "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors",
+                  "inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors",
                   selected ? "bg-brand-700 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200/70",
                 )}
               >
@@ -165,8 +165,8 @@ export function ConversationList({
         {conversations.isLoading ? (
           <ul className={cn("space-y-1", pad)}>
             {Array.from({ length: 5 }).map((_, i) => (
-              <li key={i} className="flex items-center gap-3 py-3">
-                <div className="skeleton h-12 w-12 shrink-0 rounded-full" />
+              <li key={i} className="flex items-center gap-3 py-2.5">
+                <div className="skeleton h-11 w-11 shrink-0 rounded-full" />
                 <div className="min-w-0 flex-1">
                   <div className="skeleton h-3.5 w-32" />
                   <div className="skeleton mt-2 h-3 w-48 max-w-full" />
@@ -175,22 +175,22 @@ export function ConversationList({
             ))}
           </ul>
         ) : all.length === 0 ? (
-          <div className={cn("flex flex-col items-center py-12 text-center", pad)}>
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
-              <MessageCircle className="h-7 w-7" aria-hidden />
+          <div className={cn("flex flex-col items-center py-10 text-center", pad)}>
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
+              <MessageCircle className="h-6 w-6" aria-hidden />
             </span>
-            <p className="mt-4 font-semibold text-slate-900">{t("noChatsYet")}</p>
-            <p className="mt-1 max-w-xs text-sm text-slate-500">{t("noChatsYetHint")}</p>
+            <p className="mt-3 text-sm font-semibold text-slate-900">{t("noChatsYet")}</p>
+            <p className="mt-1 max-w-xs text-xs text-slate-500">{t("noChatsYetHint")}</p>
             <Link
               to="/search"
-              className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800"
+              className="mt-3.5 inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand-700 px-3.5 text-sm font-semibold text-white hover:bg-brand-800"
             >
               <Search className="h-4 w-4" aria-hidden />
               {t("findPeople")}
             </Link>
           </div>
         ) : items.length === 0 ? (
-          <div className={cn("flex flex-col items-center py-12 text-center", pad)}>
+          <div className={cn("flex flex-col items-center py-10 text-center", pad)}>
             {filter === "unread" && !q ? (
               <>
                 <CheckCircle2 className="h-9 w-9 text-brand-500" aria-hidden />
@@ -248,12 +248,12 @@ function ConversationRow({
     // a link nested in a button would be invalid markup with both firing.
     <li
       className={cn(
-        "relative flex items-center gap-3 rounded-2xl px-2.5 py-2.5 transition-colors duration-150",
+        "relative flex items-center gap-3 rounded-xl px-2.5 py-2 transition-colors duration-150",
         active ? "bg-brand-50 ring-1 ring-brand-200" : c.unread ? "bg-brand-50/50 hover:bg-brand-50" : "hover:bg-slate-50",
       )}
     >
       {active && <span className="absolute inset-y-3 left-0 w-1 rounded-full bg-brand-600" aria-hidden />}
-      <Avatar name={c.otherName} src={c.otherAvatarUrl} size={48} online={online} profileId={c.otherProfileId} />
+      <Avatar name={c.otherName} src={c.otherAvatarUrl} size={44} online={online} profileId={c.otherProfileId} />
       <button
         type="button"
         onClick={onOpen}
@@ -265,7 +265,7 @@ function ConversationRow({
             <span className="flex min-w-0 items-center gap-1">
               <span
                 className={cn(
-                  "truncate text-[15px]",
+                  "truncate text-sm",
                   c.unread ? "font-bold text-slate-950" : "font-semibold text-slate-900",
                 )}
               >
@@ -279,14 +279,14 @@ function ConversationRow({
           </span>
 
           {typing ? (
-            <span className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-brand-700">
+            <span className="mt-0.5 flex items-center gap-1.5 text-[13px] font-medium text-brand-700">
               <TypingDots />
               {t("typingIndicator")}
             </span>
           ) : (
             <span
               className={cn(
-                "mt-0.5 flex items-center gap-1 text-sm",
+                "mt-0.5 flex items-center gap-1 text-[13px]",
                 c.unread ? "font-semibold text-slate-800" : "text-slate-500",
               )}
             >
@@ -306,7 +306,7 @@ function ConversationRow({
           )}
         </span>
         {c.unread && (
-          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-600 ring-4 ring-brand-100" aria-hidden />
+          <span className="h-2 w-2 shrink-0 rounded-full bg-brand-600 ring-[3px] ring-brand-100" aria-hidden />
         )}
       </button>
     </li>
@@ -354,8 +354,8 @@ export function ChatSidebar({
   return (
     <div className={cn("flex min-h-0 flex-col", className)}>
       {showDivisions && (
-        <div className="px-4 pb-3">
-          <div className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1" role="tablist" aria-label={t("chatsTitle")}>
+        <div className="px-4 pb-2.5">
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1" role="tablist" aria-label={t("chatsTitle")}>
             {(["chats", "friends"] as const).map((d) => {
               const selected = division === d;
               const Icon = d === "chats" ? MessageCircle : Users;
@@ -367,14 +367,14 @@ export function ChatSidebar({
                   aria-selected={selected}
                   onClick={() => setDivision(d)}
                   className={cn(
-                    "inline-flex items-center justify-center gap-2 rounded-xl py-2 text-sm font-semibold transition-all duration-200",
+                    "inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[13px] font-semibold transition-all duration-200",
                     selected ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800",
                   )}
                 >
-                  <Icon className={cn("h-4 w-4", selected ? "text-brand-700" : "")} aria-hidden />
+                  <Icon className={cn("h-3.5 w-3.5", selected ? "text-brand-700" : "")} aria-hidden />
                   {d === "chats" ? t("navChats") : t("myFriends")}
                   {d === "chats" && unread > 0 && (
-                    <span className="min-w-5 rounded-full bg-brand-600 px-1.5 text-center text-[11px] font-bold leading-5 text-white">
+                    <span className="min-w-4.5 rounded-full bg-brand-600 px-1.5 text-center text-[10px] font-bold leading-[18px] text-white">
                       {formatNumber(unread, lang)}
                     </span>
                   )}

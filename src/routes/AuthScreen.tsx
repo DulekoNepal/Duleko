@@ -313,19 +313,19 @@ export function AuthScreen({
       </div>
 
       <div className="mx-auto w-full max-w-sm flex-1 px-5 pb-10">
-        <div className="mb-7 text-center">
+        <div className="mb-5 text-center">
           <img
             src={dulekoMark}
             alt=""
-            className="mx-auto mb-4 h-14 w-14 rounded-2xl object-cover shadow-sm"
+            className="mx-auto mb-3 h-12 w-12 rounded-xl object-cover shadow-sm"
           />
-          <h1 className="text-2xl font-bold text-slate-900">{heading.title}</h1>
+          <h1 className="text-xl font-bold text-slate-900">{heading.title}</h1>
           {heading.blurb && (
-            <p className="mx-auto mt-1.5 max-w-xs text-sm text-slate-500">{heading.blurb}</p>
+            <p className="mx-auto mt-1 max-w-xs text-[13px] text-slate-500">{heading.blurb}</p>
           )}
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           {error && (
             <p className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-700">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
@@ -341,7 +341,7 @@ export function AuthScreen({
 
           {view === "verify" && (
             <>
-              <div className="mb-5 flex justify-center">
+              <div className="mb-4 flex justify-center">
                 <OtpInput value={otp} onChange={setOtp} length={OTP_LENGTH} disabled={busy} autoFocus />
               </div>
               <Button
@@ -383,7 +383,7 @@ export function AuthScreen({
 
           {view === "forgotCode" && (
             <>
-              <div className="mb-5 flex justify-center">
+              <div className="mb-4 flex justify-center">
                 <OtpInput value={otp} onChange={setOtp} length={OTP_LENGTH} disabled={busy} autoFocus />
               </div>
               <Button
@@ -463,7 +463,7 @@ export function AuthScreen({
           {view === "auth" && (
             <>
               <div
-                className="mb-5 grid grid-cols-2 rounded-xl bg-slate-100 p-1 text-sm font-medium"
+                className="mb-4 grid grid-cols-2 rounded-xl bg-slate-100 p-1 text-[13px] font-medium"
                 role="tablist"
                 aria-label={t("signInOrSignUp")}
               >

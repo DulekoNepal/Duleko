@@ -114,22 +114,22 @@ export function Dialog({
           className,
         )}
       >
-        <div className="sticky top-0 flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3">
-          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+        <div className="sticky top-0 flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-2.5">
+          <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
             aria-label="Close"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4.5 w-4.5" />
           </button>
         </div>
-        <div className={cn("px-4 pt-4", footer ? "pb-4" : "pb-[calc(1rem+var(--sab))]")}>
+        <div className={cn("px-4 pt-3.5", footer ? "pb-3.5" : "pb-[calc(0.875rem+var(--sab))]")}>
           {children}
         </div>
         {footer && (
-          <div className="sticky bottom-0 border-t border-slate-200 bg-white px-4 pb-[calc(0.75rem+var(--sab))] pt-3">
+          <div className="sticky bottom-0 border-t border-slate-200 bg-white px-4 pb-[calc(0.625rem+var(--sab))] pt-2.5">
             {footer}
           </div>
         )}
