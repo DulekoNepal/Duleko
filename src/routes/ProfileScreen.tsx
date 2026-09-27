@@ -9,6 +9,7 @@ import {
   CalendarDays,
   Camera,
   Check,
+  ChevronRight,
   CircleDot,
   Download,
   Eye,
@@ -23,8 +24,10 @@ import {
   Navigation,
   Pencil,
   Phone,
+  Plus,
   Share2,
   ShieldCheck,
+  Star,
   Trash2,
   Upload,
   Users,
@@ -39,7 +42,7 @@ import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { LocationFields, type LocationValue } from "@/components/duleko/LocationFields";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ProfileCover, SectionCard } from "@/components/duleko/ProfileParts";
+import { DetailRow, ProfileCover, SectionCard } from "@/components/duleko/ProfileParts";
 import { ContactPrivacyRows } from "@/components/duleko/ContactPrivacyRows";
 import { ListGroup, ListRow } from "@/components/duleko/SettingsList";
 import { DulekoPagesHub } from "@/components/duleko/DulekoPagesHub";
@@ -550,7 +553,7 @@ export function ProfileScreen() {
           </ProfileCover>
 
           <div className="px-4 @2xl:px-8">
-            <div className="flex flex-col gap-3 @2xl:flex-row @2xl:items-end @2xl:gap-6">
+            <div className="flex flex-col gap-3 @4xl:flex-row @4xl:items-end @4xl:gap-6">
               {/* Photo: the only thing pulled up into the cover. */}
               <div className="relative z-10 -mt-[4.5rem] h-[7.5rem] w-[7.5rem] shrink-0 self-start rounded-full bg-white p-1 shadow-md @2xl:-mt-[5.5rem] @2xl:h-[10.5rem] @2xl:w-[10.5rem]">
                 <Avatar
@@ -580,9 +583,10 @@ export function ProfileScreen() {
                 </label>
               </div>
 
-              <div className="min-w-0 flex-1 @2xl:pb-4">
+              <div className="min-w-0 flex-1 @4xl:pb-4">
+                {/* Wraps rather than truncates - a name is never cut short. */}
                 <h2 className="flex min-w-0 items-center gap-2 text-2xl font-bold leading-tight tracking-tight text-slate-900 @2xl:text-[2rem]">
-                  <span className="truncate">{profile.full_name}</span>
+                  <span className="min-w-0 break-words">{profile.full_name}</span>
                   <VerifiedBadge staffRole={profile.staff_role} verified={profile.is_verified} size={22} />
                 </h2>
                 {profile.bio && <p className="mt-1 text-[15px] leading-snug text-slate-600">{profile.bio}</p>}
@@ -604,14 +608,14 @@ export function ProfileScreen() {
               </div>
 
               {!editing && (
-                <div className="relative flex w-full items-center gap-2 @2xl:w-auto @2xl:pb-4" data-profile-menu>
-                  <Button className="flex-1 @2xl:flex-none" onClick={startEditing}>
+                <div className="relative flex w-full items-center gap-2 @xl:max-w-md @4xl:w-auto @4xl:max-w-none @4xl:pb-4" data-profile-menu>
+                  <Button className="flex-1 @4xl:flex-none" onClick={startEditing}>
                     <Pencil className="h-4 w-4" aria-hidden />
                     {t("editProfile")}
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 @2xl:flex-none"
+                    className="flex-1 @4xl:flex-none"
                     onClick={() => share.mutate()}
                     aria-label={t("shareProfile")}
                   >
@@ -714,7 +718,7 @@ export function ProfileScreen() {
                     >
                       {label}
                       {badge ? (
-                        <span className="rounded-full bg-amber-100 px-1.5 text-[11px] font-bold leading-5 text-amber-800">
+                        <span className="rounded-full bg-slate-100 px-1.5 text-[11px] font-bold leading-5 text-slate-600">
                           {formatNumber(badge, lang)}
                         </span>
                       ) : null}
@@ -858,166 +862,245 @@ export function ProfileScreen() {
         ) : (
           <div className="@container">
             {tab === "overview" && (
-              /* Same plain list style as Settings. Intro on the left, the
-                 work on the right once there's room; stacked on a phone. */
+              /* A dashboard of cards: where you stand today up top, then
+                 your intro beside your work once there's room; stacked on
+                 a phone in the order people read a profile. */
               <div
                 id="profile-panel-overview"
                 role="tabpanel"
                 aria-labelledby="profile-tab-overview"
-                className="animate-in-up grid grid-cols-1 gap-6 @2xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @2xl:items-start"
+                className="animate-in-up space-y-4 md:space-y-5"
               >
-                <div className="@container min-w-0 space-y-6">
-                  <ListGroup>
-                    <ListRow
-                      icon={CircleDot}
-                      title={profile.is_available ? t("availableForWork") : t("notAvailable")}
-                      hint={profile.is_available ? t("availabilityOnHint") : t("availabilityOffHint")}
-                      trailing={
-                        <Switch
-                          checked={profile.is_available}
-                          disabled={toggleAvailable.isPending}
-                          onChange={(next) => toggleAvailable.mutate(next)}
-                          aria-label={t("availableForWork")}
-                        />
+                <div className="grid grid-cols-1 gap-4 md:gap-5 @3xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+                  <AvailabilityCard
+                    on={profile.is_available}
+                    pending={toggleAvailable.isPending}
+                    onChange={(next) => toggleAvailable.mutate(next)}
+                  />
+
+                  <div className="grid grid-cols-2 gap-3 @xl:grid-cols-4">
+                    <StatTile
+                      icon={Star}
+                      label={t("ratingLabel")}
+                      value={
+                        profile.rating_count > 0
+                          ? formatNumber(Number(profile.rating).toFixed(1), lang)
+                          : t("newShort")
                       }
                     />
-                  </ListGroup>
-
-                  <ListGroup title={t("profileIntro")} action={{ label: t("edit"), onClick: startEditing }}>
-                    {profile.about ? (
-                      <p className="whitespace-pre-line px-4 py-3.5 text-[15px] leading-7 text-slate-700">
-                        {profile.about}
-                      </p>
-                    ) : (
-                      <ListRow icon={Pencil} title={t("noAboutYet")} onClick={startEditing} />
-                    )}
-                    {place && <ListRow icon={MapPin} title={t("livesIn", { place })} />}
-                    {myPhone.data?.phone && <ListRow icon={Phone} title={myPhone.data.phone} />}
-                    {myPhone.data?.alt_phone && <ListRow icon={Phone} title={myPhone.data.alt_phone} />}
-                    {profile.education && <ListRow icon={GraduationCap} title={profile.education} />}
-                    {profile.age != null && (
-                      <ListRow icon={Cake} title={t("yearsOld", { count: formatNumber(profile.age, lang) })} />
-                    )}
-                    <ListRow
-                      icon={CalendarDays}
-                      title={t("joinedOn", { date: formatDate(profile.created_at.slice(0, 10), lang) })}
+                    <StatTile
+                      icon={MessageSquare}
+                      label={t("reviews")}
+                      value={formatNumber(profile.rating_count, lang)}
                     />
-                  </ListGroup>
+                    <StatTile
+                      icon={Briefcase}
+                      label={t("skills")}
+                      value={formatNumber(skillList.length, lang)}
+                    />
+                    <StatTile
+                      icon={CalendarDays}
+                      label={t("busyDaysLabel")}
+                      value={formatNumber(busyDaysCount, lang)}
+                      onClick={() => selectTab("calendar")}
+                    />
+                  </div>
                 </div>
 
-                <div className="@container min-w-0 space-y-6">
-                  {strengthPercent < 100 && (
-                    <ProfileStrength percent={strengthPercent} checks={strengthChecks} onComplete={startEditing} />
-                  )}
+                {strengthPercent < 100 && (
+                  <ProfileStrength percent={strengthPercent} checks={strengthChecks} onComplete={startEditing} />
+                )}
 
-                  <ListGroup
-                    title={
-                      skillList.length > 0
-                        ? `${t("skillsAndRates")} · ${formatNumber(skillList.length, lang)}`
-                        : t("skillsAndRates")
+                <div className="grid grid-cols-1 gap-4 md:gap-5 @3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @3xl:items-start">
+                  <SectionCard
+                    icon={Info}
+                    title={t("profileIntro")}
+                    action={
+                      <Button variant="ghost" size="sm" className="-my-1.5 text-brand-700" onClick={startEditing}>
+                        <Pencil className="h-3.5 w-3.5" aria-hidden />
+                        {t("edit")}
+                      </Button>
                     }
-                    action={skillList.length > 0 ? { label: t("edit"), onClick: startEditing } : undefined}
                   >
-                    {skillList.length === 0 ? (
-                      <ListRow
-                        icon={Briefcase}
-                        title={t("addYourSkills")}
-                        hint={t("noSkillsYetProfileHint")}
-                        onClick={startEditing}
-                      />
+                    {profile.about ? (
+                      <p className="whitespace-pre-line text-[15px] leading-7 text-slate-700">{profile.about}</p>
                     ) : (
-                      skillList.map((s) => {
-                        const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
-                        const rate =
-                          s.rate_amount != null
-                            ? `${formatMoney(s.rate_amount, lang)}${s.rate_unit ? ` / ${s.rate_unit}` : ""}`
-                            : null;
-                        return (
-                          <div key={s.id} className="flex min-h-14 items-center gap-3 px-4 py-2.5">
-                            <SkillTile skillId={s.id} className="h-9 w-9 shrink-0 rounded-lg bg-slate-50" />
-                            {/* The rate gets its own line so it never has to be cut short. */}
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-[15px] font-medium text-slate-900">{label}</p>
-                              {rate && <p className="text-sm font-medium text-brand-700">{rate}</p>}
-                              {s.custom_note && <p className="truncate text-xs text-slate-500">{s.custom_note}</p>}
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </ListGroup>
-
-                  <ListGroup
-                    title={
-                      certificates.length > 0
-                        ? `${t("certificates")} · ${formatNumber(certificates.length, lang)}`
-                        : t("certificates")
-                    }
-                    footer={`${t("certificatesHint")} ${t("uploadCertificateHint")}`}
-                  >
-                    {certificates.map((c) => (
-                      <div key={c.id} className="flex min-h-14 items-center gap-3 px-4 py-2.5">
-                        <Award className="h-5 w-5 shrink-0 text-slate-400" aria-hidden />
-                        <div className="min-w-0 flex-1">
-                          <a
-                            href={c.file_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block truncate text-[15px] font-medium text-slate-900 hover:text-brand-700 hover:underline"
-                          >
-                            {c.title}
-                          </a>
-                          <p className="text-xs text-slate-500">{formatDate(c.created_at.slice(0, 10), lang)}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => deleteCert.mutate(c.id)}
-                          aria-label={t("delete")}
-                          title={t("delete")}
-                          className="-mr-1.5 shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" aria-hidden />
-                        </button>
-                      </div>
-                    ))}
-
-                    {/* Add one: name it, then pick the file. */}
-                    <div className="flex flex-col gap-2 p-3 @md:flex-row @md:items-center">
-                      <Input
-                        value={certTitle}
-                        onChange={(e) => setCertTitle(e.target.value)}
-                        placeholder={t("certificateTitlePlaceholder")}
-                        maxLength={100}
-                        aria-label={t("addCertificate")}
-                        className="min-w-0 flex-1"
-                      />
-                      <label
-                        className={cn(
-                          "inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50",
-                          (!certTitle.trim() || addCert.isPending) && "pointer-events-none opacity-50",
-                        )}
+                      <button
+                        type="button"
+                        onClick={startEditing}
+                        className="flex w-full items-center gap-3 rounded-xl border border-dashed border-slate-300 p-3.5 text-left text-sm text-slate-500 transition-colors hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-800"
                       >
-                        <Upload className="h-4 w-4" aria-hidden />
-                        {t("upload")}
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,application/pdf"
-                          className="hidden"
-                          disabled={!certTitle.trim() || addCert.isPending}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file || !certTitle.trim()) return;
-                            if (file.size > 5 * 1024 * 1024) {
-                              toast(t("photoTooBig"), "error");
-                              return;
-                            }
-                            addCert.mutate({ title: certTitle.trim(), file });
-                            e.target.value = "";
-                          }}
+                        <Pencil className="h-4 w-4 shrink-0" aria-hidden />
+                        {t("noAboutYet")}
+                      </button>
+                    )}
+
+                    <dl className="mt-5 space-y-3.5 border-t border-slate-100 pt-5">
+                      {place && <DetailRow icon={MapPin} label={t("whereYouAre")} value={place} />}
+                      {myPhone.data?.phone && (
+                        <DetailRow icon={Phone} label={t("phoneNumber")} value={myPhone.data.phone} />
+                      )}
+                      {myPhone.data?.alt_phone && (
+                        <DetailRow icon={Phone} label={t("altPhone")} value={myPhone.data.alt_phone} />
+                      )}
+                      {profile.education && (
+                        <DetailRow icon={GraduationCap} label={t("highestEducation")} value={profile.education} />
+                      )}
+                      {profile.age != null && (
+                        <DetailRow
+                          icon={Cake}
+                          label={t("age")}
+                          value={t("yearsOld", { count: formatNumber(profile.age, lang) })}
                         />
-                      </label>
-                    </div>
-                  </ListGroup>
+                      )}
+                      <DetailRow
+                        icon={CalendarDays}
+                        label={t("memberSince")}
+                        value={formatDate(profile.created_at.slice(0, 10), lang)}
+                      />
+                    </dl>
+                  </SectionCard>
+
+                  <div className="@container min-w-0 space-y-4 md:space-y-5">
+                    <SectionCard
+                      icon={Briefcase}
+                      title={t("skillsAndRates")}
+                      badge={skillList.length > 0 ? skillList.length : undefined}
+                    >
+                      <ul className="grid grid-cols-1 gap-3 @lg:grid-cols-2">
+                        {skillList.map((s) => {
+                          const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
+                          return (
+                            <li
+                              key={s.id}
+                              className="flex min-w-0 items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3.5"
+                            >
+                              <SkillTile skillId={s.id} className="h-11 w-11 rounded-xl bg-white ring-1 ring-slate-200" />
+                              {/* The rate gets its own line so it never has to be cut short. */}
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-[15px] font-semibold text-slate-900">{label}</p>
+                                {s.rate_amount != null ? (
+                                  <p className="mt-0.5 text-sm font-semibold text-brand-700">
+                                    {formatMoney(s.rate_amount, lang)}
+                                    {s.rate_unit && (
+                                      <span className="font-medium text-slate-500"> / {s.rate_unit}</span>
+                                    )}
+                                  </p>
+                                ) : (
+                                  <p className="mt-0.5 text-sm text-slate-400">{t("rateNotSet")}</p>
+                                )}
+                                {s.custom_note && (
+                                  <p className="mt-1 line-clamp-2 text-xs text-slate-500">{s.custom_note}</p>
+                                )}
+                              </div>
+                            </li>
+                          );
+                        })}
+                        <li className={cn(skillList.length === 0 && "@lg:col-span-2")}>
+                          <button
+                            type="button"
+                            onClick={startEditing}
+                            className="flex h-full min-h-[4.5rem] w-full items-center gap-3 rounded-xl border border-dashed border-slate-300 p-3.5 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/50"
+                          >
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                              <Plus className="h-5 w-5" aria-hidden />
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block text-[15px] font-semibold text-slate-900">
+                                {skillList.length > 0 ? t("editSkills") : t("addYourSkills")}
+                              </span>
+                              {skillList.length === 0 && (
+                                <span className="block text-sm text-slate-500">{t("noSkillsYetProfileHint")}</span>
+                              )}
+                            </span>
+                          </button>
+                        </li>
+                      </ul>
+                    </SectionCard>
+
+                    <SectionCard
+                      icon={Award}
+                      title={t("certificates")}
+                      badge={certificates.length > 0 ? certificates.length : undefined}
+                    >
+                      {certificates.length > 0 && (
+                        <ul className="mb-4 grid grid-cols-1 gap-3 @lg:grid-cols-2">
+                          {certificates.map((c) => (
+                            <li
+                              key={c.id}
+                              className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-3"
+                            >
+                              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                                <Award className="h-5 w-5" aria-hidden />
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <a
+                                  href={c.file_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="block truncate text-[15px] font-semibold text-slate-900 hover:text-brand-700 hover:underline"
+                                >
+                                  {c.title}
+                                </a>
+                                <p className="text-xs text-slate-500">{formatDate(c.created_at.slice(0, 10), lang)}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => deleteCert.mutate(c.id)}
+                                aria-label={t("delete")}
+                                title={t("delete")}
+                                className="shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4" aria-hidden />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {/* Add one: name it, then pick the file. */}
+                      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-3">
+                        <div className="flex flex-col gap-2 @md:flex-row @md:items-center">
+                          <Input
+                            value={certTitle}
+                            onChange={(e) => setCertTitle(e.target.value)}
+                            placeholder={t("certificateTitlePlaceholder")}
+                            maxLength={100}
+                            aria-label={t("addCertificate")}
+                            className="min-w-0 flex-1 bg-white"
+                          />
+                          <label
+                            className={cn(
+                              "inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50",
+                              (!certTitle.trim() || addCert.isPending) && "pointer-events-none opacity-50",
+                            )}
+                          >
+                            <Upload className="h-4 w-4" aria-hidden />
+                            {t("upload")}
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,application/pdf"
+                              className="hidden"
+                              disabled={!certTitle.trim() || addCert.isPending}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file || !certTitle.trim()) return;
+                                if (file.size > 5 * 1024 * 1024) {
+                                  toast(t("photoTooBig"), "error");
+                                  return;
+                                }
+                                addCert.mutate({ title: certTitle.trim(), file });
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                        </div>
+                        <p className="mt-2 px-1 text-xs leading-relaxed text-slate-500">
+                          {t("certificatesHint")} {t("uploadCertificateHint")}
+                        </p>
+                      </div>
+                    </SectionCard>
+                  </div>
                 </div>
               </div>
             )}
@@ -1027,126 +1110,141 @@ export function ProfileScreen() {
                 id="profile-panel-calendar"
                 role="tabpanel"
                 aria-labelledby="profile-tab-calendar"
-                className="animate-in-up mx-auto max-w-2xl"
+                className="animate-in-up grid grid-cols-1 gap-4 md:gap-5 @3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @3xl:items-start"
               >
-                <ListGroup title={t("markCalendar")} footer={t("calendarHint")}>
-                  <ListRow
-                    icon={CalendarDays}
-                    title={
-                      busyDaysCount > 0
-                        ? t("daysMarkedBusy", { count: formatNumber(busyDaysCount, lang) })
-                        : t("noBusyDays")
-                    }
+                {/* What the calendar means, beside it once there's room. */}
+                <SectionCard icon={CalendarDays} title={t("markCalendar")}>
+                  <p className="text-[15px] font-medium text-slate-900">
+                    {busyDaysCount > 0
+                      ? t("daysMarkedBusy", { count: formatNumber(busyDaysCount, lang) })
+                      : t("noBusyDays")}
+                  </p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{t("calendarHint")}</p>
+                  <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
+                    <li className="flex items-center gap-2">
+                      <span className="h-3.5 w-3.5 rounded-full ring-1 ring-slate-300" aria-hidden />
+                      {t("freeDay")}
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-3.5 w-3.5 rounded-full bg-slate-800" aria-hidden />
+                      {t("bookedDay")}
+                    </li>
+                  </ul>
+                </SectionCard>
+
+                <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5">
+                  <AvailabilityCalendar
+                    days={availability.data ?? []}
+                    editable
+                    monthView
+                    onToggle={(day, status) => changeDay.mutate({ day, status })}
                   />
-                  <div className="p-3 sm:p-5">
-                    <AvailabilityCalendar
-                      days={availability.data ?? []}
-                      editable
-                      monthView
-                      onToggle={(day, status) => changeDay.mutate({ day, status })}
-                    />
-                  </div>
-                </ListGroup>
+                </section>
               </div>
             )}
 
-            {/* Settings and About share one plain list style and a readable
-                column width, on every screen size. */}
+            {/* Every tab fills the same width as the header; the plain
+                lists go two-up once there's room. */}
             {tab === "settings" && (
               <div
                 id="profile-panel-settings"
                 role="tabpanel"
                 aria-labelledby="profile-tab-settings"
-                className="animate-in-up mx-auto max-w-2xl space-y-6"
+                className="animate-in-up grid grid-cols-1 gap-6 @3xl:grid-cols-2 @3xl:items-start"
               >
-                <ListGroup title={t("settingsPreferences")}>
-                  <ListRow
-                    icon={Mail}
-                    title={t("emailAlerts")}
-                    hint={t("emailAlertsHint")}
-                    trailing={
-                      <Switch
-                        checked={alertPrefs.data?.email_enabled ?? true}
-                        onChange={(next) => saveAlerts.mutate({ email_enabled: next })}
-                        aria-label={t("emailAlerts")}
-                      />
-                    }
-                  />
-                  <ListRow
-                    icon={MessageSquare}
-                    title={t("smsAlerts")}
-                    hint={t("smsAlertsHint")}
-                    trailing={
-                      <Switch
-                        checked={alertPrefs.data?.sms_enabled ?? false}
-                        onChange={(next) => saveAlerts.mutate({ sms_enabled: next })}
-                        aria-label={t("smsAlerts")}
-                      />
-                    }
-                  />
-                </ListGroup>
+                <div className="min-w-0 space-y-6">
+                  <ListGroup title={t("settingsPreferences")}>
+                    <ListRow
+                      icon={Mail}
+                      title={t("emailAlerts")}
+                      hint={t("emailAlertsHint")}
+                      trailing={
+                        <Switch
+                          checked={alertPrefs.data?.email_enabled ?? true}
+                          onChange={(next) => saveAlerts.mutate({ email_enabled: next })}
+                          aria-label={t("emailAlerts")}
+                        />
+                      }
+                    />
+                    <ListRow
+                      icon={MessageSquare}
+                      title={t("smsAlerts")}
+                      hint={t("smsAlertsHint")}
+                      trailing={
+                        <Switch
+                          checked={alertPrefs.data?.sms_enabled ?? false}
+                          onChange={(next) => saveAlerts.mutate({ sms_enabled: next })}
+                          aria-label={t("smsAlerts")}
+                        />
+                      }
+                    />
+                  </ListGroup>
 
-                <ListGroup title={t("settingsPrivacy")}>
-                  <ListRow
-                    icon={Navigation}
-                    title={t("shareLocation")}
-                    hint={
-                      profile.location_consent === "granted"
-                        ? profile.location_shared_at
-                          ? t("locationShared", { time: relativeTime(profile.location_shared_at, lang) })
-                          : t("locationSharedPending")
-                        : t("shareLocationHint")
-                    }
-                    trailing={
-                      <Switch
-                        checked={profile.location_consent === "granted"}
-                        disabled={toggleLocationSharing.isPending}
-                        onChange={(next) => toggleLocationSharing.mutate(next)}
-                        aria-label={t("shareLocation")}
-                      />
-                    }
-                  />
-                  <ContactPrivacyRows />
-                </ListGroup>
+                  <ListGroup title={t("settingsPrivacy")}>
+                    <ListRow
+                      icon={Navigation}
+                      title={t("shareLocation")}
+                      hint={
+                        profile.location_consent === "granted"
+                          ? profile.location_shared_at
+                            ? t("locationShared", { time: relativeTime(profile.location_shared_at, lang) })
+                            : t("locationSharedPending")
+                          : t("shareLocationHint")
+                      }
+                      trailing={
+                        <Switch
+                          checked={profile.location_consent === "granted"}
+                          disabled={toggleLocationSharing.isPending}
+                          onChange={(next) => toggleLocationSharing.mutate(next)}
+                          aria-label={t("shareLocation")}
+                        />
+                      }
+                    />
+                    <ContactPrivacyRows />
+                  </ListGroup>
+                </div>
 
-                <ListGroup title={t("accountTitle")}>
-                  <ListRow icon={Users} title={t("myFriends")} to="/friends" />
-                  <ListRow
-                    icon={Eye}
-                    title={t("viewPublicProfile")}
-                    to="/worker/$workerId"
-                    params={{ workerId: profile.id }}
-                  />
-                  <ListRow
-                    icon={LinkIcon}
-                    title={t("copyLink")}
-                    hint={<span className="break-all">{profileUrl(profile.public_slug)}</span>}
-                    onClick={() => copy.mutate()}
-                    trailing={null}
-                  />
-                  <ListRow
-                    icon={Share2}
-                    title={t("shareProfile")}
-                    hint={t("shareProfileHint")}
-                    onClick={() => share.mutate()}
-                    trailing={null}
-                  />
-                </ListGroup>
+                <div className="min-w-0 space-y-6">
 
-                <ListGroup>
-                  <ListRow icon={LogOut} title={t("signOut")} tone="danger" onClick={() => setSignOutConfirmOpen(true)} />
-                  <ListRow
-                    icon={Trash2}
-                    title={t("deleteAccount")}
-                    hint={t("deleteAccountHint")}
-                    tone="danger"
-                    onClick={() => {
-                      setDeleteConfirm("");
-                      setDeletePassword("");
-                      setDeleteOpen(true);
-                    }}
-                  />
-                </ListGroup>
+                  <ListGroup title={t("accountTitle")}>
+                    <ListRow icon={Users} title={t("myFriends")} to="/friends" />
+                    <ListRow
+                      icon={Eye}
+                      title={t("viewPublicProfile")}
+                      to="/worker/$workerId"
+                      params={{ workerId: profile.id }}
+                    />
+                    <ListRow
+                      icon={LinkIcon}
+                      title={t("copyLink")}
+                      hint={<span className="break-all">{profileUrl(profile.public_slug)}</span>}
+                      onClick={() => copy.mutate()}
+                      trailing={null}
+                    />
+                    <ListRow
+                      icon={Share2}
+                      title={t("shareProfile")}
+                      hint={t("shareProfileHint")}
+                      onClick={() => share.mutate()}
+                      trailing={null}
+                    />
+                  </ListGroup>
+
+                  <ListGroup>
+                    <ListRow icon={LogOut} title={t("signOut")} tone="danger" onClick={() => setSignOutConfirmOpen(true)} />
+                    <ListRow
+                      icon={Trash2}
+                      title={t("deleteAccount")}
+                      hint={t("deleteAccountHint")}
+                      tone="danger"
+                      onClick={() => {
+                        setDeleteConfirm("");
+                        setDeletePassword("");
+                        setDeleteOpen(true);
+                      }}
+                    />
+                  </ListGroup>
+                </div>
               </div>
             )}
 
@@ -1155,9 +1253,9 @@ export function ProfileScreen() {
                 id="profile-panel-about"
                 role="tabpanel"
                 aria-labelledby="profile-tab-about"
-                className="animate-in-up mx-auto max-w-2xl"
+                className="animate-in-up"
               >
-                <DulekoPagesHub />
+                <DulekoPagesHub wide />
               </div>
             )}
           </div>
@@ -1245,7 +1343,84 @@ export function ProfileScreen() {
   );
 }
 
-/** How complete the profile is, and what's still missing - one slim line and a bar. */
+/** Available for work or not - the one switch people change most, as the lead card. */
+function AvailabilityCard({
+  on,
+  pending,
+  onChange,
+}: {
+  on: boolean;
+  pending: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <section
+      className={cn(
+        "relative flex items-center gap-4 overflow-hidden rounded-2xl border p-4 shadow-sm transition-colors sm:p-5",
+        "border-slate-200 bg-white",
+      )}
+    >
+      <span
+        className={cn(
+          "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+          on ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-400",
+        )}
+      >
+        <CircleDot className="h-6 w-6" aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1">
+        <h3 className="text-base font-semibold text-slate-900">
+          {on ? t("availableForWork") : t("notAvailable")}
+        </h3>
+        <p className="mt-0.5 text-sm leading-snug text-slate-600">
+          {on ? t("availabilityOnHint") : t("availabilityOffHint")}
+        </p>
+      </div>
+      <Switch checked={on} disabled={pending} onChange={onChange} aria-label={t("availableForWork")} />
+    </section>
+  );
+}
+
+/** One number on the stats row; pass onClick to make it a shortcut. */
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+  onClick,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  onClick?: () => void;
+}) {
+  const body = (
+    <>
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+        <Icon className="h-[18px] w-[18px]" aria-hidden />
+      </span>
+      <span className="mt-3 truncate text-2xl font-bold tabular-nums leading-none text-slate-900">{value}</span>
+      <span className="mt-1.5 flex items-center gap-1 truncate text-xs font-medium text-slate-500">
+        {label}
+        {onClick && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />}
+      </span>
+    </>
+  );
+  const box = "flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm";
+  return onClick ? (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(box, "transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md")}
+    >
+      {body}
+    </button>
+  ) : (
+    <div className={box}>{body}</div>
+  );
+}
+
+/** How complete the profile is: a ring, and every check as a chip - the missing ones open the editor. */
 function ProfileStrength({
   percent,
   checks,
@@ -1256,32 +1431,68 @@ function ProfileStrength({
   onComplete: () => void;
 }) {
   const { t, lang } = useI18n();
-  const missing = checks.filter((c) => !c.done).map((c) => c.label);
+  const radius = 26;
+  const circumference = 2 * Math.PI * radius;
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="min-w-0 text-[15px] font-medium text-slate-900">
-          {t("profileCompleteTitle", { percent: formatNumber(percent, lang) })}
-        </p>
-        <button
-          type="button"
-          onClick={onComplete}
-          className="-my-1 shrink-0 rounded-md px-1.5 py-1 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50 hover:text-brand-800"
-        >
-          {t("completeProfile")}
-        </button>
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="flex flex-col gap-4 @2xl:flex-row @2xl:items-center @2xl:gap-6">
+        <div className="flex min-w-0 items-center gap-4 @2xl:w-80 @2xl:shrink-0">
+          <div
+            className="relative h-16 w-16 shrink-0"
+            role="progressbar"
+            aria-valuenow={percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={t("profileCompleteTitle", { percent: formatNumber(percent, lang) })}
+          >
+            <svg viewBox="0 0 64 64" className="h-full w-full -rotate-90" aria-hidden>
+              <circle cx="32" cy="32" r={radius} fill="none" strokeWidth="7" className="stroke-slate-100" />
+              <circle
+                cx="32"
+                cy="32"
+                r={radius}
+                fill="none"
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={circumference * (1 - percent / 100)}
+                className="stroke-brand-600 transition-[stroke-dashoffset] duration-700"
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-900">
+              {formatNumber(percent, lang)}%
+            </span>
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-base font-bold text-slate-900">
+              {t("profileCompleteTitle", { percent: formatNumber(percent, lang) })}
+            </h3>
+            <p className="mt-0.5 text-sm leading-snug text-slate-500">{t("profileCompleteHint")}</p>
+          </div>
+        </div>
+
+        <ul className="flex flex-wrap gap-2 @2xl:flex-1">
+          {checks.map(({ done, label, icon: Icon }) => (
+            <li key={label}>
+              {done ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500">
+                  <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden />
+                  {label}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onComplete}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-brand-400 hover:bg-brand-50 hover:text-brand-800"
+                >
+                  <Icon className="h-3.5 w-3.5" aria-hidden />
+                  {label}
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
-      <div
-        className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100"
-        role="progressbar"
-        aria-valuenow={percent}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={t("profileCompleteTitle", { percent: formatNumber(percent, lang) })}
-      >
-        <div className="h-full rounded-full bg-brand-600 transition-[width] duration-700" style={{ width: `${percent}%` }} />
-      </div>
-      {missing.length > 0 && <p className="mt-2.5 text-xs leading-relaxed text-slate-500">{missing.join(" · ")}</p>}
     </section>
   );
 }

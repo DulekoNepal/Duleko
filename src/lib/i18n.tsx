@@ -261,6 +261,8 @@ const strings = {
   accountTitle: ["Account", "खाता"],
   noBusyDays: ["No busy days marked - you're open every day.", "कुनै व्यस्त दिन छैन - तपाईं हरेक दिन खाली हुनुहुन्छ।"],
   skillsAndRates: ["Skills & rates", "सीप र दर"],
+  busyDaysLabel: ["Busy days", "व्यस्त दिन"],
+  rateNotSet: ["No rate set", "दर राखिएको छैन"],
   editSkills: ["Edit skills", "सीप सम्पादन"],
   addCertificate: ["Add a certificate", "प्रमाणपत्र थप्नुहोस्"],
   saveChanges: ["Save changes", "परिवर्तन सुरक्षित गर्नुहोस्"],

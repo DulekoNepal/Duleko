@@ -15,6 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { ListGroup, ListRow } from "@/components/duleko/SettingsList";
+import { cn } from "@/lib/utils";
 import { CONTACT_EMAIL } from "@/components/duleko/site/actions";
 import type { SitePath } from "@/components/duleko/site/nav";
 import { useI18n, type StringKey } from "@/lib/i18n";
@@ -65,29 +66,32 @@ const GROUPS: { id: string; titleKey: StringKey; pages: HubPage[] }[] = [
  * links. Each page opens in the website layout with a back button that
  * returns here, and Android's hardware back does the same.
  */
-export function DulekoPagesHub() {
+export function DulekoPagesHub({ wide = false }: { wide?: boolean }) {
   const { t } = useI18n();
   return (
     <div className="space-y-6">
       <p className="px-1 text-sm leading-relaxed text-slate-500">{t("hubHint")}</p>
 
-      {GROUPS.map((group) => (
-        <ListGroup key={group.id} title={t(group.titleKey)}>
-          {group.pages.map((page) => (
-            <ListRow
-              key={`${page.to}${page.hash ?? ""}`}
-              icon={page.icon}
-              title={t(page.titleKey)}
-              to={page.to}
-              hash={page.hash}
-            />
-          ))}
-        </ListGroup>
-      ))}
+      {/* Two-up in a wide @container (Profile's About tab). */}
+      <div className={cn("space-y-6", wide && "@3xl:grid @3xl:grid-cols-2 @3xl:items-start @3xl:gap-6 @3xl:space-y-0")}>
+        {GROUPS.map((group) => (
+          <ListGroup key={group.id} title={t(group.titleKey)}>
+            {group.pages.map((page) => (
+              <ListRow
+                key={`${page.to}${page.hash ?? ""}`}
+                icon={page.icon}
+                title={t(page.titleKey)}
+                to={page.to}
+                hash={page.hash}
+              />
+            ))}
+          </ListGroup>
+        ))}
 
-      <ListGroup title={t("contactUs")}>
-        <ListRow icon={Mail} title={t("footerContactUs")} hint={CONTACT_EMAIL} href={`mailto:${CONTACT_EMAIL}`} />
-      </ListGroup>
+        <ListGroup title={t("contactUs")}>
+          <ListRow icon={Mail} title={t("footerContactUs")} hint={CONTACT_EMAIL} href={`mailto:${CONTACT_EMAIL}`} />
+        </ListGroup>
+      </div>
 
       <p className="px-1 text-center text-xs text-slate-400">{t("footerMadeIn")}</p>
     </div>
