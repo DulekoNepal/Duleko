@@ -477,9 +477,9 @@ function GuestHero({
 /* ------------------------------------------------------------------ */
 
 /**
- * Four shortcuts, always one row. On a phone they're app-style icons with
- * a label in one card; from sm up each becomes its own small card with a
- * hint line.
+ * Four shortcuts in one plain card, split by hairlines: icon over label on
+ * a phone, icon beside label and hint from sm up. Hover is just a faint
+ * grey - nothing fills with colour.
  */
 function QuickActions({ pending, unreadMessages }: { pending: number; unreadMessages: number }) {
   const { t, lang } = useI18n();
@@ -500,28 +500,28 @@ function QuickActions({ pending, unreadMessages }: { pending: number; unreadMess
   return (
     <nav
       aria-label={t("quickActions")}
-      className="animate-in-up grid grid-cols-4 gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:gap-3 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none"
+      className="animate-in-up grid grid-cols-4 divide-x divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
       style={{ "--delay": "30ms" } as CSSProperties}
     >
       {actions.map(({ to, icon: Icon, label, hint, badge }) => (
         <Link
           key={to}
           to={to}
-          className="group flex min-w-0 flex-col items-center gap-1.5 rounded-xl px-1 py-2 text-center transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 sm:flex-row sm:gap-2.5 sm:border sm:border-slate-200 sm:bg-white sm:p-3 sm:text-left sm:shadow-sm sm:hover:border-brand-300 sm:hover:bg-white"
+          className="flex min-w-0 flex-col items-center gap-1.5 px-1 py-3 text-center transition-colors hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none sm:flex-row sm:gap-3 sm:px-4 sm:text-left"
         >
-          <span className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition-colors group-hover:bg-brand-700 group-hover:text-white sm:h-9 sm:w-9 sm:rounded-lg">
-            <Icon className="h-4.5 w-4.5 sm:h-4 sm:w-4" aria-hidden />
+          <span className="relative shrink-0 text-brand-700">
+            <Icon className="h-5 w-5" aria-hidden />
             {badge ? (
-              <span className="absolute -right-1.5 -top-1.5 min-w-4.5 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-[18px] text-white ring-2 ring-white">
+              <span className="absolute -right-2.5 -top-2 min-w-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-4 text-white ring-2 ring-white">
                 {formatNumber(badge > 9 ? "9+" : badge, lang)}
               </span>
             ) : null}
           </span>
           <span className="w-full min-w-0 sm:flex-1">
-            <span className="block truncate text-[11px] font-medium text-slate-700 sm:text-[13px] sm:font-semibold sm:text-slate-900">
+            <span className="block truncate text-xs font-medium text-slate-800 sm:text-sm sm:font-semibold sm:text-slate-900">
               {label}
             </span>
-            <span className="hidden truncate text-[11px] text-slate-500 sm:block">{hint}</span>
+            <span className="hidden truncate text-xs text-slate-500 sm:block">{hint}</span>
           </span>
         </Link>
       ))}
