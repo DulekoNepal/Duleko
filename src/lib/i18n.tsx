@@ -168,7 +168,7 @@ const strings = {
   changePhoto: ["Change photo", "फोटो बदल्नुहोस्"],
   removePhoto: ["Remove photo", "फोटो हटाउनुहोस्"],
   changeCover: ["Change cover photo", "कभर फोटो बदल्नुहोस्"],
-  photoTooBig: ["Photo must be under 2 MB.", "फोटो २ MB भन्दा सानो हुनुपर्छ।"],
+  photoTooBig: ["This file is too large.", "यो फाइल धेरै ठूलो छ।"],
 
   // ---- home ----------------------------------------------------------
   greeting: ["Namaste, {name}", "नमस्ते, {name}"],

@@ -8,7 +8,7 @@ import { countUnread, countUnreadMessages } from "@/lib/queries";
 import { setAppBadge } from "@/lib/native-android";
 import { supabase } from "@/lib/supabase";
 import { cn, formatNumber } from "@/lib/utils";
-import dulekoMark from "@/assets/duleko-mark.png";
+import dulekoMark from "@/assets/duleko-mark.webp";
 
 
 /**

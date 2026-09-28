@@ -2,33 +2,21 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  lazyRouteComponent,
   Outlet,
   redirect,
 } from "@tanstack/react-router";
 import { Capacitor } from "@capacitor/core";
 import { AppShell } from "@/App";
 import { HomeScreen } from "@/routes/HomeScreen";
-import { SearchScreen, type SearchFilters } from "@/routes/SearchScreen";
-import { WorkerScreen } from "@/routes/WorkerScreen";
-import { WorkScreen } from "@/routes/WorkScreen";
-import { NotificationsScreen } from "@/routes/NotificationsScreen";
-import { ProfileScreen } from "@/routes/ProfileScreen";
-import { FriendsScreen } from "@/routes/FriendsScreen";
-import { ChatScreen } from "@/routes/ChatScreen";
-import { ChatsScreen } from "@/routes/ChatsScreen";
-import { ModerationScreen } from "@/routes/ModerationScreen";
-import { PrivacyPage } from "@/routes/site/PrivacyPage";
-import { AboutPage } from "@/routes/site/AboutPage";
-import { FounderPage } from "@/routes/site/FounderPage";
-import { MissionPage } from "@/routes/site/MissionPage";
-import { ForBusinessesPage, ForIndividualsPage, PartnersPage } from "@/routes/site/AudiencePages";
-import { SafetyPage } from "@/routes/site/SafetyPage";
-import { MotivationPage } from "@/routes/site/MotivationPage";
-import { RegistrationPolicyPage } from "@/routes/site/RegistrationPolicyPage";
+import type { SearchFilters } from "@/routes/SearchScreen";
 import { LandingPage } from "@/routes/site/LandingPage";
-import { TermsPage } from "@/routes/site/TermsPage";
 import { syncSeoTags } from "@/lib/seo";
 
+// The public website and the app's Home - the two screens people land on -
+// load up front. Every other screen is fetched the first time it is opened
+// (or hovered, via defaultPreload), so first load no longer downloads the
+// whole app.
 const rootRoute = createRootRoute({
   component: () => (
     <AppShell>
@@ -73,13 +61,13 @@ const searchRoute = createRoute({
         ? search.sort
         : undefined,
   }),
-  component: SearchScreen,
+  component: lazyRouteComponent(() => import("@/routes/SearchScreen"), "SearchScreen"),
 });
 
 const workerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/worker/$workerId",
-  component: WorkerScreen,
+  component: lazyRouteComponent(() => import("@/routes/WorkerScreen"), "WorkerScreen"),
 });
 
 const workRoute = createRoute({
@@ -92,13 +80,13 @@ const workRoute = createRoute({
     job: typeof search.job === "string" && search.job ? search.job : undefined,
     from: search.from === "notifications" ? "notifications" : undefined,
   }),
-  component: WorkScreen,
+  component: lazyRouteComponent(() => import("@/routes/WorkScreen"), "WorkScreen"),
 });
 
 const notificationsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/notifications",
-  component: NotificationsScreen,
+  component: lazyRouteComponent(() => import("@/routes/NotificationsScreen"), "NotificationsScreen"),
 });
 
 export type ProfileTab = "overview" | "calendar" | "settings" | "about";
@@ -116,92 +104,92 @@ const profileRoute = createRoute({
         ? (search.tab as ProfileTab)
         : undefined,
   }),
-  component: ProfileScreen,
+  component: lazyRouteComponent(() => import("@/routes/ProfileScreen"), "ProfileScreen"),
 });
 
 const friendsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/friends",
-  component: FriendsScreen,
+  component: lazyRouteComponent(() => import("@/routes/FriendsScreen"), "FriendsScreen"),
 });
 
 const chatRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/chat/$otherId",
-  component: ChatScreen,
+  component: lazyRouteComponent(() => import("@/routes/ChatScreen"), "ChatScreen"),
 });
 
 const chatsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/chats",
-  component: ChatsScreen,
+  component: lazyRouteComponent(() => import("@/routes/ChatsScreen"), "ChatsScreen"),
 });
 
 const moderationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/moderation",
-  component: ModerationScreen,
+  component: lazyRouteComponent(() => import("@/routes/ModerationScreen"), "ModerationScreen"),
 });
 
 const privacyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/privacy",
-  component: PrivacyPage,
+  component: lazyRouteComponent(() => import("@/routes/site/PrivacyPage"), "PrivacyPage"),
 });
 
 const aboutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/about",
-  component: AboutPage,
+  component: lazyRouteComponent(() => import("@/routes/site/AboutPage"), "AboutPage"),
 });
 
 // Each team member's own page: /about/sanjay-gupta, ...
 const founderRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/about/$slug",
-  component: FounderPage,
+  component: lazyRouteComponent(() => import("@/routes/site/FounderPage"), "FounderPage"),
 });
 
 const missionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/mission",
-  component: MissionPage,
+  component: lazyRouteComponent(() => import("@/routes/site/MissionPage"), "MissionPage"),
 });
 
 const individualsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/individuals",
-  component: ForIndividualsPage,
+  component: lazyRouteComponent(() => import("@/routes/site/AudiencePages"), "ForIndividualsPage"),
 });
 
 const businessesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/businesses",
-  component: ForBusinessesPage,
+  component: lazyRouteComponent(() => import("@/routes/site/AudiencePages"), "ForBusinessesPage"),
 });
 
 const partnersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/partners",
-  component: PartnersPage,
+  component: lazyRouteComponent(() => import("@/routes/site/AudiencePages"), "PartnersPage"),
 });
 
 const safetyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/safety",
-  component: SafetyPage,
+  component: lazyRouteComponent(() => import("@/routes/site/SafetyPage"), "SafetyPage"),
 });
 
 const motivationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/motivation",
-  component: MotivationPage,
+  component: lazyRouteComponent(() => import("@/routes/site/MotivationPage"), "MotivationPage"),
 });
 
 const registrationPolicyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/registration-policy",
-  component: RegistrationPolicyPage,
+  component: lazyRouteComponent(() => import("@/routes/site/RegistrationPolicyPage"), "RegistrationPolicyPage"),
 });
 
 // Old address of the website home for members; "/" is that page now.
@@ -216,7 +204,7 @@ const welcomeRoute = createRoute({
 const termsOfUseRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/terms",
-  component: TermsPage,
+  component: lazyRouteComponent(() => import("@/routes/site/TermsPage"), "TermsPage"),
 });
 
 const routeTree = rootRoute.addChildren([

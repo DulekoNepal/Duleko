@@ -3,7 +3,7 @@ import { Briefcase, Calendar, Compass, LogIn, MapPin, Users } from "lucide-react
 import { LanguageToggleButton } from "./Layout";
 import { BrandWatermark } from "./site/ui";
 import { useI18n, type StringKey } from "@/lib/i18n";
-import dulekoMark from "@/assets/duleko-mark.png";
+import dulekoMark from "@/assets/duleko-mark.webp";
 
 // Same four ideas as the in-app WelcomeWalkthrough - reusing that copy here
 // means a first-time visitor and a first-time member see the same story.

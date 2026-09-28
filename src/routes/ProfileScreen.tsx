@@ -78,8 +78,8 @@ import {
   getUserSkills,
   type UserSkillInput,
 } from "@/lib/queries";
+import { MAX_PHOTO_INPUT_BYTES } from "@/lib/image";
 import { copyLink, profileUrl, shareProfile } from "@/lib/share";
-import { profileCardFilename, renderProfileCard, saveProfileCard } from "@/lib/profileCard";
 import { errorMessage } from "@/lib/supabase";
 import type { NotificationPrefs } from "@/lib/types";
 import {
@@ -315,6 +315,9 @@ export function ProfileScreen() {
   // then handed to the browser as a plain PNG download.
   const downloadCard = useMutation({
     mutationFn: async () => {
+      // Loaded on tap: the card drawer brings a QR encoder and React's
+      // server renderer, which nobody needs just to open their profile.
+      const { profileCardFilename, renderProfileCard, saveProfileCard } = await import("@/lib/profileCard");
       const blob = await renderProfileCard(profile!, mySkills.data ?? [], myPhone.data?.phone);
       return saveProfileCard(blob, profileCardFilename(profile!));
     },
@@ -541,7 +544,7 @@ export function ProfileScreen() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
-                  if (file.size > 4 * 1024 * 1024) {
+                  if (file.size > MAX_PHOTO_INPUT_BYTES) {
                     toast(t("photoTooBig"), "error");
                     return;
                   }
@@ -572,7 +575,7 @@ export function ProfileScreen() {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
-                      if (file.size > 2 * 1024 * 1024) {
+                      if (file.size > MAX_PHOTO_INPUT_BYTES) {
                         toast(t("photoTooBig"), "error");
                         return;
                       }
@@ -1087,7 +1090,10 @@ export function ProfileScreen() {
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (!file || !certTitle.trim()) return;
-                                if (file.size > 5 * 1024 * 1024) {
+                                // Photos are shrunk before upload; a PDF goes up as-is.
+                                const limit =
+                                  file.type === "application/pdf" ? 5 * 1024 * 1024 : MAX_PHOTO_INPUT_BYTES;
+                                if (file.size > limit) {
                                   toast(t("photoTooBig"), "error");
                                   return;
                                 }

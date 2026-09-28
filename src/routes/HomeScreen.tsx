@@ -37,7 +37,7 @@ import { countPendingForMe, countUnreadMessages, listSkills, searchWorkers, skil
 import { districtLabel } from "@/lib/nepal";
 import { cn, formatNumber, locationLine, skillName, todayKey } from "@/lib/utils";
 import type { Profile, Skill, WorkerCardData } from "@/lib/types";
-import dulekoMark from "@/assets/duleko-mark.png";
+import dulekoMark from "@/assets/duleko-mark.webp";
 
 // One orange accent for "tap for more" (the section "See all" links),
 // used nowhere else on the page, so every such link reads as one family.

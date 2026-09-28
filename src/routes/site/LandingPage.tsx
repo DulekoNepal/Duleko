@@ -32,7 +32,7 @@ import {
 } from "@/components/duleko/Site";
 import { Link } from "@tanstack/react-router";
 import { useI18n, type StringKey } from "@/lib/i18n";
-import dulekoMark from "@/assets/duleko-mark.png";
+import dulekoMark from "@/assets/duleko-mark.webp";
 
 const STEPS: { icon: React.ComponentType<{ className?: string }>; labelKey: StringKey }[] = [
   { icon: UserCircle, labelKey: "stepCreateProfile" },

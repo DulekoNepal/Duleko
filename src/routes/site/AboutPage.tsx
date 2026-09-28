@@ -27,9 +27,9 @@ import {
 import { PolicyContact } from "@/components/duleko/site/policy";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import sunilImage from "@/assets/sunil.jpg";
-import sanjayImage from "@/assets/sanjay.png";
-import dipendraImage from "@/assets/dipendra.jpg";
+import sunilImage from "@/assets/sunil.webp";
+import sanjayImage from "@/assets/sanjay.webp";
+import dipendraImage from "@/assets/dipendra.webp";
 
 const HOW_IT_WORKS_KEYS = [
   "walkthroughBody1",

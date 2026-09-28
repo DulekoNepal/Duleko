@@ -9,7 +9,7 @@ import { skillIconFor } from "@/components/duleko/SkillIcon";
 import { profileUrl } from "@/lib/share";
 import { initials, locationShort } from "@/lib/utils";
 import type { Profile, UserSkillDetail } from "@/lib/types";
-import dulekoLogo from "@/assets/duleko-logo-full.png";
+import dulekoLogo from "@/assets/duleko-logo-full.webp";
 
 // Duleko Green (brand-700 in styles.css) - the app's own official colour,
 // used as the one accent here (underlines, avatar ring, QR frame,

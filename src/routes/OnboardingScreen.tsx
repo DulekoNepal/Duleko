@@ -20,6 +20,7 @@ import {
   updateProfile,
   uploadAvatar,
 } from "@/lib/queries";
+import { MAX_PHOTO_INPUT_BYTES } from "@/lib/image";
 import { errorMessage } from "@/lib/supabase";
 import { cn, isValidNepaliPhone, normalisePhone } from "@/lib/utils";
 
@@ -121,7 +122,7 @@ export function OnboardingScreen() {
 
   function onPickPhoto(file: File | undefined) {
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > MAX_PHOTO_INPUT_BYTES) {
       toast(t("photoTooBig"), "error");
       return;
     }

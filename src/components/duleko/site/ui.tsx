@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import dulekoMark from "@/assets/duleko-mark.png";
+import dulekoMark from "@/assets/duleko-mark.webp";
 import dulekoSilhouette from "@/assets/duleko-mark-silhouette.png";
 
 const WATERMARK_MASK: React.CSSProperties = {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Capacitor } from "@capacitor/core";
 import { AlertTriangle } from "lucide-react";
@@ -7,8 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { GuestModeProvider, readGuestMode, persistGuestMode } from "@/hooks/use-guest-mode";
 import { useI18n } from "@/lib/i18n";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { AuthScreen } from "@/routes/AuthScreen";
-import { OnboardingScreen } from "@/routes/OnboardingScreen";
 import { WelcomeChoiceScreen } from "@/components/duleko/WelcomeChoiceScreen";
 import { SiteActionsProvider, type SiteActions } from "@/components/duleko/Site";
 import {
@@ -19,6 +17,14 @@ import {
 import { WelcomeWalkthrough, hasSeenWalkthrough } from "@/components/duleko/WelcomeWalkthrough";
 import { AutoShareLocation } from "@/components/duleko/AutoShareLocation";
 import { FullPageLoader } from "@/components/ui/states";
+
+// Sign-in and onboarding pull in the form libraries (react-hook-form, zod).
+// Most visits never show them - signed-in members and website readers - so
+// they load only when needed.
+const AuthScreen = lazy(() => import("@/routes/AuthScreen").then((m) => ({ default: m.AuthScreen })));
+const OnboardingScreen = lazy(() =>
+  import("@/routes/OnboardingScreen").then((m) => ({ default: m.OnboardingScreen })),
+);
 
 /** Shown when .env.local has not been filled in yet - the most common first-run trip-up. */
 function SetupScreen() {
@@ -189,17 +195,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // actually set a new one.
   if (isPasswordRecovery) {
     return (
-      <AuthScreen
-        onBack={() => {
-          clearPasswordRecovery();
-          signOut();
-        }}
-      />
+      <Suspense fallback={<FullPageLoader label={t("loading")} />}>
+        <AuthScreen
+          onBack={() => {
+            clearPasswordRecovery();
+            signOut();
+          }}
+        />
+      </Suspense>
     );
   }
 
   if (!session) {
-    if (authIntent) return <AuthScreen initialMode={authIntent} onBack={closeAuth} />;
+    if (authIntent) {
+      return (
+        <Suspense fallback={<FullPageLoader label={t("loading")} />}>
+          <AuthScreen initialMode={authIntent} onBack={closeAuth} />
+        </Suspense>
+      );
+    }
     // The Android app opens on a sign-in / explore choice. A shared profile
     // link has to land on the profile, though - showing the choice instead
     // throws away the deep link and makes every shared link look like a wall.
@@ -221,7 +235,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   if (loadingProfile) return <FullPageLoader label={t("loading")} />;
-  if (!profile) return <OnboardingScreen />;
+  if (!profile) {
+    return (
+      <Suspense fallback={<FullPageLoader label={t("loading")} />}>
+        <OnboardingScreen />
+      </Suspense>
+    );
+  }
 
   return (
     <div className="min-h-dvh">

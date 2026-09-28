@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { supabase, errorMessage } from "@/lib/supabase";
-import dulekoMark from "@/assets/duleko-mark.png";
+import dulekoMark from "@/assets/duleko-mark.webp";
 
 const schema = z.object({
   email: z.string().email(),

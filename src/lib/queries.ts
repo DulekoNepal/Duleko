@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { IMAGE_MAX_SIDE, shrinkImage } from "./image";
 import type {
   AppNotification,
   AvailabilityDay,
@@ -968,24 +969,31 @@ export async function getOnlineMap(profileIds: string[]): Promise<Record<string,
 // ---------------------------------------------------------------------
 // Avatar upload
 // ---------------------------------------------------------------------
-export async function uploadAvatar(userId: string, file: File): Promise<string> {
+// Every upload gets a fresh timestamped path and is never overwritten, so
+// phones and the CDN may keep it for a year instead of re-downloading each
+// face every hour.
+const IMMUTABLE_CACHE = "31536000";
+
+export async function uploadAvatar(userId: string, original: File): Promise<string> {
+  const file = await shrinkImage(original, IMAGE_MAX_SIDE.avatar);
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   const path = `${userId}/avatar-${Date.now()}.${ext}`;
   const { error } = await supabase.storage
     .from("avatars")
-    .upload(path, file, { upsert: true, cacheControl: "3600", contentType: file.type });
+    .upload(path, file, { upsert: true, cacheControl: IMMUTABLE_CACHE, contentType: file.type });
   if (error) throw error;
   const { data } = supabase.storage.from("avatars").getPublicUrl(path);
   return data.publicUrl;
 }
 
 /** Cover photo shown behind the avatar - workers use it to show a work-site photo. */
-export async function uploadCover(userId: string, file: File): Promise<string> {
+export async function uploadCover(userId: string, original: File): Promise<string> {
+  const file = await shrinkImage(original, IMAGE_MAX_SIDE.cover);
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   const path = `${userId}/cover-${Date.now()}.${ext}`;
   const { error } = await supabase.storage
     .from("covers")
-    .upload(path, file, { upsert: true, cacheControl: "3600", contentType: file.type });
+    .upload(path, file, { upsert: true, cacheControl: IMMUTABLE_CACHE, contentType: file.type });
   if (error) throw error;
   const { data } = supabase.storage.from("covers").getPublicUrl(path);
   return data.publicUrl;
@@ -1008,13 +1016,14 @@ export async function addCertificate(
   userId: string,
   profileId: string,
   title: string,
-  file: File,
+  original: File,
 ): Promise<Certificate> {
+  const file = await shrinkImage(original, IMAGE_MAX_SIDE.certificate);
   const ext = (file.name.split(".").pop() || "pdf").toLowerCase();
   const path = `${userId}/cert-${Date.now()}.${ext}`;
   const { error: uploadError } = await supabase.storage
     .from("certificates")
-    .upload(path, file, { upsert: true, cacheControl: "3600", contentType: file.type });
+    .upload(path, file, { upsert: true, cacheControl: IMMUTABLE_CACHE, contentType: file.type });
   if (uploadError) throw uploadError;
   const { data: pub } = supabase.storage.from("certificates").getPublicUrl(path);
   return unwrap(

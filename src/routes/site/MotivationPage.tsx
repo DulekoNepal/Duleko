@@ -12,9 +12,9 @@ import {
   StoryLink,
 } from "@/components/duleko/Site";
 import { useI18n, type StringKey } from "@/lib/i18n";
-import sunilImage from "@/assets/sunil.jpg";
-import sanjayImage from "@/assets/sanjay.png";
-import dipendraImage from "@/assets/dipendra.jpg";
+import sunilImage from "@/assets/sunil.webp";
+import sanjayImage from "@/assets/sanjay.webp";
+import dipendraImage from "@/assets/dipendra.webp";
 
 const FOUNDERS: {
   id: string;
