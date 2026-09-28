@@ -1237,18 +1237,23 @@ export function ProfileScreen() {
 
                   <ListGroup>
                     <ListRow icon={LogOut} title={t("signOut")} tone="danger" onClick={() => setSignOutConfirmOpen(true)} />
-                    <ListRow
-                      icon={Trash2}
-                      title={t("deleteAccount")}
-                      hint={t("deleteAccountHint")}
-                      tone="danger"
+                  </ListGroup>
+
+                  {/* Deliberately quiet, but still here: Play Store policy
+                      needs in-app deletion to stay discoverable. */}
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      className="text-xs text-slate-400 underline-offset-2 hover:text-slate-500 hover:underline"
                       onClick={() => {
                         setDeleteConfirm("");
                         setDeletePassword("");
                         setDeleteOpen(true);
                       }}
-                    />
-                  </ListGroup>
+                    >
+                      {t("deleteAccount")}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

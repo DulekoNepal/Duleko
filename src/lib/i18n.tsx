@@ -647,10 +647,6 @@ const strings = {
   viewPublicProfile: ["View my public profile", "मेरो सार्वजनिक प्रोफाइल हेर्नुहोस्"],
   yourProfileLink: ["Your profile link", "तपाईंको प्रोफाइल लिङ्क"],
   deleteAccount: ["Delete account", "खाता मेटाउनुहोस्"],
-  deleteAccountHint: [
-    "Permanent. Everything goes, and it cannot be brought back.",
-    "स्थायी। सबै कुरा जान्छ, फिर्ता ल्याउन सकिँदैन।",
-  ],
   deleteAccountBody: [
     "This removes your profile, photos, chats, work history and reviews for good. It cannot be undone.",
     "यसले तपाईंको प्रोफाइल, फोटो, कुराकानी, कामको इतिहास र समीक्षाहरू सधैंको लागि हटाउँछ। यो फिर्ता गर्न सकिँदैन।",
