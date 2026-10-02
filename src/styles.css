@@ -85,7 +85,6 @@ html.dark {
 
   --color-accent-50: #2e1a0c;
   --color-orange-50: #2e1a0c;
-  --color-teal-50: #0f2a30;
   --color-red-50: #2d1416;
   --color-red-100: #3a1719;
   --color-red-200: #5a2226;
@@ -136,6 +135,12 @@ html.dark :is([class*="text-green-6"], [class*="text-green-7"]) {
 }
 html.dark :is([class*="text-accent-6"], [class*="text-accent-7"]) {
   --color-accent-600: #fb923c;
+}
+
+/* Pale teal is the footer's text colour, so only darken it where it's a
+   fill (the success toast). */
+html.dark [class*="bg-teal-50"] {
+  --color-teal-50: #0f2a30;
 }
 
 /* Pale brand text sits on the dark-green sections: keep it pale. */

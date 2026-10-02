@@ -105,9 +105,10 @@ export function SiteButton({
         variant === "outline" &&
           "border-2 border-brand-700 bg-surface text-brand-800 hover:bg-brand-50 focus-visible:ring-brand-700",
         variant === "ghost" && "text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-slate-400",
-        variant === "light" && "bg-surface text-brand-800 shadow-md hover:bg-brand-50 focus-visible:ring-surface",
+        variant === "light" &&
+          "bg-white text-[#166534] shadow-md hover:bg-[#f0fdf4] focus-visible:ring-white",
         variant === "ghostLight" &&
-          "border-2 border-white/70 text-white hover:bg-white/10 focus-visible:ring-surface",
+          "border-2 border-white/70 text-white hover:bg-white/10 focus-visible:ring-white",
         size === "sm" && "h-10 px-4 text-sm",
         size === "md" && "h-11 px-5 text-sm sm:text-base",
         size === "lg" && "h-12 px-6 text-[15px] sm:text-base",
