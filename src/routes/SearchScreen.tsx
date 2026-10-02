@@ -274,14 +274,14 @@ export function SearchScreen() {
         <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start lg:gap-4">
           {/* ---- Desktop: filters beside the results ---------------------- */}
           <aside className="hidden lg:sticky lg:top-20 lg:block">
-            <div className="rounded-2xl border border-slate-200 bg-surface p-3.5 shadow-sm">
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <div className="rounded-2xl border border-slate-200 bg-surface p-3 shadow-sm">
+              <h2 className="mb-2.5 flex items-center gap-2 text-sm font-semibold text-slate-900">
                 <SlidersHorizontal className="h-3.5 w-3.5 text-brand-700" aria-hidden />
                 {t("filters")}
               </h2>
               <FilterPanel {...panelProps} sortLayout="stack" />
               {hasFilters && (
-                <Button variant="outline" size="sm" className="mt-1 w-full" onClick={clearAll}>
+                <Button variant="outline" size="sm" className="h-8 w-full text-[13px]" onClick={clearAll}>
                   {t("clearFilters")}
                 </Button>
               )}
@@ -514,11 +514,16 @@ function FilterPanel({
 }) {
   const { t, lang } = useI18n();
   const current = filters.sort ?? "relevance";
+  // The desktop sidebar matches the app's other compact panels (13px, short
+  // rows). The phone sheet keeps 16px fields, or iOS zooms on focus.
+  const dense = sortLayout === "stack";
+  const control = dense ? "h-8 rounded-lg px-2.5 text-[13px]!" : undefined;
+  const field = dense ? "mb-2.5" : undefined;
 
   return (
     <div>
-      <p className="mb-1.5 text-[13px] font-medium text-slate-700">{t("sortBy")}</p>
-      <div className={cn("mb-4 grid gap-1.5", sortLayout === "grid" ? "grid-cols-2" : "grid-cols-1")}>
+      <p className={cn("text-[13px] font-medium text-slate-700", dense ? "mb-1" : "mb-1.5")}>{t("sortBy")}</p>
+      <div className={cn("grid", dense ? "mb-3 grid-cols-1 gap-1" : "mb-4 grid-cols-2 gap-1.5")}>
         {SORTS.map(({ value, labelKey, icon: Icon }) => {
           const selected = value === current;
           return (
@@ -529,7 +534,8 @@ function FilterPanel({
               disabled={locating}
               aria-pressed={selected}
               className={cn(
-                "flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-[13px] font-medium transition-colors disabled:opacity-60",
+                "flex items-center gap-2 rounded-lg border px-2.5 text-left text-[13px] font-medium transition-colors disabled:opacity-60",
+                dense ? "py-1.5" : "py-2",
                 selected
                   ? "border-brand-600 bg-brand-50 text-brand-800 ring-1 ring-brand-600"
                   : "border-slate-200 bg-surface text-slate-600 hover:border-brand-300",
@@ -542,8 +548,8 @@ function FilterPanel({
         })}
       </div>
 
-      <Field label={t("skills")}>
-        <Select value={filters.skill ?? ""} onChange={(e) => onUpdate({ skill: e.target.value || undefined })}>
+      <Field label={t("skills")} className={field}>
+        <Select className={control} value={filters.skill ?? ""} onChange={(e) => onUpdate({ skill: e.target.value || undefined })}>
           <option value="">{t("allSkills")}</option>
           {skills.map((s) => (
             <option key={s.id} value={s.id}>
@@ -553,8 +559,8 @@ function FilterPanel({
         </Select>
       </Field>
 
-      <Field label={t("district")}>
-        <Select value={filters.district ?? ""} onChange={(e) => onUpdate({ district: e.target.value || undefined })}>
+      <Field label={t("district")} className={field}>
+        <Select className={control} value={filters.district ?? ""} onChange={(e) => onUpdate({ district: e.target.value || undefined })}>
           <option value="">{t("anywhere")}</option>
           {ALL_DISTRICTS.map((d) => (
             <option key={d.en} value={d.en}>
@@ -564,15 +570,21 @@ function FilterPanel({
         </Select>
       </Field>
 
-      <Field label={t("onDate")}>
+      <Field label={t("onDate")} className={field}>
         <Input
+          className={control}
           type="date"
           value={filters.day ?? ""}
           onChange={(e) => onUpdate({ day: e.target.value || undefined })}
         />
       </Field>
 
-      <div className="mb-3.5 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+      <div
+        className={cn(
+          "flex items-center justify-between gap-3 border border-slate-200 bg-slate-50/70",
+          dense ? "mb-2.5 rounded-lg px-2.5 py-1.5" : "mb-3.5 rounded-xl px-3 py-2",
+        )}
+      >
         <span className="inline-flex items-center gap-2 text-[13px] font-medium text-slate-700">
           <span className="h-2 w-2 rounded-full bg-brand-500" aria-hidden />
           {t("availableOnly")}
