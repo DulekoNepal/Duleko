@@ -142,11 +142,16 @@ html.dark :is([class*="text-accent-6"], [class*="text-accent-7"]) {
    page but glare on a dark one, so in dark mode they deepen to night
    greens and teals. Scoped to `.band` so buttons elsewhere keep theirs. */
 html.dark .band {
-  --color-brand-600: #12552f;
-  --color-brand-700: #104827;
-  --color-brand-800: #0d3a21;
-  --color-teal-700: #0d3540;
-  --color-teal-800: #0a2731;
+  --color-brand-600: #0e4426;
+  --color-brand-700: #0c3920;
+  --color-brand-800: #0a2e1a;
+  --color-teal-700: #0a2a33;
+  --color-teal-800: #081e26;
+}
+
+/* ...and their soft corner glows fade back, or they lift the band again. */
+html.dark .band .pointer-events-none.rounded-full[class*="blur-"] {
+  opacity: 0.35;
 }
 
 /* Pale teal is the footer's text colour, so only darken it where it's a
