@@ -11,7 +11,6 @@ import {
   Menu,
   ShieldCheck,
   Target,
-  UserPlus,
   X,
 } from "lucide-react";
 import { LanguageToggleButton } from "@/components/duleko/Layout";
@@ -441,11 +440,14 @@ function MobileDrawer({
     if (open) closeRef.current?.focus();
   }, [open]);
 
+  // One plain row style for every link - small icon, label, nothing else.
   const rowClass = (active: boolean) =>
     cn(
-      "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[15px] font-medium transition-colors",
-      active ? "bg-brand-50 text-brand-800" : "text-slate-700 hover:bg-slate-50",
+      "flex items-center gap-3 rounded-lg px-3 py-2 text-[15px] transition-colors",
+      active ? "bg-brand-50 font-semibold text-brand-800" : "font-medium text-slate-700 hover:bg-slate-50",
     );
+  const iconClass = (active: boolean) =>
+    cn("h-[18px] w-[18px] shrink-0", active ? "text-brand-700" : "text-slate-400");
 
   return (
     <div
@@ -491,25 +493,26 @@ function MobileDrawer({
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-2.5 py-2.5" aria-label={t("siteWebsiteNav")}>
+        <nav className="flex-1 overflow-y-auto px-3 py-3" aria-label={t("siteWebsiteNav")}>
           <Link to="/" onClick={onClose} className={rowClass(pathname === "/")}>
-            <Home className="h-[18px] w-[18px] text-brand-700" aria-hidden />
+            <Home className={iconClass(pathname === "/")} aria-hidden />
             {t("siteHome")}
           </Link>
 
           {NAV.map((entry) => {
             if (entry.kind === "link") {
               const Icon = LINK_ICONS[entry.to] ?? Home;
+              const active = pathname === entry.to;
               return (
-                <Link key={entry.to} to={entry.to} onClick={onClose} className={rowClass(pathname === entry.to)}>
-                  <Icon className="h-[18px] w-[18px] text-brand-700" aria-hidden />
+                <Link key={entry.to} to={entry.to} onClick={onClose} className={rowClass(active)}>
+                  <Icon className={iconClass(active)} aria-hidden />
                   {t(entry.labelKey)}
                 </Link>
               );
             }
             return (
-              <div key={entry.id} className="mt-2 border-t border-slate-100 pt-2.5">
-                <p className="px-2.5 pb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-accent-600">
+              <div key={entry.id} className="mt-4">
+                <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                   {t(entry.labelKey)}
                 </p>
                 {entry.items.map((item) => {
@@ -521,18 +524,10 @@ function MobileDrawer({
                       to={item.to}
                       hash={item.hash}
                       onClick={onClose}
-                      className={cn(
-                        "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 transition-colors",
-                        active ? "bg-brand-50" : "hover:bg-slate-50",
-                      )}
+                      className={rowClass(active)}
                     >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-sm font-semibold leading-snug text-slate-900">{t(item.labelKey)}</span>
-                        <span className="block text-xs leading-snug text-slate-500">{t(item.descriptionKey)}</span>
-                      </span>
+                      <Icon className={iconClass(active)} aria-hidden />
+                      <span className="truncate">{t(item.labelKey)}</span>
                     </Link>
                   );
                 })}
@@ -541,30 +536,31 @@ function MobileDrawer({
           })}
         </nav>
 
-        <div className="space-y-2 border-t border-slate-100 bg-slate-50/70 px-3 pb-[calc(var(--sab)+0.75rem)] pt-3">
-          <SiteButton size="sm" className="w-full" onClick={primaryCta.onClick}>
-            {signedIn ? <Compass className="h-4 w-4" aria-hidden /> : <UserPlus className="h-4 w-4" aria-hidden />}
-            {primaryCta.label}
-          </SiteButton>
-          {!signedIn && (
-            <div className="grid grid-cols-2 gap-2">
-              <SiteButton variant="outline" size="sm" className="w-full" onClick={onSignIn}>
-                <LogIn className="h-4 w-4" aria-hidden />
-                {t("siteLogIn")}
-              </SiteButton>
-              <SiteButton variant="ghost" size="sm" className="w-full border border-slate-200 bg-surface" onClick={onExplore}>
-                <Compass className="h-4 w-4" aria-hidden />
+        <div className="border-t border-slate-100 px-3 pb-[calc(var(--sab)+0.75rem)] pt-3">
+          {signedIn ? (
+            <SiteButton size="sm" className="w-full" onClick={primaryCta.onClick}>
+              <Compass className="h-4 w-4" aria-hidden />
+              {primaryCta.label}
+            </SiteButton>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <SiteButton variant="outline" size="sm" className="w-full" onClick={onSignIn}>
+                  {t("siteLogIn")}
+                </SiteButton>
+                <SiteButton size="sm" className="w-full" onClick={primaryCta.onClick}>
+                  {primaryCta.label}
+                </SiteButton>
+              </div>
+              <button
+                type="button"
+                onClick={onExplore}
+                className="mt-2 w-full py-1 text-center text-[13px] font-medium text-slate-500 transition-colors hover:text-brand-700"
+              >
                 {t("headerExplore")}
-              </SiteButton>
-            </div>
+              </button>
+            </>
           )}
-          <a
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="flex items-center justify-center gap-1.5 pt-0.5 text-[13px] text-slate-500 hover:text-brand-700"
-          >
-            <Mail className="h-4 w-4" aria-hidden />
-            {CONTACT_EMAIL}
-          </a>
         </div>
       </div>
     </div>
