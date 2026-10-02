@@ -382,7 +382,7 @@ function DropdownPanel({
         </div>
 
         {wide ? (
-          <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-teal-700 to-teal-800 p-5 text-white">
+          <div className="band relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-teal-700 to-teal-800 p-5 text-white">
             <div
               className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand-400/20 blur-2xl"
               aria-hidden

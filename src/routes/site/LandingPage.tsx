@@ -60,7 +60,7 @@ export function LandingPage() {
     // English keeps index.html's own tab title; Nepali gets a translated one.
     <SiteLayout title={lang === "ne" ? t("homeHeroTitle") : undefined}>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-600 via-brand-700 to-teal-800 text-white">
+      <section className="band relative overflow-hidden bg-gradient-to-br from-brand-600 via-brand-700 to-teal-800 text-white">
         <div
           className="pointer-events-none absolute -right-20 -top-24 h-96 w-96 rounded-full bg-white/10 blur-3xl"
           aria-hidden
@@ -198,7 +198,7 @@ export function LandingPage() {
               {t(bodyKey)}
             </IconCard>
           ))}
-          <div className="relative flex items-center overflow-hidden rounded-2xl bg-teal-800 p-4 text-white shadow-sm sm:p-5">
+          <div className="band relative flex items-center overflow-hidden rounded-2xl bg-teal-800 p-4 text-white shadow-sm sm:p-5">
             <BrandWatermark className="-bottom-5 -right-5 h-28 w-28" />
             <p className="relative text-base font-semibold leading-snug sm:text-lg">
               {t("serviceEitherWay")}

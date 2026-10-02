@@ -166,7 +166,7 @@ export function TeamProfileCard({
       >
         <div
           className={cn(
-            "relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-800 to-teal-800 p-5 text-white sm:p-6",
+            "band relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-800 to-teal-800 p-5 text-white sm:p-6",
             reversed && "lg:order-2",
           )}
         >

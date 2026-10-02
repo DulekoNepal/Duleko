@@ -462,7 +462,7 @@ export function ReadNext({ links }: { links: { to: SitePath; hash?: string; titl
 export function FinalCta() {
   const { t } = useI18n();
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-800 to-teal-800 py-12 text-white sm:py-16">
+    <section className="band relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-800 to-teal-800 py-12 text-white sm:py-16">
       <div
         className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl"
         aria-hidden

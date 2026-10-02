@@ -106,7 +106,7 @@ export function SiteButton({
           "border-2 border-brand-700 bg-surface text-brand-800 hover:bg-brand-50 focus-visible:ring-brand-700",
         variant === "ghost" && "text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-slate-400",
         variant === "light" &&
-          "bg-white text-[#166534] shadow-md hover:bg-[#f0fdf4] focus-visible:ring-white",
+          "bg-white text-[#166534] shadow-md hover:bg-[#f0fdf4] focus-visible:ring-white dark:bg-[#16a34a] dark:text-white dark:shadow-black/30 dark:hover:bg-[#15803d]",
         variant === "ghostLight" &&
           "border-2 border-white/70 text-white hover:bg-white/10 focus-visible:ring-white",
         size === "sm" && "h-10 px-4 text-sm",

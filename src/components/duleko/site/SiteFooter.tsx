@@ -142,7 +142,7 @@ function FooterColumn({ title, links, wide = false }: { title: string; links: Fo
 export function SiteFooter() {
   const { t } = useI18n();
   return (
-    <footer className="relative overflow-hidden bg-teal-800 text-white">
+    <footer className="band relative overflow-hidden bg-teal-800 text-white">
       <div
         className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-brand-500/15 blur-3xl"
         aria-hidden
