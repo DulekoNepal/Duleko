@@ -229,7 +229,7 @@ export function BottomNav() {
               )}
             >
               <span className="relative">
-                <Icon className="h-5 w-5" aria-hidden />
+                <Icon className="h-6 w-6" aria-hidden />
                 {badge > 0 && (
                   <span className="absolute -right-2 -top-1.5 min-w-4 rounded-full bg-red-500 px-1 text-[10px] font-bold leading-4 text-white">
                     {formatNumber(badge > 9 ? "9+" : badge, lang)}
@@ -285,7 +285,7 @@ export function TopNav() {
                 )}
               >
                 <span className="relative">
-                  <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                  <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
                   {badge > 0 && (
                     <span className="absolute -right-2 -top-1.5 min-w-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-4 text-white">
                       {formatNumber(badge > 9 ? "9+" : badge, lang)}
