@@ -6,7 +6,7 @@ import { AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, ChevronDown, Chevron
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { OtpInput } from "@/components/ui/otp-input";
-import { LanguageToggleButton } from "@/components/duleko/Layout";
+import { HeaderToggles } from "@/components/duleko/Layout";
 import { PolicyDialog } from "@/components/duleko/PolicyDialog";
 import { siteOrigin } from "@/lib/share";
 import { cn } from "@/lib/utils";
@@ -309,7 +309,7 @@ export function AuthScreen({
         ) : (
           <span />
         )}
-        <LanguageToggleButton />
+        <HeaderToggles />
       </div>
 
       <div className="mx-auto w-full max-w-sm flex-1 px-5 pb-10">

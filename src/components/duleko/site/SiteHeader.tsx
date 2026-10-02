@@ -13,7 +13,7 @@ import {
   Target,
   X,
 } from "lucide-react";
-import { LanguageToggleButton } from "@/components/duleko/Layout";
+import { HeaderToggles, ThemeToggleButton } from "@/components/duleko/Layout";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { CONTACT_EMAIL, useSiteActions } from "./actions";
@@ -38,7 +38,9 @@ function isGroupActive(entry: Extract<NavEntry, { kind: "group" }>, pathname: st
  * panel and a compact "About" one - that open on hover or click.
  * Below lg: a hamburger opening a slide-in drawer with the same entries,
  * grouped, and the two primary actions pinned to its bottom. The language
- * button sits in the header bar only, at every size - never twice.
+ * button sits in the header bar only, at every size - never twice. The
+ * sun/moon shares its pill from 400px; narrower phones find it in the drawer,
+ * where the bar has no room left.
  */
 export function SiteHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -147,7 +149,7 @@ export function SiteHeader() {
             <button
               type="button"
               onClick={back}
-              className="-ml-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-700 transition-colors hover:bg-slate-100"
+              className="-ml-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-700 transition-colors hover:bg-slate-100"
               aria-label={t("back")}
               title={t("back")}
             >
@@ -229,10 +231,10 @@ export function SiteHeader() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2 lg:ml-0">
-            <LanguageToggleButton />
+            <HeaderToggles className="h-9 rounded-xl" themeClassName="hidden min-[400px]:inline-flex" />
             {/* In-app guests already have the back arrow into the app. */}
             {!signedIn && !inApp && (
-              <SiteButton variant="ghost" size="sm" className="hidden xl:inline-flex" onClick={() => explore("/home")}>
+              <SiteButton variant="ghost" size="sm" className="hidden h-9 xl:inline-flex" onClick={() => explore("/home")}>
                 <Compass className="h-4 w-4" aria-hidden />
                 {t("headerExplore")}
               </SiteButton>
@@ -245,7 +247,7 @@ export function SiteHeader() {
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "border border-slate-200 bg-surface px-3 shadow-sm",
+                  "h-9 border border-slate-200 bg-surface px-3",
                   inApp ? "hidden sm:inline-flex" : "inline-flex",
                 )}
                 onClick={signIn}
@@ -255,19 +257,19 @@ export function SiteHeader() {
                 <span className={cn(!inApp && "hidden min-[360px]:inline")}>{t("siteLogIn")}</span>
               </SiteButton>
             )}
-            <SiteButton size="sm" className="hidden sm:inline-flex" onClick={primaryCta.onClick}>
+            <SiteButton size="sm" className="hidden h-9 sm:inline-flex" onClick={primaryCta.onClick}>
               {primaryCta.label}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </SiteButton>
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-surface text-slate-700 shadow-sm transition-colors hover:bg-slate-50 lg:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-surface text-slate-700 transition-colors hover:bg-slate-50 lg:hidden"
               aria-label={t("headerOpenMenu")}
               aria-expanded={drawerOpen}
               aria-controls="site-drawer"
             >
-              <Menu className="h-5 w-5" aria-hidden />
+              <Menu className="h-[18px] w-[18px]" aria-hidden />
             </button>
           </div>
         </div>
@@ -481,6 +483,8 @@ function MobileDrawer({
             <Link to="/" onClick={onClose} aria-label={t("siteHomeAria")}>
               <Brand />
             </Link>
+            {/* From 400px the bar itself carries it. */}
+            <ThemeToggleButton className="ml-auto h-9 w-9 rounded-lg hover:bg-slate-100 min-[400px]:hidden" />
             <button
               ref={closeRef}
               type="button"

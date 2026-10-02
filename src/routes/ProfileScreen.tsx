@@ -1292,7 +1292,7 @@ export function ProfileScreen() {
               {t("cancel")}
             </Button>
             <Button
-              className="bg-red-600 hover:bg-red-700"
+              variant="danger"
               onClick={() => {
                 setSignOutConfirmOpen(false);
                 void signOut();
@@ -1319,7 +1319,7 @@ export function ProfileScreen() {
               {t("cancel")}
             </Button>
             <Button
-              className="bg-red-600 hover:bg-red-700"
+              variant="danger"
               loading={deleteAccount.isPending}
               disabled={!deleteReady}
               onClick={() => deleteAccount.mutate()}

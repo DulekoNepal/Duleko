@@ -98,8 +98,10 @@ export function Dialog({
   // where it's opened from.
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+      {/* Deeper in dark mode: a 40% navy wash over a navy page barely
+          dims it, and the card behind reads as part of the dialog. */}
       <div
-        className="absolute inset-0 bg-scrim/40"
+        className="absolute inset-0 bg-scrim/40 dark:bg-black/60"
         onClick={onClose}
         aria-hidden
       />
@@ -128,8 +130,10 @@ export function Dialog({
         <div className={cn("px-4 pt-3.5", footer ? "pb-3.5" : "pb-[calc(0.875rem+var(--sab))]")}>
           {children}
         </div>
+        {/* The footer lays its buttons out itself - side by side, equal
+            widths, one gap - so callers can just pass the buttons. */}
         {footer && (
-          <div className="sticky bottom-0 border-t border-slate-200 bg-surface px-4 pb-[calc(0.625rem+var(--sab))] pt-2.5">
+          <div className="sticky bottom-0 grid auto-cols-[minmax(0,1fr)] grid-flow-col gap-2 border-t border-slate-200 bg-surface px-4 pb-[calc(0.625rem+var(--sab))] pt-2.5">
             {footer}
           </div>
         )}

@@ -14,7 +14,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { LanguageToggleButton, PAGE_GUTTER, PAGE_WIDTH } from "@/components/duleko/Layout";
+import { HeaderToggles, PAGE_GUTTER, PAGE_WIDTH } from "@/components/duleko/Layout";
 import { ALL_REACTIONS, ChatBubble, type BubblePanel } from "@/components/duleko/ChatBubble";
 import { useConversationsLive } from "@/components/duleko/ConversationList";
 import { ChatsPane } from "@/routes/ChatsScreen";
@@ -476,7 +476,7 @@ export function ChatScreen() {
             </Link>
             {/* The list pane beside it already has one on desktop. */}
             {/* Phones only - the top bar has it from md up. */}
-            {!split && <LanguageToggleButton className="md:hidden" />}
+            {!split && <HeaderToggles className="md:hidden" />}
           </div>
         </header>
 

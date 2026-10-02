@@ -646,6 +646,7 @@ const strings = {
   themeSystemNowLight: ["Following your phone - light right now.", "तपाईंको फोन अनुसार - अहिले उज्यालो।"],
   themeLight: ["Light", "उज्यालो"],
   themeDark: ["Dark", "अँध्यारो"],
+  darkMode: ["Dark mode", "अँध्यारो मोड"],
 
   // ---- profile / settings --------------------------------------------
   myProfile: ["My profile", "मेरो प्रोफाइल"],

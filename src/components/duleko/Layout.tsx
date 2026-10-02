@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Briefcase, Globe, Home, MessageCircle, User } from "lucide-react";
+import { Bell, Briefcase, Globe, Home, MessageCircle, Moon, Sun, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
+import { useIsDark, useThemeChoice } from "@/lib/theme";
 import { useSession } from "@/hooks/use-session";
 import { countUnread, countUnreadMessages } from "@/lib/queries";
 import { setAppBadge } from "@/lib/native-android";
@@ -42,6 +43,56 @@ export function LanguageToggleButton({ className }: { className?: string }) {
   );
 }
 
+/**
+ * A small sun/moon that flips between Light and Dark - the icon shows the
+ * look you're in. "Auto" (follow the phone) stays in Settings > Appearance.
+ */
+export function ThemeToggleButton({ className }: { className?: string }) {
+  const { t } = useI18n();
+  const dark = useIsDark();
+  const [, setTheme] = useThemeChoice();
+  const Icon = dark ? Moon : Sun;
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={dark}
+      aria-label={t("darkMode")}
+      title={t("darkMode")}
+      onClick={(e) => {
+        const box = e.currentTarget.getBoundingClientRect();
+        setTheme(dark ? "light" : "dark", { x: box.left + box.width / 2, y: box.top + box.height / 2 });
+      }}
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center rounded-full p-1.5 text-slate-600 transition-colors duration-200 hover:bg-slate-50 hover:text-slate-900",
+        className,
+      )}
+    >
+      <Icon key={String(dark)} className="h-3.5 w-3.5 animate-[theme-icon-in_0.4s_ease-out]" aria-hidden />
+    </button>
+  );
+}
+
+/**
+ * The bars' one quiet control: theme and language in a single pill -
+ * [sun | EN] - instead of two loose buttons. `themeClassName` hides the
+ * theme half where it lives elsewhere (the website's drawer on phones).
+ */
+export function HeaderToggles({ className, themeClassName }: { className?: string; themeClassName?: string }) {
+  return (
+    <div
+      className={cn(
+        "inline-flex shrink-0 items-center overflow-hidden rounded-full border border-slate-200 bg-surface",
+        className,
+      )}
+    >
+      <ThemeToggleButton className={cn("self-stretch rounded-none pl-2.5 pr-2", themeClassName)} />
+      <span className={cn("h-3.5 w-px bg-slate-200", themeClassName)} aria-hidden />
+      <LanguageToggleButton className="self-stretch rounded-none border-0 bg-transparent" />
+    </div>
+  );
+}
+
 export function AppHeader({
   title,
   subtitle,
@@ -65,6 +116,7 @@ export function AppHeader({
    * name in wordmark form doesn't need to also be spelled out next to it. */
   logo?: boolean;
 }) {
+  const { t } = useI18n();
   return (
     <header
       className={cn(
@@ -83,8 +135,11 @@ export function AppHeader({
           {leading}
           {logo ? (
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
-              {/* The top bar already shows the logo from md up. */}
-              <img src={dulekoMark} alt="" className="h-8 w-8 shrink-0 rounded-xl object-cover shadow-sm md:hidden" />
+              {/* The top bar already shows the logo from md up. Like that
+                  one, it goes to the website's home. */}
+              <Link to="/" aria-label={t("siteHomeAria")} className="shrink-0 rounded-xl md:hidden">
+                <img src={dulekoMark} alt="" className="h-8 w-8 rounded-xl object-cover shadow-sm" />
+              </Link>
               {/* Still announced to screen readers/tab title - just not spelled out visually next to its own mark. */}
               <h1 className="sr-only">{title}</h1>
               {subtitle && <p className="truncate text-xs text-slate-500 md:text-sm">{subtitle}</p>}
@@ -98,9 +153,9 @@ export function AppHeader({
             </div>
           )}
           {right}
-          {/* On every phone screen that uses this header - from md up it
-              lives in the top bar instead, so it's never shown twice. */}
-          <LanguageToggleButton className="md:hidden" />
+          {/* On every phone screen that uses this header - from md up they
+              live in the top bar instead, so they're never shown twice. */}
+          <HeaderToggles className="md:hidden" />
         </div>
         {below}
       </div>
@@ -262,10 +317,12 @@ export function TopNav() {
   return (
     <header className="sticky top-0 z-40 hidden border-b border-slate-200 bg-surface/95 pt-[var(--sat)] backdrop-blur md:block">
       <div className="flex h-14 items-center gap-4 px-4 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-6">
+        {/* The logo goes to the website's home (the Android app, which has
+            no website, is sent on to /home by the "/" route). */}
         <Link
-          to="/home"
+          to="/"
           className="flex shrink-0 items-center gap-2.5 justify-self-start rounded-xl"
-          aria-label={t("appName")}
+          aria-label={t("siteHomeAria")}
         >
           <img src={dulekoMark} alt="" className="h-8 w-8 rounded-lg object-cover" />
           <span className="text-base font-bold tracking-tight text-slate-900">{t("appName")}</span>
@@ -297,11 +354,11 @@ export function TopNav() {
             );
           })}
         </nav>
-        {/* Right column: the language switch - here on desktop instead of
-            in each screen's header. It also balances the logo column so
-            the links stay truly centred. */}
+        {/* Right column: the theme and language switches - here on desktop
+            instead of in each screen's header. It also balances the logo
+            column so the links stay truly centred. */}
         <div className="flex shrink-0 justify-end">
-          <LanguageToggleButton />
+          <HeaderToggles />
         </div>
       </div>
     </header>
