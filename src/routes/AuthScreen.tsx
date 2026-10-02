@@ -325,7 +325,7 @@ export function AuthScreen({
           )}
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="rounded-2xl border border-slate-200 bg-surface p-4 shadow-sm sm:p-5">
           {error && (
             <p className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-700">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
@@ -474,7 +474,7 @@ export function AuthScreen({
                   onClick={() => switchMode("signin")}
                   className={cn(
                     "rounded-lg py-2 transition-colors duration-200",
-                    mode === "signin" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
+                    mode === "signin" ? "bg-surface text-slate-900 shadow-sm" : "text-slate-500",
                   )}
                 >
                   {t("signIn")}
@@ -486,7 +486,7 @@ export function AuthScreen({
                   onClick={() => switchMode("signup")}
                   className={cn(
                     "rounded-lg py-2 transition-colors duration-200",
-                    mode === "signup" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
+                    mode === "signup" ? "bg-surface text-slate-900 shadow-sm" : "text-slate-500",
                   )}
                 >
                   {t("signUp")}

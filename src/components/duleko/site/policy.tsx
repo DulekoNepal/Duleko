@@ -55,7 +55,7 @@ export function PolicyMeta({
   children: React.ReactNode;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-[13px] font-medium text-slate-600 shadow-sm sm:text-sm">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-surface px-3 py-1 text-[13px] font-medium text-slate-600 shadow-sm sm:text-sm">
       <Icon className="h-4 w-4 text-brand-600" aria-hidden />
       {children}
     </span>
@@ -109,7 +109,7 @@ export function PolicySections({ sections }: { sections: PolicySection[] }) {
 export function PolicyContact({ questionKey }: { questionKey: StringKey }) {
   const { t } = useI18n();
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-5 sm:p-7">
+    <div className="relative overflow-hidden rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-50 via-surface to-surface p-5 sm:p-7">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3 sm:gap-4">
           <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-700 text-white shadow-sm">

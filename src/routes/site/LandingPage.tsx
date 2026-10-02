@@ -90,7 +90,7 @@ export function LandingPage() {
 
           <div className="relative mx-auto hidden w-full max-w-sm lg:block" aria-hidden>
             <div className="rounded-[2rem] bg-white/10 p-5 ring-1 ring-white/20 backdrop-blur">
-              <div className="flex items-center gap-3 rounded-2xl bg-white p-4 text-slate-900 shadow-lg">
+              <div className="flex items-center gap-3 rounded-2xl bg-surface p-4 text-slate-900 shadow-lg">
                 <img src={dulekoMark} alt="" className="h-12 w-12 rounded-xl object-cover" />
                 <div>
                   <p className="font-semibold">{t("homeCardSkill")}</p>
@@ -149,7 +149,7 @@ export function LandingPage() {
           <Prose className="mt-4">
             <p>{t("homeSolutionBody")}</p>
           </Prose>
-          <p className="mt-6 inline-block rounded-2xl bg-white px-5 py-4 text-lg font-semibold text-teal-800 shadow-sm ring-1 ring-slate-200 sm:text-xl">
+          <p className="mt-6 inline-block rounded-2xl bg-surface px-5 py-4 text-lg font-semibold text-teal-800 shadow-sm ring-1 ring-slate-200 sm:text-xl">
             {t("homeYouBring")} <span className="text-brand-700">{t("homeDulekoFinds")}</span>
           </p>
           <div className="mt-5">
@@ -168,7 +168,7 @@ export function LandingPage() {
           {STEPS.map(({ icon: Icon, labelKey }, i) => (
             <li
               key={labelKey}
-              className="relative flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              className="relative flex items-center gap-3 rounded-2xl border border-slate-200 bg-surface p-4 shadow-sm"
             >
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
                 <Icon className="h-6 w-6" aria-hidden />
@@ -208,7 +208,7 @@ export function LandingPage() {
 
         <Link
           to="/partners"
-          className="group mt-3 flex flex-col gap-3 rounded-2xl border border-brand-200 bg-white p-4 shadow-sm sm:mt-4 sm:p-5 transition-all hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md sm:flex-row sm:items-center"
+          className="group mt-3 flex flex-col gap-3 rounded-2xl border border-brand-200 bg-surface p-4 shadow-sm sm:mt-4 sm:p-5 transition-all hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md sm:flex-row sm:items-center"
         >
           <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-600">
             <Landmark className="h-6 w-6" aria-hidden />

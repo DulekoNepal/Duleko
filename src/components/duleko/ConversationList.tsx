@@ -108,7 +108,7 @@ export function ConversationList({
     <div className="flex min-h-0 flex-1 flex-col">
       {/* ---- Search + filter ------------------------------------------ */}
       <div className={cn("space-y-2 pb-2.5", pad)}>
-        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition-all focus-within:border-brand-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-100">
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition-all focus-within:border-brand-400 focus-within:bg-surface focus-within:ring-4 focus-within:ring-brand-100">
           <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
           <input
             type="search"
@@ -368,7 +368,7 @@ export function ChatSidebar({
                   onClick={() => setDivision(d)}
                   className={cn(
                     "inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[13px] font-semibold transition-all duration-200",
-                    selected ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800",
+                    selected ? "bg-surface text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800",
                   )}
                 >
                   <Icon className={cn("h-3.5 w-3.5", selected ? "text-brand-700" : "")} aria-hidden />

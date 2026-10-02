@@ -117,7 +117,7 @@ export function WorkerRow({
         <button
           type="button"
           onClick={onRequest}
-          className="relative z-10 h-8 shrink-0 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-brand-700 transition-colors hover:border-brand-600 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+          className="relative z-10 h-8 shrink-0 rounded-lg border border-slate-200 bg-surface px-3 text-xs font-semibold text-brand-700 transition-colors hover:border-brand-600 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
         >
           {t("requestShort")}
         </button>
@@ -129,7 +129,7 @@ export function WorkerRow({
 /** The card the rows sit in, with an optional footer (see all, load more). */
 export function WorkerList({ children, footer }: { children: React.ReactNode; footer?: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-surface shadow-sm">
       <ul className="divide-y divide-slate-100">{children}</ul>
       {footer && <div className="border-t border-slate-100 bg-slate-50/70">{footer}</div>}
     </div>
@@ -138,7 +138,7 @@ export function WorkerList({ children, footer }: { children: React.ReactNode; fo
 
 export function WorkerListSkeleton({ rows = 3 }: { rows?: number }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-surface">
       <ul className="divide-y divide-slate-100">
         {Array.from({ length: rows }).map((_, i) => (
           <li key={i} className="flex items-center gap-3 px-3.5 py-2.5 sm:px-4">

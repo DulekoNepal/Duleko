@@ -99,7 +99,7 @@ export function Dialog({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div
-        className="absolute inset-0 bg-slate-900/40"
+        className="absolute inset-0 bg-scrim/40"
         onClick={onClose}
         aria-hidden
       />
@@ -109,12 +109,12 @@ export function Dialog({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white shadow-xl",
+          "relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-surface shadow-xl",
           "sm:max-w-lg sm:rounded-2xl",
           className,
         )}
       >
-        <div className="sticky top-0 flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-2.5">
+        <div className="sticky top-0 flex items-center justify-between gap-3 border-b border-slate-200 bg-surface px-4 py-2.5">
           <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
           <button
             type="button"
@@ -129,7 +129,7 @@ export function Dialog({
           {children}
         </div>
         {footer && (
-          <div className="sticky bottom-0 border-t border-slate-200 bg-white px-4 pb-[calc(0.625rem+var(--sab))] pt-2.5">
+          <div className="sticky bottom-0 border-t border-slate-200 bg-surface px-4 pb-[calc(0.625rem+var(--sab))] pt-2.5">
             {footer}
           </div>
         )}

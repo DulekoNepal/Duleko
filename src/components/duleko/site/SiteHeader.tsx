@@ -139,8 +139,8 @@ export function SiteHeader() {
         className={cn(
           "sticky top-0 z-40 border-b pt-[var(--sat)] transition-[background-color,border-color,box-shadow] duration-300",
           scrolled
-            ? "border-slate-200/80 bg-white/90 shadow-[0_10px_30px_-18px_rgba(12,60,72,0.35)] backdrop-blur-xl"
-            : "border-transparent bg-white/75 backdrop-blur",
+            ? "border-slate-200/80 bg-surface/90 shadow-[0_10px_30px_-18px_rgba(12,60,72,0.35)] backdrop-blur-xl"
+            : "border-transparent bg-surface/75 backdrop-blur",
         )}
       >
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6 lg:h-[72px] lg:px-8">
@@ -246,7 +246,7 @@ export function SiteHeader() {
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "border border-slate-200 bg-white px-3 shadow-sm",
+                  "border border-slate-200 bg-surface px-3 shadow-sm",
                   inApp ? "hidden sm:inline-flex" : "inline-flex",
                 )}
                 onClick={signIn}
@@ -263,7 +263,7 @@ export function SiteHeader() {
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-50 lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-surface text-slate-700 shadow-sm transition-colors hover:bg-slate-50 lg:hidden"
               aria-label={t("headerOpenMenu")}
               aria-expanded={drawerOpen}
               aria-controls="site-drawer"
@@ -371,7 +371,7 @@ function DropdownPanel({
     >
       <div
         className={cn(
-          "overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl shadow-teal-900/10",
+          "overflow-hidden rounded-2xl border border-slate-200/80 bg-surface shadow-2xl shadow-teal-900/10",
           wide ? "grid w-[640px] grid-cols-[1fr_220px]" : "w-[340px]",
         )}
       >
@@ -470,7 +470,7 @@ function MobileDrawer({
         aria-modal="true"
         aria-label={t("headerMenu")}
         className={cn(
-          "absolute inset-y-0 right-0 flex w-full max-w-sm flex-col bg-white shadow-2xl transition-transform duration-300 ease-out",
+          "absolute inset-y-0 right-0 flex w-full max-w-sm flex-col bg-surface shadow-2xl transition-transform duration-300 ease-out",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
@@ -552,7 +552,7 @@ function MobileDrawer({
                 <LogIn className="h-4.5 w-4.5" aria-hidden />
                 {t("siteLogIn")}
               </SiteButton>
-              <SiteButton variant="ghost" className="w-full border border-slate-200 bg-white" onClick={onExplore}>
+              <SiteButton variant="ghost" className="w-full border border-slate-200 bg-surface" onClick={onExplore}>
                 <Compass className="h-4.5 w-4.5" aria-hidden />
                 {t("headerExplore")}
               </SiteButton>

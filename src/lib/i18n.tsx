@@ -620,6 +620,16 @@ const strings = {
   ],
   alertPrefsSaved: ["Alert settings saved.", "सूचना सेटिङ सुरक्षित भयो।"],
 
+  // ---- appearance ----------------------------------------------------
+  appearance: ["Appearance", "देखावट"],
+  appearanceHint: [
+    "Dark mode is easier on the eyes at night. Saved on this phone only.",
+    "राति आँखालाई सजिलो हुन्छ। यो फोनमा मात्र सुरक्षित हुन्छ।",
+  ],
+  themeSystem: ["Auto", "स्वतः"],
+  themeLight: ["Light", "उज्यालो"],
+  themeDark: ["Dark", "अँध्यारो"],
+
   // ---- profile / settings --------------------------------------------
   myProfile: ["My profile", "मेरो प्रोफाइल"],
 

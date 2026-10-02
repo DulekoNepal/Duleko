@@ -242,7 +242,7 @@ export function SearchScreen() {
             update({ q: queryText.trim() || undefined });
           }}
         >
-          <div className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-sm transition-all focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
+          <div className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-surface px-3 shadow-sm transition-all focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
             <SearchIcon className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
             <input
               type="search"
@@ -274,7 +274,7 @@ export function SearchScreen() {
         <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start lg:gap-4">
           {/* ---- Desktop: filters beside the results ---------------------- */}
           <aside className="hidden lg:sticky lg:top-20 lg:block">
-            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+            <div className="rounded-2xl border border-slate-200 bg-surface p-3.5 shadow-sm">
               <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
                 <SlidersHorizontal className="h-3.5 w-3.5 text-brand-700" aria-hidden />
                 {t("filters")}
@@ -307,7 +307,7 @@ export function SearchScreen() {
               <button
                 type="button"
                 onClick={() => setFiltersOpen(true)}
-                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-300 lg:hidden"
+                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-surface px-2.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-300 lg:hidden"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
                 {t("filters")}
@@ -325,7 +325,7 @@ export function SearchScreen() {
                 {pills.map((pill) => (
                   <span
                     key={pill.key}
-                    className="inline-flex max-w-full items-center gap-1 rounded-full border border-slate-200 bg-white py-0.5 pl-2.5 pr-0.5 text-xs text-slate-700"
+                    className="inline-flex max-w-full items-center gap-1 rounded-full border border-slate-200 bg-surface py-0.5 pl-2.5 pr-0.5 text-xs text-slate-700"
                   >
                     <span className="inline-flex min-w-0 items-center gap-1.5 truncate">{pill.label}</span>
                     <button
@@ -467,7 +467,7 @@ function SkillChips({
       "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] whitespace-nowrap transition-colors",
       selected
         ? "border-brand-700 bg-brand-700 font-semibold text-white"
-        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+        : "border-slate-200 bg-surface text-slate-700 hover:border-slate-300",
     );
 
   return (
@@ -532,7 +532,7 @@ function FilterPanel({
                 "flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-[13px] font-medium transition-colors disabled:opacity-60",
                 selected
                   ? "border-brand-600 bg-brand-50 text-brand-800 ring-1 ring-brand-600"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-brand-300",
+                  : "border-slate-200 bg-surface text-slate-600 hover:border-brand-300",
               )}
             >
               <Icon className={cn("h-3.5 w-3.5 shrink-0", selected ? "text-brand-700" : "text-slate-400")} aria-hidden />

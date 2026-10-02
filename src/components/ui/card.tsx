@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 type CardTone = "default" | "primary" | "success" | "warning" | "danger";
 
 const cardTones: Record<CardTone, string> = {
-  default: "border-slate-200 bg-white",
+  default: "border-slate-200 bg-surface",
   primary: "border-brand-200 bg-brand-50/30",
   success: "border-green-200 bg-green-50/50",
   warning: "border-amber-200 bg-amber-50/60",

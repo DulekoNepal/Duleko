@@ -50,7 +50,7 @@ export function SignInRequiredScreen({ title, children }: { title: string; child
     <>
       <AppHeader title={title} />
       <PageContainer>
-        <div className="flex flex-col items-center rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center">
+        <div className="flex flex-col items-center rounded-2xl border border-dashed border-slate-300 bg-surface px-5 py-8 text-center">
           <span className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
             <LogIn className="h-5 w-5" aria-hidden />
           </span>

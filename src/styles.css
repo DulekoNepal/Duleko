@@ -40,6 +40,115 @@
   /* Soft Beige background + Neutral Gray for secondary text. */
   --color-cream-50: #f8f9fa;
   --color-neutral-500: #6b7280;
+
+  /* Cards, sheets and bars. White in light mode; use this (not bg-white)
+     for any surface, so dark mode can repaint it. Plain `white` stays
+     white for text and tints on the green sections. */
+  --color-surface: #ffffff;
+  /* The dim layer behind dialogs - the same in both modes. */
+  --color-scrim: #0f172a;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---- Dark mode -------------------------------------------------------
+   Settings > Appearance puts `dark` on <html> (see lib/theme.ts). Rather
+   than a dark: variant on every class, the palette itself is repainted:
+   the slate scale flips (slate-900 ink becomes near-white, slate-100 fills
+   become deep blue-grey) and the pale brand/status tints become deep ones.
+   The strong colours (brand-600..900, teal-800, red-600...) keep their
+   light-mode values so filled buttons and the green sections look the
+   same; only where one of them is used as text on a page is it lifted to
+   a lighter shade, further down. */
+html.dark {
+  color-scheme: dark;
+
+  --color-cream-50: #0b1220;
+  --color-surface: #131c2e;
+
+  --color-slate-50: #182236;
+  --color-slate-100: #1e293d;
+  --color-slate-200: #2a364b;
+  --color-slate-300: #3b4a62;
+  --color-slate-400: #66758c;
+  --color-slate-500: #94a3b8;
+  --color-slate-600: #a9b6c8;
+  --color-slate-700: #c7d1de;
+  --color-slate-800: #dde4ed;
+  --color-slate-900: #eef2f7;
+  --color-slate-950: #f8fafc;
+
+  --color-brand-50: #10291d;
+  --color-brand-100: #133222;
+  --color-brand-200: #1b4630;
+  --color-brand-300: #25603f;
+
+  --color-accent-50: #2e1a0c;
+  --color-orange-50: #2e1a0c;
+  --color-teal-50: #0f2a30;
+  --color-red-50: #2d1416;
+  --color-red-100: #3a1719;
+  --color-red-200: #5a2226;
+  --color-amber-50: #2b220d;
+  --color-amber-100: #3a2c0e;
+  --color-amber-200: #574213;
+  --color-amber-300: #6f5517;
+  --color-green-50: #10291d;
+  --color-green-100: #133222;
+  --color-green-200: #1b4630;
+}
+
+/* Strong colours used as text on a dark page: lift them so they stay
+   readable. Set on the element itself, so its own fill (if any) and the
+   rest of the page keep the normal shade. */
+html.dark :is([class*="text-brand-6"], [class*="text-brand-7"], [class*="text-brand-8"], [class*="text-brand-9"]) {
+  --color-brand-600: #4ade80;
+  --color-brand-700: #4ade80;
+  --color-brand-800: #86efac;
+  --color-brand-900: #bbf7d0;
+}
+html.dark :is([class*="text-teal-7"], [class*="text-teal-8"], [class*="text-teal-9"]) {
+  --color-teal-700: #8fd3df;
+  --color-teal-800: #a9dee7;
+  --color-teal-900: #c5e9ef;
+}
+html.dark :is([class*="text-navy-"]) {
+  --color-navy-500: #8fb4dc;
+  --color-navy-600: #9fc0e3;
+  --color-navy-700: #b4cdea;
+  --color-navy-900: #d4e2f3;
+}
+html.dark :is([class*="text-red-6"], [class*="text-red-7"], [class*="text-red-8"], [class*="text-red-9"]) {
+  --color-red-600: #f87171;
+  --color-red-700: #fca5a5;
+  --color-red-800: #fecaca;
+  --color-red-900: #fee2e2;
+}
+html.dark :is([class*="text-amber-6"], [class*="text-amber-7"], [class*="text-amber-8"], [class*="text-amber-9"]) {
+  --color-amber-600: #fbbf24;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fde68a;
+  --color-amber-900: #fef3c7;
+}
+html.dark :is([class*="text-green-6"], [class*="text-green-7"]) {
+  --color-green-600: #4ade80;
+  --color-green-700: #86efac;
+}
+html.dark :is([class*="text-accent-6"], [class*="text-accent-7"]) {
+  --color-accent-600: #fb923c;
+}
+
+/* Pale brand text sits on the dark-green sections: keep it pale. */
+html.dark :is([class*="text-brand-50"], [class*="text-brand-1"], [class*="text-brand-2"], [class*="text-brand-3"]) {
+  --color-brand-50: #f0fdf4;
+  --color-brand-100: #dcfce7;
+  --color-brand-200: #bbf7d0;
+  --color-brand-300: #86efac;
+}
+
+/* Photos and the logo artwork read a touch bright on a dark page. */
+html.dark img {
+  filter: brightness(0.92);
 }
 
 /* System-bar insets. Capacitor's Android build publishes --safe-area-inset-*
@@ -107,6 +216,10 @@ textarea {
   inset: 0;
   transform: translateX(-100%);
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+}
+
+html.dark .skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
   animation: skeleton-shimmer 1.6s ease-in-out infinite;
 }
 

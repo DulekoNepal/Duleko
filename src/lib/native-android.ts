@@ -16,8 +16,8 @@ import { Badge } from "@capawesome/capacitor-badge";
  *   from that real stack (e.g. after a hard reload resets it to zero while
  *   the WebView itself still has entries to go back to), so it isn't used
  *   here as the source of truth.
- * - Status bar: dark icons/text on the app's white background, matching
- *   the site's own light chrome instead of the OS default.
+ * - Status bar: matched to the app's own light or dark chrome instead of
+ *   the OS default - see setStatusBarTheme(), called by lib/theme.ts.
  */
 export function setupNativeAndroid(): void {
   if (Capacitor.getPlatform() !== "android") return;
@@ -34,8 +34,16 @@ export function setupNativeAndroid(): void {
     }
   });
 
-  StatusBar.setStyle({ style: Style.Light }).catch(() => {});
-  StatusBar.setBackgroundColor({ color: "#ffffff" }).catch(() => {});
+}
+
+/**
+ * Status bar to match the app's theme: dark icons on white in light mode,
+ * light icons on the dark page colour in dark mode.
+ */
+export function setStatusBarTheme(dark: boolean): void {
+  if (Capacitor.getPlatform() !== "android") return;
+  StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light }).catch(() => {});
+  StatusBar.setBackgroundColor({ color: dark ? "#0b1220" : "#ffffff" }).catch(() => {});
 }
 
 /**

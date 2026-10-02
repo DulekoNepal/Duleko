@@ -135,7 +135,7 @@ function SkillCategorySection({
   return (
     <section
       aria-labelledby={`skill-category-${category}`}
-      className="rounded-2xl border border-slate-200 bg-white shadow-sm"
+      className="rounded-2xl border border-slate-200 bg-surface shadow-sm"
     >
       <h3
         id={`skill-category-${category}`}
@@ -207,7 +207,7 @@ export function SkillPicker({
                       "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 active:scale-[0.97]",
                       active
                         ? "border-brand-600 bg-brand-600 text-white"
-                        : "border-slate-300 bg-white text-slate-700 hover:border-brand-300",
+                        : "border-slate-300 bg-surface text-slate-700 hover:border-brand-300",
                     )}
                   >
                     <SkillIcon skillId={skill.id} className="h-3.5 w-3.5" inherit={active} />

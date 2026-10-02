@@ -116,7 +116,7 @@ export function ProgressTimeline({
                   "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200",
                   done
                     ? cn("border-transparent text-white", STATUS_ACCENT[status])
-                    : "border-slate-200 bg-white",
+                    : "border-slate-200 bg-surface",
                 )}
               >
                 {done ? (

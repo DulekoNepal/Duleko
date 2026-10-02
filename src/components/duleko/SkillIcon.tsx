@@ -204,7 +204,7 @@ export function SkillChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white font-medium text-slate-700",
+        "inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-surface font-medium text-slate-700",
         compact ? "gap-1 px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs",
         className,
       )}

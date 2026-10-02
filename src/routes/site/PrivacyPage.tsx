@@ -133,7 +133,7 @@ export function PrivacyPage() {
               .map((line) => (
                 <li
                   key={line}
-                  className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-teal-800 shadow-sm"
+                  className="rounded-xl border border-slate-200 bg-surface px-3.5 py-2.5 text-sm font-medium text-teal-800 shadow-sm"
                 >
                   {line}
                 </li>

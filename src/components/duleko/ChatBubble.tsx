@@ -255,10 +255,10 @@ export function ChatBubble({
               ? cn("rounded-2xl", !firstInRun && "rounded-tr-md", !lastInRun && "rounded-br-md")
               : cn("rounded-2xl", !firstInRun && "rounded-tl-md", !lastInRun && "rounded-bl-md"),
             removed
-              ? "border border-slate-200 bg-white italic text-slate-400"
+              ? "border border-slate-200 bg-surface italic text-slate-400"
               : mine
                 ? "bg-brand-700 text-white shadow-sm shadow-brand-900/10"
-                : "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70",
+                : "bg-surface text-slate-900 shadow-sm ring-1 ring-slate-200/70",
             highlighted && "ring-2 ring-brand-400 ring-offset-2",
           )}
         >
@@ -275,8 +275,8 @@ export function ChatBubble({
                   type="button"
                   onClick={() => onReact(m, emoji)}
                   className={cn(
-                    "rounded-full border px-1.5 py-0.5 text-xs leading-none shadow-sm ring-2 ring-white transition-colors duration-200",
-                    myReaction ? "border-brand-300 bg-brand-50 text-slate-900" : "border-slate-200 bg-white text-slate-900",
+                    "rounded-full border px-1.5 py-0.5 text-xs leading-none shadow-sm ring-2 ring-surface transition-colors duration-200",
+                    myReaction ? "border-brand-300 bg-brand-50 text-slate-900" : "border-slate-200 bg-surface text-slate-900",
                   )}
                 >
                   {emoji}
@@ -288,7 +288,7 @@ export function ChatBubble({
         </div>
 
         {panel === "menu" && (
-          <div data-chat-popover className={cn(panelSide, "flex items-center gap-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-lg")}>
+          <div data-chat-popover className={cn(panelSide, "flex items-center gap-0.5 rounded-xl border border-slate-200 bg-surface p-1 shadow-lg")}>
             <MenuItem icon={SmilePlus} label={t("react")} onClick={() => openPanel("emoji")} />
             <MenuItem icon={CornerUpLeft} label={t("reply")} onClick={() => { onReply(m); openPanel(null); }} />
             <MenuItem
@@ -305,7 +305,7 @@ export function ChatBubble({
         )}
 
         {panel === "emoji" && (
-          <div data-chat-popover className={cn(panelSide, "w-[min(19rem,84vw)] rounded-2xl border border-slate-200 bg-white p-1.5 shadow-lg")}>
+          <div data-chat-popover className={cn(panelSide, "w-[min(19rem,84vw)] rounded-2xl border border-slate-200 bg-surface p-1.5 shadow-lg")}>
             <div className="flex items-center gap-0.5">
               {QUICK_REACTIONS.map((emoji) => (
                 <button
@@ -357,7 +357,7 @@ export function ChatBubble({
             <button
               type="button"
               onClick={() => openPanel(null)}
-              className="rounded-lg px-2 py-1 text-xs font-medium text-slate-600 transition-colors duration-200 hover:bg-white"
+              className="rounded-lg px-2 py-1 text-xs font-medium text-slate-600 transition-colors duration-200 hover:bg-surface"
             >
               {t("cancel")}
             </button>

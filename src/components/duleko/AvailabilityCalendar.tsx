@@ -154,7 +154,7 @@ export function AvailabilityCalendar({
                       outsideMonth && "opacity-40",
                       past && "cursor-default text-slate-300",
                       !past && !booked && "text-slate-800",
-                      !past && booked && !lockedByJob && "bg-slate-800 font-medium text-white",
+                      !past && booked && !lockedByJob && "bg-slate-800 font-medium text-surface",
                       lockedByJob && "bg-amber-100 font-medium text-amber-900",
                       isToday && !booked && "font-semibold text-brand-700 ring-1 ring-brand-600",
                       clickable && !booked && "hover:bg-slate-100",

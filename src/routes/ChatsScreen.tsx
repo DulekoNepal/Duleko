@@ -45,7 +45,7 @@ export function ChatsScreen() {
       <div className="flex h-full overflow-hidden bg-cream-50/60 md:rounded-2xl md:border md:border-slate-200 md:shadow-sm">
       <ChatsPane typingFrom={typingFrom} />
       <main className="flex min-w-0 flex-1 flex-col items-center justify-center p-6 text-center">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-brand-700 shadow-sm ring-1 ring-slate-200">
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface text-brand-700 shadow-sm ring-1 ring-slate-200">
           <MessageCircle className="h-6 w-6" aria-hidden />
         </span>
         <h2 className="mt-4 text-base font-bold text-slate-900">{t("selectConversation")}</h2>
@@ -69,7 +69,7 @@ export function ChatsPane({
 }) {
   const { t } = useI18n();
   return (
-    <aside className="flex w-[320px] shrink-0 flex-col border-r border-slate-200 bg-white pt-[var(--sat)] md:pt-0 xl:w-[360px]">
+    <aside className="flex w-[320px] shrink-0 flex-col border-r border-slate-200 bg-surface pt-[var(--sat)] md:pt-0 xl:w-[360px]">
       <div className="flex h-14 items-center justify-between gap-3 px-4 lg:h-16">
         <h1 className="text-lg font-bold text-slate-900">{t("chatsTitle")}</h1>
       </div>

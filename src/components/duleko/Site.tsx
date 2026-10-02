@@ -46,7 +46,7 @@ export function SiteLayout({ title, children }: { title?: string; children: Reac
   }, [fullTitle]);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white text-slate-900">
+    <div className="flex min-h-dvh flex-col bg-surface text-slate-900">
       <SiteHeader />
       <main className="flex-1">{children}</main>
       <SiteFooter />
@@ -251,7 +251,7 @@ export function PageHero({
   const breadcrumb =
     crumb ?? (chapter && { title: t(chapter.titleKey), group: chapter.groupKey && t(chapter.groupKey) });
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-brand-50 via-white to-cream-50 pb-10 pt-6 sm:pb-14 sm:pt-8">
+    <section className="relative overflow-hidden bg-gradient-to-br from-brand-50 via-surface to-cream-50 pb-10 pt-6 sm:pb-14 sm:pt-8">
       <div
         className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand-200/40 blur-3xl"
         aria-hidden
@@ -295,7 +295,7 @@ export function Flow({ steps, className }: { steps: string[]; className?: string
                 "rounded-full px-3 py-1.5 text-sm font-semibold",
                 last
                   ? "bg-brand-700 text-white shadow-sm"
-                  : "border border-brand-200 bg-white text-brand-800",
+                  : "border border-brand-200 bg-surface text-brand-800",
               )}
             >
               {step}
@@ -338,7 +338,7 @@ export function IconCard({
     </>
   );
   const className =
-    "group block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 transition-all duration-200 hover:shadow-md";
+    "group block rounded-2xl border border-slate-200 bg-surface p-4 shadow-sm sm:p-5 transition-all duration-200 hover:shadow-md";
   return to ? (
     <Link to={to} className={cn(className, "hover:-translate-y-0.5 hover:border-brand-300")}>
       {body}
@@ -359,7 +359,7 @@ export function StoryNav({ current }: { current: StoryKey }) {
   const next = index < STORY.length - 1 ? STORY[index + 1] : null;
 
   return (
-    <section className="border-t border-slate-100 bg-white py-8 sm:py-12" aria-label={t("storyContinue")}>
+    <section className="border-t border-slate-100 bg-surface py-8 sm:py-12" aria-label={t("storyContinue")}>
       <Container>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -393,7 +393,7 @@ export function StoryNav({ current }: { current: StoryKey }) {
           {prev ? (
             <Link
               to={prev.to}
-              className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md sm:p-5"
+              className="group flex flex-col rounded-2xl border border-slate-200 bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md sm:p-5"
             >
               <span className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500">
                 <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" aria-hidden />
@@ -408,7 +408,7 @@ export function StoryNav({ current }: { current: StoryKey }) {
           {next && (
             <Link
               to={next.to}
-              className="group flex flex-col rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 to-white p-4 transition-all hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md sm:items-end sm:p-5 sm:text-right"
+              className="group flex flex-col rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 to-surface p-4 transition-all hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md sm:items-end sm:p-5 sm:text-right"
             >
               <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700">
                 {t("storyNext")}
@@ -431,7 +431,7 @@ export function StoryNav({ current }: { current: StoryKey }) {
 export function ReadNext({ links }: { links: { to: SitePath; hash?: string; title: string; teaser: string }[] }) {
   const { t } = useI18n();
   return (
-    <section className="border-t border-slate-100 bg-white py-8 sm:py-12" aria-label={t("keepReading")}>
+    <section className="border-t border-slate-100 bg-surface py-8 sm:py-12" aria-label={t("keepReading")}>
       <Container>
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent-600">{t("keepReading")}</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4">
@@ -440,7 +440,7 @@ export function ReadNext({ links }: { links: { to: SitePath; hash?: string; titl
               key={`${link.to}${link.hash ?? ""}`}
               to={link.to}
               hash={link.hash}
-              className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md sm:p-5"
+              className="group flex flex-col rounded-2xl border border-slate-200 bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md sm:p-5"
             >
               <span className="inline-flex items-center gap-1.5 text-base font-semibold text-slate-900 sm:text-lg">
                 {link.title}

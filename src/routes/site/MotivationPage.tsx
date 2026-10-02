@@ -60,7 +60,7 @@ export function MotivationPage() {
         <ul className="mt-6 grid gap-4 md:grid-cols-3">
           {FOUNDERS.map((founder) => (
             <li key={founder.id}>
-              <figure className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow duration-300 hover:shadow-xl hover:shadow-teal-900/5 sm:p-6">
+              <figure className="flex h-full flex-col rounded-3xl border border-slate-200 bg-surface p-5 shadow-sm transition-shadow duration-300 hover:shadow-xl hover:shadow-teal-900/5 sm:p-6">
                 <Quote className="h-6 w-6 text-accent-500" aria-hidden />
                 <blockquote className="mt-3 flex-1">
                   <p className="text-balance text-base font-semibold leading-snug text-teal-800 sm:text-lg">

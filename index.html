@@ -30,6 +30,12 @@
       document.documentElement.classList.add("js");
       if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())
         document.documentElement.classList.add("native");
+      // Dark mode before first paint (Settings > Appearance; see src/lib/theme.ts).
+      try {
+        var theme = localStorage.getItem("duleko.theme");
+        if (theme === "dark" || (theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches))
+          document.documentElement.classList.add("dark");
+      } catch (e) {}
     </script>
 
     <!-- Open Graph / social previews -->

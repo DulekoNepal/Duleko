@@ -62,7 +62,7 @@ export function SectionCard({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-slate-200 bg-white shadow-sm",
+        "rounded-2xl border border-slate-200 bg-surface shadow-sm",
         compact ? "p-3.5 sm:p-4" : "p-4 sm:p-5",
         className,
       )}

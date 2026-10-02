@@ -38,7 +38,7 @@ export function ListGroup({
           )}
         </div>
       )}
-      <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-surface">
         {children}
       </div>
       {footer && <p className="px-1 pt-1.5 text-[11px] leading-relaxed text-slate-500">{footer}</p>}

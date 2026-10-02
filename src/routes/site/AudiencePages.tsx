@@ -40,7 +40,7 @@ export function ForIndividualsPage() {
           {INDIVIDUAL_STEPS.map((step) => (
             <li
               key={step}
-              className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-surface p-4 shadow-sm"
             >
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />
               <span className="text-[15px] font-medium text-slate-800 sm:text-base">{t(step)}</span>

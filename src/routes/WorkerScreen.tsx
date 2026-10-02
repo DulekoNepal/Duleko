@@ -288,7 +288,7 @@ export function WorkerScreen() {
   // Chat, Call and the friend button share one small outline look - the same
   // size as the buttons on your own Profile.
   const tileClass =
-    "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 transition-colors duration-200 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 disabled:opacity-60 @xl:text-sm";
+    "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-surface px-2.5 text-xs font-semibold text-slate-700 transition-colors duration-200 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 disabled:opacity-60 @xl:text-sm";
 
   const callButton = canCall ? (
     <a href={`tel:${contact.data!.phone}`} className={tileClass}>
@@ -450,16 +450,16 @@ export function WorkerScreen() {
             it, then the stats strip. Edge to edge on a phone, a card from
             sm up.
             ============================================================== */}
-        <section className="@container animate-in-up -mx-4 -mt-3 border-b border-slate-200 bg-white shadow-sm sm:mx-0 sm:mt-0 sm:rounded-3xl sm:border">
+        <section className="@container animate-in-up -mx-4 -mt-3 border-b border-slate-200 bg-surface shadow-sm sm:mx-0 sm:mt-0 sm:rounded-3xl sm:border">
           <ProfileCover src={w.cover_url} className="h-32 overflow-hidden sm:rounded-t-3xl @md:h-40 @2xl:h-48 @4xl:h-56" />
 
           <div className="px-4 @2xl:px-6">
             <div className="flex flex-col gap-2.5 @4xl:flex-row @4xl:items-end @4xl:gap-5">
               {/* Photo: the only thing pulled up into the cover. */}
-              <div className="relative z-10 -mt-14 h-24 w-24 shrink-0 self-start rounded-full bg-white p-1 shadow-md @2xl:-mt-16 @2xl:h-32 @2xl:w-32">
+              <div className="relative z-10 -mt-14 h-24 w-24 shrink-0 self-start rounded-full bg-surface p-1 shadow-md @2xl:-mt-16 @2xl:h-32 @2xl:w-32">
                 <Avatar name={w.full_name} src={w.avatar_url} size={128} className="h-full! w-full!" />
                 {online && (
-                  <span className="absolute bottom-1.5 right-1.5 h-4 w-4 rounded-full border-[3px] border-white bg-green-500 @2xl:bottom-2.5 @2xl:right-2.5">
+                  <span className="absolute bottom-1.5 right-1.5 h-4 w-4 rounded-full border-[3px] border-surface bg-green-500 @2xl:bottom-2.5 @2xl:right-2.5">
                     <span className="sr-only">{t("online")}</span>
                   </span>
                 )}
@@ -599,7 +599,7 @@ export function WorkerScreen() {
                         key={s.id}
                         className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5"
                       >
-                        <SkillTile skillId={s.id} className="h-9 w-9 rounded-lg bg-white ring-1 ring-slate-200" />
+                        <SkillTile skillId={s.id} className="h-9 w-9 rounded-lg bg-surface ring-1 ring-slate-200" />
                         {/* The rate gets its own line so it never has to be cut short. */}
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold text-slate-900">{label}</p>
@@ -631,7 +631,7 @@ export function WorkerScreen() {
                         href={c.file_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 transition-colors hover:border-brand-200"
+                        className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-surface p-2.5 transition-colors hover:border-brand-200"
                       >
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
                           <Award className="h-4 w-4" aria-hidden />
@@ -711,7 +711,7 @@ export function WorkerScreen() {
       {!isMe && (
         <div
           className={cn(
-            "fixed inset-x-0 bottom-[calc(3.5rem+var(--sab))] z-30 border-t border-slate-200 bg-white/95 px-4 py-2 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)] backdrop-blur transition-all duration-300 md:hidden",
+            "fixed inset-x-0 bottom-[calc(3.5rem+var(--sab))] z-30 border-t border-slate-200 bg-surface/95 px-4 py-2 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)] backdrop-blur transition-all duration-300 md:hidden",
             showStickyBar ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0",
           )}
           aria-hidden={!showStickyBar}

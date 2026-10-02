@@ -132,7 +132,7 @@ export function OnboardingScreen() {
 
   return (
     <div className="min-h-dvh bg-cream-50">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white pt-[var(--sat)]">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-surface pt-[var(--sat)]">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
           {step > 1 && (
             <button
@@ -186,8 +186,8 @@ export function OnboardingScreen() {
               <>
                 <div className="mb-4 flex justify-center">
                   <div className="relative">
-                    <Avatar name={fullName || "?"} src={avatarPreview} size={72} className="shadow-md ring-4 ring-white" />
-                    <label className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow ring-1 ring-slate-200 transition-transform hover:scale-105">
+                    <Avatar name={fullName || "?"} src={avatarPreview} size={72} className="shadow-md ring-4 ring-surface" />
+                    <label className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-surface text-slate-700 shadow ring-1 ring-slate-200 transition-transform hover:scale-105">
                       <Camera className="h-4 w-4" aria-hidden />
                       <span className="sr-only">{avatarPreview ? t("changePhoto") : t("addPhoto")}</span>
                       <input

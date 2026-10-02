@@ -156,7 +156,7 @@ export function TeamProfileCard({
   return (
     <article
       id={member.id}
-      className="scroll-mt-24 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-xl hover:shadow-teal-900/5"
+      className="scroll-mt-24 overflow-hidden rounded-3xl border border-slate-200 bg-surface shadow-sm transition-shadow duration-300 hover:shadow-xl hover:shadow-teal-900/5"
     >
       <div
         className={cn(
@@ -244,7 +244,7 @@ export function TeamProfileCard({
             </div>
             {!expanded && (
               <div
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent lg:hidden"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-surface to-transparent lg:hidden"
                 aria-hidden
               />
             )}
@@ -322,7 +322,7 @@ export function AboutPage() {
             {HOW_IT_WORKS_KEYS.map((key) => (
               <li
                 key={key}
-                className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 text-[15px] leading-relaxed text-slate-700 shadow-sm sm:p-4 sm:text-base"
+                className="flex gap-3 rounded-2xl border border-slate-200 bg-surface p-3.5 text-[15px] leading-relaxed text-slate-700 shadow-sm sm:p-4 sm:text-base"
               >
                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />
                 <span className="min-w-0 flex-1">{t(key)}</span>
@@ -346,7 +346,7 @@ export function AboutPage() {
               <li key={member.id}>
                 <a
                   href={`#${member.id}`}
-                  className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3.5 text-sm font-medium text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-800"
+                  className="flex items-center gap-2 rounded-full border border-slate-200 bg-surface py-1 pl-1 pr-3.5 text-sm font-medium text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-800"
                 >
                   <img src={member.image} alt="" className="h-8 w-8 rounded-full object-cover" />
                   {t(member.nameKey).split(" ")[0]}

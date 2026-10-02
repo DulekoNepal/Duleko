@@ -20,6 +20,7 @@ import {
   Mail,
   MapPin,
   MessageSquare,
+  Moon,
   MoreHorizontal,
   Navigation,
   Pencil,
@@ -28,6 +29,8 @@ import {
   Share2,
   ShieldCheck,
   Star,
+  Sun,
+  SunMoon,
   Trash2,
   Upload,
   Users,
@@ -52,6 +55,7 @@ import { MenuItem, MenuPanel } from "@/components/ui/menu";
 import { Switch } from "@/components/ui/switch";
 import { SkillTile } from "@/components/duleko/SkillIcon";
 import { getCurrentPosition } from "@/lib/geolocation";
+import { useThemeChoice } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
@@ -532,9 +536,9 @@ export function ProfileScreen() {
             card itself doesn't clip (the cover does), so the ⋯ menu can
             open past its bottom edge.
             ================================================================ */}
-        <section className="@container animate-in-up relative z-10 -mx-4 -mt-3 border-b border-slate-200 bg-white shadow-sm sm:mx-0 sm:mt-0 sm:rounded-3xl sm:border">
+        <section className="@container animate-in-up relative z-10 -mx-4 -mt-3 border-b border-slate-200 bg-surface shadow-sm sm:mx-0 sm:mt-0 sm:rounded-3xl sm:border">
           <ProfileCover src={coverSrc} className="h-32 overflow-hidden sm:rounded-t-3xl @md:h-40 @2xl:h-48 @4xl:h-56">
-            <label className="absolute bottom-3 right-3 inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-white/90 px-2.5 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 backdrop-blur transition-colors hover:bg-white @2xl:bottom-4 @2xl:right-4">
+            <label className="absolute bottom-3 right-3 inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-surface/90 px-2.5 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 backdrop-blur transition-colors hover:bg-surface @2xl:bottom-4 @2xl:right-4">
               <Camera className="h-3.5 w-3.5" aria-hidden />
               <span className="sr-only @lg:not-sr-only">{t("changeCover")}</span>
               <input
@@ -558,14 +562,14 @@ export function ProfileScreen() {
           <div className="px-4 @2xl:px-6">
             <div className="flex flex-col gap-2.5 @4xl:flex-row @4xl:items-end @4xl:gap-5">
               {/* Photo: the only thing pulled up into the cover. */}
-              <div className="relative z-10 -mt-14 h-24 w-24 shrink-0 self-start rounded-full bg-white p-1 shadow-md @2xl:-mt-16 @2xl:h-32 @2xl:w-32">
+              <div className="relative z-10 -mt-14 h-24 w-24 shrink-0 self-start rounded-full bg-surface p-1 shadow-md @2xl:-mt-16 @2xl:h-32 @2xl:w-32">
                 <Avatar
                   name={profile.full_name}
                   src={avatarPreview ?? profile.avatar_url}
                   size={128}
                   className="h-full! w-full!"
                 />
-                <label className="absolute bottom-0 right-0 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow ring-2 ring-white transition-colors hover:bg-slate-200 @2xl:bottom-1 @2xl:right-1">
+                <label className="absolute bottom-0 right-0 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow ring-2 ring-surface transition-colors hover:bg-slate-200 @2xl:bottom-1 @2xl:right-1">
                   <Camera className="h-3.5 w-3.5" aria-hidden />
                   <span className="sr-only">{t("changePhoto")}</span>
                   <input
@@ -798,7 +802,7 @@ export function ProfileScreen() {
                     return (
                       <div key={id} className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5 sm:p-4">
                         <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
-                          <SkillTile skillId={skill.id} className="h-8 w-8 rounded-lg bg-white ring-1 ring-slate-200" />
+                          <SkillTile skillId={skill.id} className="h-8 w-8 rounded-lg bg-surface ring-1 ring-slate-200" />
                           {skillName(skill, lang)}
                         </p>
                         {id === "other" && (
@@ -830,14 +834,14 @@ export function ProfileScreen() {
                             type="number"
                             inputMode="numeric"
                             min={0}
-                            className="w-24 shrink-0 bg-white"
+                            className="w-24 shrink-0 bg-surface"
                             value={d.rate_amount}
                             onChange={(e) => setDraft(id, { rate_amount: e.target.value })}
                             placeholder={t("rateAmountPlaceholder")}
                           />
                           <span className="shrink-0 text-sm text-slate-400">/</span>
                           <Input
-                            className="min-w-0 flex-1 bg-white"
+                            className="min-w-0 flex-1 bg-surface"
                             value={d.rate_unit}
                             onChange={(e) => setDraft(id, { rate_unit: e.target.value })}
                             placeholder={t("rateUnitPlaceholder")}
@@ -853,7 +857,7 @@ export function ProfileScreen() {
 
             {/* Stays on screen while scrolling the form - above the phone
                 tab bar, at the bottom edge once the sidebar takes over. */}
-            <div className="sticky bottom-[calc(4.25rem+var(--sab))] z-20 flex gap-2 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg shadow-slate-900/10 backdrop-blur md:bottom-4">
+            <div className="sticky bottom-[calc(4.25rem+var(--sab))] z-20 flex gap-2 rounded-2xl border border-slate-200 bg-surface/95 p-3 shadow-lg shadow-slate-900/10 backdrop-blur md:bottom-4">
               <Button variant="outline" className="flex-1" onClick={() => setEditing(false)}>
                 {t("cancel")}
               </Button>
@@ -979,7 +983,7 @@ export function ProfileScreen() {
                               key={s.id}
                               className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5"
                             >
-                              <SkillTile skillId={s.id} className="h-9 w-9 rounded-lg bg-white ring-1 ring-slate-200" />
+                              <SkillTile skillId={s.id} className="h-9 w-9 rounded-lg bg-surface ring-1 ring-slate-200" />
                               {/* The rate gets its own line so it never has to be cut short. */}
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-semibold text-slate-900">{label}</p>
@@ -1033,7 +1037,7 @@ export function ProfileScreen() {
                           {certificates.map((c) => (
                             <li
                               key={c.id}
-                              className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5"
+                              className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-surface p-2.5"
                             >
                               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
                                 <Award className="h-4 w-4" aria-hidden />
@@ -1072,11 +1076,11 @@ export function ProfileScreen() {
                             placeholder={t("certificateTitlePlaceholder")}
                             maxLength={100}
                             aria-label={t("addCertificate")}
-                            className="h-9 min-w-0 flex-1 bg-white text-sm"
+                            className="h-9 min-w-0 flex-1 bg-surface text-sm"
                           />
                           <label
                             className={cn(
-                              "inline-flex h-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50",
+                              "inline-flex h-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-surface px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50",
                               (!certTitle.trim() || addCert.isPending) && "pointer-events-none opacity-50",
                             )}
                           >
@@ -1140,7 +1144,7 @@ export function ProfileScreen() {
                   </ul>
                 </SectionCard>
 
-                <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+                <section className="rounded-2xl border border-slate-200 bg-surface p-3 shadow-sm sm:p-4">
                   <AvailabilityCalendar
                     days={availability.data ?? []}
                     editable
@@ -1162,6 +1166,7 @@ export function ProfileScreen() {
               >
                 <div className="min-w-0 space-y-5">
                   <ListGroup title={t("settingsPreferences")}>
+                    <AppearanceRow />
                     <ListRow
                       icon={Mail}
                       title={t("emailAlerts")}
@@ -1374,7 +1379,7 @@ function AvailabilityCard({
     <section
       className={cn(
         "flex items-center gap-3 rounded-2xl border p-3.5 shadow-sm transition-colors",
-        "border-slate-200 bg-white",
+        "border-slate-200 bg-surface",
       )}
     >
       <span
@@ -1395,6 +1400,47 @@ function AvailabilityCard({
       </div>
       <Switch size="sm" checked={on} disabled={pending} onChange={onChange} aria-label={t("availableForWork")} />
     </section>
+  );
+}
+
+/** Settings > Appearance: Auto (follow the phone) / Light / Dark. */
+function AppearanceRow() {
+  const { t } = useI18n();
+  const [theme, setTheme] = useThemeChoice();
+  const options = [
+    { id: "system", label: t("themeSystem"), icon: SunMoon },
+    { id: "light", label: t("themeLight"), icon: Sun },
+    { id: "dark", label: t("themeDark"), icon: Moon },
+  ] as const;
+
+  return (
+    <ListRow
+      icon={theme === "dark" ? Moon : theme === "light" ? Sun : SunMoon}
+      title={t("appearance")}
+      hint={
+        <>
+          {t("appearanceHint")}
+          <span role="radiogroup" aria-label={t("appearance")} className="mt-2 flex gap-1 rounded-xl bg-slate-100 p-1">
+            {options.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={theme === id}
+                onClick={() => setTheme(id)}
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[13px] font-medium transition-all duration-200",
+                  theme === id ? "bg-surface text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700",
+                )}
+              >
+                <Icon className={cn("h-3.5 w-3.5", theme === id ? "text-brand-600" : "text-slate-400")} aria-hidden />
+                {label}
+              </button>
+            ))}
+          </span>
+        </>
+      }
+    />
   );
 }
 
@@ -1422,7 +1468,7 @@ function StatTile({
       </span>
     </>
   );
-  const box = "flex min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-2.5 text-left shadow-sm @xl:rounded-2xl @xl:p-3";
+  const box = "flex min-w-0 flex-col rounded-xl border border-slate-200 bg-surface p-2.5 text-left shadow-sm @xl:rounded-2xl @xl:p-3";
   return onClick ? (
     <button
       type="button"
@@ -1454,7 +1500,7 @@ function ProfileStrength({
   const radius = 26;
   const circumference = 2 * Math.PI * radius;
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-surface p-3.5 shadow-sm">
       <div className="flex flex-col gap-3 @2xl:flex-row @2xl:items-center @2xl:gap-5">
         <div className="flex min-w-0 items-center gap-3 @2xl:w-72 @2xl:shrink-0">
           <div
@@ -1505,7 +1551,7 @@ function ProfileStrength({
                 <button
                   type="button"
                   onClick={onComplete}
-                  className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition-colors hover:border-brand-400 hover:bg-brand-50 hover:text-brand-800"
+                  className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 bg-surface px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition-colors hover:border-brand-400 hover:bg-brand-50 hover:text-brand-800"
                 >
                   <Icon className="h-3 w-3" aria-hidden />
                   {label}

@@ -43,8 +43,8 @@ export function WelcomeWalkthrough({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 sm:items-center">
-      <div className="w-full max-w-sm rounded-t-3xl bg-white p-5 shadow-xl sm:rounded-2xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/50 sm:items-center">
+      <div className="w-full max-w-sm rounded-t-3xl bg-surface p-5 shadow-xl sm:rounded-2xl">
         <div className="flex justify-end">
           <button
             type="button"

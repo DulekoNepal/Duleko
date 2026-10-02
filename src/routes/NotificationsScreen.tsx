@@ -223,7 +223,7 @@ export function NotificationsScreen() {
               onClick={() => setFilter(f)}
               className={cn(
                 "flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-200",
-                filter === f ? "bg-white text-slate-900 shadow-sm" : "text-slate-500",
+                filter === f ? "bg-surface text-slate-900 shadow-sm" : "text-slate-500",
               )}
             >
               {f === "all" ? t("filterAll") : t("filterUnread")}
@@ -250,7 +250,7 @@ export function NotificationsScreen() {
                 <h2 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   {group.label}
                 </h2>
-                <ul className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                <ul className="overflow-hidden rounded-2xl border border-slate-200 bg-surface">
                   {group.rows.map((n) => (
                     <li key={n.id} className="border-b border-slate-100 last:border-0">
                       <button

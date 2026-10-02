@@ -6,7 +6,7 @@ export function MenuPanel({ className, ...props }: React.HTMLAttributes<HTMLDivE
     <div
       role="menu"
       className={cn(
-        "absolute right-0 top-full z-30 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg",
+        "absolute right-0 top-full z-30 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-surface py-1 shadow-lg",
         className,
       )}
       {...props}

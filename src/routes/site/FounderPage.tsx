@@ -41,7 +41,7 @@ export function FounderPage() {
               <Link
                 to="/about/$slug"
                 params={{ slug: other.slug }}
-                className="group flex items-center gap-4 rounded-3xl border border-slate-200 bg-white p-3.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lg hover:shadow-teal-900/5 sm:p-4"
+                className="group flex items-center gap-4 rounded-3xl border border-slate-200 bg-surface p-3.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lg hover:shadow-teal-900/5 sm:p-4"
               >
                 <img
                   src={other.image}

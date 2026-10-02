@@ -102,7 +102,7 @@ export function WorkScreen() {
                 className={cn(
                   "flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all duration-200",
                   role === r
-                    ? "bg-white text-slate-900 shadow-sm"
+                    ? "bg-surface text-slate-900 shadow-sm"
                     : "text-slate-500 hover:text-slate-700",
                 )}
               >
@@ -139,7 +139,7 @@ export function WorkScreen() {
                   </p>
                   <div
                     className={cn(
-                      "divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm",
+                      "divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-surface shadow-sm",
                       isOffRampStatus(g.status) && "opacity-70",
                     )}
                   >

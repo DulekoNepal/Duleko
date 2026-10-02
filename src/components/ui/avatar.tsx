@@ -15,7 +15,7 @@ function OnlineDot({ size }: { size: number }) {
     <span
       aria-hidden
       style={{ width: dot, height: dot, borderWidth: ring }}
-      className="absolute bottom-0 right-0 rounded-full border-white bg-green-500"
+      className="absolute bottom-0 right-0 rounded-full border-surface bg-green-500"
     />
   );
 }

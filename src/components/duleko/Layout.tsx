@@ -32,7 +32,7 @@ export function LanguageToggleButton({ className }: { className?: string }) {
       onClick={toggleLang}
       aria-label={lang === "en" ? t("switchToNepali") : t("switchToEnglish")}
       className={cn(
-        "inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors duration-200 hover:bg-slate-50",
+        "inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-surface px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors duration-200 hover:bg-slate-50",
         className,
       )}
     >
@@ -69,7 +69,7 @@ export function AppHeader({
     <header
       className={cn(
         "sticky top-0 z-30 border-b border-slate-200 pt-[var(--sat)] backdrop-blur",
-        gradient ? "bg-gradient-to-r from-brand-50/60 via-white/95 to-white/95" : "bg-white/95",
+        gradient ? "bg-gradient-to-r from-brand-50/60 via-surface/95 to-surface/95" : "bg-surface/95",
         // From md up the top bar (TopNav) is the one and only bar: this
         // becomes a plain page-title row that scrolls with the page, and a
         // header with nothing but the logo (Home) isn't shown at all.
@@ -212,7 +212,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[var(--sab)] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-surface pb-[var(--sab)] md:hidden"
       aria-label={t("mainNavLabel")}
     >
       <div className="mx-auto flex max-w-3xl">
@@ -260,7 +260,7 @@ export function TopNav() {
   const badges = useNavBadges();
 
   return (
-    <header className="sticky top-0 z-40 hidden border-b border-slate-200 bg-white/95 pt-[var(--sat)] backdrop-blur md:block">
+    <header className="sticky top-0 z-40 hidden border-b border-slate-200 bg-surface/95 pt-[var(--sat)] backdrop-blur md:block">
       <div className="flex h-14 items-center gap-4 px-4 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-6">
         <Link
           to="/home"

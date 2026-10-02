@@ -32,7 +32,7 @@ export function EmptyState({
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-col items-center rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-7 text-center"
+      className="flex flex-col items-center rounded-2xl border border-dashed border-slate-300 bg-surface px-5 py-7 text-center"
     >
       {icon && (
         <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 [&_svg]:h-6 [&_svg]:w-6">
@@ -50,7 +50,7 @@ export function CardSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-2xl border border-slate-200 bg-white p-3.5">
+        <div key={i} className="rounded-2xl border border-slate-200 bg-surface p-3.5">
           <div className="flex gap-3">
             <div className="skeleton h-10 w-10 rounded-full" />
             <div className="flex-1 space-y-2">

@@ -417,12 +417,12 @@ export function ChatScreen() {
     // Phones stay edge to edge.
     <div className="h-dvh md:h-[calc(100dvh-3.5rem-1px-var(--sat))] md:py-4">
       <div className={cn("mx-auto h-full w-full max-md:px-0", PAGE_WIDTH, PAGE_GUTTER)}>
-      <div className="flex h-full overflow-hidden bg-white md:rounded-2xl md:border md:border-slate-200 md:shadow-sm">
+      <div className="flex h-full overflow-hidden bg-surface md:rounded-2xl md:border md:border-slate-200 md:shadow-sm">
       {split && <ChatsPane typingFrom={typingFrom} activeId={otherId} showDivisions={false} />}
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* ---- Thread header ------------------------------------------- */}
-        <header className="z-20 border-b border-slate-200 bg-white/95 pt-[var(--sat)] backdrop-blur md:pt-0">
+        <header className="z-20 border-b border-slate-200 bg-surface/95 pt-[var(--sat)] backdrop-blur md:pt-0">
           <div className="flex h-14 items-center gap-2 px-2 sm:gap-3 sm:px-4 lg:h-16">
             {!split && (
               <button
@@ -509,7 +509,7 @@ export function ChatScreen() {
                 // An empty thread gets a proper welcome - who you're talking
                 // to, and a few one-tap openers.
                 <div className="m-auto flex max-w-sm flex-col items-center py-10 text-center">
-                  <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={64} online={isOnline} className="ring-4 ring-white shadow-md" />
+                  <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={64} online={isOnline} className="ring-4 ring-surface shadow-md" />
                   <p className="mt-3 text-base font-bold text-slate-900">{t("sayHelloTo", { name: otherName })}</p>
                   <p className="mt-1 text-xs text-slate-500">{t("chatStarterHint")}</p>
                   <div className="mt-4 flex flex-wrap justify-center gap-1.5">
@@ -521,7 +521,7 @@ export function ChatScreen() {
                           onDraftChange(s);
                           inputRef.current?.focus();
                         }}
-                        className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-[13px] font-medium text-brand-800 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-50"
+                        className="rounded-full border border-brand-200 bg-surface px-3 py-1.5 text-[13px] font-medium text-brand-800 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-50"
                       >
                         {s}
                       </button>
@@ -539,7 +539,7 @@ export function ChatScreen() {
                           anchorFromBottom.current = el ? el.scrollHeight - el.scrollTop : null;
                           setLimit((n) => n + MESSAGES_PAGE);
                         }}
-                        className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-colors duration-200 hover:bg-slate-50"
+                        className="rounded-full border border-slate-200 bg-surface px-3.5 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-colors duration-200 hover:bg-slate-50"
                       >
                         {t("loadOlderMessages")}
                       </button>
@@ -550,7 +550,7 @@ export function ChatScreen() {
                       {newDay && (
                         <div className="my-3 flex items-center gap-3" role="separator">
                           <span className="h-px flex-1 bg-slate-200" aria-hidden />
-                          <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-500 shadow-sm ring-1 ring-slate-200">
+                          <span className="rounded-full bg-surface px-3 py-1 text-[11px] font-semibold text-slate-500 shadow-sm ring-1 ring-slate-200">
                             {formatDayLabel(m.created_at, lang)}
                           </span>
                           <span className="h-px flex-1 bg-slate-200" aria-hidden />
@@ -598,7 +598,7 @@ export function ChatScreen() {
               {otherTyping && (
                 <div className="mt-1 flex items-end gap-1.5">
                   <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={28} profileId={otherId} />
-                  <span className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-white px-3.5 py-3 text-slate-400 shadow-sm ring-1 ring-slate-200/70">
+                  <span className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-surface px-3.5 py-3 text-slate-400 shadow-sm ring-1 ring-slate-200/70">
                     <TypingDots />
                     <span className="sr-only">
                       {otherName} {t("typingIndicator")}
@@ -620,7 +620,7 @@ export function ChatScreen() {
                 "absolute bottom-4 z-20 inline-flex items-center gap-1.5 rounded-full shadow-lg transition-all duration-200",
                 unreadBelow
                   ? "left-1/2 -translate-x-1/2 bg-brand-700 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-brand-800"
-                  : "right-4 h-9 w-9 justify-center bg-white text-slate-600 ring-1 ring-slate-200 hover:text-brand-700",
+                  : "right-4 h-9 w-9 justify-center bg-surface text-slate-600 ring-1 ring-slate-200 hover:text-brand-700",
               )}
             >
               <ArrowDown className="h-4 w-4" aria-hidden />
@@ -631,7 +631,7 @@ export function ChatScreen() {
 
         {/* ---- Composer ------------------------------------------------- */}
         <form
-          className="border-t border-slate-200 bg-white px-3 pb-[calc(0.5rem+var(--sab))] pt-2 sm:px-4"
+          className="border-t border-slate-200 bg-surface px-3 pb-[calc(0.5rem+var(--sab))] pt-2 sm:px-4"
           onSubmit={(e) => {
             e.preventDefault();
             submit();
@@ -640,7 +640,7 @@ export function ChatScreen() {
           <div className="mx-auto w-full max-w-3xl">
             {(replyTo || editing) && (
               <div className="animate-in-up mb-2 flex items-start gap-2.5 rounded-2xl border border-brand-200 bg-brand-50/70 px-3 py-2.5">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 ring-1 ring-brand-200" aria-hidden>
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-surface text-brand-700 ring-1 ring-brand-200" aria-hidden>
                   {editing ? <Pencil className="h-3.5 w-3.5" /> : <CornerUpLeft className="h-3.5 w-3.5" />}
                 </span>
                 <span className="min-w-0 flex-1 border-l-2 border-brand-500 pl-2.5">
@@ -657,7 +657,7 @@ export function ChatScreen() {
                   type="button"
                   onClick={cancelComposer}
                   aria-label={t("cancel")}
-                  className="shrink-0 rounded-lg p-1 text-slate-400 transition-colors duration-200 hover:bg-white hover:text-slate-600"
+                  className="shrink-0 rounded-lg p-1 text-slate-400 transition-colors duration-200 hover:bg-surface hover:text-slate-600"
                 >
                   <X className="h-4 w-4" aria-hidden />
                 </button>
@@ -665,7 +665,7 @@ export function ChatScreen() {
             )}
 
             <div className="relative flex items-end gap-2">
-              <div className="flex min-w-0 flex-1 items-end gap-0.5 rounded-3xl border border-slate-200 bg-slate-50 py-1 pl-1 pr-3 transition-all focus-within:border-brand-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-100">
+              <div className="flex min-w-0 flex-1 items-end gap-0.5 rounded-3xl border border-slate-200 bg-slate-50 py-1 pl-1 pr-3 transition-all focus-within:border-brand-400 focus-within:bg-surface focus-within:ring-4 focus-within:ring-brand-100">
                 <button
                   type="button"
                   data-chat-emoji
@@ -719,7 +719,7 @@ export function ChatScreen() {
               {emojiOpen && (
                 <div
                   data-chat-emoji
-                  className="animate-in-up absolute bottom-full left-0 z-30 mb-2 w-[min(21rem,calc(100vw-1.5rem))] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"
+                  className="animate-in-up absolute bottom-full left-0 z-30 mb-2 w-[min(21rem,calc(100vw-1.5rem))] rounded-2xl border border-slate-200 bg-surface p-2 shadow-xl"
                 >
                   <div className="grid max-h-56 grid-cols-8 gap-0.5 overflow-y-auto">
                     {ALL_REACTIONS.map((emoji) => (

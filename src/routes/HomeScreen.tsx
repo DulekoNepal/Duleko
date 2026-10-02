@@ -194,7 +194,7 @@ export function HomeScreen() {
           {skills.isLoading ? (
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div key={i} className="rounded-2xl border border-slate-200 bg-surface shadow-sm">
                   <div className="px-4 pt-3.5">
                     <div className="skeleton h-4 w-40 rounded" />
                   </div>
@@ -306,7 +306,7 @@ export function HomeScreen() {
  */
 function HeroShell({ children }: { children: React.ReactNode }) {
   return (
-    <section className="animate-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <section className="animate-in-up rounded-2xl border border-slate-200 bg-surface p-4 shadow-sm sm:p-5">
       {children}
     </section>
   );
@@ -340,7 +340,7 @@ function HeroSearch({ popular }: { popular: Skill[] }) {
         <label htmlFor="home-search" className="sr-only">
           {t("homeHeroPrompt")}
         </label>
-        <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 transition-colors focus-within:border-brand-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-100">
+        <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 transition-colors focus-within:border-brand-400 focus-within:bg-surface focus-within:ring-4 focus-within:ring-brand-100">
           <Search className="ml-2.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden />
           <input
             id="home-search"
@@ -397,7 +397,7 @@ function MemberHero({ profile, popular }: { profile: Profile; popular: Skill[] }
           <Avatar name={profile.full_name} src={profile.avatar_url} size={44} />
           <span
             className={cn(
-              "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white",
+              "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-surface",
               profile.is_available ? "bg-brand-500" : "bg-slate-300",
             )}
             aria-hidden
@@ -500,7 +500,7 @@ function QuickActions({ pending, unreadMessages }: { pending: number; unreadMess
   return (
     <nav
       aria-label={t("quickActions")}
-      className="animate-in-up grid grid-cols-4 divide-x divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+      className="animate-in-up grid grid-cols-4 divide-x divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-surface shadow-sm"
       style={{ "--delay": "30ms" } as CSSProperties}
     >
       {actions.map(({ to, icon: Icon, label, hint, badge }) => (
@@ -512,7 +512,7 @@ function QuickActions({ pending, unreadMessages }: { pending: number; unreadMess
           <span className="relative shrink-0 text-brand-700">
             <Icon className="h-5 w-5" aria-hidden />
             {badge ? (
-              <span className="absolute -right-2.5 -top-2 min-w-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-4 text-white ring-2 ring-white">
+              <span className="absolute -right-2.5 -top-2 min-w-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-4 text-white ring-2 ring-surface">
                 {formatNumber(badge > 9 ? "9+" : badge, lang)}
               </span>
             ) : null}
@@ -582,7 +582,7 @@ function ProfileProgress({ profile }: { profile: Profile }) {
                 .map(({ label, icon: Icon }) => (
                   <li
                     key={label}
-                    className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-white px-2 py-0.5 text-[11px] font-medium text-brand-800"
+                    className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-surface px-2 py-0.5 text-[11px] font-medium text-brand-800"
                   >
                     <Icon className="h-3 w-3" aria-hidden />
                     {label}

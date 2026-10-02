@@ -49,10 +49,10 @@ export function RegistrationPolicyPage() {
       </SiteSection>
 
       <SiteSection className="pt-0 sm:pt-0">
-        <div className="rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-5 sm:p-7">
+        <div className="rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-50 via-surface to-surface p-5 sm:p-7">
           <h2 className="text-xl font-bold text-teal-800 sm:text-2xl">{t("registrationAgreement")}</h2>
           <p className="mt-1.5 text-[15px] text-slate-600 sm:text-base">{t("registrationAgreementIntro")}</p>
-          <p className="mt-3 flex gap-3 rounded-2xl bg-white p-3.5 text-[15px] font-medium leading-relaxed text-slate-800 shadow-sm ring-1 ring-slate-200 sm:p-4 sm:text-base">
+          <p className="mt-3 flex gap-3 rounded-2xl bg-surface p-3.5 text-[15px] font-medium leading-relaxed text-slate-800 shadow-sm ring-1 ring-slate-200 sm:p-4 sm:text-base">
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />
             <span className="min-w-0 flex-1">{t("registrationAgreePolicies")}</span>
           </p>

@@ -103,7 +103,7 @@ export function NegotiationPanel({
         <div className="mt-3">
           {editing ? (
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex h-10 items-center gap-1.5 rounded-xl border border-slate-300 bg-white pl-3 pr-1 focus-within:border-brand-600 focus-within:outline focus-within:outline-2 focus-within:outline-brand-600/30">
+              <div className="flex h-10 items-center gap-1.5 rounded-xl border border-slate-300 bg-surface pl-3 pr-1 focus-within:border-brand-600 focus-within:outline focus-within:outline-2 focus-within:outline-brand-600/30">
                 <span className="text-sm text-slate-500">{lang === "ne" ? "रु" : "Rs"}</span>
                 <Input
                   type="number"

@@ -74,7 +74,7 @@ export function WelcomeChoiceScreen({
           {FEATURES.map(({ icon: Icon, titleKey, bodyKey }) => (
             <div
               key={titleKey}
-              className="animate-in-up rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm transition-shadow duration-200 hover:shadow-md"
+              className="animate-in-up rounded-2xl border border-slate-200 bg-surface p-3.5 shadow-sm transition-shadow duration-200 hover:shadow-md"
             >
               <span className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
                 <Icon className="h-4.5 w-4.5" aria-hidden />
@@ -102,7 +102,7 @@ export function WelcomeChoiceScreen({
           <button
             type="button"
             onClick={onExplore}
-            className="flex w-full flex-col items-center gap-0.5 rounded-xl border-2 border-brand-700 bg-white px-4 py-2.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-50 hover:shadow-md active:translate-y-0 sm:flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
+            className="flex w-full flex-col items-center gap-0.5 rounded-xl border-2 border-brand-700 bg-surface px-4 py-2.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-50 hover:shadow-md active:translate-y-0 sm:flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
           >
             <span className="inline-flex items-center gap-2 text-[15px] font-semibold text-brand-800">
               <Compass className="h-4 w-4" aria-hidden />

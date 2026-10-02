@@ -7,9 +7,11 @@ import { SessionProvider } from "@/hooks/use-session";
 import { ToastProvider } from "@/hooks/use-toast";
 import { router } from "@/router";
 import { setupNativeAndroid } from "@/lib/native-android";
+import { setupTheme } from "@/lib/theme";
 import "./styles.css";
 
 setupNativeAndroid();
+setupTheme();
 
 const queryClient = new QueryClient({
   defaultOptions: {

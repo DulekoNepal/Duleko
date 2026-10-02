@@ -156,7 +156,7 @@ export function RequestWorkDialog({
             type="button"
             onClick={() => setCalendarOpen((v) => !v)}
             aria-expanded={calendarOpen}
-            className="flex h-11 w-full items-center justify-between rounded-xl border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-900 transition-colors duration-200 hover:border-slate-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/25"
+            className="flex h-11 w-full items-center justify-between rounded-xl border border-slate-300 bg-surface px-3.5 text-sm font-medium text-slate-900 transition-colors duration-200 hover:border-slate-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/25"
           >
             <span className="inline-flex items-center gap-2">
               <CalendarDays className="h-4 w-4 text-slate-400" aria-hidden />
