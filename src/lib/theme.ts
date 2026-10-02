@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { flushSync } from "react-dom";
 import { setStatusBarTheme } from "@/lib/native-android";
 
 /**
@@ -25,14 +26,18 @@ function readChoice(): ThemeChoice {
 
 let choice: ThemeChoice = typeof window !== "undefined" ? readChoice() : "system";
 
+function isDark(): boolean {
+  return choice === "dark" || (choice === "system" && !!darkQuery?.matches);
+}
+
 function apply(): void {
-  const dark = choice === "dark" || (choice === "system" && !!darkQuery?.matches);
+  const dark = isDark();
   document.documentElement.classList.toggle("dark", dark);
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#0b1220" : "#15803d");
   setStatusBarTheme(dark);
 }
 
-export function setThemeChoice(next: ThemeChoice): void {
+function commit(next: ThemeChoice): void {
   choice = next;
   try {
     if (next === "system") window.localStorage.removeItem(THEME_KEY);
@@ -44,22 +49,59 @@ export function setThemeChoice(next: ThemeChoice): void {
   listeners.forEach((l) => l());
 }
 
+/**
+ * Switch theme. Pass the point that was tapped and, where the browser can
+ * (Chrome / Android WebView), the new look spreads out from it in a circle;
+ * elsewhere, or with reduced motion on, it simply swaps.
+ */
+export function setThemeChoice(next: ThemeChoice, from?: { x: number; y: number }): void {
+  if (next === choice) return;
+  const willBeDark = next === "dark" || (next === "system" && !!darkQuery?.matches);
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (!from || willBeDark === isDark() || reduceMotion || !document.startViewTransition) {
+    commit(next);
+    return;
+  }
+
+  const transition = document.startViewTransition(() => flushSync(() => commit(next)));
+  transition.ready
+    .then(() => {
+      const radius = Math.hypot(
+        Math.max(from.x, window.innerWidth - from.x),
+        Math.max(from.y, window.innerHeight - from.y),
+      );
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${from.x}px ${from.y}px)`, `circle(${radius}px at ${from.x}px ${from.y}px)`] },
+        { duration: 500, easing: "cubic-bezier(0.4, 0, 0.2, 1)", pseudoElement: "::view-transition-new(root)" },
+      );
+    })
+    .catch(() => {});
+}
+
 /** Call once at startup: applies the saved choice and tracks the system setting. */
 export function setupTheme(): void {
   apply();
   darkQuery?.addEventListener("change", () => {
-    if (choice === "system") apply();
+    if (choice !== "system") return;
+    apply();
+    listeners.forEach((l) => l());
   });
 }
 
-export function useThemeChoice(): [ThemeChoice, (next: ThemeChoice) => void] {
-  const current = useSyncExternalStore(
-    (onChange) => {
-      listeners.add(onChange);
-      return () => listeners.delete(onChange);
-    },
-    () => choice,
-    () => "system" as const,
-  );
+function subscribe(onChange: () => void) {
+  listeners.add(onChange);
+  return () => {
+    listeners.delete(onChange);
+  };
+}
+
+export function useThemeChoice(): [ThemeChoice, typeof setThemeChoice] {
+  const current = useSyncExternalStore(subscribe, () => choice, () => "system" as const);
   return [current, setThemeChoice];
+}
+
+/** Whether the app is dark right now, whatever the reason (choice or phone). */
+export function useIsDark(): boolean {
+  return useSyncExternalStore(subscribe, isDark, () => false);
 }

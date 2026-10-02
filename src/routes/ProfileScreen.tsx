@@ -20,7 +20,6 @@ import {
   Mail,
   MapPin,
   MessageSquare,
-  Moon,
   MoreHorizontal,
   Navigation,
   Pencil,
@@ -29,8 +28,6 @@ import {
   Share2,
   ShieldCheck,
   Star,
-  Sun,
-  SunMoon,
   Trash2,
   Upload,
   Users,
@@ -48,6 +45,7 @@ import { Button } from "@/components/ui/button";
 import { DetailRow, ProfileCover, SectionCard } from "@/components/duleko/ProfileParts";
 import { ContactPrivacyRows } from "@/components/duleko/ContactPrivacyRows";
 import { ListGroup, ListRow } from "@/components/duleko/SettingsList";
+import { AppearancePicker } from "@/components/duleko/AppearancePicker";
 import { DulekoPagesHub } from "@/components/duleko/DulekoPagesHub";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/field";
@@ -55,7 +53,6 @@ import { MenuItem, MenuPanel } from "@/components/ui/menu";
 import { Switch } from "@/components/ui/switch";
 import { SkillTile } from "@/components/duleko/SkillIcon";
 import { getCurrentPosition } from "@/lib/geolocation";
-import { useThemeChoice } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
@@ -1166,7 +1163,7 @@ export function ProfileScreen() {
               >
                 <div className="min-w-0 space-y-5">
                   <ListGroup title={t("settingsPreferences")}>
-                    <AppearanceRow />
+                    <AppearancePicker />
                     <ListRow
                       icon={Mail}
                       title={t("emailAlerts")}
@@ -1400,47 +1397,6 @@ function AvailabilityCard({
       </div>
       <Switch size="sm" checked={on} disabled={pending} onChange={onChange} aria-label={t("availableForWork")} />
     </section>
-  );
-}
-
-/** Settings > Appearance: Auto (follow the phone) / Light / Dark. */
-function AppearanceRow() {
-  const { t } = useI18n();
-  const [theme, setTheme] = useThemeChoice();
-  const options = [
-    { id: "system", label: t("themeSystem"), icon: SunMoon },
-    { id: "light", label: t("themeLight"), icon: Sun },
-    { id: "dark", label: t("themeDark"), icon: Moon },
-  ] as const;
-
-  return (
-    <ListRow
-      icon={theme === "dark" ? Moon : theme === "light" ? Sun : SunMoon}
-      title={t("appearance")}
-      hint={
-        <>
-          {t("appearanceHint")}
-          <span role="radiogroup" aria-label={t("appearance")} className="mt-2 flex gap-1 rounded-xl bg-slate-100 p-1">
-            {options.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                type="button"
-                role="radio"
-                aria-checked={theme === id}
-                onClick={() => setTheme(id)}
-                className={cn(
-                  "flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[13px] font-medium transition-all duration-200",
-                  theme === id ? "bg-surface text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700",
-                )}
-              >
-                <Icon className={cn("h-3.5 w-3.5", theme === id ? "text-brand-600" : "text-slate-400")} aria-hidden />
-                {label}
-              </button>
-            ))}
-          </span>
-        </>
-      }
-    />
   );
 }
 

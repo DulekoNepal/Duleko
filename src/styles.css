@@ -146,6 +146,22 @@ html.dark :is([class*="text-brand-50"], [class*="text-brand-1"], [class*="text-b
   --color-brand-300: #86efac;
 }
 
+/* The theme switch's circle reveal (lib/theme.ts) animates the new page in
+   itself, so drop the browser's default cross-fade. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Settings > Appearance: the sun/moon turns in when the theme flips. */
+@keyframes theme-icon-in {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+  }
+}
+
 /* Photos and the logo artwork read a touch bright on a dark page. */
 html.dark img {
   filter: brightness(0.92);

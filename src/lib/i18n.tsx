@@ -627,6 +627,8 @@ const strings = {
     "राति आँखालाई सजिलो हुन्छ। यो फोनमा मात्र सुरक्षित हुन्छ।",
   ],
   themeSystem: ["Auto", "स्वतः"],
+  themeSystemNowDark: ["Following your phone - dark right now.", "तपाईंको फोन अनुसार - अहिले अँध्यारो।"],
+  themeSystemNowLight: ["Following your phone - light right now.", "तपाईंको फोन अनुसार - अहिले उज्यालो।"],
   themeLight: ["Light", "उज्यालो"],
   themeDark: ["Dark", "अँध्यारो"],
 
