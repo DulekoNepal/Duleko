@@ -27,12 +27,18 @@ import {
   Star,
   UserCheck,
   UserPlus,
-  UserRound,
 } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { RatingLine } from "@/components/duleko/WorkerList";
-import { DetailRow, ProfileCover, SectionCard, StatItem } from "@/components/duleko/ProfileParts";
-import { ReviewsCard } from "@/components/duleko/ReviewsCard";
+import {
+  AvailabilityCard,
+  DetailRow,
+  ProfileCover,
+  SectionCard,
+  StatTile,
+} from "@/components/duleko/ProfileParts";
+import { ReviewsPanel } from "@/components/duleko/ReviewsPanel";
+import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
 import { RequestWorkDialog } from "@/components/duleko/RequestWorkDialog";
 import { ReportDialog } from "@/components/duleko/ReportDialog";
 import { SuspendUserDialog } from "@/components/duleko/SuspendUserDialog";
@@ -49,6 +55,7 @@ import { useGuestMode } from "@/hooks/use-guest-mode";
 import { usePresence } from "@/hooks/use-presence";
 import { useToast } from "@/hooks/use-toast";
 import {
+  getAvailability,
   getContact,
   getFriendshipWith,
   getProfile,
@@ -66,7 +73,20 @@ import {
   verifyProfile,
 } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import { cn, formatDate, formatMoney, formatNumber, locationLine, skillName } from "@/lib/utils";
+import {
+  addDays,
+  cn,
+  formatDate,
+  formatMoney,
+  formatNumber,
+  locationLine,
+  skillName,
+  toDateKey,
+  todayKey,
+} from "@/lib/utils";
+
+/** The tabs under the header - the same row your own Profile has. */
+type WorkerTab = "overview" | "calendar" | "reviews";
 
 export function WorkerScreen() {
   const { t, lang } = useI18n();
@@ -83,6 +103,7 @@ export function WorkerScreen() {
   const [reportOpen, setReportOpen] = useState(false);
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [moderationMenuOpen, setModerationMenuOpen] = useState(false);
+  const [tab, setTab] = useState<WorkerTab>("overview");
 
   // The staff ⋯ menu closes on a tap anywhere else, or Escape - same
   // behaviour as the ⋯ menu on your own Profile screen.
@@ -141,6 +162,14 @@ export function WorkerScreen() {
   const certificates = useQuery({
     queryKey: ["certificates", workerId],
     queryFn: () => listCertificates(workerId),
+    enabled: ready,
+  });
+
+  // A full year ahead, the same span your own Profile's calendar covers -
+  // so viewing yourself here shares that cached copy.
+  const availability = useQuery({
+    queryKey: ["availability", workerId],
+    queryFn: () => getAvailability(workerId, todayKey(), toDateKey(addDays(new Date(), 365))),
     enabled: ready,
   });
 
@@ -247,6 +276,7 @@ export function WorkerScreen() {
   // On a phone, the Request/Chat bar slides in once the hero's own buttons
   // have scrolled out of view, so the main action is never more than a tap away.
   const actionsRef = useRef<HTMLDivElement>(null);
+  const tabRowRef = useRef<HTMLDivElement>(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
   useEffect(() => {
     const onScroll = () => {
@@ -279,6 +309,20 @@ export function WorkerScreen() {
   const incomingRequest = fs?.status === "pending" && !iAmRequester;
   const skillList = skills.data ?? [];
   const certList = certificates.data ?? [];
+  const busyDaysCount = (availability.data ?? []).filter((d) => d.status === "booked").length;
+
+  const tabs: { id: WorkerTab; label: string; badge?: number }[] = [
+    { id: "overview", label: t("profileTabOverview") },
+    { id: "calendar", label: t("profileTabCalendar"), badge: busyDaysCount },
+    { id: "reviews", label: t("reviews"), badge: w.rating_count },
+  ];
+
+  // A stat tile can open another tab, which sits below the fold on a
+  // phone - bring the tab row back into view with it.
+  function selectTab(next: WorkerTab) {
+    setTab(next);
+    tabRowRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
 
   // Staff moderation only ever targets an ordinary member - never your own
   // profile, and never another staff member's (verify/suspend a colleague
@@ -447,8 +491,8 @@ export function WorkerScreen() {
         {/* ==============================================================
             Identity, laid out like your own Profile: wide cover, round
             photo overlapping its bottom-left edge, name and actions beside
-            it, then the stats strip. Edge to edge on a phone, a card from
-            sm up.
+            it, then the tab row. Edge to edge on a phone, a card from sm
+            up.
             ============================================================== */}
         <section className="@container animate-in-up -mx-4 -mt-3 border-b border-slate-200 bg-surface shadow-sm sm:mx-0 sm:mt-0 sm:rounded-3xl sm:border">
           <ProfileCover src={w.cover_url} className="h-32 overflow-hidden sm:rounded-t-3xl @md:h-40 @2xl:h-48 @4xl:h-56" />
@@ -475,24 +519,20 @@ export function WorkerScreen() {
                 {w.bio && <p className="mt-0.5 text-sm leading-snug text-slate-600">{w.bio}</p>}
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-slate-500">
                   <RatingLine rating={w.rating} count={w.rating_count} className="text-[13px]" />
-                  {place && (
-                    <span className="inline-flex min-w-0 items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
-                      <span className="truncate">{place}</span>
+                  {w.rating_count > 0 && (
+                    <span aria-hidden className="text-slate-300">
+                      ·
                     </span>
                   )}
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                      w.is_available ? "bg-brand-50 text-brand-800 ring-1 ring-brand-200" : "bg-slate-100 text-slate-500",
-                    )}
-                  >
-                    <span
-                      className={cn("h-1.5 w-1.5 rounded-full", w.is_available ? "bg-brand-500" : "bg-slate-400")}
-                      aria-hidden
-                    />
-                    {w.is_available ? t("availableForWork") : t("notAvailable")}
+                  <span className="font-medium text-slate-600">
+                    {t("skillsCount", { count: formatNumber(skillList.length, lang) })}
                   </span>
+                  {w.is_available && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-800 ring-1 ring-brand-200">
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden />
+                      {t("availableForWork")}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -546,163 +586,284 @@ export function WorkerScreen() {
             )}
           </div>
 
-          {/* Stats strip - sits where the tab row does on your own Profile.
-              Member since lives in Details below, so it isn't repeated here. */}
-          <dl className="mt-3 grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-200">
-            <StatItem icon={Briefcase} label={t("skills")} value={formatNumber(skillList.length, lang)} />
-            <StatItem
-              icon={Star}
-              label={t("ratingLabel")}
-              value={w.rating_count > 0 ? formatNumber(Number(w.rating).toFixed(1), lang) : "–"}
-            />
-            <StatItem icon={MessageSquare} label={t("reviews")} value={formatNumber(w.rating_count, lang)} />
-          </dl>
+          {/* Tab row - scrolls sideways instead of wrapping on a narrow phone. */}
+          <div
+            ref={tabRowRef}
+            role="tablist"
+            aria-label={t("profileSectionsNav")}
+            className="mt-3 flex scroll-mt-20 overflow-x-auto border-t border-slate-200 px-2 [scrollbar-width:none] @2xl:px-4 [&::-webkit-scrollbar]:hidden"
+          >
+            {tabs.map(({ id, label, badge }) => {
+              const selected = tab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  id={`worker-tab-${id}`}
+                  aria-selected={selected}
+                  aria-controls={`worker-panel-${id}`}
+                  onClick={() => setTab(id)}
+                  className="group relative shrink-0 px-0.5 py-1"
+                >
+                  <span
+                    className={cn(
+                      "flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-semibold transition-colors",
+                      selected ? "text-brand-700" : "text-slate-600 group-hover:bg-slate-100 group-hover:text-slate-900",
+                    )}
+                  >
+                    {label}
+                    {badge ? (
+                      <span className="rounded-full bg-slate-100 px-1.5 text-[11px] font-bold leading-5 text-slate-600">
+                        {formatNumber(badge, lang)}
+                      </span>
+                    ) : null}
+                  </span>
+                  {selected && <span className="absolute inset-x-1 bottom-0 h-0.5 rounded-t-full bg-brand-700" aria-hidden />}
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         {/* ==============================================================
-            Content beside a details column on desktop
+            The open tab, laid out like the same tab on your own Profile.
             ============================================================== */}
-        <div className="grid gap-3 md:gap-4 lg:grid-cols-3 lg:items-start">
-          <div className="@container min-w-0 space-y-3 md:space-y-4 lg:col-span-2">
-            <SectionCard compact icon={Info} title={t("about")}>
-              {w.about ? (
-                <p className="whitespace-pre-line text-sm leading-6 text-slate-700">{w.about}</p>
-              ) : (
-                <p className="text-sm italic text-slate-400">{t("noAboutYetOther")}</p>
-              )}
-            </SectionCard>
-
-            <SectionCard
-              compact
-              icon={Briefcase}
-              title={t("skillsAndRates")}
-              badge={skillList.length > 0 ? skillList.length : undefined}
+        <div className="@container">
+          {tab === "overview" && (
+            /* Where they stand today up top, then their intro beside their
+               work once there's room; stacked on a phone in the order
+               people read a profile. */
+            <div
+              id="worker-panel-overview"
+              role="tabpanel"
+              aria-labelledby="worker-tab-overview"
+              className="animate-in-up space-y-3 md:space-y-4"
             >
-              {/* These can only be fetched once the handle in the URL has
-                  resolved to a profile, so there is a real gap before they
-                  arrive - show placeholders rather than claiming there is
-                  nothing here. */}
-              {skills.isPending ? (
-                <div className="grid grid-cols-1 gap-2 @lg:grid-cols-2">
-                  {[0, 1].map((i) => (
-                    <div key={i} className="skeleton h-14 rounded-xl" />
-                  ))}
-                </div>
-              ) : skillList.length === 0 ? (
-                <p className="text-sm italic text-slate-400">{t("noSkillsYetProfile")}</p>
-              ) : (
-                <ul className="grid grid-cols-1 gap-2 @lg:grid-cols-2">
-                  {skillList.map((s) => {
-                    const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
-                    return (
-                      <li
-                        key={s.id}
-                        className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5"
-                      >
-                        <SkillTile skillId={s.id} className="h-9 w-9 rounded-lg bg-surface ring-1 ring-slate-200" />
-                        {/* The rate gets its own line so it never has to be cut short. */}
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-slate-900">{label}</p>
-                          {s.rate_amount != null ? (
-                            <p className="text-xs font-semibold text-brand-700">
-                              {formatMoney(s.rate_amount, lang)}
-                              {s.rate_unit && <span className="font-medium text-slate-500"> / {s.rate_unit}</span>}
-                            </p>
-                          ) : (
-                            <p className="text-xs text-slate-400">{t("rateNotSet")}</p>
-                          )}
-                          {s.custom_note && (
-                            <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{s.custom_note}</p>
-                          )}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </SectionCard>
-
-            {certList.length > 0 && (
-              <SectionCard compact icon={Award} title={t("certificates")} badge={certList.length}>
-                <ul className="grid grid-cols-1 gap-2 @lg:grid-cols-2">
-                  {certList.map((c) => (
-                    <li key={c.id}>
-                      <a
-                        href={c.file_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-surface p-2.5 transition-colors hover:border-brand-200"
-                      >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-                          <Award className="h-4 w-4" aria-hidden />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold text-slate-900 group-hover:text-brand-700">
-                            {c.title}
-                          </span>
-                          <span className="block text-xs text-slate-500">{formatDate(c.created_at.slice(0, 10), lang)}</span>
-                        </span>
-                        <ExternalLink className="h-3.5 w-3.5 shrink-0 text-slate-300 group-hover:text-brand-600" aria-hidden />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </SectionCard>
-            )}
-
-            <ReviewsCard
-              reviews={reviews.data?.pages.flat() ?? []}
-              isPending={reviews.isPending}
-              hasMore={reviews.hasNextPage}
-              loadingMore={reviews.isFetchingNextPage}
-              onLoadMore={() => reviews.fetchNextPage()}
-              rating={Number(w.rating)}
-              ratingCount={w.rating_count}
-            />
-          </div>
-
-          <aside className="space-y-3 md:space-y-4 lg:sticky lg:top-24">
-            <SectionCard compact icon={UserRound} title={t("profileDetails")}>
-              <dl className="space-y-3">
-                {place && <DetailRow icon={MapPin} label={t("whereYouAre")} value={place} />}
-                {w.age != null && (
-                  <DetailRow icon={Cake} label={t("age")} value={t("yearsOld", { count: formatNumber(w.age, lang) })} />
-                )}
-                {w.education && (
-                  <DetailRow icon={GraduationCap} label={t("highestEducation")} value={w.education} />
-                )}
-                {canCall && contact.data?.alt_phone && (
-                  <DetailRow icon={Phone} label={t("altPhone")} value={contact.data.alt_phone} />
-                )}
-                <DetailRow
-                  icon={CalendarDays}
-                  label={t("memberSince")}
-                  value={formatDate(w.created_at.slice(0, 10), lang)}
+              <div className="grid grid-cols-1 gap-3 md:gap-4 @3xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+                <AvailabilityCard
+                  on={w.is_available}
+                  hint={w.is_available ? t("workerAvailableHint") : t("workerUnavailableHint")}
                 />
-              </dl>
-            </SectionCard>
 
-            {!isMe && (
-              <SectionCard compact icon={ShieldCheck} title={t("stayingSafeTitle")}>
-                <ul className="space-y-2 text-xs leading-relaxed text-slate-600">
-                  {(["stayingSafeTip1", "stayingSafeTip2", "stayingSafeTip3"] as const).map((key) => (
-                    <li key={key} className="flex gap-2">
-                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
-                      <span>{t(key)}</span>
-                    </li>
-                  ))}
+                <div className="grid grid-cols-4 gap-2 @xl:gap-2.5">
+                  <StatTile
+                    icon={Star}
+                    label={t("ratingLabel")}
+                    value={w.rating_count > 0 ? formatNumber(Number(w.rating).toFixed(1), lang) : t("newShort")}
+                  />
+                  <StatTile
+                    icon={MessageSquare}
+                    label={t("reviews")}
+                    value={formatNumber(w.rating_count, lang)}
+                    onClick={() => selectTab("reviews")}
+                  />
+                  <StatTile icon={Briefcase} label={t("skills")} value={formatNumber(skillList.length, lang)} />
+                  <StatTile
+                    icon={CalendarDays}
+                    label={t("busyDaysLabel")}
+                    value={formatNumber(busyDaysCount, lang)}
+                    onClick={() => selectTab("calendar")}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 md:gap-4 @3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @3xl:items-start">
+                <div className="min-w-0 space-y-3 md:space-y-4">
+                  <SectionCard compact icon={Info} title={t("about")}>
+                    {w.about ? (
+                      <p className="whitespace-pre-line text-sm leading-6 text-slate-700">{w.about}</p>
+                    ) : (
+                      <p className="text-sm italic text-slate-400">{t("noAboutYetOther")}</p>
+                    )}
+
+                    <dl className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+                      {place && <DetailRow icon={MapPin} label={t("basedIn")} value={place} />}
+                      {canCall && contact.data?.alt_phone && (
+                        <DetailRow icon={Phone} label={t("altPhone")} value={contact.data.alt_phone} />
+                      )}
+                      {w.education && (
+                        <DetailRow icon={GraduationCap} label={t("highestEducation")} value={w.education} />
+                      )}
+                      {w.age != null && (
+                        <DetailRow
+                          icon={Cake}
+                          label={t("age")}
+                          value={t("yearsOld", { count: formatNumber(w.age, lang) })}
+                        />
+                      )}
+                      <DetailRow
+                        icon={CalendarDays}
+                        label={t("memberSince")}
+                        value={formatDate(w.created_at.slice(0, 10), lang)}
+                      />
+                    </dl>
+                  </SectionCard>
+
+                  {!isMe && (
+                    <SectionCard compact icon={ShieldCheck} title={t("stayingSafeTitle")}>
+                      <ul className="space-y-2 text-xs leading-relaxed text-slate-600">
+                        {(["stayingSafeTip1", "stayingSafeTip2", "stayingSafeTip3"] as const).map((key) => (
+                          <li key={key} className="flex gap-2">
+                            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
+                            <span>{t(key)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        type="button"
+                        onClick={() => withAuth(() => setReportOpen(true))}
+                        className="mt-3 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <Flag className="h-3.5 w-3.5" aria-hidden />
+                        {t("reportProfile")}
+                      </button>
+                    </SectionCard>
+                  )}
+                </div>
+
+                <div className="@container min-w-0 space-y-3 md:space-y-4">
+                  <SectionCard
+                    compact
+                    icon={Briefcase}
+                    title={t("skillsAndRates")}
+                    badge={skillList.length > 0 ? skillList.length : undefined}
+                  >
+                    {/* These can only be fetched once the handle in the URL has
+                        resolved to a profile, so there is a real gap before they
+                        arrive - show placeholders rather than claiming there is
+                        nothing here. */}
+                    {skills.isPending ? (
+                      <div className="grid grid-cols-1 gap-2 @lg:grid-cols-2">
+                        {[0, 1].map((i) => (
+                          <div key={i} className="skeleton h-14 rounded-xl" />
+                        ))}
+                      </div>
+                    ) : skillList.length === 0 ? (
+                      <p className="text-sm italic text-slate-400">{t("noSkillsYetProfile")}</p>
+                    ) : (
+                      <ul className="grid grid-cols-1 gap-2 @lg:grid-cols-2">
+                        {skillList.map((s) => {
+                          const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
+                          return (
+                            <li
+                              key={s.id}
+                              className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5"
+                            >
+                              <SkillTile skillId={s.id} className="h-9 w-9 rounded-lg bg-surface ring-1 ring-slate-200" />
+                              {/* The rate gets its own line so it never has to be cut short. */}
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold text-slate-900">{label}</p>
+                                {s.rate_amount != null ? (
+                                  <p className="text-xs font-semibold text-brand-700">
+                                    {formatMoney(s.rate_amount, lang)}
+                                    {s.rate_unit && <span className="font-medium text-slate-500"> / {s.rate_unit}</span>}
+                                  </p>
+                                ) : (
+                                  <p className="text-xs text-slate-400">{t("rateNotSet")}</p>
+                                )}
+                                {s.custom_note && (
+                                  <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{s.custom_note}</p>
+                                )}
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </SectionCard>
+
+                  {certList.length > 0 && (
+                    <SectionCard compact icon={Award} title={t("certificates")} badge={certList.length}>
+                      <ul className="grid grid-cols-1 gap-2 @lg:grid-cols-2">
+                        {certList.map((c) => (
+                          <li key={c.id}>
+                            <a
+                              href={c.file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-surface p-2.5 transition-colors hover:border-brand-200"
+                            >
+                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                                <Award className="h-4 w-4" aria-hidden />
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-semibold text-slate-900 group-hover:text-brand-700">
+                                  {c.title}
+                                </span>
+                                <span className="block text-xs text-slate-500">
+                                  {formatDate(c.created_at.slice(0, 10), lang)}
+                                </span>
+                              </span>
+                              <ExternalLink className="h-3.5 w-3.5 shrink-0 text-slate-300 group-hover:text-brand-600" aria-hidden />
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </SectionCard>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {tab === "calendar" && (
+            <div
+              id="worker-panel-calendar"
+              role="tabpanel"
+              aria-labelledby="worker-tab-calendar"
+              className="animate-in-up grid grid-cols-1 gap-3 md:gap-4 @3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @3xl:items-start"
+            >
+              {/* What the calendar means, beside it once there's room. */}
+              <SectionCard compact icon={CalendarDays} title={t("workerCalendarTitle")}>
+                <p className="text-sm font-medium text-slate-900">
+                  {busyDaysCount > 0
+                    ? t("daysMarkedBusy", { count: formatNumber(busyDaysCount, lang) })
+                    : t("workerNoBusyDays")}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">{t("workerCalendarHint")}</p>
+                <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
+                  <li className="flex items-center gap-2">
+                    <span className="h-3.5 w-3.5 rounded-full ring-1 ring-slate-300" aria-hidden />
+                    {t("freeDay")}
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="h-3.5 w-3.5 rounded-full bg-slate-800" aria-hidden />
+                    {t("bookedDay")}
+                  </li>
                 </ul>
-                <button
-                  type="button"
-                  onClick={() => withAuth(() => setReportOpen(true))}
-                  className="mt-3 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                >
-                  <Flag className="h-3.5 w-3.5" aria-hidden />
-                  {t("reportProfile")}
-                </button>
+                {!isMe && (
+                  <Button size="sm" className="mt-4 w-full" onClick={() => withAuth(() => setRequestOpen(true))}>
+                    <Send className="h-3.5 w-3.5" aria-hidden />
+                    {t("requestWork")}
+                  </Button>
+                )}
               </SectionCard>
-            )}
-          </aside>
+
+              <section className="rounded-2xl border border-slate-200 bg-surface p-3 shadow-sm sm:p-4">
+                <AvailabilityCalendar days={availability.data ?? []} monthView />
+              </section>
+            </div>
+          )}
+
+          {tab === "reviews" && (
+            <div
+              id="worker-panel-reviews"
+              role="tabpanel"
+              aria-labelledby="worker-tab-reviews"
+              className="animate-in-up"
+            >
+              <ReviewsPanel
+                reviews={reviews.data?.pages.flat() ?? []}
+                isPending={reviews.isPending}
+                hasMore={reviews.hasNextPage}
+                loadingMore={reviews.isFetchingNextPage}
+                onLoadMore={() => reviews.fetchNextPage()}
+                rating={Number(w.rating)}
+                ratingCount={w.rating_count}
+              />
+            </div>
+          )}
         </div>
       </PageContainer>
 

@@ -1,5 +1,6 @@
-import type { LucideIcon } from "lucide-react";
+import { ChevronRight, CircleDot, type LucideIcon } from "lucide-react";
 import { SectionIcon } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { BrandWatermark } from "@/components/duleko/site/ui";
 import { useI18n } from "@/lib/i18n";
 import { cn, formatNumber } from "@/lib/utils";
@@ -89,19 +90,6 @@ export function SectionCard({
   );
 }
 
-/** One cell of the stats strip under a profile's identity. Use inside a <dl>. */
-export function StatItem({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="flex min-w-0 flex-col items-center gap-0.5 px-2 py-2.5 text-center">
-      <dt className="order-last max-w-full truncate text-[11px] font-medium text-slate-500">{label}</dt>
-      <dd className="flex items-center gap-1.5 text-base font-bold tabular-nums leading-tight text-slate-900">
-        <Icon className="h-3.5 w-3.5 text-brand-600" aria-hidden />
-        {value}
-      </dd>
-    </div>
-  );
-}
-
 /** Icon, label and value - one fact in a Details list. Use inside a <dl>. */
 export function DetailRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
@@ -114,5 +102,80 @@ export function DetailRow({ icon: Icon, label, value }: { icon: LucideIcon; labe
         <dd className="break-words text-sm font-semibold text-slate-800">{value}</dd>
       </div>
     </div>
+  );
+}
+
+/**
+ * Available for work or not, as the lead card. On your own Profile it carries
+ * the switch; on someone else's page (no onChange) it only says where they stand.
+ */
+export function AvailabilityCard({
+  on,
+  hint,
+  pending = false,
+  onChange,
+}: {
+  on: boolean;
+  hint: string;
+  pending?: boolean;
+  onChange?: (next: boolean) => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <section className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-surface p-3.5 shadow-sm transition-colors">
+      <span
+        className={cn(
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+          on ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-400",
+        )}
+      >
+        <CircleDot className="h-4.5 w-4.5" aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1">
+        <h3 className="text-sm font-semibold text-slate-900">{on ? t("availableForWork") : t("notAvailable")}</h3>
+        <p className="mt-0.5 text-xs leading-snug text-slate-500">{hint}</p>
+      </div>
+      {onChange && (
+        <Switch size="sm" checked={on} disabled={pending} onChange={onChange} aria-label={t("availableForWork")} />
+      )}
+    </section>
+  );
+}
+
+/** One number on the stats row; pass onClick to make it a shortcut. */
+export function StatTile({
+  icon: Icon,
+  label,
+  value,
+  onClick,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  onClick?: () => void;
+}) {
+  const body = (
+    <>
+      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+        <Icon className="h-3.5 w-3.5" aria-hidden />
+      </span>
+      <span className="mt-2 truncate text-lg font-bold tabular-nums leading-none text-slate-900">{value}</span>
+      <span className="mt-1 flex items-center gap-0.5 truncate text-[11px] font-medium text-slate-500 @xl:text-xs">
+        {label}
+        {onClick && <ChevronRight className="hidden h-3.5 w-3.5 shrink-0 text-slate-400 @xl:block" aria-hidden />}
+      </span>
+    </>
+  );
+  const box = "flex min-w-0 flex-col rounded-xl border border-slate-200 bg-surface p-2.5 text-left shadow-sm @xl:rounded-2xl @xl:p-3";
+  return onClick ? (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(box, "transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md")}
+    >
+      {body}
+    </button>
+  ) : (
+    <div className={box}>{body}</div>
   );
 }

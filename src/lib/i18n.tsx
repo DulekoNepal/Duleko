@@ -146,6 +146,7 @@ const strings = {
     "८ वर्षदेखि घरको वायरिङ। आफ्नै औजार ल्याउँछु।",
   ],
   whereYouAre: ["Where you are", "तपाईं कहाँ हुनुहुन्छ"],
+  basedIn: ["Based in", "बसोबास"],
   province: ["Province", "प्रदेश"],
   district: ["District", "जिल्ला"],
   municipality: ["Municipality", "नगरपालिका / गाउँपालिका"],
@@ -257,6 +258,20 @@ const strings = {
   availabilityOffHint: [
     "You're hidden from \"Available today\" until you switch this back on.",
     "यो फेरि खोल्दासम्म तपाईं \"आज उपलब्ध\" मा देखिनुहुने छैन।",
+  ],
+  workerAvailableHint: [
+    "Taking new work - send a request or start a chat.",
+    "नयाँ काम लिँदै हुनुहुन्छ - अनुरोध पठाउनुहोस् वा कुराकानी सुरु गर्नुहोस्।",
+  ],
+  workerUnavailableHint: [
+    "Not taking new work right now - you can still chat.",
+    "अहिले नयाँ काम लिनुहुन्न - तर कुराकानी गर्न सक्नुहुन्छ।",
+  ],
+  workerCalendarTitle: ["Busy and free days", "व्यस्त र खाली दिन"],
+  workerNoBusyDays: ["No busy days marked - open every day.", "कुनै व्यस्त दिन छैन - हरेक दिन खाली।"],
+  workerCalendarHint: [
+    "Booked days are already taken. Pick a free day when you send a request.",
+    "बुक भएका दिन लिइसकिएको छ। अनुरोध पठाउँदा खाली दिन छान्नुहोस्।",
   ],
   profileItemSkills: ["Add your skills", "आफ्ना सीपहरू थप्नुहोस्"],
   profileItemPhone: ["Add a phone number", "फोन नम्बर थप्नुहोस्"],
