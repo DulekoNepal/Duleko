@@ -6,7 +6,9 @@
 // pg_cron via pg_net - see supabase/migrations/20260101002500_*.sql.
 //
 // It never throws on a single bad row: one failure is recorded against
-// that row and the rest of the batch still goes out.
+// that row and the rest of the batch still goes out. When Brevo says the
+// day's emails are used up, emails are marked 'skipped' instead of being
+// retried - their in-app alerts are unaffected (see migration 5200).
 //
 // Secrets (supabase secrets set ...):
 //   BREVO_API_KEY       required for email
@@ -85,6 +87,9 @@ function parseFrom(raw: string): { name: string; email: string } {
   return match ? { name: match[1].trim(), email: match[2].trim() } : { name: "Duleko", email: raw.trim() };
 }
 
+/** Brevo says no more email today. Retrying would only fail again. */
+class EmailLimitReached extends Error {}
+
 async function sendEmail(d: Delivery): Promise<void> {
   const key = env("BREVO_API_KEY");
   if (!key) throw new Error("BREVO_API_KEY is not set");
@@ -107,7 +112,13 @@ async function sendEmail(d: Delivery): Promise<void> {
     }),
   });
 
-  if (!res.ok) throw new Error(`brevo ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) {
+    const detail = (await res.text()).slice(0, 300);
+    // 402 / not_enough_credits: the day's sending allowance is spent.
+    // (429 is different - a short burst limit that clears by itself.)
+    if (res.status === 402 || detail.includes("not_enough_credits")) throw new EmailLimitReached(detail);
+    throw new Error(`brevo ${res.status}: ${detail}`);
+  }
 }
 
 /** Nepali numbers are stored however the user typed them; normalise here. */
@@ -178,11 +189,20 @@ Deno.serve(async () => {
   const batch = (data ?? []) as Delivery[];
   let sent = 0;
   let failed = 0;
+  let skipped = 0;
+  // Once Brevo says the day's emails are used up, the rest of this batch's
+  // emails are skipped without asking again. Their in-app alerts are
+  // already there; only the email copy is dropped. SMS carries on.
+  let emailLimitReached = false;
 
   for (const d of batch) {
     try {
-      if (d.channel === "email") await sendEmail(d);
-      else await sendSms(d);
+      if (d.channel === "email") {
+        if (emailLimitReached) throw new EmailLimitReached("skipped without sending");
+        await sendEmail(d);
+      } else {
+        await sendSms(d);
+      }
 
       await supabase
         .from("notification_deliveries")
@@ -190,6 +210,15 @@ Deno.serve(async () => {
         .eq("id", d.id);
       sent++;
     } catch (err) {
+      if (err instanceof EmailLimitReached) {
+        emailLimitReached = true;
+        await supabase
+          .from("notification_deliveries")
+          .update({ status: "skipped", last_error: "daily email limit reached" })
+          .eq("id", d.id);
+        skipped++;
+        continue;
+      }
       // Retry a couple of times, then stop paying attention to this row.
       const message = err instanceof Error ? err.message : String(err);
       await supabase
@@ -203,7 +232,7 @@ Deno.serve(async () => {
     }
   }
 
-  return new Response(JSON.stringify({ claimed: batch.length, sent, failed }), {
+  return new Response(JSON.stringify({ claimed: batch.length, sent, failed, skipped }), {
     headers: { "Content-Type": "application/json" },
   });
 });
