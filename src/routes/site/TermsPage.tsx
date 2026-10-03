@@ -51,6 +51,7 @@ export function TermsPage() {
       body: (
         <>
           <p>{t("termsCreatingAccountDesc")}</p>
+          <p>{t("termsAgeRequirement")}</p>
           <PolicyStrong>{t("termsMustNot")}</PolicyStrong>
           <PolicyBullets
             keys={[

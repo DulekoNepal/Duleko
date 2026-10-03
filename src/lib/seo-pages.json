@@ -97,14 +97,14 @@
       "description": "The terms for using Duleko: Duleko connects people but does not employ them, payments are between users, and honesty is required.",
       "priority": "0.3",
       "changefreq": "yearly",
-      "lastmod": "2026-09-27"
+      "lastmod": "2026-10-03"
     },
     "/registration-policy": {
       "title": "Registration Policy | Duleko",
       "description": "Duleko's user registration policy: what you agree to when you create an account on Duleko.",
       "priority": "0.3",
       "changefreq": "yearly",
-      "lastmod": "2026-09-27"
+      "lastmod": "2026-10-03"
     }
   }
 }

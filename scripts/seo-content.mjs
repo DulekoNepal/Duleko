@@ -270,6 +270,7 @@ export const content = {
         "Duleko connects, it does not employ - Duleko is a platform that connects people; it is not the employer.",
         "Payments are between users - rates and payment are agreed directly between the people involved.",
         "Honesty is required - profiles, skills and reviews must be truthful.",
+        "You must be 18 or older, and sign up with a Google or email account of your own.",
       ] },
       { p: "Questions about these terms, or something to report? Reach us at dulekonepal@gmail.com." },
     ],
@@ -279,6 +280,7 @@ export const content = {
     blocks: [
       { p: "Duleko helps people discover skills, connect with people nearby, and find or offer work opportunities. By creating an account, you agree to the following:" },
       { ul: [
+        "Be 18 or older - you must be at least 18 to create an account, using a Google or email account of your own.",
         "Provide genuine information about yourself, your skills, experience, location, rates and qualifications.",
         "Phone verification is required - every registered account must have a verified phone number.",
         "Use Duleko responsibly - no scams, harassment, discrimination, illegal activities or exploitation.",

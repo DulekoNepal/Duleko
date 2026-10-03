@@ -4,6 +4,7 @@ import { PolicyMeta, PolicySections, type PolicySection } from "@/components/dul
 import { useI18n, type StringKey } from "@/lib/i18n";
 
 const RULES: { id: string; key: StringKey }[] = [
+  { id: "age", key: "regPolicyAge" },
   { id: "genuine", key: "regPolicyGenuineInfo" },
   { id: "phone", key: "regPolicyPhoneVerification" },
   { id: "responsible", key: "regPolicyResponsibleUse" },

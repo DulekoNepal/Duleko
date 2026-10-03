@@ -821,6 +821,10 @@ const strings = {
   ],
   policyQuickSummary: ["Quick summary", "छोटो सारांश"],
   policyFullTerms: ["Read the full Terms of Use", "पूरा प्रयोगका सर्तहरू पढ्नुहोस्"],
+  policySummaryAge: [
+    "You must be 18 or older, and sign up with a Google or email account of your own.",
+    "तपाईं १८ वर्ष वा माथिको हुनुपर्छ, र आफ्नै Google वा इमेल खाताबाट साइन अप गर्नुपर्छ।",
+  ],
   policySummary1: [
     "Provide genuine information about yourself, your skills, and your location. Do not impersonate anyone or use fake certificates.",
     "आफ्नो बारेमा, सीप, र स्थानको बारेमा सही जानकारी दिनुहोस्। कसैको नक्कल नगर्नुहोस् वा नक्कली प्रमाणपत्र प्रयोग नगर्नुहोस्।",
@@ -1152,10 +1156,14 @@ const strings = {
 
   // User Registration Policy
   registrationPolicyTitle: ["Duleko User Registration Policy", "डुलेको प्रयोगकर्ता दर्ता नीति"],
-  registrationPolicyLastUpdated: ["Last updated: September 2026", "अन्तिम अद्यावधिक: सेप्टेम्बर २०२६"],
+  registrationPolicyLastUpdated: ["Last updated: October 2026", "अन्तिम अद्यावधिक: अक्टोबर २०२६"],
   registrationPolicyIntro: [
     "Welcome to Duleko. Duleko helps people discover skills, connect with people nearby, and find or offer work opportunities. By creating an account, you agree to the following:",
     "डुलेकोमा स्वागत छ। डुलेकोले मानिसहरूलाई सीपहरू खोज्न, नजिकैका मानिसहरूसँग जोड्न, र कामको अवसर खोज्न वा प्रस्ताव गर्न मद्दत गर्छ। खाता सिर्जना गरेर, तपाईं निम्नलाई स्वीकार गर्नुहुन्छ:",
+  ],
+  regPolicyAge: [
+    "Be 18 or older. You must be at least 18 years old to create a Duleko account, and the Google or email account you sign up with must be your own.",
+    "१८ वर्ष वा माथि हुनुहोस्। डुलेको खाता सिर्जना गर्न तपाईं कम्तीमा १८ वर्षको हुनुपर्छ, र साइन अप गर्न प्रयोग गर्ने Google वा इमेल खाता तपाईं आफ्नै हुनुपर्छ।",
   ],
   regPolicyGenuineInfo: [
     "Provide genuine information. Use accurate information about yourself, your skills, experience, location, rates, and qualifications. Do not impersonate another person or provide false certificates or credentials.",
@@ -1202,14 +1210,14 @@ const strings = {
     "खाता सिर्जना गर्नुअघि:",
   ],
   registrationAgreePolicies: [
-    "I have read and agree to Duleko's Terms, Privacy Policy, and User Registration Policy.",
-    "मैले डुलेको सर्तहरू, गोपनीयता नीति, र प्रयोगकर्ता दर्ता नीति पढेको छु र स्वीकार गर्छु।",
+    "I am 18 or older, and I have read and agree to Duleko's Terms, Privacy Policy, and User Registration Policy.",
+    "म १८ वर्ष वा माथिको हुँ, र मैले डुलेको सर्तहरू, गोपनीयता नीति, र प्रयोगकर्ता दर्ता नीति पढेको छु र स्वीकार गर्छु।",
   ],
   createAccount: ["Create Account", "खाता सिर्जना गर्नुहोस्"],
 
   // Terms of Use
   termsTitle: ["DULEKO – TERMS OF USE & USER POLICY", "डुलेको – प्रयोगका सर्तहरू र प्रयोगकर्ता नीति"],
-  termsEffectiveDate: ["Effective Date: September 2026", "प्रभावकाली मिति: सेप्टेम्बर २०२६"],
+  termsEffectiveDate: ["Effective Date: October 2026", "प्रभावकाली मिति: अक्टोबर २०२६"],
   termsJurisdiction: ["Applicable Jurisdiction: Nepal", "लागू अधिकार क्षेत्र: नेपाल"],
   
   termsAboutTitle: ["1. About Duleko", "१. डुलेकोको बारेमा"],
@@ -1226,6 +1234,10 @@ const strings = {
   termsCreatingAccountDesc: [
     "To create a Duleko account, users must provide accurate information and verify their mobile number through OTP.",
     "डुलेको खाता सिर्जना गर्न, प्रयोगकर्ताहरूले सटीक जानकारी प्रदान गर्नुपर्छ र OTP मार्फत आफ्नो मोबाइल नम्बर प्रमाणित गर्नुपर्छ।",
+  ],
+  termsAgeRequirement: [
+    "Users must be at least 18 years old, and must sign up with a Google or email account of their own.",
+    "प्रयोगकर्ता कम्तीमा १८ वर्षको हुनुपर्छ, र आफ्नै Google वा इमेल खाताबाट साइन अप गर्नुपर्छ।",
   ],
   termsMustNot: ["Users must not:", "प्रयोगकर्ताहरूले यी गर्नु हुँदैन:"],
   termsMustNotImpersonate: ["impersonate another person;", "अर्को व्यक्तिको नक्कल गर्नु;"],

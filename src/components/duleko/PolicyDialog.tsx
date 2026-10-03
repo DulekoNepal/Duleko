@@ -52,6 +52,7 @@ function TermsContent({ lang }: { lang: "en" | "ne" }) {
 
       <Collapsible title={t("policyQuickSummary")} defaultOpen>
         <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-700">
+          <li>{t("policySummaryAge")}</li>
           <li>{t("policySummary1")}</li>
           <li>{t("policySummary2")}</li>
           <li>{t("policySummary3")}</li>
@@ -76,7 +77,7 @@ function TermsContent({ lang }: { lang: "en" | "ne" }) {
 function TermsFullEn() {
   return (
     <>
-      <p className="mb-3 text-xs text-slate-400">Effective September 2026. Applicable jurisdiction: Nepal.</p>
+      <p className="mb-3 text-xs text-slate-400">Effective October 2026. Applicable jurisdiction: Nepal.</p>
 
       <h3 className={heading}>1. About Duleko</h3>
       <p className={body}>
@@ -88,7 +89,8 @@ function TermsFullEn() {
       <h3 className={heading}>2. Creating an Account</h3>
       <p className={body}>
         To create a Duleko account, users must provide accurate information and verify their mobile
-        number through OTP. Users must not:
+        number through OTP. Users must be at least 18 years old, and must sign up with a Google or
+        email account of their own. Users must not:
       </p>
       <ul className={list}>
         <li>impersonate another person;</li>
@@ -151,7 +153,7 @@ function TermsFullEn() {
 function TermsFullNe() {
   return (
     <>
-      <p className="mb-3 text-xs text-slate-400">प्रभावकारी मिति: सेप्टेम्बर २०२६। लागू हुने क्षेत्राधिकार: नेपाल।</p>
+      <p className="mb-3 text-xs text-slate-400">प्रभावकारी मिति: अक्टोबर २०२६। लागू हुने क्षेत्राधिकार: नेपाल।</p>
 
       <h3 className={heading}>१. डुलेकोको बारेमा</h3>
       <p className={body}>
@@ -162,6 +164,7 @@ function TermsFullNe() {
       <h3 className={heading}>२. खाता खोल्दा</h3>
       <p className={body}>
         डुलेको खाता खोल्न, प्रयोगकर्ताले सही जानकारी दिनुपर्छ र OTP मार्फत आफ्नो मोबाइल नम्बर प्रमाणित गर्नुपर्छ।
+        प्रयोगकर्ता कम्तीमा १८ वर्षको हुनुपर्छ, र आफ्नै Google वा इमेल खाताबाट साइन अप गर्नुपर्छ।
         प्रयोगकर्ताले निम्न गर्नु हुँदैन:
       </p>
       <ul className={list}>
@@ -453,6 +456,9 @@ function RegistrationContent({ lang }: { lang: "en" | "ne" }) {
     <div>
       <p className="mb-3 text-xs text-slate-400">{t("registrationPolicyLastUpdated")}</p>
       <p className={body}>{t("registrationPolicyIntro")}</p>
+
+      <h3 className={heading}>{t("regPolicyAge").split(".")[0]}</h3>
+      <p className={body}>{t("regPolicyAge")}</p>
       
       <h3 className={heading}>{t("regPolicyGenuineInfo").split(".")[0]}</h3>
       <p className={body}>{t("regPolicyGenuineInfo")}</p>

@@ -566,6 +566,7 @@ export function AuthScreen({
                       <div className="mt-3 space-y-2 text-sm text-slate-700">
                         <p>{t("registrationPolicyIntro")}</p>
                         <div className="space-y-1 pl-2">
+                          <p className="text-xs">• {t("regPolicyAge")}</p>
                           <p className="text-xs">• {t("regPolicyGenuineInfo")}</p>
                           <p className="text-xs">• {t("regPolicyPhoneVerification")}</p>
                           <p className="text-xs">• {t("regPolicyResponsibleUse")}</p>
