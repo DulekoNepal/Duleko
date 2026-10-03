@@ -25,6 +25,9 @@ interface Delivery {
   subject: string;
   body: string;
   attempts: number;
+  /** Notice emails only (migration 5000): the notice's image, and its path in the app. */
+  image_url?: string | null;
+  link_path?: string | null;
 }
 
 const MAX_ATTEMPTS = 3;
@@ -34,8 +37,8 @@ const env = (key: string, fallback = "") => Deno.env.get(key) ?? fallback;
 const SITE_URL = env("SITE_URL", "https://www.duleko.com");
 
 const COPY = {
-  en: { open: "Open Duleko", footer: "You are getting this because you have an account on Duleko.", settings: "Turn these off in Profile → Settings." },
-  ne: { open: "डुलेको खोल्नुहोस्", footer: "तपाईंको डुलेकोमा खाता भएकाले यो सन्देश पठाइएको हो।", settings: "प्रोफाइल → सेटिङबाट यो बन्द गर्न सकिन्छ।" },
+  en: { open: "Open Duleko", view: "See the notice", footer: "You are getting this because you have an account on Duleko.", settings: "Turn these off in Profile → Settings." },
+  ne: { open: "डुलेको खोल्नुहोस्", view: "सूचना हेर्नुहोस्", footer: "तपाईंको डुलेकोमा खाता भएकाले यो सन्देश पठाइएको हो।", settings: "प्रोफाइल → सेटिङबाट यो बन्द गर्न सकिन्छ।" },
 } as const;
 
 function escapeHtml(text: string): string {
@@ -44,17 +47,29 @@ function escapeHtml(text: string): string {
   );
 }
 
+/** Where the button goes: the notice itself for a notice email, the app otherwise. */
+function openUrl(d: Delivery): string {
+  return d.link_path?.startsWith("/") ? `${SITE_URL}${d.link_path}` : SITE_URL;
+}
+
 function emailHtml(d: Delivery): string {
   const c = COPY[d.lang] ?? COPY.en;
+  const href = escapeHtml(openUrl(d));
+  // 432px = the 480px card minus its padding. Tapping the image opens the
+  // notice too, the way people expect a picture in an email to behave.
+  const image = d.image_url?.startsWith("https://")
+    ? `<a href="${href}" style="display:block;margin:0 0 16px"><img src="${escapeHtml(d.image_url)}" alt="" width="432" style="display:block;width:100%;max-width:432px;height:auto;border:1px solid #e2e8f0;border-radius:12px" /></a>`
+    : "";
   return `<!doctype html>
 <html lang="${d.lang}">
   <body style="margin:0;padding:24px;background:#f8fafc;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#0f172a">
     <div style="max-width:480px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden">
       <div style="padding:20px 24px;border-bottom:1px solid #f1f5f9;font-size:18px;font-weight:700;color:#0f766e">Duleko</div>
       <div style="padding:24px">
-        <h1 style="margin:0 0 8px;font-size:18px;line-height:1.4">${escapeHtml(d.subject)}</h1>
+        <h1 style="margin:0 0 12px;font-size:18px;line-height:1.4">${escapeHtml(d.subject)}</h1>
+        ${image}
         <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#475569;white-space:pre-wrap">${escapeHtml(d.body)}</p>
-        <a href="${SITE_URL}" style="display:inline-block;background:#0f766e;color:#fff;text-decoration:none;padding:11px 20px;border-radius:9999px;font-size:14px;font-weight:600">${c.open}</a>
+        <a href="${href}" style="display:inline-block;background:#0f766e;color:#fff;text-decoration:none;padding:11px 20px;border-radius:9999px;font-size:14px;font-weight:600">${d.link_path ? c.view : c.open}</a>
       </div>
       <div style="padding:16px 24px;background:#f8fafc;border-top:1px solid #f1f5f9;font-size:12px;color:#94a3b8;line-height:1.5">
         ${c.footer}<br />${c.settings}
@@ -88,7 +103,7 @@ async function sendEmail(d: Delivery): Promise<void> {
       to: [{ email: d.destination }],
       subject: d.subject,
       htmlContent: emailHtml(d),
-      textContent: `${d.subject}\n\n${d.body}\n\n${SITE_URL}`,
+      textContent: `${d.subject}\n\n${d.body}\n\n${openUrl(d)}`,
     }),
   });
 

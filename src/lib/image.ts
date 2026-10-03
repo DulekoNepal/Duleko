@@ -11,6 +11,8 @@ export const IMAGE_MAX_SIDE = {
   cover: 1600,
   // Certificates are read, not glanced at - keep small print legible.
   certificate: 2000,
+  // Same for notices: often a photo of a printed notice or a poster.
+  notice: 2000,
 } as const;
 
 /** Largest original we accept before shrinking - anything bigger is almost certainly not a photo. */

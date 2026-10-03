@@ -12,6 +12,7 @@ import {
   LogIn,
   MapPin,
   MessageCircle,
+  Pin,
   Search,
   UserRound,
   Users,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { EmergencyContactsSection } from "@/components/duleko/EmergencyContacts";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
+import { NoticeRow } from "@/components/duleko/NoticeParts";
 import { SkillCategoryBrowser, groupSkillsByCategory } from "@/components/duleko/SkillGrid";
 import { SkillIcon } from "@/components/duleko/SkillIcon";
 import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
@@ -33,7 +35,14 @@ import { useI18n, type StringKey } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useGuestMode } from "@/hooks/use-guest-mode";
 import { usePresence } from "@/hooks/use-presence";
-import { countPendingForMe, countUnreadMessages, listSkills, searchWorkers, skillCounts } from "@/lib/queries";
+import {
+  countPendingForMe,
+  countUnreadMessages,
+  listNotices,
+  listSkills,
+  searchWorkers,
+  skillCounts,
+} from "@/lib/queries";
 import { districtLabel } from "@/lib/nepal";
 import { cn, formatNumber, locationLine, skillName, todayKey } from "@/lib/utils";
 import type { Profile, Skill, WorkerCardData } from "@/lib/types";
@@ -43,6 +52,10 @@ import dulekoMark from "@/assets/duleko-mark.webp";
 // used nowhere else on the page, so every such link reads as one family.
 const seeAllLinkClass =
   "inline-flex shrink-0 items-center gap-0.5 text-xs font-semibold text-accent-600 hover:text-accent-700";
+
+// How long a new notice stays on Home. After that it is old news, and
+// lives on the board (Alerts → Notice board) only.
+const NOTICE_FRESH_MS = 14 * 24 * 60 * 60_000;
 
 function timeGreetingKey(): StringKey {
   const hour = new Date().getHours();
@@ -113,6 +126,16 @@ export function HomeScreen() {
     refetchInterval: 120_000,
   });
 
+  // The newest notice, while it is still news. Guests see it too.
+  const latestNotice = useQuery({
+    queryKey: ["notices", "latest"],
+    queryFn: () => listNotices(0, 1),
+    staleTime: 5 * 60_000,
+  });
+  const freshNotice = (latestNotice.data ?? []).find(
+    (n) => Date.now() - new Date(n.created_at).getTime() < NOTICE_FRESH_MS,
+  );
+
   // Same key as the nav badge, so react-query serves both from one request.
   const unreadMessages = useQuery({
     queryKey: ["unread-messages", profile?.id],
@@ -173,6 +196,22 @@ export function HomeScreen() {
         )}
 
         <QuickActions pending={pendingCount} unreadMessages={unreadMessages.data ?? 0} />
+
+        {freshNotice && (
+          <section className="animate-in-up" style={{ "--delay": "45ms" } as CSSProperties}>
+            <SectionHeader
+              icon={Pin}
+              title={t("noticeBoard")}
+              action={
+                <Link to="/notices" className={seeAllLinkClass}>
+                  {t("seeAll")}
+                  <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                </Link>
+              }
+            />
+            <NoticeRow notice={freshNotice} />
+          </section>
+        )}
 
         {profile && <ProfileProgress profile={profile} />}
 

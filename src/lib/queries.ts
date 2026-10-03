@@ -15,6 +15,7 @@ import type {
   Friendship,
   Lang,
   MessageReaction,
+  Notice,
   NotificationPrefs,
   Profile,
   RepliedMessage,
@@ -1038,6 +1039,118 @@ export async function addCertificate(
 export async function removeCertificate(id: string): Promise<void> {
   const { error } = await supabase.from("certificates").delete().eq("id", id);
   if (error) throw error;
+}
+
+// ---------------------------------------------------------------------
+// Notice board - staff post, everyone reads (5000_notice_board.sql)
+// ---------------------------------------------------------------------
+// staff_roles has a second FK back to profiles (granted_by), so the embed
+// names the profile_id constraint, same as PROFILE_COLUMNS_WITH_BADGES.
+const NOTICE_COLUMNS =
+  "id,title,body,image_url,created_at," +
+  "author:profiles!notices_author_profile_id_fkey(id,full_name,avatar_url,staff_roles!staff_roles_profile_id_fkey(role))";
+
+type NoticeAuthorRow = Pick<Profile, "id" | "full_name" | "avatar_url"> & {
+  staff_roles?: { role: StaffRole } | { role: StaffRole }[] | null;
+};
+
+function mapNoticeRow(row: unknown): Notice {
+  const { author, ...rest } = row as Omit<Notice, "author"> & {
+    author: NoticeAuthorRow | NoticeAuthorRow[] | null;
+  };
+  const a = one(author);
+  return {
+    ...rest,
+    author: a
+      ? { id: a.id, full_name: a.full_name, avatar_url: a.avatar_url, staff_role: one(a.staff_roles)?.role ?? null }
+      : null,
+  };
+}
+
+export const NOTICES_PAGE = 12;
+
+export async function listNotices(page = 0, pageSize = NOTICES_PAGE): Promise<Notice[]> {
+  const from = page * pageSize;
+  const { data, error } = await supabase
+    .from("notices")
+    .select(NOTICE_COLUMNS)
+    .order("created_at", { ascending: false })
+    .range(from, from + pageSize - 1);
+  if (error) throw error;
+  return (data ?? []).map(mapNoticeRow);
+}
+
+export async function getNotice(id: string): Promise<Notice | null> {
+  const { data, error } = await supabase.from("notices").select(NOTICE_COLUMNS).eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data ? mapNoticeRow(data) : null;
+}
+
+/**
+ * Posts a notice. The database does the rest: every member gets an alert,
+ * and an email with the image, from the notices insert trigger. Staff-only
+ * - enforced by RLS on both the table and the storage bucket.
+ */
+export async function publishNotice(
+  userId: string,
+  profileId: string,
+  input: { title: string; body: string; image: File | null },
+): Promise<Notice> {
+  let imagePath: string | null = null;
+  let imageUrl: string | null = null;
+  if (input.image) {
+    const file = await shrinkImage(input.image, IMAGE_MAX_SIDE.notice);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    imagePath = `${userId}/notice-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("notices")
+      .upload(imagePath, file, { cacheControl: IMMUTABLE_CACHE, contentType: file.type });
+    if (error) throw error;
+    imageUrl = supabase.storage.from("notices").getPublicUrl(imagePath).data.publicUrl;
+  }
+
+  const body = input.body.trim();
+  const { data, error } = await supabase
+    .from("notices")
+    .insert({ author_profile_id: profileId, title: input.title.trim(), body: body || null, image_url: imageUrl })
+    .select(NOTICE_COLUMNS)
+    .single();
+  if (error) {
+    // Nothing will ever show an image whose notice never got posted.
+    if (imagePath) await supabase.storage.from("notices").remove([imagePath]);
+    throw error;
+  }
+  return mapNoticeRow(data);
+}
+
+/** The object path inside `bucket` that one of its public URLs points at. */
+function publicPathIn(bucket: string, url: string): string | null {
+  const marker = `/object/public/${bucket}/`;
+  const at = url.indexOf(marker);
+  return at === -1 ? null : decodeURIComponent(url.slice(at + marker.length));
+}
+
+/** Takes a notice down - its alerts go with it (on delete cascade). Staff-only via RLS. */
+export async function deleteNotice(notice: Pick<Notice, "id" | "image_url">): Promise<void> {
+  const { error } = await supabase.from("notices").delete().eq("id", notice.id);
+  if (error) throw error;
+  // Best-effort: nothing links to the image once the notice is gone, and a
+  // leftover file must never make the delete itself look like it failed.
+  const path = notice.image_url ? publicPathIn("notices", notice.image_url) : null;
+  if (path) await supabase.storage.from("notices").remove([path]);
+}
+
+/** Opening a notice clears its alert, however you got there. True if one was unread. */
+export async function markNoticeAlertRead(profileId: string, noticeId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("profile_id", profileId)
+    .eq("notice_id", noticeId)
+    .eq("is_read", false)
+    .select("id");
+  if (error) throw error;
+  return (data?.length ?? 0) > 0;
 }
 
 // ---------------------------------------------------------------------

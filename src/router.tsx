@@ -131,6 +131,20 @@ const moderationRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/ModerationScreen"), "ModerationScreen"),
 });
 
+// The Duleko notice board: staff post, everyone (guests too) reads.
+const noticesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/notices",
+  component: lazyRouteComponent(() => import("@/routes/NoticesScreen"), "NoticeBoardScreen"),
+});
+
+// One notice - where its alert and its email both lead.
+const noticeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/notices/$noticeId",
+  component: lazyRouteComponent(() => import("@/routes/NoticesScreen"), "NoticeScreen"),
+});
+
 const privacyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/privacy",
@@ -219,6 +233,8 @@ const routeTree = rootRoute.addChildren([
   chatRoute,
   chatsRoute,
   moderationRoute,
+  noticesRoute,
+  noticeRoute,
   privacyRoute,
   aboutRoute,
   founderRoute,

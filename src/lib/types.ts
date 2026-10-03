@@ -181,7 +181,8 @@ export interface AppNotification {
     | "welcome"
     | "verified"
     | "verify_reminder"
-    | "announcement";
+    | "announcement"
+    | "notice";
   title_en: string;
   title_ne: string;
   body_en: string | null;
@@ -189,9 +190,25 @@ export interface AppNotification {
   engagement_id: string | null;
   /** Set for kinds like "message" that link to a profile rather than an engagement. */
   related_profile_id: string | null;
+  /** Set for "notice" - the notice board post this alert is about. */
+  notice_id: string | null;
   actor_name: string | null;
   is_read: boolean;
   created_at: string;
+}
+
+/**
+ * One post on the Duleko notice board. Only staff can publish one;
+ * everyone, guests included, can read them.
+ */
+export interface Notice {
+  id: string;
+  title: string;
+  body: string | null;
+  image_url: string | null;
+  created_at: string;
+  /** null once the staff member who posted it has deleted their account. */
+  author: (Pick<Profile, "id" | "full_name" | "avatar_url"> & { staff_role: StaffRole | null }) | null;
 }
 
 /**

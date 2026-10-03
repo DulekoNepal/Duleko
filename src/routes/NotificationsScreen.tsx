@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Megaphone,
   MessageCircle,
+  Pin,
   ShieldCheck,
   Sparkles,
   Star,
@@ -61,6 +62,7 @@ const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
   verified: { icon: ShieldCheck, tone: "green" },
   verify_reminder: { icon: ShieldCheck, tone: "brand" },
   announcement: { icon: Megaphone, tone: "brand" },
+  notice: { icon: Pin, tone: "amber" },
 };
 
 const URL_RE = /https?:\/\/[^\s<>"')\]]+/i;
@@ -165,6 +167,12 @@ export function NotificationsScreen() {
       return;
     }
 
+    // A notice opens whole - its full image and text - on the board.
+    if (n.kind === "notice" && n.notice_id) {
+      navigate({ to: "/notices/$noticeId", params: { noticeId: n.notice_id } });
+      return;
+    }
+
     // "Someone accepted your request" is about a person - show who.
     if (n.kind === "accepted" && n.engagement_id) {
       try {
@@ -203,12 +211,23 @@ export function NotificationsScreen() {
         title={t("notifications")}
         subtitle={unreadCount > 0 ? t("unreadCount", { count: formatNumber(unreadCount, lang) }) : undefined}
         right={
-          unreadCount > 0 ? (
-            <Button variant="ghost" size="sm" onClick={() => readAll.mutate()} loading={readAll.isPending}>
-              <CheckCheck className="h-4 w-4" aria-hidden />
-              <span className="hidden sm:inline">{t("markAllRead")}</span>
-            </Button>
-          ) : undefined
+          <div className="flex items-center gap-1">
+            <Link
+              to="/notices"
+              aria-label={t("noticeBoard")}
+              title={t("noticeBoard")}
+              className="inline-flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-100"
+            >
+              <Pin className="h-4 w-4" aria-hidden />
+              <span className="hidden sm:inline">{t("noticeBoard")}</span>
+            </Link>
+            {unreadCount > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => readAll.mutate()} loading={readAll.isPending}>
+                <CheckCheck className="h-4 w-4" aria-hidden />
+                <span className="hidden sm:inline">{t("markAllRead")}</span>
+              </Button>
+            )}
+          </div>
         }
       />
       <PageContainer>
@@ -283,7 +302,10 @@ export function NotificationsScreen() {
                               {relativeTime(n.created_at, lang)}
                             </span>
                           </span>
-                          <span className="mt-0.5 line-clamp-2 block text-[13px] leading-snug text-slate-500">
+                          {/* No `block` here: it would override the -webkit-box
+                              display line-clamp needs, and a long notice would
+                              print in full. */}
+                          <span className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-slate-500">
                             {lang === "ne" ? n.body_ne : n.body_en}
                           </span>
                         </span>

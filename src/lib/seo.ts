@@ -19,6 +19,8 @@ const PRIVATE_PREFIXES = [
   "/chat",
   "/chats",
   "/moderation",
+  // Readable without an account, but short-lived news, not a page to index.
+  "/notices",
   // The app's Home; the website's home at "/" is the page to index.
   "/home",
 ];

@@ -621,6 +621,47 @@ const strings = {
   noNotifications: ["No notifications.", "कुनै सूचना छैन।"],
   officialAccount: ["Official", "आधिकारिक"],
 
+  // ---- notice board --------------------------------------------------
+  noticeBoard: ["Notice board", "सूचना पाटी"],
+  noticeBoardHint: ["Official notices from the Duleko team.", "डुलेको टोलीका आधिकारिक सूचनाहरू।"],
+  notice: ["Notice", "सूचना"],
+  postNotice: ["Post a notice", "सूचना राख्नुहोस्"],
+  postNoticeShort: ["Post", "राख्नुहोस्"],
+  noticeTitle: ["Title", "शीर्षक"],
+  noticeTitlePlaceholder: ["e.g. Office closed for Dashain", "जस्तै: दशैंमा कार्यालय बन्द"],
+  noticeText: ["Text", "विवरण"],
+  noticeTextPlaceholder: ["Write the notice here", "सूचना यहाँ लेख्नुहोस्"],
+  noticeImage: ["Image (JPEG or PNG)", "तस्बिर (JPEG वा PNG)"],
+  noticeAddImage: ["Choose an image", "तस्बिर छान्नुहोस्"],
+  noticeRemoveImage: ["Remove image", "तस्बिर हटाउनुहोस्"],
+  noticeTitleTooShort: [
+    "Give the notice a title of at least 3 characters.",
+    "सूचनाको कम्तीमा ३ अक्षरको शीर्षक लेख्नुहोस्।",
+  ],
+  noticeImageType: ["Choose a JPEG or PNG image.", "JPEG वा PNG तस्बिर छान्नुहोस्।"],
+  noticeGoesToEveryone: [
+    "Every member gets an alert and an email. You can take a notice down later, but emails already sent stay sent.",
+    "हरेक सदस्यलाई एप र इमेलमा सूचना जान्छ। पछि सूचना हटाउन सकिन्छ, तर पठाइसकेको इमेल फिर्ता हुँदैन।",
+  ],
+  publishNotice: ["Publish to everyone", "सबैलाई पठाउनुहोस्"],
+  noticePublished: ["Notice published. Everyone is being notified.", "सूचना प्रकाशित भयो। सबैलाई जानकारी पठाइँदैछ।"],
+  noNotices: ["No notices yet.", "अहिलेसम्म कुनै सूचना छैन।"],
+  noNoticesHint: [
+    "Official notices from the Duleko team will appear here.",
+    "डुलेको टोलीका आधिकारिक सूचनाहरू यहाँ देखिनेछन्।",
+  ],
+  noticeNotFound: ["This notice is no longer on the board.", "यो सूचना अब पाटीमा छैन।"],
+  deleteNotice: ["Take down", "हटाउनुहोस्"],
+  deleteNoticeTitle: ["Take this notice down?", "यो सूचना हटाउने?"],
+  deleteNoticeConfirm: [
+    "It disappears from the board and from everyone's alerts. Emails already sent stay in people's inboxes.",
+    "यो सूचना पाटी र सबैको सूचनाबाट हट्छ। पठाइसकेका इमेल भने मानिसहरूको इनबक्समै रहन्छन्।",
+  ],
+  noticeDeleted: ["Notice taken down.", "सूचना हटाइयो।"],
+  dulekoTeam: ["Duleko team", "डुलेको टोली"],
+  openFullImage: ["Open full image", "पूरा तस्बिर खोल्नुहोस्"],
+  allNotices: ["All notices", "सबै सूचना"],
+
   // ---- alerts outside the app ----------------------------------------
   alertsOutsideApp: ["Email & SMS alerts", "इमेल र एसएमएस सूचना"],
   emailAlerts: ["Email me", "मलाई इमेल पठाउनुहोस्"],
