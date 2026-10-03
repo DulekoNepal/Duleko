@@ -7,6 +7,7 @@ import { useIsDark, useThemeChoice } from "@/lib/theme";
 import { useSession } from "@/hooks/use-session";
 import { countUnread, countUnreadMessages } from "@/lib/queries";
 import { setAppBadge } from "@/lib/native-android";
+import { clearAllAlerts } from "@/lib/phone-alerts";
 import { supabase } from "@/lib/supabase";
 import { cn, formatNumber } from "@/lib/utils";
 import dulekoMark from "@/assets/duleko-mark.webp";
@@ -206,7 +207,11 @@ function useNavBadges() {
     refetchInterval: 60_000,
   });
 
-  return { notifications: unread.data ?? 0, chats: unreadMessages.data ?? 0 };
+  return {
+    notifications: unread.data ?? 0,
+    chats: unreadMessages.data ?? 0,
+    loaded: unread.isSuccess && unreadMessages.isSuccess,
+  };
 }
 
 /**
@@ -225,10 +230,12 @@ export function useNotificationsBadgeSync() {
   const badges = useNavBadges();
   const total = profile?.id ? badges.notifications + badges.chats : 0;
 
-  // Mirror the unread total onto the Android launcher icon.
+  // Mirror the unread total onto the Android launcher icon. Once it's all
+  // read, the phone's notifications about it are stale too.
   useEffect(() => {
     setAppBadge(total);
-  }, [total]);
+    if (badges.loaded && total === 0) clearAllAlerts();
+  }, [total, badges.loaded]);
 
   useEffect(() => {
     if (!profile?.id) return;

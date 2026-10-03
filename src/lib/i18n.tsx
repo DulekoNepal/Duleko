@@ -689,6 +689,12 @@ const strings = {
   themeDark: ["Dark", "अँध्यारो"],
   darkMode: ["Dark mode", "अँध्यारो मोड"],
 
+  // ---- phone alert categories (Android Settings > Notifications) -----
+  alertChannelMessages: ["Messages", "सन्देशहरू"],
+  alertChannelWork: ["Work requests", "कामका अनुरोधहरू"],
+  alertChannelFriends: ["Friend requests", "साथी अनुरोधहरू"],
+  alertChannelUpdates: ["News and updates", "समाचार र अपडेटहरू"],
+
   // ---- profile / settings --------------------------------------------
   myProfile: ["My profile", "मेरो प्रोफाइल"],
 

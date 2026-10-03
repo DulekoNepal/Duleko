@@ -41,6 +41,7 @@ import {
 } from "@/lib/queries";
 import { usePresence } from "@/hooks/use-presence";
 import { CHAT_SPLIT_QUERY, useMediaQuery } from "@/hooks/use-media-query";
+import { clearChatAlert } from "@/lib/phone-alerts";
 import { supabase, errorMessage } from "@/lib/supabase";
 import { cn, containsPhoneNumber, formatDayLabel, relativeTime, sameMinuteWindow, toDateKey } from "@/lib/utils";
 import type { ChatMessage } from "@/lib/types";
@@ -186,6 +187,7 @@ export function ChatScreen() {
     if (!me) return;
     const markRead = () => {
       if (document.visibilityState === "hidden") return;
+      clearChatAlert(otherId);
       Promise.all([markThreadRead(me.id, otherId), markMessageNotificationsRead(me.id, otherId)])
         .then(() => {
           queryClient.invalidateQueries({ queryKey: ["unread-messages", me.id] });

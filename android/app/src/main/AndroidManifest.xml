@@ -32,6 +32,8 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 13+: asked once after sign-in, for phone alerts (PhoneAlertsPlugin) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Required by @capacitor/geolocation (AutoShareLocation, Search "nearest", Profile location toggle) -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />

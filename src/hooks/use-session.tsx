@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { stopPhoneAlerts } from "@/lib/phone-alerts";
 import { supabase } from "@/lib/supabase";
 import { getMyProfile, touchPresence } from "@/lib/queries";
 import { persistGuestMode } from "@/hooks/use-guest-mode";
@@ -108,6 +109,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         await profileQuery.refetch();
       },
       signOut: async () => {
+        // This phone stops getting the account's alerts.
+        await stopPhoneAlerts().catch(() => {});
         await supabase.auth.signOut();
         queryClient.clear();
         // A deliberate sign-out should land back on the welcome choice, not

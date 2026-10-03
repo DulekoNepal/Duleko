@@ -4,6 +4,7 @@ import { Capacitor } from "@capacitor/core";
 import { AlertTriangle } from "lucide-react";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
+import { usePhoneAlerts } from "@/hooks/use-phone-alerts";
 import { GuestModeProvider, readGuestMode, persistGuestMode } from "@/hooks/use-guest-mode";
 import { useI18n } from "@/lib/i18n";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -76,6 +77,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // One realtime subscription for the whole app, regardless of how many nav
   // components (bottom bar, top bar) are mounted at once.
   useNotificationsBadgeSync();
+  usePhoneAlerts();
 
   // Pre-account browsing: "Explore" persists across a refresh; "sign in
   // now" (from the choice screen, or from any gated action while browsing
