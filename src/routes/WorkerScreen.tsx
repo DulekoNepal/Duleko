@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Flag,
   GraduationCap,
+  IdCard,
   Info,
   Lock,
   MapPin,
@@ -697,6 +698,7 @@ export function WorkerScreen() {
                         label={t("memberSince")}
                         value={formatDate(w.created_at.slice(0, 10), lang)}
                       />
+                      <DetailRow icon={IdCard} label={t("memberId")} value={w.member_no} />
                     </dl>
                   </SectionCard>
 

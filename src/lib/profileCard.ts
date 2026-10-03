@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { MapPin } from "lucide-react";
+import { IdCard, MapPin } from "lucide-react";
 import QRCode from "qrcode";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
@@ -190,23 +190,47 @@ export async function renderProfileCard(
   ctx.lineTo(nameX + 100, avatarCy + 26);
   ctx.stroke();
 
+  // One line per fact under the name, each an icon and muted text.
+  let infoY = avatarCy + 26;
+
   // Where they are, the same "locality, district" format used everywhere
   // else in the app - a person's structured location, not their live GPS
   // position (that's the separate, opt-in "share my location" feature).
   const place = locationShort(profile, "en");
   if (place) {
+    infoY += 42;
     const pinIcon = await loadLucideIconImage(MapPin, MUTED);
-    const pinY = avatarCy + 26 + 42;
     let lx = nameX;
     if (pinIcon) {
-      ctx.drawImage(pinIcon, lx, pinY - 22, 24, 24);
+      ctx.drawImage(pinIcon, lx, infoY - 22, 24, 24);
       lx += 32;
     }
     ctx.fillStyle = MUTED;
     ctx.font = "400 26px system-ui, sans-serif";
-    ctx.fillText(place, lx, pinY, splitX - lx - PAD);
+    ctx.fillText(place, lx, infoY, splitX - lx - PAD);
   }
 
+  // The Duleko Membership ID - the one number that is theirs alone, so the
+  // card can be checked against the profile it came from.
+  if (profile.member_no) {
+    infoY += place ? 46 : 42;
+    const idIcon = await loadLucideIconImage(IdCard, MUTED);
+    let ix = nameX;
+    if (idIcon) {
+      ctx.drawImage(idIcon, ix, infoY - 22, 24, 24);
+      ix += 32;
+    }
+    ctx.fillStyle = MUTED;
+    ctx.font = "400 26px system-ui, sans-serif";
+    ctx.fillText("Membership ID", ix, infoY);
+    ix += ctx.measureText("Membership ID").width + 14;
+    ctx.fillStyle = INK;
+    ctx.font = "700 26px system-ui, sans-serif";
+    ctx.fillText(profile.member_no, ix, infoY, splitX - ix - PAD);
+  }
+
+  // Both lines sit within the photo's height, so the sections below start
+  // where they always have.
   let y = avatarCy + avatarR + (place ? 112 : 70);
 
   if (skills.length > 0) {
@@ -331,13 +355,13 @@ export async function renderProfileCard(
   });
 }
 
-/** A readable, per-person file name, e.g. "Duleko-Sanjay-Kumar-Profile-Card-ab12cd.png". */
+/** A readable, per-person file name, e.g. "Duleko-Sanjay-Gupta-ID-Card-DLK-26-00001.png". */
 export function profileCardFilename(profile: Profile): string {
   const name = profile.full_name
     .normalize("NFKD")
     .replace(/[^A-Za-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  return ["Duleko", name, "Profile-Card", profile.public_slug].filter(Boolean).join("-") + ".png";
+  return ["Duleko", name, "ID-Card", profile.member_no].filter(Boolean).join("-") + ".png";
 }
 
 /** Triggers a real file download of the rendered card - a plain <a download>, same as any file save. */

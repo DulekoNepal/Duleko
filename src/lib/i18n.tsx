@@ -653,9 +653,9 @@ const strings = {
 
   // ---- sharing a profile ---------------------------------------------
   shareProfile: ["Share profile", "प्रोफाइल सेयर गर्नुहोस्"],
-  downloadCard: ["Download profile card", "प्रोफाइल कार्ड डाउनलोड गर्नुहोस्"],
+  downloadCard: ["Download Professional ID card", "व्यावसायिक परिचयपत्र डाउनलोड गर्नुहोस्"],
   generatingCard: ["Preparing your card…", "तपाईंको कार्ड तयार हुँदैछ…"],
-  cardDownloaded: ["Profile card downloaded.", "प्रोफाइल कार्ड डाउनलोड भयो।"],
+  cardDownloaded: ["Professional ID card downloaded.", "व्यावसायिक परिचयपत्र डाउनलोड भयो।"],
   cardReadyToShare: ["Choose where to save your card.", "आफ्नो कार्ड कहाँ सुरक्षित गर्ने रोज्नुहोस्।"],
   profileOptions: ["Profile options", "प्रोफाइल विकल्पहरू"],
   copyLink: ["Copy link", "लिङ्क कपी गर्नुहोस्"],
@@ -705,6 +705,7 @@ const strings = {
   ],
   profileSaved: ["Profile saved.", "प्रोफाइल सुरक्षित भयो।"],
   memberSince: ["Member since", "देखि सदस्य"],
+  memberId: ["Duleko Membership ID", "डुलेको सदस्यता नम्बर"],
   basicInfo: ["Basic info", "आधारभूत जानकारी"],
   noAboutYet: [
     "Add a short bio so people know what you do.",

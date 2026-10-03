@@ -56,6 +56,8 @@ export interface Profile {
   is_official: boolean;
   /** Opaque handle used in shared links, so they never carry the row id. */
   public_slug: string;
+  /** Duleko Membership ID, e.g. "DLK-26-00042" - issued once at sign-up, never changes. */
+  member_no: string;
   language: Lang;
   rating: number;
   rating_count: number;

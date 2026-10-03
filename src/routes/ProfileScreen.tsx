@@ -12,6 +12,7 @@ import {
   Download,
   Eye,
   GraduationCap,
+  IdCard,
   Info,
   Link2 as LinkIcon,
   LogOut,
@@ -961,6 +962,7 @@ export function ProfileScreen() {
                         label={t("memberSince")}
                         value={formatDate(profile.created_at.slice(0, 10), lang)}
                       />
+                      <DetailRow icon={IdCard} label={t("memberId")} value={profile.member_no} />
                     </dl>
                   </SectionCard>
 
