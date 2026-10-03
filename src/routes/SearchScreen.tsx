@@ -176,7 +176,7 @@ export function SearchScreen() {
       key: "skill",
       label: (
         <>
-          <SkillIcon skillId={activeSkill.id} className="h-3.5 w-3.5" />
+          <SkillIcon skillId={activeSkill.id} category={activeSkill.category} className="h-3.5 w-3.5" />
           {skillName(activeSkill, lang)}
         </>
       ),
@@ -485,7 +485,7 @@ function SkillChips({
             className={chip(selected)}
             aria-pressed={selected}
           >
-            <SkillIcon skillId={skill.id} className="h-3.5 w-3.5" inherit={selected} />
+            <SkillIcon skillId={skill.id} category={skill.category} className="h-3.5 w-3.5" inherit={selected} />
             {skillName(skill, lang)}
           </button>
         );

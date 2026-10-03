@@ -32,6 +32,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
+import type { SkillCategory } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 /**
@@ -72,16 +73,14 @@ function AutoRickshawIcon({
 }
 
 /**
- * One icon per skill, and one colour for all of them.
+ * One icon per skill, coloured by its category.
  *
  * Every icon here is a lucide outline glyph (bar the hand-drawn rickshaw
  * above, built to the same rules), so they share a stroke weight, a
  * corner radius and a set of round line caps by construction - nothing
- * filled sits next to something outlined. Colour is Deep Navy
- * throughout: giving each trade its own hue turned the grid into a dozen
- * competing mini-brands, which is exactly what a marketplace should not
- * look like. Orange is reserved for emphasis the app chooses, never for
- * telling one skill apart from another.
+ * filled sits next to something outlined. Colour follows the category,
+ * never the individual skill (a dozen hues would turn the grid into
+ * competing mini-brands): see CATEGORY_ICON_CLASS below.
  *
  * Keyed on skills.id, a stable slug, not on the translated name.
  */
@@ -134,6 +133,25 @@ export function skillIconFor(skillId: string): LucideIcon | typeof AutoRickshawI
 }
 
 /**
+ * The team's category colours: Orange for Trades & Local Services, Deep
+ * Navy for Professional & Skilled Services, Duleko Green for Personal &
+ * Everyday Services (Emergency contacts are red, in EmergencyContacts).
+ * The category comes from the skills table, so moving a skill between
+ * categories recolours it with no code change. Without one - a skill
+ * loaded without its category - the icon stays Deep Navy. Each class has
+ * a lighter dark-mode shade in styles.css.
+ */
+export const CATEGORY_ICON_CLASS: Record<SkillCategory, string> = {
+  trades: "text-accent-600",
+  professional: "text-navy-700",
+  personal: "text-brand-700",
+};
+
+function iconColour(category: SkillCategory | undefined): string {
+  return (category && CATEGORY_ICON_CLASS[category]) || "text-navy-700";
+}
+
+/**
  * The one stroke weight every skill icon uses. Lucide's default is 2,
  * which reads heavy at the sizes these appear at.
  */
@@ -141,22 +159,25 @@ const STROKE = 1.75;
 
 export function SkillIcon({
   skillId,
+  category,
   className,
   inherit = false,
 }: {
   skillId: string;
+  /** The skill's category (skills.category), which sets the icon's colour. */
+  category?: SkillCategory;
   className?: string;
   /**
-   * Takes the colour of whatever it sits in, instead of navy. Used on a
-   * filled surface - the selected picker pill - where navy would fight
-   * the fill rather than read against it.
+   * Takes the colour of whatever it sits in, instead of its category
+   * colour. Used on a filled surface - the selected picker pill - where
+   * the colour would fight the fill rather than read against it.
    */
   inherit?: boolean;
 }) {
   const Icon = skillIconFor(skillId);
   return (
     <Icon
-      className={cn("h-4 w-4 shrink-0", !inherit && "text-navy-700", className)}
+      className={cn("h-4 w-4 shrink-0", !inherit && iconColour(category), className)}
       strokeWidth={STROKE}
       aria-hidden
     />
@@ -170,7 +191,15 @@ export function SkillIcon({
  * outline icon straight on the card's own background is what actually
  * reads as "one clean icon set" rather than "icons in boxes".
  */
-export function SkillTile({ skillId, className }: { skillId: string; className?: string }) {
+export function SkillTile({
+  skillId,
+  category,
+  className,
+}: {
+  skillId: string;
+  category?: SkillCategory;
+  className?: string;
+}) {
   const Icon = skillIconFor(skillId);
   return (
     <span
@@ -180,22 +209,24 @@ export function SkillTile({ skillId, className }: { skillId: string; className?:
         className,
       )}
     >
-      <Icon className="h-[18px] w-[18px] text-navy-700" strokeWidth={STROKE} />
+      <Icon className={cn("h-[18px] w-[18px]", iconColour(category))} strokeWidth={STROKE} />
     </span>
   );
 }
 
 /**
- * A skill as a label. Neutral by design - the icon carries the navy, and
- * nothing else on the chip competes with it.
+ * A skill as a label. Neutral by design - the icon carries the category
+ * colour, and nothing else on the chip competes with it.
  */
 export function SkillChip({
   skillId,
+  category,
   children,
   compact = false,
   className,
 }: {
   skillId: string;
+  category?: SkillCategory;
   children: React.ReactNode;
   /** Tighter, for the dense worker cards in a results list. */
   compact?: boolean;
@@ -209,7 +240,7 @@ export function SkillChip({
         className,
       )}
     >
-      <SkillIcon skillId={skillId} className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
+      <SkillIcon skillId={skillId} category={category} className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
       {children}
     </span>
   );

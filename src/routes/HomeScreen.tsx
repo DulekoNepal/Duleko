@@ -411,7 +411,7 @@ function HeroSearch({ popular }: { popular: Skill[] }) {
               search={{ skill: skill.id }}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-brand-50 hover:text-brand-800"
             >
-              <SkillIcon skillId={skill.id} className="h-3 w-3" />
+              <SkillIcon skillId={skill.id} category={skill.category} className="h-3 w-3" />
               {skillName(skill, lang)}
             </Link>
           ))}

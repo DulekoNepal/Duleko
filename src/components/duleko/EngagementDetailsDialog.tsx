@@ -193,7 +193,7 @@ export function EngagementDetailsDialog({
           </p>
           {engagement.skill && (
             <p className="mt-1.5">
-              <SkillChip skillId={engagement.skill.id} compact>
+              <SkillChip skillId={engagement.skill.id} category={engagement.skill.category} compact>
                 {skillName(engagement.skill, lang)}
               </SkillChip>
             </p>

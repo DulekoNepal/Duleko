@@ -798,7 +798,7 @@ export function ProfileScreen() {
                     return (
                       <div key={id} className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5 sm:p-4">
                         <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
-                          <SkillTile skillId={skill.id} className="h-8 w-8 rounded-lg bg-surface ring-1 ring-slate-200" />
+                          <SkillTile skillId={skill.id} category={skill.category} className="h-8 w-8 rounded-lg bg-surface ring-1 ring-slate-200" />
                           {skillName(skill, lang)}
                         </p>
                         {id === "other" && (
@@ -981,7 +981,7 @@ export function ProfileScreen() {
                               key={s.id}
                               className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5"
                             >
-                              <SkillTile skillId={s.id} className="h-9 w-9 rounded-lg bg-surface ring-1 ring-slate-200" />
+                              <SkillTile skillId={s.id} category={s.category} className="h-9 w-9 rounded-lg bg-surface ring-1 ring-slate-200" />
                               {/* The rate gets its own line so it never has to be cut short. */}
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-semibold text-slate-900">{label}</p>

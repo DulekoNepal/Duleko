@@ -69,7 +69,11 @@ export function SkillGrid({
             twoRows && i >= 8 && i < 12 && "max-sm:hidden",
           )}
         >
-          <SkillIcon skillId={skill.id} className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+          <SkillIcon
+            skillId={skill.id}
+            category={skill.category}
+            className="h-5 w-5 transition-transform duration-200 group-hover:scale-110"
+          />
           <span className="line-clamp-2 text-[11px] font-medium leading-tight text-slate-700">
             {skillName(skill, lang)}
           </span>
@@ -210,7 +214,7 @@ export function SkillPicker({
                         : "border-slate-300 bg-surface text-slate-700 hover:border-brand-300",
                     )}
                   >
-                    <SkillIcon skillId={skill.id} className="h-3.5 w-3.5" inherit={active} />
+                    <SkillIcon skillId={skill.id} category={skill.category} className="h-3.5 w-3.5" inherit={active} />
                     {skillName(skill, lang)}
                   </button>
                 );

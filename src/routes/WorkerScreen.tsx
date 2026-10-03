@@ -752,7 +752,7 @@ export function WorkerScreen() {
                               key={s.id}
                               className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5"
                             >
-                              <SkillTile skillId={s.id} className="h-9 w-9 rounded-lg bg-surface ring-1 ring-slate-200" />
+                              <SkillTile skillId={s.id} category={s.category} className="h-9 w-9 rounded-lg bg-surface ring-1 ring-slate-200" />
                               {/* The rate gets its own line so it never has to be cut short. */}
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-semibold text-slate-900">{label}</p>
