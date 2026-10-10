@@ -3,6 +3,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Briefcase, Wrench } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
+import { FeeReminder } from "@/components/duleko/payments/FeeReminder";
 import { EngagementDetailsDialog } from "@/components/duleko/EngagementDetailsDialog";
 import { EngagementRow } from "@/components/duleko/EngagementRow";
 import { STATUS_ACCENT, STATUS_KEY } from "@/components/duleko/EngagementProgress";
@@ -90,6 +91,7 @@ export function WorkScreen() {
     <>
       <AppHeader title={t("myWork")} />
       <PageContainer>
+        <FeeReminder className="mb-3" />
         <div className="mb-3 inline-flex w-full gap-1 rounded-xl bg-slate-100 p-1" role="tablist">
           {(["worker", "employer"] as const).map((r) => {
             const Icon = r === "worker" ? Wrench : Briefcase;

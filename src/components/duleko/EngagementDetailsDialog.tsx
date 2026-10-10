@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Info, MapPin, Phone, TriangleAlert } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { CalendarDays, ChevronRight, Info, MapPin, Phone, Sparkles, TriangleAlert, Wallet } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,17 +11,21 @@ import { ProgressTimeline, STATUS_KEY, STATUS_TONE } from "./EngagementProgress"
 import { NegotiationPanel } from "./NegotiationPanel";
 import { ReviewDialog } from "./ReviewDialog";
 import { SkillChip } from "./SkillIcon";
+import { PaymentMethodsList } from "./payments/PaymentMethodsManager";
+import { useFeeAccount } from "@/hooks/use-fee-account";
+import { feeFor, nepalDayOf } from "@/lib/fees";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import {
   cancelEngagement,
   getContact,
+  getFeeForJob,
   listBids,
   setEngagementStatus,
   submitBid,
 } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import { formatDate, formatMoney, skillName } from "@/lib/utils";
+import { formatDate, formatMoney, formatNumber, skillName } from "@/lib/utils";
 import type { CancellationReason, EngagementStatus, EngagementWithParties } from "@/lib/types";
 
 /**
@@ -57,6 +62,15 @@ export function EngagementDetailsDialog({
     queryFn: () => getContact(other.id),
     enabled: open && contactVisible,
     staleTime: 5 * 60_000,
+  });
+
+  // Duleko's fee on this job, for the worker: the real one once it's
+  // completed, an estimate before that.
+  const feeAccount = useFeeAccount(open && iAmWorker);
+  const charge = useQuery({
+    queryKey: ["fee-charge", engagement.id],
+    queryFn: () => getFeeForJob(engagement.id),
+    enabled: open && iAmWorker && engagement.status === "completed",
   });
 
   // The negotiation thread - only meaningful while a request is still pending.
@@ -152,6 +166,29 @@ export function EngagementDetailsDialog({
           ? t("confirmedNext")
           : null;
 
+  const rules = feeAccount.data?.rules;
+  const price = engagement.payment_amount ?? 0;
+  let feeLine: { text: string; free: boolean } | null = null;
+  if (iAmWorker && engagement.status === "completed" && charge.data) {
+    feeLine = charge.data.welcome
+      ? { text: t("feeOnJobWelcome", { total: formatNumber(rules?.welcome_jobs ?? 0, lang) }), free: true }
+      : charge.data.amount > 0
+        ? { text: t("feeOnJob", { amount: formatMoney(charge.data.amount, lang) }), free: false }
+        : null;
+  } else if (
+    iAmWorker &&
+    rules &&
+    price > 0 &&
+    ["pending", "accepted", "confirmed"].includes(engagement.status) &&
+    nepalDayOf(engagement.created_at) >= rules.starts_on
+  ) {
+    feeLine =
+      (feeAccount.data?.welcome_left ?? 0) > 0
+        ? { text: t("feeOnJobWelcome", { total: formatNumber(rules.welcome_jobs, lang) }), free: true }
+        : { text: t("feeOnJob", { amount: formatMoney(feeFor(price, rules.tiers), lang) }), free: false };
+  }
+  const feesBlockAccept = iAmWorker && isPending && Boolean(feeAccount.data?.blocked);
+
   return (
     <Dialog open={open} onClose={onClose} title={engagement.title}>
       {/* Same flat, compact rhythm as the row that opens this - small
@@ -191,6 +228,16 @@ export function EngagementDetailsDialog({
             <MapPin className="mt-px h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
             <span>{engagement.location_text}</span>
           </p>
+          {feeLine && (
+            <p className={feeLine.free ? "mt-1 flex items-center gap-1.5 text-xs font-medium text-green-700" : "mt-1 flex items-center gap-1.5 text-xs text-slate-600"}>
+              {feeLine.free ? (
+                <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              ) : (
+                <Wallet className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
+              )}
+              {feeLine.text}
+            </p>
+          )}
           {engagement.skill && (
             <p className="mt-1.5">
               <SkillChip skillId={engagement.skill.id} category={engagement.skill.category} compact>
@@ -199,6 +246,22 @@ export function EngagementDetailsDialog({
             </p>
           )}
         </div>
+
+        {feesBlockAccept && feeAccount.data && (
+          <Link
+            to="/fees"
+            className="flex items-center gap-2.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 transition-colors hover:bg-red-100/70"
+          >
+            <TriangleAlert className="h-4 w-4 shrink-0 text-red-600" aria-hidden />
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-semibold text-red-900">{t("feeBlockedTitle")}</span>
+              <span className="block text-xs text-red-800/80">
+                {t("feeBlockedText", { amount: formatMoney(feeAccount.data.overdue - feeAccount.data.awaiting, lang) })}
+              </span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-red-400" aria-hidden />
+          </Link>
+        )}
 
         {isPending && bids.data && bids.data.length > 0 && (
           <NegotiationPanel
@@ -228,6 +291,22 @@ export function EngagementDetailsDialog({
           ) : (
             <p className="text-xs text-slate-400">{t("noPhoneSaved")}</p>
           ))}
+
+        {/* The employer pays the worker - with their own app, into the
+            worker's account. Duleko never touches the money. */}
+        {!iAmWorker && contactVisible && (
+          <div className="@container border-t border-slate-100 pt-3">
+            <h3 className="mb-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+              {t("payPayName", { name: other.full_name })}
+            </h3>
+            <p className="mb-2 text-xs text-slate-500">{t("payPayHint")}</p>
+            <PaymentMethodsList
+              owner={other.id}
+              limit={1}
+              empty={<p className="text-xs text-slate-500">{t("payNoneFromThem", { name: other.full_name })}</p>}
+            />
+          </div>
+        )}
 
         {waitingHint && (
           <p className="flex items-start gap-1.5 text-xs text-slate-500">

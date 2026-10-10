@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Lang } from "./types";
 import { siteStrings } from "./i18n-site";
+import { paymentStrings } from "./i18n-payments";
+import { setActiveCalendar, storeCalendar, storedCalendar, type CalendarChoice } from "./bs-calendar";
 
 /**
  * Every user-visible string lives here, in English and Nepali.
@@ -985,7 +987,7 @@ const strings = {
 
   // Privacy policy page
   privacyTitle: ["Privacy policy", "गोपनीयता नीति"],
-  privacyLastUpdated: ["Last updated: September 2026", "अन्तिम अद्यावधिक: सेप्टेम्बर २०२६"],
+  privacyLastUpdated: ["Last updated: October 2026", "अन्तिम अद्यावधिक: अक्टोबर २०२६"],
   privacyIntro: [
     "Welcome to Duleko. Duleko helps people discover skills, connect with people nearby, and find or offer work opportunities.",
     "डुलेकोमा स्वागत छ। डुलेकोले मानिसहरूलाई सीपहरू खोज्न, नजिकैका मानिसहरूसँग जोड्न, र कामको अवसर खोज्न वा प्रस्ताव गर्न मद्दत गर्छ।",
@@ -1054,7 +1056,7 @@ const strings = {
   ],
 
   // Location and Live Location
-  privacyLocationTitle: ["5. Location and live location", "५. स्थान र लाइभ स्थान"],
+  privacyLocationTitle: ["6. Location and live location", "६. स्थान र लाइभ स्थान"],
   privacyLocationImportant: ["This section is especially important for Duleko.", "यो खण्ड डुलेकोको लागि विशेष गरी महत्त्वपूर्ण छ।"],
   privacyLocationNotPublic: [
     "A user's exact or live location should never become publicly visible merely because they created an account.",
@@ -1070,7 +1072,7 @@ const strings = {
   ],
 
   // Certificates and Verification
-  privacyCertificatesTitle: ["6. Certificates and verification", "६. प्रमाणपत्र र प्रमाणीकरण"],
+  privacyCertificatesTitle: ["7. Certificates and verification", "७. प्रमाणपत्र र प्रमाणीकरण"],
   privacyCertificatesNotPublic: [
     "Certificates submitted for verification should not automatically become publicly downloadable documents.",
     "प्रमाणीकरणको लागि पेश गरिएका प्रमाणपत्रहरू स्वचालित रूपमा सार्वजनिक रूपमा डाउनलोड गर्न मिल्ने कागजातहरू बन्नु हुँदैन।",
@@ -1087,7 +1089,7 @@ const strings = {
   ],
 
   // Sharing Information
-  privacySharingTitle: ["7. Sharing information", "७. जानकारी साझा गर्ने"],
+  privacySharingTitle: ["8. Sharing information", "८. जानकारी साझा गर्ने"],
   privacyNoSell: [
     "Duleko should not sell users' personal information.",
     "डुलेकोले प्रयोगकर्ताहरूको व्यक्तिगत जानकारी बेच्नु हुँदैन।",
@@ -1114,7 +1116,7 @@ const strings = {
   ],
 
   // Data Security
-  privacySecurityTitle: ["8. Data security", "८. डेटा सुरक्षा"],
+  privacySecurityTitle: ["9. Data security", "९. डेटा सुरक्षा"],
   privacySecurityDesc: [
     "Duleko will take reasonable technical and organizational measures to protect personal information from unauthorized access, disclosure, alteration, loss, or misuse.",
     "डुलेकोले व्यक्तिगत जानकारीलाई अनाधिकृत पहुँच, प्रकटीकरण, परिवर्तन, हराउने, वा दुरुपयोगबाट बचाउन उचित प्राविधिक र संगठनात्मक उपायहरू लिनेछ।",
@@ -1125,7 +1127,7 @@ const strings = {
   ],
 
   // User Choices
-  privacyChoicesTitle: ["9. User choices", "९. प्रयोगकर्ता विकल्पहरू"],
+  privacyChoicesTitle: ["10. User choices", "१०. प्रयोगकर्ता विकल्पहरू"],
   privacyChoicesIntro: [
     "Users should be provided reasonable ways to:",
     "प्रयोगकर्ताहरूलाई उचित तरिकाहरू प्रदान गर्नुपर्छ:",
@@ -1141,7 +1143,7 @@ const strings = {
   ],
 
   // Changes to Policy
-  privacyChangesTitle: ["10. Changes to this policy", "१०. यो नीतिमा परिवर्तन"],
+  privacyChangesTitle: ["11. Changes to this policy", "११. यो नीतिमा परिवर्तन"],
   privacyChangesDesc: [
     "Duleko may update this Privacy Policy as the platform develops or legal requirements change.",
     "डुलेकोले प्लेटफर्म विकास हुँदा वा कानूनी आवश्यकताहरू परिवर्तन हुँदा यो गोपनीयता नीति अद्यावधिक गर्न सक्छ।",
@@ -1377,6 +1379,9 @@ const strings = {
 
   // ---- public website (see i18n-site.ts) -----------------------------
   ...siteStrings,
+
+  // ---- payment details and Duleko's fees (see i18n-payments.ts) -------
+  ...paymentStrings,
 } as const;
 
 export type StringKey = keyof typeof strings;
@@ -1412,6 +1417,9 @@ interface I18nValue {
   lang: Lang;
   setLang: (lang: Lang) => void;
   toggleLang: () => void;
+  /** Which calendar dates are shown in - BS (Nepal's) unless someone picks AD. */
+  calendar: CalendarChoice;
+  setCalendar: (calendar: CalendarChoice) => void;
   t: (key: StringKey, vars?: Record<string, string | number>) => string;
 }
 
@@ -1424,6 +1432,10 @@ if (import.meta.hot) import.meta.hot.data.i18nContext = I18nContext;
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>(detectInitialLang);
+  const [calendar, setCalendarState] = useState<CalendarChoice>(storedCalendar);
+  // formatDate() and friends read this; set during render so the children
+  // rendering right after already see a change.
+  setActiveCalendar(calendar);
 
   useEffect(() => {
     window.localStorage.setItem(LANG_KEY, lang);
@@ -1432,6 +1444,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   const setLang = useCallback((next: Lang) => setLangState(next), []);
   const toggleLang = useCallback(() => setLangState((l) => (l === "en" ? "ne" : "en")), []);
+  const setCalendar = useCallback((next: CalendarChoice) => {
+    storeCalendar(next);
+    setCalendarState(next);
+  }, []);
 
   const t = useCallback(
     (key: StringKey, vars?: Record<string, string | number>) => {
@@ -1447,7 +1463,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     [lang],
   );
 
-  const value = useMemo<I18nValue>(() => ({ lang, setLang, toggleLang, t }), [lang, setLang, toggleLang, t]);
+  const value = useMemo<I18nValue>(
+    () => ({ lang, setLang, toggleLang, calendar, setCalendar, t }),
+    [lang, setLang, toggleLang, calendar, setCalendar, t],
+  );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

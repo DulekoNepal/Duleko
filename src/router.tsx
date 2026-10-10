@@ -89,9 +89,9 @@ const notificationsRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/NotificationsScreen"), "NotificationsScreen"),
 });
 
-export type ProfileTab = "overview" | "calendar" | "settings" | "about";
+export type ProfileTab = "overview" | "calendar" | "payments" | "settings" | "about";
 
-const PROFILE_TABS: ProfileTab[] = ["overview", "calendar", "settings", "about"];
+const PROFILE_TABS: ProfileTab[] = ["overview", "calendar", "payments", "settings", "about"];
 
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -123,6 +123,20 @@ const chatsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/chats",
   component: lazyRouteComponent(() => import("@/routes/ChatsScreen"), "ChatsScreen"),
+});
+
+// A worker's Duleko fees: what they owe, how to pay, their bills.
+const feesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/fees",
+  component: lazyRouteComponent(() => import("@/routes/FeesScreen"), "FeesScreen"),
+});
+
+// Staff: payments to check, Duleko's own accounts, who owes.
+const staffFeesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/staff/fees",
+  component: lazyRouteComponent(() => import("@/routes/StaffFeesScreen"), "StaffFeesScreen"),
 });
 
 const moderationRoute = createRoute({
@@ -232,6 +246,8 @@ const routeTree = rootRoute.addChildren([
   friendsRoute,
   chatRoute,
   chatsRoute,
+  feesRoute,
+  staffFeesRoute,
   moderationRoute,
   noticesRoute,
   noticeRoute,

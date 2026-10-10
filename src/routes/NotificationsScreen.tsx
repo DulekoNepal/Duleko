@@ -20,6 +20,7 @@ import {
   UserPlus,
   XCircle,
   type LucideIcon,
+  Wallet,
 } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
@@ -65,6 +66,8 @@ const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
   verify_reminder: { icon: ShieldCheck, tone: "brand" },
   announcement: { icon: Megaphone, tone: "brand" },
   notice: { icon: Pin, tone: "amber" },
+  fee_payment: { icon: Wallet, tone: "green" },
+  fee_review: { icon: Wallet, tone: "amber" },
 };
 
 export function NotificationsScreen() {

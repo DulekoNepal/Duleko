@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Briefcase, Camera, Check, MapPin, User } from "lucide-react";
+import { ArrowLeft, Briefcase, Camera, Check, MapPin, Pencil, Trash2, User, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, SectionIcon } from "@/components/ui/card";
 import { Field, Input, Textarea } from "@/components/ui/field";
@@ -8,6 +8,9 @@ import { Avatar } from "@/components/ui/avatar";
 import { HeaderToggles } from "@/components/duleko/Layout";
 import { LocationFields, type LocationValue } from "@/components/duleko/LocationFields";
 import { SkillPicker } from "@/components/duleko/SkillGrid";
+import { PaymentCard } from "@/components/duleko/payments/PaymentCard";
+import { PaymentMethodForm, type PaymentFormResult } from "@/components/duleko/payments/PaymentMethodForm";
+import { AddPaymentTiles, MAX_PAYMENT_METHODS } from "@/components/duleko/payments/PaymentMethodsManager";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +19,7 @@ import {
   getMyProfile,
   listSkills,
   saveContact,
+  savePaymentMethod,
   setUserSkills,
   updateProfile,
   uploadAvatar,
@@ -23,9 +27,15 @@ import {
 import { MAX_PHOTO_INPUT_BYTES } from "@/lib/image";
 import { errorMessage } from "@/lib/supabase";
 import { cn, isValidNepaliPhone, normalisePhone } from "@/lib/utils";
+import type { PaymentKind } from "@/lib/types";
 
-const TOTAL_STEPS = 3;
-const STEP_ICONS = [User, MapPin, Briefcase] as const;
+const TOTAL_STEPS = 4;
+const STEP_ICONS = [User, MapPin, Briefcase, Wallet] as const;
+
+/** Payment details typed in during sign-up, saved once the profile exists. */
+interface PaymentDraft extends PaymentFormResult {
+  key: number;
+}
 
 export function OnboardingScreen() {
   const { t, lang } = useI18n();
@@ -50,6 +60,11 @@ export function OnboardingScreen() {
   const [otherLabel, setOtherLabel] = useState("");
   const [otherNote, setOtherNote] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [payments, setPayments] = useState<PaymentDraft[]>([]);
+  const [payForm, setPayForm] = useState<{ index: number | null; kind: PaymentKind } | null>(null);
+  // Ones already saved by an earlier attempt, so a retry doesn't add them twice.
+  const savedPayments = useRef(new Set<number>());
+  const nextPaymentKey = useRef(1);
 
   const skills = useQuery({ queryKey: ["skills"], queryFn: listSkills });
 
@@ -97,6 +112,18 @@ export function OnboardingScreen() {
           })),
         );
       }
+      // Optional, like the photo: a failure here never stops someone joining.
+      let paymentsFailed = false;
+      for (const p of payments) {
+        if (savedPayments.current.has(p.key)) continue;
+        try {
+          await savePaymentMethod({ folder: user.id, owner: profile.id, draft: p.draft, qr: p.qr });
+          savedPayments.current.add(p.key);
+        } catch {
+          paymentsFailed = true;
+        }
+      }
+      if (paymentsFailed) toast(t("onboardPayFailed"), "error");
       return profile;
     },
     onSuccess: async () => {
@@ -178,7 +205,13 @@ export function OnboardingScreen() {
             <div className="mb-4 flex items-center gap-2">
               <SectionIcon icon={STEP_ICONS[step - 1]} />
               <h2 className="text-base font-semibold text-slate-900">
-                {step === 1 ? t("basicInfo") : step === 2 ? t("whereYouAre") : t("yourSkills")}
+                {step === 1
+                  ? t("basicInfo")
+                  : step === 2
+                    ? t("whereYouAre")
+                    : step === 3
+                      ? t("yourSkills")
+                      : t("onboardPayTitle")}
               </h2>
             </div>
 
@@ -274,6 +307,68 @@ export function OnboardingScreen() {
                 )}
               </>
             )}
+            {step === 4 && (
+              <>
+                <p className="-mt-2 mb-4 text-sm text-slate-500">{t("onboardPayIntro")}</p>
+                {payments.length > 0 && (
+                  <div className="mb-4 space-y-3">
+                    {payments.map((p, index) => (
+                      <PaymentCard
+                        key={p.key}
+                        compact
+                        method={{ ...p.draft, qr_url: p.qrPreview, is_primary: index === 0 }}
+                        actions={
+                          <>
+                            <Button variant="outline" size="sm" onClick={() => setPayForm({ index, kind: p.draft.kind })}>
+                              <Pencil className="h-3.5 w-3.5" aria-hidden />
+                              {t("payEdit")}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-slate-500 hover:bg-red-50 hover:text-red-600"
+                              onClick={() => setPayments((list) => list.filter((_, i) => i !== index))}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                              {t("payRemove")}
+                            </Button>
+                          </>
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+                {payments.length < MAX_PAYMENT_METHODS && (
+                  <>
+                    {payments.length > 0 && <p className="mb-2 text-xs font-semibold text-slate-500">{t("payAddTitle")}</p>}
+                    <AddPaymentTiles onAdd={(kind) => setPayForm({ index: null, kind })} />
+                  </>
+                )}
+                <PaymentMethodForm
+                  open={Boolean(payForm)}
+                  existing={
+                    payForm?.index != null && payments[payForm.index]
+                      ? { ...payments[payForm.index].draft, qr_url: payments[payForm.index].qrPreview }
+                      : null
+                  }
+                  initialKind={payForm?.kind}
+                  onClose={() => setPayForm(null)}
+                  onSubmit={(result) => {
+                    setPayments((list) => {
+                      const editing = payForm?.index;
+                      if (editing == null) return [...list, { ...result, key: nextPaymentKey.current++ }];
+                      const before = list[editing];
+                      return list.map((p, i) =>
+                        i === editing
+                          ? { ...result, key: before.key, qr: result.qr ?? (result.removeQr ? null : before.qr) }
+                          : p,
+                      );
+                    });
+                    setPayForm(null);
+                  }}
+                />
+              </>
+            )}
           </CardBody>
         </Card>
 
@@ -289,10 +384,17 @@ export function OnboardingScreen() {
               {t("next")}
             </Button>
           ) : (
-            <Button size="lg" className="w-full" loading={save.isPending} onClick={() => save.mutate()}>
-              <Check className="h-4 w-4" aria-hidden />
-              {t("finishSetup")}
-            </Button>
+            <>
+              <Button size="lg" className="w-full" loading={save.isPending} onClick={() => save.mutate()}>
+                <Check className="h-4 w-4" aria-hidden />
+                {t("finishSetup")}
+              </Button>
+              {payments.length === 0 && (
+                <Button variant="ghost" className="mt-2 w-full" disabled={save.isPending} onClick={() => save.mutate()}>
+                  {t("onboardPaySkip")}
+                </Button>
+              )}
+            </>
           )}
         </div>
       </main>

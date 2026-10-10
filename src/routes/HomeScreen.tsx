@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { EmergencyContactsSection } from "@/components/duleko/EmergencyContacts";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
+import { FeeReminder } from "@/components/duleko/payments/FeeReminder";
 import { NoticeRow } from "@/components/duleko/NoticeParts";
 import { SkillCategoryBrowser, groupSkillsByCategory } from "@/components/duleko/SkillGrid";
 import { SkillIcon } from "@/components/duleko/SkillIcon";
@@ -194,6 +195,8 @@ export function HomeScreen() {
             </Card>
           </Link>
         )}
+
+        {profile && <FeeReminder className="animate-in-up" />}
 
         <QuickActions pending={pendingCount} unreadMessages={unreadMessages.data ?? 0} />
 

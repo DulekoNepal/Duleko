@@ -34,7 +34,7 @@ import { SEARCH_PAGE, listSkills, searchWorkers } from "@/lib/queries";
 import { getCurrentPosition } from "@/lib/geolocation";
 import { ALL_DISTRICTS, districtLabel } from "@/lib/nepal";
 import { errorMessage } from "@/lib/supabase";
-import { cn, formatDate, formatNumber, locationLine, skillName } from "@/lib/utils";
+import { addDays, cn, formatDate, formatNumber, locationLine, skillName, toDateKey, todayKey } from "@/lib/utils";
 import type { Skill, WorkerCardData } from "@/lib/types";
 
 export interface SearchFilters {
@@ -496,6 +496,9 @@ function SkillChips({
 
 /** Sort, skill, district, date and availability - shared by the desktop
  * sidebar and the phone bottom sheet. */
+/** The next two months of days, for picking one by its Nepali date. */
+const PICKABLE_DAYS = 60;
+
 function FilterPanel({
   filters,
   skills,
@@ -512,7 +515,7 @@ function FilterPanel({
   /** One per row in the narrow desktop sidebar, two across in the sheet. */
   sortLayout: "stack" | "grid";
 }) {
-  const { t, lang } = useI18n();
+  const { t, lang, calendar } = useI18n();
   const current = filters.sort ?? "relevance";
   // The desktop sidebar matches the app's other compact panels (13px, short
   // rows). The phone sheet keeps 16px fields, or iOS zooms on focus.
@@ -571,12 +574,27 @@ function FilterPanel({
       </Field>
 
       <Field label={t("onDate")} className={field}>
-        <Input
-          className={control}
-          type="date"
-          value={filters.day ?? ""}
-          onChange={(e) => onUpdate({ day: e.target.value || undefined })}
-        />
+        {calendar === "bs" ? (
+          // The phone's own date picker only knows AD, so in Nepali dates
+          // the coming days are listed instead.
+          <Select className={control} value={filters.day ?? ""} onChange={(e) => onUpdate({ day: e.target.value || undefined })}>
+            <option value="">{t("anyDay")}</option>
+            {Array.from({ length: PICKABLE_DAYS }, (_, i) => toDateKey(addDays(new Date(), i)))
+              .concat(filters.day && filters.day < todayKey() ? [filters.day] : [])
+              .map((day) => (
+                <option key={day} value={day}>
+                  {formatDate(day, lang)}
+                </option>
+              ))}
+          </Select>
+        ) : (
+          <Input
+            className={control}
+            type="date"
+            value={filters.day ?? ""}
+            onChange={(e) => onUpdate({ day: e.target.value || undefined })}
+          />
+        )}
       </Field>
 
       <div

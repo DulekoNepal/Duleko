@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { districtLabel, municipalityLabel } from "./nepal";
+import { adToBs, BS_MONTH_NAMES, getCalendar } from "./bs-calendar";
 import type { Lang, Profile, Skill } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
@@ -82,7 +83,27 @@ export function formatMoney(amount: number | null | undefined, lang: Lang): stri
   return `${lang === "ne" ? "रु" : "Rs"} ${formatNumber(rounded, lang)}`;
 }
 
+/**
+ * A day in Nepal's calendar - "24 Ashwin 2083", "२४ असोज २०८३" - or null
+ * outside the years the BS table covers. `withYear` false drops the year.
+ */
+function formatBsDay(iso: string, lang: Lang, withYear: boolean): string | null {
+  const bs = adToBs(iso);
+  if (!bs) return null;
+  const parts = [formatNumber(bs.day, lang), BS_MONTH_NAMES[lang][bs.month - 1]];
+  if (withYear) parts.push(formatNumber(bs.year, lang));
+  return parts.join(" ");
+}
+
+/**
+ * A calendar day for reading: in BS by default, in AD ("10 Oct 2026") for
+ * someone who chose it in Settings. Days are always stored as AD keys.
+ */
 export function formatDate(iso: string, lang: Lang): string {
+  if (getCalendar() === "bs") {
+    const bs = formatBsDay(iso, lang, true);
+    if (bs) return bs;
+  }
   const d = new Date(`${iso}T00:00:00`);
   if (Number.isNaN(d.getTime())) return iso;
   const out = d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -95,6 +116,11 @@ export function formatDate(iso: string, lang: Lang): string {
  * "12 Sep 2026" just truncates to "12 Sept 20...".
  */
 export function formatDateShort(iso: string, lang: Lang): string {
+  if (getCalendar() === "bs") {
+    const thisYear = adToBs(iso)?.year === adToBs(todayKey())?.year;
+    const bs = formatBsDay(iso, lang, !thisYear);
+    if (bs) return bs;
+  }
   const d = new Date(`${iso}T00:00:00`);
   if (Number.isNaN(d.getTime())) return iso;
   const thisYear = d.getFullYear() === new Date().getFullYear();

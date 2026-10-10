@@ -58,6 +58,16 @@ export async function openNotification(
     }
   }
 
+  // Duleko's fees: the verdict on your payment, or (staff) one to check.
+  if (n.kind === "fee_payment") {
+    void navigate({ to: "/fees" });
+    return;
+  }
+  if (n.kind === "fee_review") {
+    void navigate({ to: "/staff/fees" });
+    return;
+  }
+
   if (n.kind === "friend_request" || n.kind === "friend_accepted") {
     void navigate({ to: "/friends" });
   } else if (

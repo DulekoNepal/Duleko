@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn, addDays, toDateKey, formatNumber } from "@/lib/utils";
+import { addBsMonths, adToBs, bsToAd, BS_MONTH_NAMES, BS_MONTH_SHORT } from "@/lib/bs-calendar";
 import { useI18n } from "@/lib/i18n";
 import type { AvailabilityDay } from "@/lib/types";
 
@@ -15,10 +16,17 @@ const MONTH_NAMES_NE = [
   "जनवरी", "फेब्रुअरी", "मार्च", "अप्रिल", "मे", "जुन",
   "जुलाई", "अगस्ट", "सेप्टेम्बर", "अक्टोबर", "नोभेम्बर", "डिसेम्बर",
 ];
+const MONTH_SHORT_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-/** First-of-month helper - keeps month arithmetic in one place. */
-function startOfMonth(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), 1);
+/**
+ * Where a day sits in whichever calendar is showing - BS (Nepal's, the
+ * default) or AD. The cells themselves are always AD days underneath.
+ */
+interface DayParts {
+  year: number;
+  /** 1-12 */
+  month: number;
+  day: number;
 }
 
 /**
@@ -26,7 +34,9 @@ function startOfMonth(d: Date): Date {
  *  - a rolling N-week strip (default) - good for "is he free this/next week"
  *    and for the work-date picker, where a short range is all that matters.
  *  - a flippable month grid (monthView) - lets someone mark a whole year of
- *    busy days, one month at a time, like "I'm busy on November 15th".
+ *    busy days, one month at a time, like "I'm busy on 15 Mangsir".
+ * Both follow the calendar chosen in Settings: Nepali months and day
+ * numbers by default, AD for anyone who picked it.
  */
 export function AvailabilityCalendar({
   days,
@@ -52,9 +62,20 @@ export function AvailabilityCalendar({
   /** Render a flippable month grid (a full year, one month at a time) instead of a rolling strip. */
   monthView?: boolean;
 }) {
-  const { t, lang } = useI18n();
+  const { t, lang, calendar } = useI18n();
   const weekdays = lang === "ne" ? WEEKDAYS_NE : WEEKDAYS_EN;
-  const monthNames = lang === "ne" ? MONTH_NAMES_NE : MONTH_NAMES_EN;
+  const todayStr = toDateKey(new Date());
+  // BS unless chosen otherwise - or if today is somehow past the BS table.
+  const bsMode = calendar === "bs" && adToBs(todayStr) != null;
+
+  const partsOf = (date: Date): DayParts => {
+    const bs = bsMode ? adToBs(toDateKey(date)) : null;
+    return bs ?? { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
+  };
+  const monthName = (month: number) =>
+    (bsMode ? BS_MONTH_NAMES[lang] : lang === "ne" ? MONTH_NAMES_NE : MONTH_NAMES_EN)[month - 1];
+  const monthShort = (month: number) =>
+    (bsMode ? BS_MONTH_SHORT[lang] : lang === "ne" ? MONTH_NAMES_NE : MONTH_SHORT_EN)[month - 1];
 
   const byDay = useMemo(() => {
     const map = new Map<string, AvailabilityDay>();
@@ -62,19 +83,24 @@ export function AvailabilityCalendar({
     return map;
   }, [days]);
 
-  const thisMonth = useMemo(() => startOfMonth(new Date()), []);
-  const [viewMonth, setViewMonth] = useState(thisMonth);
-  // A "whole year" - this month plus the next 11.
-  const maxMonth = useMemo(() => new Date(thisMonth.getFullYear(), thisMonth.getMonth() + 11, 1), [thisMonth]);
+  // Months on from this one: 0 is this month, 11 the last of the year ahead.
+  // Counted, not stored as a date, so switching calendars keeps its place.
+  const [offset, setOffset] = useState(0);
+  const today = partsOf(new Date());
+  const view = bsMode
+    ? addBsMonths(today.year, today.month, offset)
+    : { year: today.year + Math.floor((today.month - 1 + offset) / 12), month: ((today.month - 1 + offset) % 12) + 1 };
 
   const start = useMemo(() => {
     if (monthView) {
+      const firstKey = bsMode ? bsToAd({ year: view.year, month: view.month, day: 1 }) : null;
+      const first = firstKey ? new Date(`${firstKey}T00:00:00`) : new Date(view.year, view.month - 1, 1);
       // Back up to the Sunday on/before the 1st, so the grid always fills full weeks.
-      return addDays(viewMonth, -viewMonth.getDay());
+      return addDays(first, -first.getDay());
     }
-    const today = new Date();
-    return addDays(today, -today.getDay()); // back to Sunday
-  }, [monthView, viewMonth]);
+    const now = new Date();
+    return addDays(now, -now.getDay()); // back to Sunday
+  }, [monthView, bsMode, view.year, view.month]);
 
   const cellCount = monthView ? 42 : weeks * 7; // 6 full weeks always covers a month
 
@@ -83,28 +109,26 @@ export function AvailabilityCalendar({
     [start, cellCount],
   );
 
-  const todayStr = toDateKey(new Date());
-
   return (
     <div>
       {monthView && (
         <div className="mb-3 flex items-center justify-between">
           <button
             type="button"
-            onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1))}
-            disabled={viewMonth <= thisMonth}
+            onClick={() => setOffset((o) => o - 1)}
+            disabled={offset <= 0}
             aria-label={t("previousMonth")}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden />
           </button>
           <p className="text-sm font-semibold text-slate-800">
-            {monthNames[viewMonth.getMonth()]} {formatNumber(viewMonth.getFullYear(), lang)}
+            {monthName(view.month)} {formatNumber(view.year, lang)}
           </p>
           <button
             type="button"
-            onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1))}
-            disabled={viewMonth >= maxMonth}
+            onClick={() => setOffset((o) => o + 1)}
+            disabled={offset >= 11}
             aria-label={t("nextMonth")}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
           >
@@ -118,16 +142,19 @@ export function AvailabilityCalendar({
         ))}
       </div>
       <div className="grid grid-cols-7 gap-1">
-        {cells.map((date) => {
+        {cells.map((date, index) => {
           const key = toDateKey(date);
+          const parts = partsOf(date);
           const record = byDay.get(key);
           const booked = record?.status === "booked";
           const lockedByJob = Boolean(record?.engagement_id);
           const past = key < todayStr;
           const isToday = key === todayStr;
           const isSelected = selectedDay === key;
-          const outsideMonth = monthView && date.getMonth() !== viewMonth.getMonth();
+          const outsideMonth = monthView && (parts.month !== view.month || parts.year !== view.year);
           const clickable = onSelectDay ? !past && !booked : editable && !past && !lockedByJob;
+          // The strip has no month heading, so it names the month where one starts.
+          const monthTag = !monthView && (index === 0 || parts.day === 1) ? monthShort(parts.month) : null;
 
           function handleClick() {
             if (onSelectDay) {
@@ -162,7 +189,6 @@ export function AvailabilityCalendar({
                     )
                   : cn(
                       "rounded-lg",
-                      outsideMonth && "opacity-30",
                       past && "cursor-default text-slate-300",
                       !past && !booked && "bg-brand-50 text-brand-800",
                       !past && booked && "bg-slate-200 text-slate-500 line-through",
@@ -173,7 +199,8 @@ export function AvailabilityCalendar({
                     ),
               )}
             >
-              {formatNumber(date.getDate(), lang)}
+              {formatNumber(parts.day, lang)}
+              {monthTag && <span className="-mt-0.5 text-[9px] font-medium leading-none opacity-75">{monthTag}</span>}
             </button>
           );
         })}

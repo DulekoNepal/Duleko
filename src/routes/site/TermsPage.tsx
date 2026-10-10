@@ -98,6 +98,9 @@ export function TermsPage() {
         <>
           <p>{t("termsRatesDesc")}</p>
           <PolicyNote>{t("termsNoIntegratedPayment")}</PolicyNote>
+          <p>{t("termsPaymentDetails")}</p>
+          <p>{t("termsDulekoFee")}</p>
+          <p>{t("termsDulekoFeeMonthly")}</p>
         </>
       ),
     },

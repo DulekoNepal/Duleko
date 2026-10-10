@@ -53,6 +53,19 @@ export function errorMessage(error: unknown): string {
   if (e.code === "invalid_credentials" || /invalid login credentials/i.test(e.message || "")) {
     return translateStatic("incorrectCredentials");
   }
+  // Payment details and Duleko's fees (5600_payment_details_and_fees.sql).
+  const message = e.message || "";
+  if (message.includes("PAYMENT_METHOD_LIMIT")) return translateStatic("errPaymentLimit");
+  if (message.includes("FEES_OVERDUE")) return translateStatic("errFeesOverdue");
+  if (message.includes("FEE_NOTHING_TO_PAY")) return translateStatic("errFeeNothing");
+  if (message.includes("FEE_ACCOUNT_REQUIRED")) return translateStatic("errFeeAccount");
+  if (message.includes("ADMIN_ONLY")) return translateStatic("errAdminOnly");
+  if (message.includes("FEE_PAYMENT_TOO_MUCH")) {
+    const most = Number((error as { details?: string }).details);
+    return translateStatic("errFeeTooMuch").replace("{amount}", Number.isFinite(most) ? `Rs ${most.toLocaleString("en-IN")}` : "");
+  }
+  if (message.includes("payment_methods_wallet_id_check")) return translateStatic("payBadWallet");
+  if (message.includes("payment_methods_account_number_check")) return translateStatic("payBadNumber");
   // The resend/reset-code cooldown Supabase enforces server-side.
   if (e.code === "over_email_send_rate_limit" || /security purposes.*after \d+ seconds/i.test(e.message || "")) {
     return translateStatic("pleaseWaitBeforeRetry");

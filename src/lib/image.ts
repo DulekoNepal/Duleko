@@ -13,6 +13,10 @@ export const IMAGE_MAX_SIDE = {
   certificate: 2000,
   // Same for notices: often a photo of a printed notice or a poster.
   notice: 2000,
+  // A payment QR has to stay sharp enough to scan off another phone's screen.
+  qr: 1200,
+  // A payment screenshot is read for its transaction ID and amount.
+  proof: 2000,
 } as const;
 
 /** Largest original we accept before shrinking - anything bigger is almost certainly not a photo. */

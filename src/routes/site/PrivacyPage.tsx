@@ -92,6 +92,17 @@ export function PrivacyPage() {
       ),
     },
     {
+      id: "payments",
+      title: t("privacyPaymentsTitle"),
+      body: (
+        <>
+          <p>{t("privacyPaymentsWhat")}</p>
+          <p>{t("privacyPaymentsWho")}</p>
+          <p>{t("privacyPaymentsFees")}</p>
+        </>
+      ),
+    },
+    {
       id: "location",
       title: t("privacyLocationTitle"),
       body: (

@@ -182,7 +182,11 @@ export interface AppNotification {
     | "verified"
     | "verify_reminder"
     | "announcement"
-    | "notice";
+    | "notice"
+    /** To a worker: Duleko confirmed, or couldn't find, a fee payment. */
+    | "fee_payment"
+    /** To admins: a worker recorded paying their fees. */
+    | "fee_review";
   title_en: string;
   title_ne: string;
   body_en: string | null;
@@ -307,4 +311,146 @@ export interface ConversationSummary {
   lastDeleted: boolean;
   /** One emoji standing in for any reactions on the last message, shown in the preview. */
   lastReaction: string | null;
+}
+
+// ---------------------------------------------------------------------
+// Payment details and Duleko's fees (5600_payment_details_and_fees.sql)
+// ---------------------------------------------------------------------
+export type PaymentKind = "bank" | "esewa" | "khalti";
+
+/**
+ * One bank account or eSewa/Khalti wallet money can be paid into: a
+ * member's own, or (profile_id null) one of Duleko's official accounts.
+ */
+export interface PaymentMethod {
+  id: string;
+  profile_id: string | null;
+  kind: PaymentKind;
+  /** Banks only: a code from lib/banks.ts, or "other" with bank_name typed in. */
+  bank_code: string | null;
+  bank_name: string | null;
+  branch: string | null;
+  account_number: string | null;
+  account_name: string;
+  /** eSewa / Khalti: the wallet's mobile number. */
+  wallet_id: string | null;
+  qr_url: string | null;
+  is_primary: boolean;
+  created_at: string;
+}
+
+/** What the form edits - everything a member types or picks. */
+export interface PaymentMethodDraft {
+  kind: PaymentKind;
+  bank_code: string | null;
+  bank_name: string | null;
+  branch: string | null;
+  account_number: string | null;
+  account_name: string;
+  wallet_id: string | null;
+}
+
+export interface FeeTier {
+  /** The top of this band of the price; null for the last, open-ended one. */
+  up_to: number | null;
+  percent: number;
+}
+
+export interface FeeRules {
+  tiers: FeeTier[];
+  /** Fees apply to jobs requested on or after this day (YYYY-MM-DD). */
+  starts_on: string;
+  welcome_jobs: number;
+  /** A month's fees are due by this day of the next Nepali month. */
+  due_day: number;
+}
+
+export type FeePeriodStatus = "open" | "due" | "overdue" | "paid";
+
+/** One Nepali month's fees. */
+export interface FeePeriod {
+  /** "2083-08": BS year and month. */
+  period: string;
+  jobs: number;
+  amount: number;
+  paid: number;
+  left: number;
+  due_on: string;
+  status: FeePeriodStatus;
+}
+
+/** Where a worker stands - see fee_summary_for() in the migration. */
+export interface FeeAccount {
+  today: string;
+  current_period: string | null;
+  periods: FeePeriod[];
+  charged: number;
+  paid: number;
+  awaiting: number;
+  balance: number;
+  payable_now: number;
+  overdue: number;
+  due_on: string | null;
+  max_payment: number;
+  blocked: boolean;
+  welcome_left: number;
+  rules: FeeRules;
+}
+
+/** Duleko's fee on one completed job. */
+export interface FeeCharge {
+  id: string;
+  engagement_id: string | null;
+  worker_profile_id: string;
+  job_title: string;
+  price: number;
+  amount: number;
+  welcome: boolean;
+  completed_on: string;
+  period: string;
+  created_at: string;
+}
+
+export type FeePaymentStatus = "reported" | "confirmed" | "rejected";
+
+export interface FeePayment {
+  id: string;
+  worker_profile_id: string;
+  amount: number;
+  method: PaymentKind | "cash";
+  paid_to_id: string | null;
+  paid_to_label: string | null;
+  transaction_id: string | null;
+  proof_url: string | null;
+  note: string | null;
+  status: FeePaymentStatus;
+  rejection_reason: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  /** Staff lists only: who recorded it. */
+  worker?: Pick<Profile, "id" | "full_name" | "avatar_url" | "member_no">;
+}
+
+/** One worker's line in the staff overview. */
+export interface FeeWorkerLine {
+  profile_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  member_no: string;
+  charged: number;
+  paid: number;
+  awaiting: number;
+  balance: number;
+  overdue: number;
+  blocked: boolean;
+  due_on: string | null;
+}
+
+export interface FeeOverview {
+  charged: number;
+  paid: number;
+  awaiting: number;
+  balance: number;
+  overdue: number;
+  workers: FeeWorkerLine[];
 }

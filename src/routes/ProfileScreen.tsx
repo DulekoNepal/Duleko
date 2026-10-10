@@ -24,12 +24,14 @@ import {
   Pencil,
   Phone,
   Plus,
+  Receipt,
   Share2,
   ShieldCheck,
   Star,
   Trash2,
   Upload,
   Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
@@ -45,6 +47,10 @@ import { AvailabilityCard, DetailRow, ProfileCover, SectionCard, StatTile } from
 import { ContactPrivacyRows } from "@/components/duleko/ContactPrivacyRows";
 import { ListGroup, ListRow } from "@/components/duleko/SettingsList";
 import { AppearancePicker } from "@/components/duleko/AppearancePicker";
+import { CalendarPicker } from "@/components/duleko/CalendarPicker";
+import { PaymentMethodsManager } from "@/components/duleko/payments/PaymentMethodsManager";
+import { useFeeAccount } from "@/hooks/use-fee-account";
+import { standingOf } from "@/lib/fees";
 import { DulekoPagesHub } from "@/components/duleko/DulekoPagesHub";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/field";
@@ -164,6 +170,8 @@ export function ProfileScreen() {
     queryFn: () => getAvailability(profile!.id, todayKey(), toDateKey(addDays(new Date(), 365))),
     enabled: Boolean(profile?.id),
   });
+  // Only for the Payments tab's line about Duleko's fees.
+  const feeAccount = useFeeAccount(tab === "payments");
   const alertPrefs = useQuery({
     queryKey: ["notification-prefs", profile?.id],
     queryFn: () => getNotificationPrefs(profile!.id),
@@ -496,6 +504,22 @@ export function ProfileScreen() {
     (strengthChecks.filter((c) => c.done).length / strengthChecks.length) * 100,
   );
 
+  /** The Duleko fees row's hint: where you stand, once it's known. */
+  function feeShortcutHint(): string {
+    const a = feeAccount.data;
+    if (!a) return t("feesShortcutHint");
+    const standing = standingOf(a);
+    if (standing === "overdue") return t("feesOverdueTitle", { amount: formatMoney(a.overdue - a.awaiting, lang) });
+    if (standing === "due") {
+      return t("feesDueTitle", {
+        amount: formatMoney(a.payable_now - a.awaiting, lang),
+        date: a.due_on ? formatDate(a.due_on, lang) : "",
+      });
+    }
+    if (standing === "awaiting") return t("feesAwaitingTitle");
+    return t("feesShortcutHint");
+  }
+
   function startEditing() {
     setEditing(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -515,6 +539,7 @@ export function ProfileScreen() {
   const tabs: { id: ProfileTab; label: string; badge?: number }[] = [
     { id: "overview", label: t("profileTabOverview") },
     { id: "calendar", label: t("profileTabCalendar"), badge: busyDaysCount },
+    { id: "payments", label: t("profileTabPayments") },
     { id: "settings", label: t("profileTabSettings") },
     { id: "about", label: t("aboutTitle") },
   ];
@@ -673,6 +698,16 @@ export function ProfileScreen() {
                           onClick={() => {
                             setMenuOpen(false);
                             navigate({ to: "/moderation" });
+                          }}
+                        />
+                      )}
+                      {profile.staff_role && (
+                        <MenuItem
+                          icon={Wallet}
+                          label={t("staffFeesShortcut")}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            navigate({ to: "/staff/fees" });
                           }}
                         />
                       )}
@@ -1153,6 +1188,40 @@ export function ProfileScreen() {
               </div>
             )}
 
+            {tab === "payments" && (
+              <div
+                id="profile-panel-payments"
+                role="tabpanel"
+                aria-labelledby="profile-tab-payments"
+                className="animate-in-up grid grid-cols-1 gap-3 md:gap-4 @3xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @3xl:items-start"
+              >
+                <SectionCard compact icon={Wallet} title={t("payDetailsTitle")}>
+                  <p className="mb-3 text-xs leading-relaxed text-slate-500">{t("payDetailsHint")}</p>
+                  <div className="@container">
+                    <PaymentMethodsManager owner={profile.id} folder={user!.id} />
+                  </div>
+                  <p className="mt-4 flex gap-2 rounded-xl bg-amber-50 px-3 py-2.5 text-[11px] leading-relaxed text-amber-900">
+                    <ShieldCheck className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
+                    {t("paySafety")}
+                  </p>
+                </SectionCard>
+
+                <div className="min-w-0 space-y-5">
+                  <ListGroup title={t("feesTitle")}>
+                    <ListRow
+                      icon={Receipt}
+                      title={t("feesShortcut")}
+                      hint={feeShortcutHint()}
+                      to="/fees"
+                    />
+                    {profile.staff_role && (
+                      <ListRow icon={Wallet} title={t("staffFeesShortcut")} hint={t("staffFeesShortcutHint")} to="/staff/fees" />
+                    )}
+                  </ListGroup>
+                </div>
+              </div>
+            )}
+
             {/* Every tab fills the same width as the header; the plain
                 lists go two-up once there's room. */}
             {tab === "settings" && (
@@ -1165,6 +1234,7 @@ export function ProfileScreen() {
                 <div className="min-w-0 space-y-5">
                   <ListGroup title={t("settingsPreferences")}>
                     <AppearancePicker />
+                    <CalendarPicker />
                     <ListRow
                       icon={Mail}
                       title={t("emailAlerts")}

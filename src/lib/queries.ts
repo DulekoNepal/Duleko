@@ -12,11 +12,17 @@ import type {
   EngagementStatus,
   EngagementWithParties,
   CallPermission,
+  FeeAccount,
+  FeeCharge,
+  FeeOverview,
+  FeePayment,
   Friendship,
   Lang,
   MessageReaction,
   Notice,
   NotificationPrefs,
+  PaymentMethod,
+  PaymentMethodDraft,
   Profile,
   RepliedMessage,
   ReportReason,
@@ -138,7 +144,7 @@ export async function createProfile(userId: string, input: ProfileInput): Promis
   )!;
 }
 
-const USER_BUCKETS = ["avatars", "covers", "certificates"] as const;
+const USER_BUCKETS = ["avatars", "covers", "certificates", "payments"] as const;
 
 /**
  * Clears the person's uploads. Storage rows cannot be deleted with SQL
@@ -1369,4 +1375,249 @@ export async function listConversations(myProfileId: string): Promise<Conversati
     });
   }
   return out;
+}
+
+// ---------------------------------------------------------------------
+// Payment details and Duleko's fees (5600_payment_details_and_fees.sql)
+// ---------------------------------------------------------------------
+// Duleko never moves money: members list where they can be paid, and
+// workers record paying Duleko's monthly fee for an admin to confirm.
+
+const PAYMENT_METHOD_COLUMNS =
+  "id,profile_id,kind,bank_code,bank_name,branch,account_number,account_name,wallet_id,qr_url,is_primary,created_at";
+
+/** The folder Duleko's own QR codes are kept in (admins only, by RLS). */
+export const DULEKO_PAYMENTS_FOLDER = "duleko";
+
+/**
+ * A member's accounts (`owner` = their profile id) or Duleko's own
+ * (`owner` = null), primary first. Someone else's come back empty unless
+ * RLS lets you see them - a job with them, or their phone rule.
+ */
+export async function listPaymentMethods(owner: string | null): Promise<PaymentMethod[]> {
+  const query = supabase.from("payment_methods").select(PAYMENT_METHOD_COLUMNS);
+  const { data, error } = await (owner ? query.eq("profile_id", owner) : query.is("profile_id", null))
+    .order("is_primary", { ascending: false })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as PaymentMethod[];
+}
+
+/** Puts a QR or a payment screenshot in the payments bucket, under a name nobody can guess. */
+async function uploadPaymentImage(folder: string, original: File, kind: "qr" | "proof"): Promise<string> {
+  const file = await shrinkImage(original, IMAGE_MAX_SIDE[kind], kind === "qr" ? 0.92 : 0.82);
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `${folder}/${kind}-${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("payments")
+    .upload(path, file, { cacheControl: IMMUTABLE_CACHE, contentType: file.type });
+  if (error) throw error;
+  return supabase.storage.from("payments").getPublicUrl(path).data.publicUrl;
+}
+
+/** Best-effort: a leftover image must never make a save or delete look like it failed. */
+async function removePaymentImage(url: string | null | undefined): Promise<void> {
+  const path = url ? publicPathIn("payments", url) : null;
+  if (!path) return;
+  try {
+    await supabase.storage.from("payments").remove([path]);
+  } catch {
+    // Ignored on purpose.
+  }
+}
+
+/** Only the fields that belong to the kind - the database refuses the rest. */
+function paymentFields(draft: PaymentMethodDraft) {
+  const clean = (value: string | null) => value?.trim() || null;
+  if (draft.kind === "bank") {
+    return {
+      bank_code: draft.bank_code,
+      bank_name: draft.bank_code === "other" ? clean(draft.bank_name) : null,
+      branch: clean(draft.branch),
+      account_number: draft.account_number?.replace(/\s+/g, "") || null,
+      account_name: draft.account_name.trim(),
+      wallet_id: null,
+    };
+  }
+  return {
+    bank_code: null,
+    bank_name: null,
+    branch: null,
+    account_number: null,
+    account_name: draft.account_name.trim(),
+    wallet_id: draft.wallet_id?.replace(/\D/g, "").replace(/^977(?=9)/, "") || null,
+  };
+}
+
+export interface SavePaymentMethodInput {
+  /** Storage folder: the signed-in user's auth id, or DULEKO_PAYMENTS_FOLDER. */
+  folder: string;
+  /** Whose account: a profile id, or null for one of Duleko's. */
+  owner: string | null;
+  /** The account being edited; leave out to add one. */
+  existing?: PaymentMethod | null;
+  draft: PaymentMethodDraft;
+  /** A new QR photo to use. */
+  qr?: File | null;
+  /** Take the existing QR off. */
+  removeQr?: boolean;
+}
+
+/** Adds or edits one account and returns the fresh list. */
+export async function savePaymentMethod(input: SavePaymentMethodInput): Promise<PaymentMethod[]> {
+  const { folder, owner, existing, draft, qr, removeQr } = input;
+  const uploaded = qr ? await uploadPaymentImage(folder, qr, "qr") : null;
+  const qr_url = uploaded ?? (removeQr ? null : (existing?.qr_url ?? null));
+  const row = { ...paymentFields(draft), qr_url };
+
+  const { error } = existing
+    ? await supabase.from("payment_methods").update(row).eq("id", existing.id)
+    : await supabase.from("payment_methods").insert({ ...row, kind: draft.kind, profile_id: owner });
+  if (error) {
+    if (uploaded) await removePaymentImage(uploaded);
+    throw error;
+  }
+  if (existing?.qr_url && existing.qr_url !== qr_url) await removePaymentImage(existing.qr_url);
+  return listPaymentMethods(owner);
+}
+
+export async function makePrimaryPaymentMethod(id: string, owner: string | null): Promise<PaymentMethod[]> {
+  const { error } = await supabase.from("payment_methods").update({ is_primary: true }).eq("id", id);
+  if (error) throw error;
+  return listPaymentMethods(owner);
+}
+
+export async function deletePaymentMethod(method: PaymentMethod): Promise<PaymentMethod[]> {
+  const { error } = await supabase.from("payment_methods").delete().eq("id", method.id);
+  if (error) throw error;
+  await removePaymentImage(method.qr_url);
+  return listPaymentMethods(method.profile_id);
+}
+
+/** Where a worker stands with Duleko's fees: their own (no id), or anyone's for staff. */
+export async function getFeeAccount(workerId?: string): Promise<FeeAccount> {
+  const { data, error } = await supabase.rpc("fee_account", workerId ? { p_worker: workerId } : {});
+  if (error) throw error;
+  return data as FeeAccount;
+}
+
+const FEE_CHARGE_COLUMNS =
+  "id,engagement_id,worker_profile_id,job_title,price,amount,welcome,completed_on,period,created_at";
+
+/** numeric comes back from PostgREST as a string or a number; always a number here. */
+function mapCharge(row: unknown): FeeCharge {
+  const c = row as FeeCharge;
+  return { ...c, price: Number(c.price) };
+}
+
+export async function listFeeCharges(workerId: string): Promise<FeeCharge[]> {
+  const { data, error } = await supabase
+    .from("fee_charges")
+    .select(FEE_CHARGE_COLUMNS)
+    .eq("worker_profile_id", workerId)
+    .order("completed_on", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) throw error;
+  return (data ?? []).map(mapCharge);
+}
+
+/** Duleko's fee on one job, once it is completed - null when it carries none. */
+export async function getFeeForJob(engagementId: string): Promise<FeeCharge | null> {
+  const { data, error } = await supabase
+    .from("fee_charges")
+    .select(FEE_CHARGE_COLUMNS)
+    .eq("engagement_id", engagementId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? mapCharge(data) : null;
+}
+
+const FEE_PAYMENT_COLUMNS =
+  "id,worker_profile_id,amount,method,paid_to_id,paid_to_label,transaction_id,proof_url,note,status,rejection_reason,reviewed_at,created_at";
+
+export async function listFeePayments(workerId: string): Promise<FeePayment[]> {
+  return unwrap(
+    await supabase
+      .from("fee_payments")
+      .select(FEE_PAYMENT_COLUMNS)
+      .eq("worker_profile_id", workerId)
+      .order("created_at", { ascending: false })
+      .limit(100),
+  );
+}
+
+export interface FeePaymentInput {
+  amount: number;
+  method: FeePayment["method"];
+  paid_to_id: string | null;
+  transaction_id: string | null;
+  note: string | null;
+}
+
+/** A worker saying they paid Duleko. It waits for an admin to confirm it. */
+export async function recordFeePayment(
+  userId: string,
+  workerId: string,
+  input: FeePaymentInput,
+  proof: File | null,
+): Promise<void> {
+  const proof_url = proof ? await uploadPaymentImage(userId, proof, "proof") : null;
+  const { error } = await supabase.from("fee_payments").insert({
+    worker_profile_id: workerId,
+    amount: input.amount,
+    method: input.method,
+    paid_to_id: input.method === "cash" ? null : input.paid_to_id,
+    transaction_id: input.transaction_id?.trim() || null,
+    note: input.note?.trim() || null,
+    proof_url,
+  });
+  if (error) {
+    if (proof_url) await removePaymentImage(proof_url);
+    throw error;
+  }
+}
+
+/** Takes back a payment recorded by mistake, while it still waits to be checked. */
+export async function withdrawFeePayment(payment: FeePayment): Promise<void> {
+  const { error } = await supabase.from("fee_payments").delete().eq("id", payment.id);
+  if (error) throw error;
+  await removePaymentImage(payment.proof_url);
+}
+
+/** Staff: totals and every worker with fees. */
+export async function getFeeOverview(): Promise<FeeOverview> {
+  const { data, error } = await supabase.rpc("fee_overview");
+  if (error) throw error;
+  return data as FeeOverview;
+}
+
+type FeePaymentRow = Omit<FeePayment, "worker"> & {
+  worker: NonNullable<FeePayment["worker"]> | NonNullable<FeePayment["worker"]>[] | null;
+};
+
+/** Staff: payments waiting to be checked, oldest first. */
+export async function listPaymentsToCheck(): Promise<FeePayment[]> {
+  const { data, error } = await supabase
+    .from("fee_payments")
+    .select(
+      FEE_PAYMENT_COLUMNS +
+        ",worker:profiles!fee_payments_worker_profile_id_fkey(id,full_name,avatar_url,member_no)",
+    )
+    .eq("status", "reported")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return ((data ?? []) as unknown as FeePaymentRow[]).map((row) => ({ ...row, worker: one(row.worker) ?? undefined }));
+}
+
+/** Admins: the money arrived (confirm), or it didn't (reject, saying why). */
+export async function reviewFeePayment(id: string, accept: boolean, reason?: string | null): Promise<void> {
+  const { data, error } = await supabase
+    .from("fee_payments")
+    .update(accept ? { status: "confirmed" } : { status: "rejected", rejection_reason: reason?.trim() || null })
+    .eq("id", id)
+    .select("id");
+  if (error) throw error;
+  // RLS turns a moderator's attempt into "nothing updated" rather than an error.
+  if (!data?.length) throw new Error("ADMIN_ONLY");
 }

@@ -28,7 +28,10 @@ import {
   Star,
   UserCheck,
   UserPlus,
+  Wallet,
 } from "lucide-react";
+import { PaymentCard } from "@/components/duleko/payments/PaymentCard";
+import { paymentMethodsKey } from "@/components/duleko/payments/PaymentMethodsManager";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { RatingLine } from "@/components/duleko/WorkerList";
 import {
@@ -58,6 +61,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   getAvailability,
   getContact,
+  listPaymentMethods,
   getFriendshipWith,
   getProfile,
   getUserSkills,
@@ -164,6 +168,14 @@ export function WorkerScreen() {
     queryKey: ["certificates", workerId],
     queryFn: () => listCertificates(workerId),
     enabled: ready,
+  });
+
+  // Only what RLS lets this viewer see: a job with them, or their phone rule.
+  const paymentMethods = useQuery({
+    queryKey: paymentMethodsKey(workerId),
+    queryFn: () => listPaymentMethods(workerId),
+    enabled: ready && Boolean(me),
+    staleTime: 60_000,
   });
 
   // A full year ahead, the same span your own Profile's calendar covers -
@@ -802,6 +814,17 @@ export function WorkerScreen() {
                           </li>
                         ))}
                       </ul>
+                    </SectionCard>
+                  )}
+
+                  {(paymentMethods.data?.length ?? 0) > 0 && (
+                    <SectionCard compact icon={Wallet} title={t("payTheirDetails")} badge={paymentMethods.data!.length}>
+                      {!isMe && <p className="mb-3 text-xs leading-relaxed text-slate-500">{t("payPayHint")}</p>}
+                      <div className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
+                        {paymentMethods.data!.map((m) => (
+                          <PaymentCard key={m.id} method={m} compact />
+                        ))}
+                      </div>
                     </SectionCard>
                   )}
                 </div>
