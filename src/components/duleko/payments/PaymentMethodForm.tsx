@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Check, ChevronDown, ImageUp, Landmark, QrCode, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/field";
 import { BankLogo } from "./BankLogo";
 import { PaymentCard } from "./PaymentCard";
-import { BANKS, OTHER_BANK, PAYMENT_KINDS, WALLETS, methodTitle, searchKey } from "@/lib/banks";
+import { BANKS, DEVELOPMENT_BANKS, OTHER_BANK, PAYMENT_KINDS, WALLETS, bankByCode, methodTitle, searchKey, type Brand } from "@/lib/banks";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import { MAX_PHOTO_INPUT_BYTES } from "@/lib/image";
@@ -67,6 +67,7 @@ export function PaymentMethodForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pickerOpen, setPickerOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const bankList = useRef<HTMLUListElement>(null);
 
   // A fresh form every time it opens.
   useEffect(() => {
@@ -96,11 +97,20 @@ export function PaymentMethodForm({
   const wallet = draft.kind === "bank" ? "" : WALLETS[draft.kind].name;
   const shownQr = qrPreview ?? (removeQr ? null : (existing?.qr_url ?? null));
 
-  const banks = useMemo(() => {
-    const needle = searchKey(query);
-    if (!needle) return BANKS;
-    return BANKS.filter((b) => searchKey(`${b.name} ${b.short} ${b.nameNe}`).includes(needle));
+  // A new search starts from the top of the list.
+  useEffect(() => {
+    if (bankList.current) bankList.current.scrollTop = 0;
   }, [query]);
+
+  // Commercial banks, then development banks, each under its own heading.
+  const groups = useMemo(() => {
+    const needle = searchKey(query);
+    const matches = (b: Brand) => !needle || searchKey(`${b.name} ${b.short} ${b.nameNe}`).includes(needle);
+    return [
+      { label: t("payBanksCommercial"), banks: BANKS.filter(matches) },
+      { label: t("payBanksDevelopment"), banks: DEVELOPMENT_BANKS.filter(matches) },
+    ].filter((g) => g.banks.length > 0);
+  }, [query, t]);
 
   function set<K extends keyof PaymentMethodDraft>(key: K, value: PaymentMethodDraft[K]) {
     setDraft((d) => ({ ...d, [key]: value }));
@@ -151,7 +161,7 @@ export function PaymentMethodForm({
     });
   }
 
-  const chosen = BANKS.find((b) => b.code === draft.bank_code);
+  const chosen = bankByCode(draft.bank_code);
   const editingTitle = existing ? methodTitle(existing, lang) || t("payKindBank") : "";
 
   return (
@@ -226,7 +236,8 @@ export function PaymentMethodForm({
               <Landmark className="h-5 w-5 text-slate-400" aria-hidden />
             )}
             <span className={cn("min-w-0 flex-1 truncate text-sm", draft.bank_code ? "font-medium text-slate-900" : "text-slate-400")}>
-              {chosen?.name ?? (draft.bank_code === OTHER_BANK ? t("payOtherBank") : t("payFormChooseBank"))}
+              {(chosen && (lang === "ne" ? chosen.nameNe : chosen.name)) ??
+                (draft.bank_code === OTHER_BANK ? t("payOtherBank") : t("payFormChooseBank"))}
             </span>
             <ChevronDown className={cn("h-4 w-4 shrink-0 text-slate-400 transition-transform", pickerOpen && "rotate-180")} aria-hidden />
           </button>
@@ -245,31 +256,42 @@ export function PaymentMethodForm({
                   autoComplete="off"
                 />
               </div>
-              <ul className="max-h-64 overflow-y-auto py-1" role="listbox" aria-label={t("payFormChooseBank")}>
-                {banks.map((b) => (
-                  <li key={b.code}>
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={draft.bank_code === b.code}
-                      onClick={() => chooseBank(b.code)}
-                      className={cn(
-                        "flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-slate-50",
-                        draft.bank_code === b.code && "bg-brand-50",
-                      )}
-                    >
-                      <span className="flex w-20 shrink-0 justify-start">
-                        <BankLogo kind="bank" bankCode={b.code} size={28} />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-slate-900">{lang === "ne" ? b.nameNe : b.name}</span>
-                        <span className="block text-[11px] text-slate-500">{lang === "ne" ? b.name : b.short}</span>
-                      </span>
-                      {draft.bank_code === b.code && <Check className="h-4 w-4 shrink-0 text-brand-700" aria-hidden />}
-                    </button>
+              <ul ref={bankList} className="max-h-64 overflow-y-auto pb-1" role="listbox" aria-label={t("payFormChooseBank")}>
+                {groups.map((group) => (
+                  <li key={group.label} role="presentation">
+                    <p className="sticky top-0 z-10 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                      {group.label}
+                    </p>
+                    <ul role="group" aria-label={group.label}>
+                      {group.banks.map((b) => (
+                        <li key={b.code}>
+                          <button
+                            type="button"
+                            role="option"
+                            aria-selected={draft.bank_code === b.code}
+                            onClick={() => chooseBank(b.code)}
+                            className={cn(
+                              "flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-slate-50",
+                              draft.bank_code === b.code && "bg-brand-50",
+                            )}
+                          >
+                            <span className="flex w-20 shrink-0 justify-start">
+                              <BankLogo kind="bank" bankCode={b.code} size={28} />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-medium text-slate-900">
+                                {lang === "ne" ? b.nameNe : b.name}
+                              </span>
+                              <span className="block text-[11px] text-slate-500">{lang === "ne" ? b.name : b.short}</span>
+                            </span>
+                            {draft.bank_code === b.code && <Check className="h-4 w-4 shrink-0 text-brand-700" aria-hidden />}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
                   </li>
                 ))}
-                {banks.length === 0 && <li className="px-3 py-2 text-xs text-slate-500">{t("payFormNoBank")}</li>}
+                {groups.length === 0 && <li className="px-3 py-2 text-xs text-slate-500">{t("payFormNoBank")}</li>}
                 <li className="border-t border-slate-100">
                   <button
                     type="button"

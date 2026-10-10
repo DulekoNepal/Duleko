@@ -18,10 +18,12 @@ export const paymentStrings = {
   payKindEsewa: ["eSewa", "इसेवा"],
   payKindKhalti: ["Khalti", "खल्ती"],
   payKindCash: ["Cash", "नगद"],
+  payBanksCommercial: ["Commercial banks", "वाणिज्य बैंक"],
+  payBanksDevelopment: ["Development banks", "विकास बैंक"],
   payOtherBank: ["Another bank", "अर्को बैंक"],
   payOtherBankHint: [
-    "Development banks, finance companies and cooperatives",
-    "विकास बैंक, फाइनान्स कम्पनी र सहकारी",
+    "Finance companies, cooperatives and any bank not listed",
+    "फाइनान्स कम्पनी, सहकारी र सूचीमा नभएका बैंक",
   ],
 
   // ---- the card --------------------------------------------------------
@@ -79,7 +81,7 @@ export const paymentStrings = {
   payFormSearchBank: ["Search banks", "बैंक खोज्नुहोस्"],
   payFormNoBank: ["No bank by that name. Pick \"Another bank\" and type it.", "त्यो नामको बैंक छैन। \"अर्को बैंक\" छानेर नाम लेख्नुहोस्।"],
   payFormBankName: ["Bank name", "बैंकको नाम"],
-  payFormBankNamePlaceholder: ["e.g. Shine Resunga Development Bank", "जस्तै: साइन रेसुंगा डेभलपमेन्ट बैंक"],
+  payFormBankNamePlaceholder: ["e.g. Kapilvastu Saving and Credit Cooperative", "जस्तै: कपिलवस्तु बचत तथा ऋण सहकारी"],
   payFormAccountNameHint: [
     "Exactly as the bank or wallet shows it, so payers can check it's you.",
     "बैंक वा वालेटमा जस्तो छ त्यस्तै, ताकि तिर्नेले तपाईं नै हो भनेर जाँच्न सकून्।",
