@@ -25,6 +25,7 @@ import {
   type MapBounds,
   type MapPerson,
 } from "@/lib/queries";
+import { cachedMapPlace, mapPlaceAt, mapPlaceLabel, type MapPlace } from "@/lib/geocode";
 import { districtLabel, municipalityLabel } from "@/lib/nepal";
 import { cn, formatNumber, skillName } from "@/lib/utils";
 import type { JobPost, Lang } from "@/lib/types";
@@ -53,10 +54,22 @@ function boundsKey(b: MapBounds | null): string | null {
   return [b.south, b.west, b.north, b.east].map((v) => v.toFixed(2)).join(",");
 }
 
-/** "Taulihawa", or the district when most people there gave no municipality. */
-function areaPlace(area: MapAreaCount, lang: Lang): string {
+/**
+ * What to call an area: the place it really is on the map (OpenStreetMap,
+ * once looked up), or else what most people in it gave on their profiles.
+ */
+function areaPlace(area: MapAreaCount, lang: Lang, place?: MapPlace | null): string {
+  const there = place ? mapPlaceLabel(place, lang) : "";
+  if (there) return there;
   if (area.district && area.municipality) return municipalityLabel(area.district, area.municipality, lang) || area.municipality;
   return area.district ? districtLabel(area.district, lang) : "";
+}
+
+/** "12 people near Butwal", or just "12 people" before the place is known. */
+function areaHeadline(area: MapAreaCount, place: string, t: ReturnType<typeof useI18n>["t"], lang: Lang): string {
+  const count = formatNumber(area.people, lang);
+  if (!place) return area.people === 1 ? t("mapPeopleCountOne") : t("mapPeopleCount", { count });
+  return area.people === 1 ? t("mapAreaPeopleOne", { place }) : t("mapAreaPeople", { count, place });
 }
 
 function areaId(area: MapAreaCount): string {
@@ -144,9 +157,10 @@ export function MapScreen() {
     const out: MapPin[] = [];
     if (show !== "jobs" && isGuest) {
       for (const a of areas.data ?? []) {
-        const place = areaPlace(a, lang);
-        const label =
-          a.people === 1 ? t("mapAreaPeopleOne", { place }) : t("mapAreaPeople", { count: formatNumber(a.people, lang), place });
+        // Named only once its real place is known here (an area is looked
+        // up when someone opens it); until then, just the count.
+        const known = cachedMapPlace(a.lat, a.lng);
+        const label = areaHeadline(a, known ? mapPlaceLabel(known, lang) : "", t, lang);
         out.push({ id: areaId(a), kind: "area", lat: a.lat, lng: a.lng, label, count: a.people });
       }
     } else if (show !== "jobs") {
@@ -160,7 +174,8 @@ export function MapScreen() {
       }
     }
     return out;
-  }, [people.data, areas.data, jobs.data, show, isGuest, lang, t]);
+    // `selected`: an area opened and closed again has been looked up by then.
+  }, [people.data, areas.data, jobs.data, show, isGuest, lang, t, selected]);
 
   const loading =
     (show !== "jobs" && (isGuest ? areas.isFetching : people.isFetching)) || (show !== "people" && jobs.isFetching);
@@ -384,7 +399,17 @@ function AreaSheet({
 }) {
   const { t, lang } = useI18n();
   const { requestSignIn } = useGuestMode();
-  const place = areaPlace(area, lang);
+  // Where this area really is. Areas sit at fixed points, so the answer is
+  // kept for good (see mapPlaceAt); if the lookup fails, profiles name it.
+  const there = useQuery({
+    queryKey: ["map-place", area.lat.toFixed(3), area.lng.toFixed(3)],
+    queryFn: () => mapPlaceAt(area.lat, area.lng),
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: 0,
+  });
+  const place = there.isPending ? "" : areaPlace(area, lang, there.data);
+  const district = there.data?.district ?? area.district;
   return (
     <SheetShell onClose={onClose}>
       <div className="rounded-2xl border border-slate-200 bg-surface p-3.5 shadow-lg">
@@ -393,11 +418,7 @@ function AreaSheet({
             {formatNumber(area.people, lang)}
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-900">
-              {area.people === 1
-                ? t("mapAreaPeopleOne", { place })
-                : t("mapAreaPeople", { count: formatNumber(area.people, lang), place })}
-            </p>
+            <p className="text-sm font-semibold text-slate-900">{areaHeadline(area, place, t, lang)}</p>
             {skillName && <p className="text-xs text-slate-600">{t("mapAreaSkill", { skill: skillName })}</p>}
             <p className="mt-1 text-[11px] leading-snug text-slate-500">{t("mapAreaWhy")}</p>
           </div>
@@ -413,7 +434,7 @@ function AreaSheet({
           </button>
           <Link
             to="/search"
-            search={{ district: area.district ?? undefined, skill: skillId ?? undefined }}
+            search={{ district: district ?? undefined, skill: skillId ?? undefined }}
             className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
           >
             <List className="h-3.5 w-3.5" aria-hidden />
