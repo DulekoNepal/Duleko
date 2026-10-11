@@ -466,11 +466,12 @@ Migrations are pasted into the Supabase **SQL editor** one at a time, in filenam
 | `5900` | Map (`map_people`), exact points moved to owner-only `profile_locations` |
 | `6000` | Mobile number + PIN sign-in (`phone_account_exists`, a placeholder Send SMS hook) |
 | `6100` | Map privacy: members-only people map, guest area counts, ~1 km squares, shop pins, private job places (`job_post_places`, `engagement_places`) |
+| `6200` | Guest map areas named after one real district + municipality pair |
 
 ### Writing a new migration
 
-1. Name it `20260101006200_short_name.sql`, the next free number in steps of 100.
-2. Start with a `-- Duleko MVP :: 6200 :: Title` comment block saying what it does and why.
+1. Name it `20260101006300_short_name.sql`, the next free number in steps of 100.
+2. Start with a `-- Duleko MVP :: 6300 :: Title` comment block saying what it does and why.
 3. Make it **safe to run more than once** (`create ... if not exists`, `create or replace`,
    `drop policy if exists`, and `not exists` guards on inserts).
 4. Enable RLS on every new table and write its policies in the same file.
