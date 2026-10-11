@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { IMAGE_MAX_SIDE, shrinkImage } from "./image";
+import { addDays, toDateKey, todayKey } from "./utils";
 import type {
   AppNotification,
   AvailabilityDay,
@@ -17,6 +18,9 @@ import type {
   FeeOverview,
   FeePayment,
   Friendship,
+  JobOffer,
+  JobPerson,
+  JobPost,
   Lang,
   MessageReaction,
   Notice,
@@ -36,7 +40,7 @@ import type {
 } from "./types";
 
 const PROFILE_COLUMNS =
-  "id,user_id,full_name,about,bio,age,education,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,is_official,public_slug,member_no,language,rating,rating_count,lat,lng,location_shared_at,location_consent,call_permission,created_at,updated_at";
+  "id,user_id,full_name,about,bio,age,education,avatar_url,cover_url,province,district,municipality,ward,locality,is_available,is_official,public_slug,member_no,language,rating,rating_count,location_shared_at,location_consent,call_permission,created_at,updated_at";
 
 // Verification and role live in their own tables (see 3500_staff_roles_
 // and_verification.sql), embedded here and flattened by mapProfileRow so
@@ -358,20 +362,77 @@ export async function setCallPermission(profileId: string, value: CallPermission
   if (error) throw error;
 }
 
+// The exact point lives in profile_locations, which only its owner can
+// read (5900_map_and_private_location.sql). Everyone else sees it through
+// map_people/search_workers, snapped to ~300 m unless show_exact is on.
+export interface MyLocation {
+  lat: number;
+  lng: number;
+  show_exact: boolean;
+  shared_at: string;
+}
+
+export async function getMyLocation(profileId: string): Promise<MyLocation | null> {
+  const { data, error } = await supabase
+    .from("profile_locations")
+    .select("lat,lng,show_exact,shared_at")
+    .eq("profile_id", profileId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as MyLocation | null) ?? null;
+}
+
 export async function shareLocation(profileId: string, lat: number, lng: number): Promise<void> {
   const { error } = await supabase
-    .from("profiles")
-    .update({ lat, lng, location_shared_at: new Date().toISOString() })
-    .eq("id", profileId);
+    .from("profile_locations")
+    .upsert({ profile_id: profileId, lat, lng, shared_at: new Date().toISOString() }, { onConflict: "profile_id" });
   if (error) throw error;
 }
 
 export async function clearLocation(profileId: string): Promise<void> {
-  const { error } = await supabase
-    .from("profiles")
-    .update({ lat: null, lng: null, location_shared_at: null })
-    .eq("id", profileId);
+  const { error } = await supabase.from("profile_locations").delete().eq("profile_id", profileId);
   if (error) throw error;
+}
+
+/** "Show my exact spot on the map" - off means the ~300 m area only. */
+export async function setShowExactLocation(profileId: string, showExact: boolean): Promise<void> {
+  const { error } = await supabase.from("profile_locations").update({ show_exact: showExact }).eq("profile_id", profileId);
+  if (error) throw error;
+}
+
+export interface MapBounds {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+}
+
+/** A worker on the map, at their public (usually ~300 m) point. */
+export interface MapPerson {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+  rating: number;
+  rating_count: number;
+  is_available: boolean;
+  is_verified: boolean;
+  staff_role: StaffRole | null;
+  skills: Skill[];
+  lat: number;
+  lng: number;
+  exact: boolean;
+}
+
+export async function mapPeople(bounds: MapBounds, skill?: string | null): Promise<MapPerson[]> {
+  const { data, error } = await supabase.rpc("map_people", {
+    p_south: bounds.south,
+    p_west: bounds.west,
+    p_north: bounds.north,
+    p_east: bounds.east,
+    p_skill: skill ?? null,
+  });
+  if (error) throw error;
+  return ((data ?? []) as MapPerson[]).map((p) => ({ ...p, rating: Number(p.rating) }));
 }
 
 // ---------------------------------------------------------------------
@@ -467,8 +528,46 @@ export async function createEngagement(input: {
 
 export const ENGAGEMENTS_PAGE = 15;
 
-/** Was unbounded - every job anyone had ever had, on every visit. */
-export async function listMyEngagements(
+/** How long a finished job stays on Work's Active list asking for a review. */
+export const REVIEW_WINDOW_DAYS = 14;
+
+/**
+ * Everything still moving on one side of Work - waiting, accepted,
+ * confirmed - plus jobs finished in the last two weeks, so one you haven't
+ * reviewed yet can ask for it. Soonest day first. Each row carries who
+ * made the latest price offer, which is what says whose turn it is.
+ */
+export async function listActiveEngagements(
+  myProfileId: string,
+  role: "worker" | "employer",
+): Promise<EngagementWithParties[]> {
+  const column = role === "worker" ? "worker_profile_id" : "employer_profile_id";
+  const since = toDateKey(addDays(new Date(), -REVIEW_WINDOW_DAYS));
+  const { data, error } = await supabase
+    .from("work_engagements")
+    .select(`${ENGAGEMENT_SELECT},bids(bidder_profile_id,created_at)`)
+    .eq(column, myProfileId)
+    .or(`status.in.(pending,accepted,confirmed),completed_at.gte.${since}`)
+    .order("work_date", { ascending: true })
+    .limit(100);
+  if (error) throw error;
+  return ((data ?? []) as unknown as (RawEngagement & { bids?: { bidder_profile_id: string; created_at: string }[] })[]).map(
+    ({ bids, ...row }) => {
+      const last = (bids ?? []).reduce<{ bidder_profile_id: string; created_at: string } | null>(
+        (latest, b) => (!latest || b.created_at > latest.created_at ? b : latest),
+        null,
+      );
+      return {
+        ...shapeEngagement(row, myProfileId),
+        last_bidder_id: last?.bidder_profile_id ?? null,
+        bid_count: bids?.length ?? 0,
+      };
+    },
+  );
+}
+
+/** Work's History: finished jobs on one side - done, declined, cancelled - latest day first. */
+export async function listFinishedEngagements(
   myProfileId: string,
   role: "worker" | "employer",
   page = 0,
@@ -480,6 +579,7 @@ export async function listMyEngagements(
     .from("work_engagements")
     .select(ENGAGEMENT_SELECT)
     .eq(column, myProfileId)
+    .in("status", ["completed", "declined", "cancelled"])
     .order("work_date", { ascending: false })
     .range(from, from + pageSize - 1);
   if (error) throw error;
@@ -1620,4 +1720,242 @@ export async function reviewFeePayment(id: string, accept: boolean, reason?: str
   if (error) throw error;
   // RLS turns a moderator's attempt into "nothing updated" rather than an error.
   if (!data?.length) throw new Error("ADMIN_ONLY");
+}
+
+// ---------------------------------------------------------------------
+// Job board - members post work, workers send offers (5800_job_board.sql).
+// Posts are public; offers are only for the worker and the poster. Every
+// write except posting goes through a function, which also sends the
+// alerts.
+// ---------------------------------------------------------------------
+const JOB_PERSON_COLUMNS =
+  "id,full_name,avatar_url,rating,rating_count,district,municipality,locality" +
+  ",profile_verifications!profile_verifications_profile_id_fkey(verified_at)" +
+  ",staff_roles!staff_roles_profile_id_fkey(role)";
+
+const JOB_POST_COLUMNS =
+  "id,employer_profile_id,skill_id,title,details,district,municipality,location_text,work_date," +
+  "budget_min,budget_max,status,engagement_id,offer_count,lat,lng,created_at,updated_at," +
+  "skill:skills(id,name_en,name_ne,emoji,category)," +
+  `poster:profiles!job_posts_employer_profile_id_fkey(${JOB_PERSON_COLUMNS})`;
+
+const JOB_OFFER_COLUMNS = "id,job_post_id,worker_profile_id,amount,note,status,created_at,updated_at";
+
+function mapJobPerson(row: unknown): JobPerson | null {
+  const profile = mapProfileRow(one(row as Record<string, unknown> | Record<string, unknown>[] | null));
+  return profile as JobPerson | null;
+}
+
+function mapJobPost(row: unknown): JobPost {
+  const { skill, poster, ...rest } = row as Omit<JobPost, "skill" | "poster"> & {
+    skill: Skill | Skill[] | null;
+    poster: unknown;
+  };
+  return {
+    ...rest,
+    budget_min: rest.budget_min == null ? null : Number(rest.budget_min),
+    budget_max: rest.budget_max == null ? null : Number(rest.budget_max),
+    skill: one(skill),
+    poster: mapJobPerson(poster),
+  };
+}
+
+function mapJobOffer(row: unknown): JobOffer {
+  const { worker, post, ...rest } = row as Omit<JobOffer, "worker" | "post"> & { worker?: unknown; post?: unknown };
+  return {
+    ...rest,
+    amount: Number(rest.amount),
+    worker: worker === undefined ? undefined : mapJobPerson(worker),
+    post: post === undefined ? undefined : post ? mapJobPost(one(post as object | object[])) : null,
+  };
+}
+
+export const JOBS_PAGE = 12;
+
+/** Open posts whose day hasn't passed, newest first - in one district, or anywhere. */
+export async function listJobPosts(params: {
+  district?: string | null;
+  skill?: string | null;
+  page?: number;
+  pageSize?: number;
+}): Promise<JobPost[]> {
+  const pageSize = params.pageSize ?? JOBS_PAGE;
+  const from = (params.page ?? 0) * pageSize;
+  let query = supabase
+    .from("job_posts")
+    .select(JOB_POST_COLUMNS)
+    .eq("status", "open")
+    .gte("work_date", todayKey());
+  if (params.district) query = query.eq("district", params.district);
+  if (params.skill) query = query.eq("skill_id", params.skill);
+  const { data, error } = await query.order("created_at", { ascending: false }).range(from, from + pageSize - 1);
+  if (error) throw error;
+  return (data ?? []).map(mapJobPost);
+}
+
+export async function getJobPost(id: string): Promise<JobPost | null> {
+  if (!UUID_RE.test(id)) return null;
+  const { data, error } = await supabase.from("job_posts").select(JOB_POST_COLUMNS).eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data ? mapJobPost(data) : null;
+}
+
+/** Everything I've posted, whatever its state. */
+export async function listMyJobPosts(myProfileId: string, page = 0, pageSize = JOBS_PAGE): Promise<JobPost[]> {
+  const from = page * pageSize;
+  const { data, error } = await supabase
+    .from("job_posts")
+    .select(JOB_POST_COLUMNS)
+    .eq("employer_profile_id", myProfileId)
+    .order("created_at", { ascending: false })
+    .range(from, from + pageSize - 1);
+  if (error) throw error;
+  return (data ?? []).map(mapJobPost);
+}
+
+export interface JobPostInput {
+  skill_id: string;
+  title: string;
+  details: string | null;
+  district: string;
+  municipality: string | null;
+  location_text: string;
+  work_date: string;
+  budget_min: number | null;
+  budget_max: number | null;
+  /** Optional map pin; the database keeps only its ~300 m cell. */
+  lat: number | null;
+  lng: number | null;
+}
+
+/** Open posts with a pin inside the map's view. */
+export async function listJobPostsInBounds(bounds: MapBounds, skill?: string | null): Promise<JobPost[]> {
+  let query = supabase
+    .from("job_posts")
+    .select(JOB_POST_COLUMNS)
+    .eq("status", "open")
+    .gte("work_date", todayKey())
+    .gte("lat", bounds.south)
+    .lte("lat", bounds.north)
+    .gte("lng", bounds.west)
+    .lte("lng", bounds.east);
+  if (skill) query = query.eq("skill_id", skill);
+  const { data, error } = await query.order("created_at", { ascending: false }).limit(200);
+  if (error) throw error;
+  return (data ?? []).map(mapJobPost);
+}
+
+/** Posts a job. The database alerts available workers nearby with that skill. */
+export async function createJobPost(employerProfileId: string, input: JobPostInput): Promise<JobPost> {
+  const { data, error } = await supabase
+    .from("job_posts")
+    .insert({ ...input, employer_profile_id: employerProfileId })
+    .select(JOB_POST_COLUMNS)
+    .single();
+  if (error) throw error;
+  return mapJobPost(data);
+}
+
+/** The poster's view: every offer on their post, with who sent it. */
+export async function listOffersForPost(postId: string): Promise<JobOffer[]> {
+  const { data, error } = await supabase
+    .from("job_offers")
+    .select(`${JOB_OFFER_COLUMNS},worker:profiles!job_offers_worker_profile_id_fkey(${JOB_PERSON_COLUMNS})`)
+    .eq("job_post_id", postId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map(mapJobOffer);
+}
+
+/** A worker's own offer on a post, if they've made one. */
+export async function getMyOffer(postId: string, myProfileId: string): Promise<JobOffer | null> {
+  const { data, error } = await supabase
+    .from("job_offers")
+    .select(JOB_OFFER_COLUMNS)
+    .eq("job_post_id", postId)
+    .eq("worker_profile_id", myProfileId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? mapJobOffer(data) : null;
+}
+
+/** Every offer I've sent, newest activity first, with the post it was for. */
+export async function listMyOffers(myProfileId: string, page = 0, pageSize = JOBS_PAGE): Promise<JobOffer[]> {
+  const from = page * pageSize;
+  const { data, error } = await supabase
+    .from("job_offers")
+    .select(`${JOB_OFFER_COLUMNS},post:job_posts(${JOB_POST_COLUMNS})`)
+    .eq("worker_profile_id", myProfileId)
+    .order("updated_at", { ascending: false })
+    .range(from, from + pageSize - 1);
+  if (error) throw error;
+  return (data ?? []).map(mapJobOffer);
+}
+
+/** My open posts with offers waiting to be chosen from - "choose a worker" on Work. */
+export async function listMyPostsWithOffers(myProfileId: string): Promise<JobPost[]> {
+  const { data, error } = await supabase
+    .from("job_posts")
+    .select(JOB_POST_COLUMNS)
+    .eq("employer_profile_id", myProfileId)
+    .eq("status", "open")
+    .gte("work_date", todayKey())
+    .gt("offer_count", 0)
+    .order("work_date", { ascending: true })
+    .limit(20);
+  if (error) throw error;
+  return (data ?? []).map(mapJobPost);
+}
+
+/**
+ * How much of mine is live on the board: open posts, and offers still
+ * waiting on an open post. The counts on Work's tabs and the board's
+ * shortcuts to them.
+ */
+export async function countMyBoardActivity(myProfileId: string): Promise<{ openPosts: number; waitingOffers: number }> {
+  const today = todayKey();
+  const [posts, offers] = await Promise.all([
+    supabase
+      .from("job_posts")
+      .select("id", { count: "exact", head: true })
+      .eq("employer_profile_id", myProfileId)
+      .eq("status", "open")
+      .gte("work_date", today),
+    supabase
+      .from("job_offers")
+      .select("id,job_posts!inner(id)", { count: "exact", head: true })
+      .eq("worker_profile_id", myProfileId)
+      .eq("status", "pending")
+      .eq("job_posts.status", "open")
+      .gte("job_posts.work_date", today),
+  ]);
+  return { openPosts: posts.count ?? 0, waitingOffers: offers.count ?? 0 };
+}
+
+/** Sends an offer, or changes the one already sent. */
+export async function makeJobOffer(postId: string, amount: number, note: string | null): Promise<JobOffer> {
+  const { data, error } = await supabase.rpc("make_job_offer", {
+    p_job_post_id: postId,
+    p_amount: amount,
+    p_note: note?.trim() || null,
+  });
+  if (error) throw error;
+  return mapJobOffer(data);
+}
+
+export async function withdrawJobOffer(offerId: string): Promise<void> {
+  const { error } = await supabase.rpc("withdraw_job_offer", { p_offer_id: offerId });
+  if (error) throw error;
+}
+
+/** The poster picks an offer: returns the work request it became. */
+export async function chooseJobOffer(offerId: string): Promise<string> {
+  const { data, error } = await supabase.rpc("choose_job_offer", { p_offer_id: offerId });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function closeJobPost(postId: string): Promise<void> {
+  const { error } = await supabase.rpc("close_job_post", { p_job_post_id: postId });
+  if (error) throw error;
 }

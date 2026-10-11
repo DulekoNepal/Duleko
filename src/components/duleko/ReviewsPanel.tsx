@@ -9,7 +9,8 @@ import type { Review } from "@/lib/types";
 
 /**
  * The Reviews tab on someone's profile: the score and how it is spread up
- * top, then every review, newest first, a page at a time.
+ * top, then every review, newest first, a page at a time. `bare` drops the
+ * card around it, for a dialog that already has its own title.
  */
 export function ReviewsPanel({
   reviews,
@@ -19,6 +20,7 @@ export function ReviewsPanel({
   hasMore,
   loadingMore,
   onLoadMore,
+  bare,
 }: {
   reviews: Review[];
   isPending: boolean;
@@ -27,6 +29,7 @@ export function ReviewsPanel({
   hasMore?: boolean;
   loadingMore?: boolean;
   onLoadMore?: () => void;
+  bare?: boolean;
 }) {
   const { t, lang } = useI18n();
 
@@ -36,13 +39,8 @@ export function ReviewsPanel({
   }));
   const mostForOneStar = Math.max(1, ...spread.map((s) => s.count));
 
-  return (
-    <SectionCard
-      compact
-      icon={Star}
-      title={t("reviews")}
-      badge={ratingCount > 0 ? ratingCount : undefined}
-    >
+  const body = (
+    <>
       {isPending ? (
         <div className="space-y-2">
           {[0, 1].map((i) => (
@@ -121,6 +119,13 @@ export function ReviewsPanel({
           )}
         </>
       )}
+    </>
+  );
+
+  if (bare) return body;
+  return (
+    <SectionCard compact icon={Star} title={t("reviews")} badge={ratingCount > 0 ? ratingCount : undefined}>
+      {body}
     </SectionCard>
   );
 }

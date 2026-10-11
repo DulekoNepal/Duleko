@@ -1,369 +1,235 @@
-import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowRight,
-  ArrowUpRight,
-  Building2,
-  CheckCircle2,
-  ChevronDown,
+  BadgeCheck,
+  CalendarDays,
+  Code2,
   Globe,
-  GraduationCap,
-  Phone,
-  Quote,
-  UserRound,
+  Layers,
+  MapPin,
+  Map as MapIcon,
+  MessagesSquare,
+  Search,
+  Send,
+  Smartphone,
+  Sprout,
+  Users,
 } from "lucide-react";
 import {
-  BrandWatermark,
-  Eyebrow,
   FinalCta,
+  IconBadge,
+  Lead,
   PageHero,
-  Prose,
-  SectionHeading,
+  SectionIntro,
   SiteLayout,
   SiteSection,
   StoryLink,
   StoryNav,
+  reveal,
+  siteCard,
+  siteCardHover,
 } from "@/components/duleko/Site";
 import { PolicyContact } from "@/components/duleko/site/policy";
+import { TEAM, type Member } from "@/components/duleko/site/team";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import sunilImage from "@/assets/sunil.webp";
-import sanjayImage from "@/assets/sanjay.webp";
-import dipendraImage from "@/assets/dipendra.webp";
 
-const HOW_IT_WORKS_KEYS = [
-  "walkthroughBody1",
-  "walkthroughBody2",
-  "walkthroughBody3",
-  "walkthroughBody4",
-] as const;
-
-export interface Member {
-  id: string;
-  /** Their own page: /about/<slug>. */
-  slug: string;
-  nameKey: StringKey;
-  roleKey: StringKey;
-  affiliationKey: StringKey;
-  affiliationIcon: React.ComponentType<{ className?: string }>;
-  quoteKey: StringKey;
-  bioKey: StringKey;
-  skillKeys: StringKey[];
-  phone: string;
-  profileUrl: string;
-  portfolioUrl?: string;
-  image: string;
-}
-
-export const TEAM: Member[] = [
-  {
-    id: "sunil",
-    slug: "sunil-k-chaudhary",
-    nameKey: "sunilName",
-    roleKey: "sunilRole",
-    affiliationKey: "sunilUniversity",
-    affiliationIcon: GraduationCap,
-    quoteKey: "sunilQuote",
-    bioKey: "sunilBio",
-    skillKeys: ["sunilSkill1", "sunilSkill2", "sunilSkill3"],
-    phone: "+977 9819447220",
-    profileUrl: "/worker/fc5757c4-cd73-4dc0-b3d6-441c4c1dad00",
-    image: sunilImage,
-  },
-  {
-    id: "sanjay",
-    slug: "sanjay-gupta",
-    nameKey: "sanjayName",
-    roleKey: "sanjayRole",
-    affiliationKey: "sanjayLocation",
-    affiliationIcon: GraduationCap,
-    quoteKey: "sanjayQuote",
-    bioKey: "sanjayBio",
-    skillKeys: ["sanjaySkill1", "sanjaySkill2", "sanjaySkill3"],
-    phone: "+977 9766382090",
-    profileUrl: "/worker/b7bc1f68-7f04-4eb4-addd-df5d71db8e98",
-    portfolioUrl: "https://guptasanjay.com.np",
-    image: sanjayImage,
-  },
-  {
-    id: "dipendra",
-    slug: "dipendra-chaudhary",
-    nameKey: "dipendraName",
-    roleKey: "dipendraRole",
-    affiliationKey: "dipendraLocation",
-    affiliationIcon: Building2,
-    quoteKey: "dipendraQuote",
-    bioKey: "dipendraBio",
-    skillKeys: ["dipendraSkill1", "dipendraSkill2", "dipendraSkill3"],
-    phone: "+977 9867503930",
-    profileUrl: "/worker/541bf85d-3b39-465f-b14d-f0267ab09b10",
-    image: dipendraImage,
-  },
+const WHAT_IT_DOES: { icon: React.ComponentType<{ className?: string }>; titleKey: StringKey; bodyKey: StringKey }[] = [
+  { icon: Search, titleKey: "walkthroughTitle1", bodyKey: "walkthroughBody1" },
+  { icon: Send, titleKey: "walkthroughTitle2", bodyKey: "walkthroughBody2" },
+  { icon: Users, titleKey: "walkthroughTitle3", bodyKey: "walkthroughBody3" },
+  { icon: CalendarDays, titleKey: "walkthroughTitle4", bodyKey: "walkthroughBody4" },
 ];
 
-/** Bios open with the member's quote, which the card shows on its own. */
-function bioParagraphs(bio: string): string[] {
-  const parts = bio.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
-  return parts[0]?.startsWith('"') ? parts.slice(1) : parts;
-}
-
-function ContactPill({
-  href,
-  icon: Icon,
-  children,
-  external,
-}: {
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  children: React.ReactNode;
-  external?: boolean;
-}) {
-  return (
-    <a
-      href={href}
-      {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-      className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-white/20 transition-colors hover:bg-white/20"
-    >
-      <Icon className="h-4 w-4 shrink-0 text-brand-300" aria-hidden />
-      <span className="truncate">{children}</span>
-      {external && <ArrowUpRight className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />}
-    </a>
-  );
-}
-
 /**
- * Identity panel (photo, role, affiliation, contact) beside a story panel
- * (quote, bio, focus areas). Phones stack the two and fold the bio behind
- * "Read full story"; tablets put photo and name side by side; desktops
- * split the card and alternate sides down the page.
+ * How Duleko got here, from the project's own history (git log, migrations):
+ * first commit 4 Sep 2026; chat, friends and bidding 6 Sep; Android 11 Sep;
+ * the website 26-27 Sep; dark mode, notice board, Membership IDs and phone
+ * alerts 2-3 Oct; categories, 18+ and bank details by 10 Oct. "Now" is the
+ * work in progress.
  */
-export function TeamProfileCard({
-  member,
-  reversed,
-  standalone = false,
-}: {
-  member: Member;
-  reversed: boolean;
-  /** On the member's own page: the full bio, and no link to that page. */
-  standalone?: boolean;
-}) {
+const TIMELINE: {
+  icon: React.ComponentType<{ className?: string }>;
+  dateKey: StringKey;
+  titleKey: StringKey;
+  bodyKey: StringKey;
+  upcoming?: boolean;
+}[] = [
+  { icon: Sprout, dateKey: "timelineSep", titleKey: "timeline1Title", bodyKey: "timeline1Body" },
+  { icon: MessagesSquare, dateKey: "timelineSep", titleKey: "timeline2Title", bodyKey: "timeline2Body" },
+  { icon: Smartphone, dateKey: "timelineSep", titleKey: "timeline3Title", bodyKey: "timeline3Body" },
+  { icon: Globe, dateKey: "timelineSep", titleKey: "timeline4Title", bodyKey: "timeline4Body" },
+  { icon: BadgeCheck, dateKey: "timelineOct", titleKey: "timeline5Title", bodyKey: "timeline5Body" },
+  { icon: Layers, dateKey: "timelineOct", titleKey: "timeline6Title", bodyKey: "timeline6Body" },
+  { icon: MapIcon, dateKey: "timelineNow", titleKey: "timeline7Title", bodyKey: "timeline7Body", upcoming: true },
+];
+
+/** A team member as a portrait card - the whole card opens their page. */
+export function TeamCard({ member }: { member: Member }) {
   const { t } = useI18n();
-  const [expanded, setExpanded] = useState(standalone);
   const AffiliationIcon = member.affiliationIcon;
   const name = t(member.nameKey);
-  const paragraphs = bioParagraphs(t(member.bioKey));
-
   return (
-    <article
+    <Link
+      to="/about/$slug"
+      params={{ slug: member.slug }}
       id={member.id}
-      className="scroll-mt-24 overflow-hidden rounded-3xl border border-slate-200 bg-surface shadow-sm transition-shadow duration-300 hover:shadow-xl hover:shadow-teal-900/5"
+      className={cn(siteCard, siteCardHover, "group flex h-full scroll-mt-28 flex-col overflow-hidden")}
     >
-      <div
-        className={cn(
-          "grid",
-          reversed ? "lg:grid-cols-[1fr_minmax(280px,320px)]" : "lg:grid-cols-[minmax(280px,320px)_1fr]",
-        )}
-      >
-        <div
-          className={cn(
-            "band relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-800 to-teal-800 p-5 text-white sm:p-6",
-            reversed && "lg:order-2",
-          )}
-        >
-          <div
-            className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/10 blur-2xl"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-brand-400/20 blur-2xl"
-            aria-hidden
-          />
-          <BrandWatermark className="-bottom-8 -right-8 h-40 w-40 sm:h-48 sm:w-48" />
-
-          <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left lg:flex-col lg:items-start">
-            <img
-              src={member.image}
-              alt={name}
-              loading="lazy"
-              className="h-24 w-24 shrink-0 rounded-3xl object-cover shadow-xl ring-4 ring-white/20 sm:h-28 sm:w-28 lg:h-36 lg:w-36"
-            />
-            <div className="min-w-0">
-              <span className="inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide ring-1 ring-white/25">
-                {t(member.roleKey)}
-              </span>
-              <h3 className="mt-2.5 text-xl font-bold leading-tight sm:text-2xl">
-                {standalone ? (
-                  name
-                ) : (
-                  <Link to="/about/$slug" params={{ slug: member.slug }} className="hover:underline">
-                    {name}
-                  </Link>
-                )}
-              </h3>
-              <p className="mt-2 inline-flex items-start gap-1.5 text-sm text-brand-50/85">
-                <AffiliationIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" aria-hidden />
-                {t(member.affiliationKey)}
-              </p>
-            </div>
-          </div>
-
-          <div className="relative mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-            <ContactPill href={`tel:${member.phone.replace(/\s+/g, "")}`} icon={Phone}>
-              {member.phone}
-            </ContactPill>
-            <ContactPill href={member.profileUrl} icon={UserRound}>
-              {t("aboutDulekoProfile")}
-            </ContactPill>
-            {member.portfolioUrl && (
-              <ContactPill href={member.portfolioUrl} icon={Globe} external>
-                {member.portfolioUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-              </ContactPill>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-col p-5 sm:p-6 lg:p-8">
-          <blockquote className="relative">
-            <Quote className="mb-2 h-6 w-6 text-accent-500" aria-hidden />
-            <p className="text-balance text-lg font-semibold leading-snug text-teal-800 sm:text-xl">
-              {t(member.quoteKey)}
-            </p>
-          </blockquote>
-
-          <div className="relative mt-4">
-            <div
-              id={`${member.id}-bio`}
-              className={cn(
-                "space-y-3 overflow-hidden text-[15px] leading-relaxed text-slate-600 transition-[max-height] duration-500 sm:text-base sm:leading-7 lg:max-h-none",
-                expanded ? "max-h-[2000px]" : "max-h-40",
-              )}
-            >
-              {paragraphs.map((paragraph) => (
-                <p key={paragraph.slice(0, 32)}>{paragraph}</p>
-              ))}
-            </div>
-            {!expanded && (
-              <div
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-surface to-transparent lg:hidden"
-                aria-hidden
-              />
-            )}
-          </div>
-          {!standalone && (
-            <button
-              type="button"
-              onClick={() => setExpanded((v) => !v)}
-              aria-expanded={expanded}
-              aria-controls={`${member.id}-bio`}
-              className="mt-2 inline-flex items-center gap-1 self-start text-sm font-semibold text-brand-700 hover:text-brand-800 lg:hidden"
-            >
-              {expanded ? t("showLess") : t("aboutReadFullStory")}
-              <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} aria-hidden />
-            </button>
-          )}
-
-          <div className="mt-auto pt-5">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{t("aboutFocusAreas")}</p>
-            <ul className="flex flex-wrap gap-1.5">
-              {member.skillKeys.map((key) => (
-                <li
-                  key={key}
-                  className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-sm font-medium text-brand-800"
-                >
-                  {t(key)}
-                </li>
-              ))}
-            </ul>
-            {!standalone && (
-              <Link
-                to="/about/$slug"
-                params={{ slug: member.slug }}
-                className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline"
-              >
-                {t("founderFullProfile", { name: name.split(" ")[0] })}
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-            )}
-          </div>
-        </div>
+      <div className="relative aspect-[4/5] overflow-hidden bg-teal-800 sm:aspect-[4/4.4]">
+        <img
+          src={member.image}
+          alt={name}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+        />
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" aria-hidden />
+        <span className="absolute left-4 top-4 rounded-full bg-surface/90 px-3 py-1 text-xs font-semibold text-teal-800 shadow-sm backdrop-blur">
+          {t(member.roleKey)}
+        </span>
       </div>
-    </article>
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        <h3 className="font-display text-xl font-semibold text-slate-900 sm:text-2xl">{name}</h3>
+        <p className="mt-1.5 inline-flex items-start gap-1.5 text-sm text-slate-500">
+          <AffiliationIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+          {t(member.affiliationKey)}
+        </p>
+        <p className="font-quote mt-4 flex-1 text-lg italic leading-snug text-teal-800">“{t(member.quoteKey)}”</p>
+        <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700">
+          {t("founderFullProfile", { name: name.split(" ")[0] })}
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
+        </span>
+      </div>
+    </Link>
   );
 }
 
 export function AboutPage() {
   const { t } = useI18n();
 
+  const facts: { icon: React.ComponentType<{ className?: string }>; labelKey: StringKey; value: string }[] = [
+    { icon: MapPin, labelKey: "aboutFactFounded", value: t("sunilLocation") },
+    { icon: Users, labelKey: "aboutFactTeam", value: t("aboutFactTeamValue") },
+    { icon: Code2, labelKey: "aboutFactStarted", value: t("aboutFactStartedValue") },
+    { icon: Smartphone, labelKey: "aboutFactOn", value: t("heroTrustApp") },
+  ];
+
   return (
     <SiteLayout title={t("navAboutDuleko")}>
-      <PageHero story="about" eyebrow={t("navAboutDuleko")} title={t("aboutHeroTitle")}>
-        <Prose>
+      <PageHero
+        story="about"
+        eyebrow={t("navAboutDuleko")}
+        title={t("aboutHeroTitle")}
+        aside={
+          <dl className={cn(siteCard, "divide-y divide-slate-100 p-2 shadow-[0_40px_80px_-40px_rgb(12_60_72/0.45)]")}>
+            {facts.map(({ icon: Icon, labelKey, value }) => (
+              <div key={labelKey} className="flex items-center gap-4 px-4 py-4">
+                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                  <Icon className="h-5 w-5" aria-hidden />
+                </span>
+                <div className="min-w-0">
+                  <dt className="text-sm text-slate-500">{t(labelKey)}</dt>
+                  <dd className="font-display text-lg font-semibold text-slate-900">{value}</dd>
+                </div>
+              </div>
+            ))}
+          </dl>
+        }
+      >
+        <Lead>
           <p>{t("aboutHeroP1")}</p>
-          <p>{t("aboutHeroP2")}</p>
+          <p className="font-semibold text-slate-900">{t("aboutHeroP2")}</p>
           <p>{t("aboutHeroP3")}</p>
-        </Prose>
-        <p className="mt-5 text-lg font-semibold text-brand-700 sm:text-xl">
-          {t("siteTagline")}
-        </p>
+        </Lead>
+        <p className="font-display mt-6 text-xl font-semibold text-brand-700 sm:text-2xl">{t("siteTagline")}</p>
       </PageHero>
 
+      {/* What Duleko is */}
       <SiteSection>
-        <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16">
           <div>
-            <Eyebrow>{t("howItWorks")}</Eyebrow>
-            <Prose>
+            <SectionIntro eyebrow={t("howItWorks")} title={t("aboutWhatTitle")}>
               <p>{t("aboutDescription")}</p>
-            </Prose>
-            <StoryLink to="/mission" className="mt-4">
+            </SectionIntro>
+            <StoryLink to="/mission" className="mt-5">
               {t("readOurMission")}
             </StoryLink>
           </div>
-          <ul className="space-y-2.5">
-            {HOW_IT_WORKS_KEYS.map((key) => (
-              <li
-                key={key}
-                className="flex gap-3 rounded-2xl border border-slate-200 bg-surface p-3.5 text-[15px] leading-relaxed text-slate-700 shadow-sm sm:p-4 sm:text-base"
-              >
-                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />
-                <span className="min-w-0 flex-1">{t(key)}</span>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {WHAT_IT_DOES.map(({ icon, titleKey, bodyKey }, i) => (
+              <li key={titleKey} className={cn(siteCard, "p-5")} {...reveal(i * 60)}>
+                <IconBadge icon={icon} />
+                <p className="font-display mt-4 text-lg font-semibold leading-snug text-slate-900">{t(titleKey)}</p>
+                <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">{t(bodyKey)}</p>
               </li>
             ))}
           </ul>
         </div>
       </SiteSection>
 
-      <SiteSection id="team" tone="cream">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <Eyebrow>{t("navOurTeam")}</Eyebrow>
-            <SectionHeading>{t("aboutTeamTitle")}</SectionHeading>
-            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-slate-600 sm:text-base">{t("aboutFoundedBy")}</p>
+      {/* The story so far */}
+      <SiteSection tone="paper">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <SectionIntro eyebrow={t("timelineEyebrow")} title={t("timelineTitle")}>
+              <p>{t("timelineIntro")}</p>
+            </SectionIntro>
           </div>
-          {/* Quick jump to each profile - most useful on a phone, where the
-              three cards run long. */}
-          <ul className="flex flex-wrap gap-2" aria-label={t("aboutJumpToMember")}>
-            {TEAM.map((member) => (
-              <li key={member.id}>
-                <a
-                  href={`#${member.id}`}
-                  className="flex items-center gap-2 rounded-full border border-slate-200 bg-surface py-1 pl-1 pr-3.5 text-sm font-medium text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-800"
-                >
-                  <img src={member.image} alt="" className="h-8 w-8 rounded-full object-cover" />
-                  {t(member.nameKey).split(" ")[0]}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="mt-6 space-y-4 sm:space-y-6">
-          {TEAM.map((member, i) => (
-            <TeamProfileCard key={member.id} member={member} reversed={i % 2 === 1} />
-          ))}
+          <ol>
+            {TIMELINE.map(({ icon: Icon, dateKey, titleKey, bodyKey, upcoming }, i) => {
+              const last = i === TIMELINE.length - 1;
+              return (
+                <li key={titleKey} className="flex gap-4 sm:gap-5" {...reveal(i * 40)}>
+                  <div className="flex flex-col items-center">
+                    <span
+                      className={cn(
+                        "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
+                        upcoming
+                          ? "border-2 border-dashed border-accent-500 bg-accent-50 text-accent-600"
+                          : "bg-surface text-brand-700 ring-2 ring-brand-200",
+                      )}
+                    >
+                      <Icon className="h-5 w-5" aria-hidden />
+                    </span>
+                    {!last && <span className="my-1 w-px flex-1 bg-brand-200" aria-hidden />}
+                  </div>
+                  <div className={cn("min-w-0 flex-1", !last && "pb-8")}>
+                    <p className="flex items-center gap-2 pt-2.5">
+                      <span className="font-display text-sm font-semibold text-accent-600">{t(dateKey)}</span>
+                      {upcoming && (
+                        <span className="rounded-full bg-accent-50 px-2 py-0.5 text-xs font-semibold text-accent-600 ring-1 ring-accent-500/30">
+                          {t("timelineInProgress")}
+                        </span>
+                      )}
+                    </p>
+                    <h3 className="font-display mt-1 text-xl font-semibold text-slate-900">{t(titleKey)}</h3>
+                    <p className="mt-1 text-[15px] leading-relaxed text-slate-600 sm:text-base">{t(bodyKey)}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
         </div>
       </SiteSection>
 
-      <SiteSection id="contact">
+      {/* The team */}
+      <SiteSection id="team">
+        <SectionIntro eyebrow={t("navOurTeam")} title={t("aboutTeamTitle")}>
+          <p>{t("aboutFoundedBy")}</p>
+        </SectionIntro>
+        <ul className="mt-10 grid gap-5 md:grid-cols-3">
+          {TEAM.map((member, i) => (
+            <li key={member.id} {...reveal(i * 80)}>
+              <TeamCard member={member} />
+            </li>
+          ))}
+        </ul>
+        <StoryLink to="/motivation" className="mt-8">
+          {t("motivationTitle")}
+        </StoryLink>
+      </SiteSection>
+
+      <SiteSection id="contact" className="pt-0 sm:pt-0 lg:pt-0">
         <PolicyContact questionKey="contactQuestion" />
       </SiteSection>
 

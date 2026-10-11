@@ -5,7 +5,7 @@ import {
   Flow,
   IconCard,
   PageHero,
-  Prose,
+  Lead,
   ReadNext,
   SectionHeading,
   SiteLayout,
@@ -138,16 +138,16 @@ export function TermsPage() {
         eyebrow={t("termsOfService")}
         title={t("termsHeroTitle")}
       >
-        <Prose>
+        <Lead>
           <p>{t("termsIntro")}</p>
-        </Prose>
-        <div className="mt-4 flex flex-wrap gap-2">
+        </Lead>
+        <div className="mt-6 flex flex-wrap gap-2">
           <PolicyMeta icon={CalendarDays}>{t("termsEffectiveDate")}</PolicyMeta>
           <PolicyMeta icon={Scale}>{t("termsJurisdiction")}</PolicyMeta>
         </div>
       </PageHero>
 
-      <SiteSection tone="cream">
+      <SiteSection tone="paper">
         <Eyebrow>{t("atAGlance")}</Eyebrow>
         <SectionHeading>{t("termsGlanceTitle")}</SectionHeading>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
@@ -167,7 +167,7 @@ export function TermsPage() {
         <PolicySections sections={sections} />
       </SiteSection>
 
-      <SiteSection id="contact" className="pt-0 sm:pt-0">
+      <SiteSection id="contact" className="pt-0 sm:pt-0 lg:pt-0">
         <PolicyContact questionKey="termsContactQuestion" />
       </SiteSection>
 

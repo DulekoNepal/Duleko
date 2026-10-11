@@ -4,9 +4,20 @@
   --font-sans: "Noto Sans", "Noto Sans Devanagari", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, sans-serif;
 
+  /* The public website's voice: a characterful grotesque for headlines and
+     a soft serif italic for the team's own words. Neither has Devanagari,
+     so Nepali falls through to Noto, which is already loaded. */
+  --font-display: "Bricolage Grotesque", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --font-quote: "Fraunces", "Noto Sans Devanagari", Georgia, "Times New Roman", serif;
+
+  /* Warm paper - the website's alternate section background, a step warmer
+     than cream so the pages read like print rather than an app screen. */
+  --color-paper: #f6f4ee;
+
   /* Deep Navy - the default ink for iconography. One colour for every
      skill icon, so the grid reads as one family instead of a dozen
      mini-brands. */
+  --color-navy-50: #eef3f9; /* the pale wash behind a navy icon */
   --color-navy-500: #24507c;
   --color-navy-600: #1d4166;
   --color-navy-700: #16324f;
@@ -65,6 +76,7 @@ html.dark {
 
   --color-cream-50: #0b1220;
   --color-surface: #131c2e;
+  --color-paper: #0f1828;
 
   --color-slate-50: #182236;
   --color-slate-100: #1e293d;
@@ -95,6 +107,11 @@ html.dark {
   --color-green-50: #10291d;
   --color-green-100: #133222;
   --color-green-200: #1b4630;
+  /* Home's skill tiles. */
+  --color-navy-50: #142236;
+  --color-sky-100: #10283a;
+  --color-rose-100: #3a1621;
+  --color-violet-100: #251a3d;
 }
 
 /* Strong colours used as text on a dark page: lift them so they stay
@@ -135,6 +152,15 @@ html.dark :is([class*="text-green-6"], [class*="text-green-7"]) {
 }
 html.dark :is([class*="text-accent-6"], [class*="text-accent-7"]) {
   --color-accent-600: #fb923c;
+}
+html.dark [class*="text-sky-6"] {
+  --color-sky-600: #7dd3fc;
+}
+html.dark [class*="text-rose-6"] {
+  --color-rose-600: #fda4af;
+}
+html.dark [class*="text-violet-6"] {
+  --color-violet-600: #c4b5fd;
 }
 
 /* Brand bands - the green hero and call-to-action sections, the teal
@@ -283,4 +309,74 @@ html.dark .skeleton::after {
 .animate-in-up {
   animation: fade-in-up 0.4s ease-out both;
   animation-delay: var(--delay, 0ms);
+}
+
+/* ---- Public website ---------------------------------------------------- */
+
+/* Headlines in the display face: tighter tracking, and Nepali (which falls
+   back to Noto Devanagari) kept at its natural spacing. */
+.font-display {
+  font-optical-sizing: auto;
+  letter-spacing: -0.022em;
+}
+.font-display:lang(ne),
+:lang(ne) .font-display {
+  letter-spacing: 0;
+}
+
+/* Devanagari has no italic - a slanted fallback looks broken - and wide
+   tracking splits the line along the top of each word. */
+.font-quote:lang(ne),
+:lang(ne) .font-quote {
+  font-style: normal;
+}
+.eyebrow-track {
+  letter-spacing: 0.16em;
+}
+.eyebrow-track:lang(ne),
+:lang(ne) .eyebrow-track {
+  letter-spacing: 0.01em;
+}
+
+/* Sections fade up as they scroll into view (SiteLayout marks them shown).
+   Only with JS and motion allowed - otherwise everything is simply there. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal]:not([data-shown]) {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  html.js [data-reveal] {
+    transition:
+      opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--delay, 0ms);
+  }
+}
+
+/* The skills ticker: two copies of the row slide left by one copy's width. */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee var(--duration, 60s) linear infinite;
+}
+.animate-marquee-reverse {
+  animation: marquee var(--duration, 60s) linear infinite reverse;
+}
+.marquee-pause:hover .animate-marquee,
+.marquee-pause:hover .animate-marquee-reverse {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-marquee-reverse {
+    animation: none;
+  }
+}
+
+/* Soft fade at both ends of a scrolling row. */
+.fade-x {
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
 }

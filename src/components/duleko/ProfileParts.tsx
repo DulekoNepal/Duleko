@@ -1,13 +1,12 @@
-import { ChevronRight, CircleDot, type LucideIcon } from "lucide-react";
+import { ChevronRight, type LucideIcon } from "lucide-react";
 import { SectionIcon } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { BrandWatermark } from "@/components/duleko/site/ui";
 import { useI18n } from "@/lib/i18n";
 import { cn, formatNumber } from "@/lib/utils";
 
 /**
- * Building blocks shared by your own Profile and someone else's (the worker
- * page), so the two read as the same design.
+ * The cover, the titled card and the stat tile - used by both profile pages
+ * (see profile/ProfileUI.tsx for the rest) and the fee screens.
  */
 
 /** Cover banner: the photo when there is one, a soft patterned wash when not. */
@@ -86,58 +85,6 @@ export function SectionCard({
         {action}
       </div>
       {children}
-    </section>
-  );
-}
-
-/** Icon, label and value - one fact in a Details list. Use inside a <dl>. */
-export function DetailRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-500 ring-1 ring-slate-200/70">
-        <Icon className="h-4 w-4" aria-hidden />
-      </span>
-      <div className="min-w-0">
-        <dt className="text-xs text-slate-500">{label}</dt>
-        <dd className="break-words text-sm font-semibold text-slate-800">{value}</dd>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Available for work or not, as the lead card. On your own Profile it carries
- * the switch; on someone else's page (no onChange) it only says where they stand.
- */
-export function AvailabilityCard({
-  on,
-  hint,
-  pending = false,
-  onChange,
-}: {
-  on: boolean;
-  hint: string;
-  pending?: boolean;
-  onChange?: (next: boolean) => void;
-}) {
-  const { t } = useI18n();
-  return (
-    <section className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-surface p-3.5 shadow-sm transition-colors">
-      <span
-        className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
-          on ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-400",
-        )}
-      >
-        <CircleDot className="h-4.5 w-4.5" aria-hidden />
-      </span>
-      <div className="min-w-0 flex-1">
-        <h3 className="text-sm font-semibold text-slate-900">{on ? t("availableForWork") : t("notAvailable")}</h3>
-        <p className="mt-0.5 text-xs leading-snug text-slate-500">{hint}</p>
-      </div>
-      {onChange && (
-        <Switch size="sm" checked={on} disabled={pending} onChange={onChange} aria-label={t("availableForWork")} />
-      )}
     </section>
   );
 }

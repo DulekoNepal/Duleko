@@ -130,11 +130,7 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number,
  * without printing a working URL that could be typed in by someone it
  * wasn't meant for.
  */
-export async function renderProfileCard(
-  profile: Profile,
-  skills: UserSkillDetail[],
-  phone?: string | null,
-): Promise<Blob> {
+export async function renderProfileCard(profile: Profile, skills: UserSkillDetail[]): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -342,13 +338,6 @@ export async function renderProfileCard(
   // profile URL as plain, typeable text. Scanning the QR above is the
   // one way this card actually opens it.
   ctx.fillText("duleko.com", rightCx, contactY + 42);
-
-  const phoneText = phone?.trim();
-  if (phoneText) {
-    ctx.fillStyle = INK;
-    ctx.font = "700 32px system-ui, sans-serif";
-    ctx.fillText(phoneText, rightCx, contactY + 92);
-  }
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Could not render the card"))), "image/png");

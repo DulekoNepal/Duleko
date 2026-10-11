@@ -59,5 +59,5 @@ async function openTapped(
     await markNotificationRead(n.id).catch(() => {});
     onRead();
   }
-  await openNotification(n, navigate, myProfileId);
+  await openNotification(n, navigate);
 }

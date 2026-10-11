@@ -1,5 +1,5 @@
 import { CalendarDays, CheckCircle2 } from "lucide-react";
-import { FinalCta, PageHero, Prose, ReadNext, SiteLayout, SiteSection, StoryLink } from "@/components/duleko/Site";
+import { FinalCta, Lead, PageHero, ReadNext, SiteLayout, SiteSection, StoryLink } from "@/components/duleko/Site";
 import { PolicyMeta, PolicySections, type PolicySection } from "@/components/duleko/site/policy";
 import { useI18n, type StringKey } from "@/lib/i18n";
 
@@ -37,10 +37,10 @@ export function RegistrationPolicyPage() {
         eyebrow={t("registrationPolicyShort")}
         title={t("registrationPolicyTitle")}
       >
-        <Prose>
+        <Lead>
           <p>{t("registrationPolicyIntro")}</p>
-        </Prose>
-        <div className="mt-4">
+        </Lead>
+        <div className="mt-6">
           <PolicyMeta icon={CalendarDays}>{t("registrationPolicyLastUpdated")}</PolicyMeta>
         </div>
       </PageHero>
@@ -49,15 +49,15 @@ export function RegistrationPolicyPage() {
         <PolicySections sections={sections} />
       </SiteSection>
 
-      <SiteSection className="pt-0 sm:pt-0">
-        <div className="rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-50 via-surface to-surface p-5 sm:p-7">
-          <h2 className="text-xl font-bold text-teal-800 sm:text-2xl">{t("registrationAgreement")}</h2>
-          <p className="mt-1.5 text-[15px] text-slate-600 sm:text-base">{t("registrationAgreementIntro")}</p>
-          <p className="mt-3 flex gap-3 rounded-2xl bg-surface p-3.5 text-[15px] font-medium leading-relaxed text-slate-800 shadow-sm ring-1 ring-slate-200 sm:p-4 sm:text-base">
+      <SiteSection className="pt-0 sm:pt-0 lg:pt-0">
+        <div className="relative overflow-hidden rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-50 via-surface to-surface p-6 sm:p-8 lg:p-10">
+          <h2 className="font-display text-2xl font-semibold text-teal-800 sm:text-3xl">{t("registrationAgreement")}</h2>
+          <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-[17px]">{t("registrationAgreementIntro")}</p>
+          <p className="mt-5 flex gap-3 rounded-2xl bg-surface p-4 text-base font-medium leading-relaxed text-slate-800 shadow-sm ring-1 ring-slate-200 sm:p-5">
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />
             <span className="min-w-0 flex-1">{t("registrationAgreePolicies")}</span>
           </p>
-          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+          <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
             <StoryLink to="/terms">{t("termsOfService")}</StoryLink>
             <StoryLink to="/privacy">{t("privacyPolicy")}</StoryLink>
           </div>

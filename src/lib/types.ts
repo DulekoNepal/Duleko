@@ -61,8 +61,7 @@ export interface Profile {
   language: Lang;
   rating: number;
   rating_count: number;
-  lat: number | null;
-  lng: number | null;
+  /** When this member last shared their location (the point itself is private - see getMyLocation). */
   location_shared_at: string | null;
   /** null = never asked; 'granted' auto-shares silently on every login; 'declined' means never ask again. */
   location_consent: "granted" | "declined" | null;
@@ -141,6 +140,13 @@ export interface EngagementWithParties extends Engagement {
   worker: Pick<Profile, "id" | "full_name" | "avatar_url" | "rating" | "rating_count">;
   skill: Skill | null;
   my_review: { id: string; rating: number; comment: string | null } | null;
+  /**
+   * Who made the latest price offer on a pending job (null: nobody yet).
+   * Only the Active list on Work loads it - it says whose turn it is.
+   */
+  last_bidder_id?: string | null;
+  /** How many price offers it has had - more than one means someone countered. */
+  bid_count?: number;
 }
 
 /** One offer in a back-and-forth price negotiation on a pending engagement. */
@@ -186,7 +192,13 @@ export interface AppNotification {
     /** To a worker: Duleko confirmed, or couldn't find, a fee payment. */
     | "fee_payment"
     /** To admins: a worker recorded paying their fees. */
-    | "fee_review";
+    | "fee_review"
+    /** To workers nearby with the skill: a new job post. */
+    | "job_post"
+    /** To a poster: an offer on their post, new or changed. */
+    | "job_offer"
+    /** To a worker: the post they offered on went to someone else, or closed. */
+    | "job_closed";
   title_en: string;
   title_ne: string;
   body_en: string | null;
@@ -196,6 +208,8 @@ export interface AppNotification {
   related_profile_id: string | null;
   /** Set for "notice" - the notice board post this alert is about. */
   notice_id: string | null;
+  /** Set for the job board kinds - the post this alert is about. */
+  job_post_id: string | null;
   actor_name: string | null;
   is_read: boolean;
   created_at: string;
@@ -453,4 +467,60 @@ export interface FeeOverview {
   balance: number;
   overdue: number;
   workers: FeeWorkerLine[];
+}
+
+export type JobPostStatus = "open" | "assigned" | "closed";
+
+export type JobOfferStatus = "pending" | "accepted" | "declined" | "withdrawn";
+
+/** Someone on the job board - the poster, or a worker who offered. */
+export type JobPerson = Pick<
+  Profile,
+  "id" | "full_name" | "avatar_url" | "rating" | "rating_count" | "district" | "municipality" | "locality"
+> & { is_verified: boolean; staff_role: StaffRole | null };
+
+/**
+ * A job someone posted for workers to send offers on (5800_job_board.sql).
+ * Readable by everyone, guests too.
+ */
+export interface JobPost {
+  id: string;
+  employer_profile_id: string;
+  skill_id: string | null;
+  title: string;
+  details: string | null;
+  district: string;
+  municipality: string | null;
+  location_text: string;
+  work_date: string;
+  budget_min: number | null;
+  budget_max: number | null;
+  status: JobPostStatus;
+  /** The work request made from the chosen offer. */
+  engagement_id: string | null;
+  /** Live offers (waiting + chosen). */
+  offer_count: number;
+  /** The post's map pin, ~300 m cell. */
+  lat: number | null;
+  lng: number | null;
+  created_at: string;
+  updated_at: string;
+  skill: Skill | null;
+  /** null if the poster's profile can't be read (e.g. suspended). */
+  poster: JobPerson | null;
+}
+
+/** A worker's price for a post. Only the worker and the poster can read it. */
+export interface JobOffer {
+  id: string;
+  job_post_id: string;
+  worker_profile_id: string;
+  amount: number;
+  note: string | null;
+  status: JobOfferStatus;
+  created_at: string;
+  updated_at: string;
+  worker?: JobPerson | null;
+  /** On "My offers": the post it was for. */
+  post?: JobPost | null;
 }

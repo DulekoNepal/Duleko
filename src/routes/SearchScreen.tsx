@@ -36,6 +36,7 @@ import { ALL_DISTRICTS, districtLabel } from "@/lib/nepal";
 import { errorMessage } from "@/lib/supabase";
 import { addDays, cn, formatDate, formatNumber, locationLine, skillName, toDateKey, todayKey } from "@/lib/utils";
 import type { Skill, WorkerCardData } from "@/lib/types";
+import { useMyLocation } from "@/hooks/use-my-location";
 
 export interface SearchFilters {
   skill?: string;
@@ -58,6 +59,7 @@ const SORTS: { value: Sort; labelKey: StringKey; icon: LucideIcon }[] = [
 export function SearchScreen() {
   const { t, lang } = useI18n();
   const { profile } = useSession();
+  const myLocation = useMyLocation();
   const { requestSignIn } = useGuestMode();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -104,8 +106,8 @@ export function SearchScreen() {
   // If neither works out, results just stay in relevance order.
   useEffect(() => {
     if (!filters.skill || filters.sort) return;
-    if (profile?.lat != null && profile?.lng != null) {
-      setCoords({ lat: profile.lat, lng: profile.lng });
+    if (myLocation) {
+      setCoords({ lat: myLocation.lat, lng: myLocation.lng });
       update({ sort: "nearest" });
       return;
     }

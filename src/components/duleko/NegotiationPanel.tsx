@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Check, Handshake, RefreshCw } from "lucide-react";
-import { Avatar } from "@/components/ui/avatar";
+import { ArrowRight, Handshake, RefreshCw, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
@@ -9,139 +8,140 @@ import { cn, formatMoney } from "@/lib/utils";
 import type { Bid } from "@/lib/types";
 
 /**
- * The price-negotiation thread on a pending work request: current offer,
- * a short trail of how it got there, and - for whoever didn't make the
- * latest move - the choice to counter it or (worker only) accept it.
+ * The price on a pending work request: the offer on the table and who
+ * made it, the trail of how it got there, and - for whoever didn't make
+ * the latest move - offering another price.
+ *
+ * Saying yes to the price (the worker accepting, the hirer agreeing) is
+ * the job sheet's main action, pinned to its foot, so it isn't repeated
+ * here.
  */
 export function NegotiationPanel({
   bids,
   myProfileId,
   otherName,
-  otherAvatarUrl,
-  otherProfileId,
   currentAmount,
-  canAccept,
-  onAccept,
-  accepting,
+  myTurn,
   onCounter,
-  countering: submittingCounter,
+  countering,
 }: {
   bids: Bid[];
   myProfileId: string;
   otherName: string;
-  otherAvatarUrl: string | null;
-  otherProfileId: string;
   currentAmount: number | null;
-  /** Only the worker can finalize a job by accepting a price. */
-  canAccept: boolean;
-  onAccept: () => void;
-  accepting: boolean;
-  onCounter: (amount: number) => void;
+  myTurn: boolean;
+  /** Resolves once the new price is in, which closes the form. */
+  onCounter: (amount: number) => Promise<unknown>;
   countering: boolean;
 }) {
   const { t, lang } = useI18n();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
+  const [error, setError] = useState("");
 
   const latest = bids[bids.length - 1];
   const latestIsMine = latest?.bidder_profile_id === myProfileId;
-  const myTurn = Boolean(latest) && !latestIsMine;
 
   function startCounter() {
-    setDraft(currentAmount != null ? String(currentAmount) : "");
+    setDraft(currentAmount != null ? String(Math.round(currentAmount)) : "");
+    setError("");
     setEditing(true);
   }
 
-  function submit() {
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
     const amount = Number(draft);
-    if (amount > 0) onCounter(amount);
+    if (!(amount > 0)) {
+      setError(t("errJobBadAmount"));
+      return;
+    }
+    try {
+      await onCounter(amount);
+      setEditing(false);
+    } catch {
+      // The sheet shows the error; keep the form open to try again.
+    }
   }
 
   return (
-    <div
+    <section
       className={cn(
-        "mt-3 overflow-hidden rounded-xl border",
-        myTurn ? "border-brand-200 bg-brand-50/40" : "border-slate-200 bg-slate-50",
+        "rounded-2xl border px-3.5 py-3",
+        myTurn ? "border-brand-200 bg-brand-50/50" : "border-slate-200 bg-slate-50/70",
       )}
+      aria-label={t("negotiation")}
     >
-      <div className="flex items-center gap-2 border-b border-black/5 px-3.5 py-2">
+      <div className="flex items-center gap-2">
         <Handshake className="h-4 w-4 shrink-0 text-brand-700" aria-hidden />
-        <span className="truncate text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-          {t("negotiation")}
-        </span>
-        <Badge tone={myTurn ? "brand" : "muted"} className="ml-auto shrink-0">
+        <h3 className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-700">{t("sheetOfferedPrice")}</h3>
+        <Badge tone={myTurn ? "brand" : "muted"} className="shrink-0">
           {myTurn ? t("yourTurn") : t("theirTurn")}
         </Badge>
       </div>
 
-      <div className="px-3.5 py-3">
-        <div className="flex items-center gap-3">
-          <Avatar name={otherName} src={otherAvatarUrl} size={32} profileId={otherProfileId} />
-          <div className="min-w-0">
-            <p className="truncate text-xs text-slate-500">
-              {latestIsMine ? t("yourOffer") : t("offerFrom", { name: otherName })}
-            </p>
-            <p className="text-lg font-bold leading-tight text-slate-900">
-              {formatMoney(currentAmount, lang)}
-            </p>
-          </div>
-        </div>
-
-        {bids.length > 1 && (
-          <div className="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-slate-400">
-            {bids.map((b, i) => (
-              <span key={b.id} className="inline-flex items-center gap-1.5">
-                {i > 0 && <ArrowRight className="h-3 w-3 shrink-0" aria-hidden />}
-                <span className={i === bids.length - 1 ? "font-semibold text-slate-600" : undefined}>
-                  {formatMoney(b.amount, lang)}
-                </span>
-              </span>
-            ))}
-          </div>
+      <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
+        <p className="text-xl font-bold tabular-nums text-slate-900">{formatMoney(currentAmount, lang)}</p>
+        {latest && (
+          <p className="text-xs text-slate-500">{latestIsMine ? t("yourOffer") : t("offerFrom", { name: otherName })}</p>
         )}
+      </div>
 
-        <div className="mt-3">
-          {editing ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex h-10 items-center gap-1.5 rounded-xl border border-slate-300 bg-surface pl-3 pr-1 focus-within:border-brand-600 focus-within:outline focus-within:outline-2 focus-within:outline-brand-600/30">
+      {bids.length > 1 && (
+        <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-slate-400" aria-label={t("priceTrail")}>
+          {bids.map((b, i) => (
+            <span key={b.id} className="inline-flex items-center gap-1.5">
+              {i > 0 && <ArrowRight className="h-3 w-3 shrink-0" aria-hidden />}
+              <span className={cn("tabular-nums", i === bids.length - 1 && "font-semibold text-slate-600")}>
+                {formatMoney(b.amount, lang)}
+              </span>
+            </span>
+          ))}
+        </p>
+      )}
+
+      {myTurn ? (
+        editing ? (
+          <form onSubmit={submit} className="mt-3">
+            <div className="flex items-center gap-2">
+              <label className="flex h-10 min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-slate-300 bg-surface pl-3 pr-1 focus-within:border-brand-600 focus-within:ring-2 focus-within:ring-brand-600/25">
                 <span className="text-sm text-slate-500">{lang === "ne" ? "रु" : "Rs"}</span>
+                <span className="sr-only">{t("offerAnotherPrice")}</span>
                 <Input
                   type="number"
                   inputMode="numeric"
                   min={1}
                   value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
+                  onChange={(e) => {
+                    setDraft(e.target.value);
+                    setError("");
+                  }}
                   autoFocus
-                  className="h-8 w-24 border-0 p-0 shadow-none focus:outline-none"
+                  className="h-8 min-w-0 flex-1 border-0 p-0 shadow-none focus:outline-none focus:ring-0"
                 />
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" loading={submittingCounter} onClick={submit}>
-                  {t("submitCounter")}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
-                  {t("cancel")}
-                </Button>
-              </div>
-            </div>
-          ) : myTurn ? (
-            <div className="flex flex-wrap gap-2">
-              {canAccept && (
-                <Button size="sm" loading={accepting} onClick={onAccept}>
-                  <Check className="h-4 w-4" aria-hidden />
-                  {t("acceptAtPrice", { amount: formatMoney(currentAmount, lang) })}
-                </Button>
-              )}
-              <Button size="sm" variant="outline" onClick={startCounter}>
-                <RefreshCw className="h-4 w-4" aria-hidden />
-                {t("counterOffer")}
+              </label>
+              <Button type="submit" size="sm" loading={countering} className="h-10">
+                <Send className="h-4 w-4" aria-hidden />
+                {t("submitCounter")}
               </Button>
             </div>
-          ) : (
-            <p className="text-xs text-slate-500">{t("waitingForResponse", { name: otherName })}</p>
-          )}
-        </div>
-      </div>
-    </div>
+            {error && <p className="mt-1.5 text-xs text-red-600">{error}</p>}
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="mt-2 text-xs font-medium text-slate-500 hover:text-slate-700"
+            >
+              {t("cancel")}
+            </button>
+          </form>
+        ) : (
+          <Button size="sm" variant="outline" onClick={startCounter} className="mt-3">
+            <RefreshCw className="h-4 w-4" aria-hidden />
+            {t("offerAnotherPrice")}
+          </Button>
+        )
+      ) : (
+        <p className="mt-2 text-xs text-slate-500">{t("waitingForResponse", { name: otherName })}</p>
+      )}
+    </section>
   );
 }

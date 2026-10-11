@@ -417,7 +417,7 @@ export function ChatScreen() {
     // From md up the chat sits in a card with the same width and gutters as
     // every other screen (PAGE_WIDTH/PAGE_GUTTER), 1.5rem under the top bar.
     // Phones stay edge to edge.
-    <div className="h-dvh md:h-[calc(100dvh-3.5rem-1px-var(--sat))] md:py-4">
+    <div className="h-dvh md:h-[calc(100dvh-4rem-1px-var(--sat))] lg:h-[calc(100dvh-72px-1px-var(--sat))] md:py-4">
       <div className={cn("mx-auto h-full w-full max-md:px-0", PAGE_WIDTH, PAGE_GUTTER)}>
       <div className="flex h-full overflow-hidden bg-surface md:rounded-2xl md:border md:border-slate-200 md:shadow-sm">
       {split && <ChatsPane typingFrom={typingFrom} activeId={otherId} showDivisions={false} />}
@@ -425,7 +425,7 @@ export function ChatScreen() {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* ---- Thread header ------------------------------------------- */}
         <header className="z-20 border-b border-slate-200 bg-surface/95 pt-[var(--sat)] backdrop-blur md:pt-0">
-          <div className="flex h-14 items-center gap-2 px-2 sm:gap-3 sm:px-4 lg:h-16">
+          <div className="flex h-16 items-center gap-2 px-2 sm:gap-3 sm:px-4">
             {!split && (
               <button
                 type="button"
@@ -478,7 +478,7 @@ export function ChatScreen() {
             </Link>
             {/* The list pane beside it already has one on desktop. */}
             {/* Phones only - the top bar has it from md up. */}
-            {!split && <HeaderToggles className="md:hidden" />}
+            {!split && <HeaderToggles className="h-9 rounded-xl md:hidden" />}
           </div>
         </header>
 

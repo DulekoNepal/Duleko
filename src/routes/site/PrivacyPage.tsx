@@ -4,7 +4,7 @@ import {
   FinalCta,
   IconCard,
   PageHero,
-  Prose,
+  Lead,
   ReadNext,
   SectionHeading,
   SiteLayout,
@@ -202,15 +202,15 @@ export function PrivacyPage() {
         eyebrow={t("privacyPolicy")}
         title={t("privacyPolicy")}
       >
-        <Prose>
+        <Lead>
           <p>{t("privacyIntro")}</p>
-        </Prose>
-        <div className="mt-4">
+        </Lead>
+        <div className="mt-6">
           <PolicyMeta icon={CalendarDays}>{t("privacyLastUpdated")}</PolicyMeta>
         </div>
       </PageHero>
 
-      <SiteSection tone="cream">
+      <SiteSection tone="paper">
         <Eyebrow>{t("atAGlance")}</Eyebrow>
         <SectionHeading>{t("privacyGlanceTitle")}</SectionHeading>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
@@ -230,7 +230,7 @@ export function PrivacyPage() {
         <PolicySections sections={sections} />
       </SiteSection>
 
-      <SiteSection id="contact" className="pt-0 sm:pt-0">
+      <SiteSection id="contact" className="pt-0 sm:pt-0 lg:pt-0">
         <PolicyContact questionKey="privacyContactQuestion" />
       </SiteSection>
 

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Briefcase, Globe, Home, MessageCircle, Moon, Sun, User } from "lucide-react";
+import { Bell, Briefcase, Globe, Home, MessageSquare, Moon, Sun, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
 import { useIsDark, useThemeChoice } from "@/lib/theme";
@@ -113,16 +113,23 @@ export function AppHeader({
   below?: React.ReactNode;
   /** A faint brand-tinted wash instead of plain white - reserved for the Home greeting, so the rest of the app stays neutral. */
   gradient?: boolean;
-  /** Home only: the brand mark itself instead of a text title - the app's
-   * name in wordmark form doesn't need to also be spelled out next to it. */
+  /** Home only: the mark and "Duleko" instead of a text title, sized like
+   * the website's own bar (SiteHeader) so the two homes look alike. */
   logo?: boolean;
 }) {
   const { t } = useI18n();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Alerts has no tab of its own on phones: the bell sits in the header of
+  // every top-level screen. Sub-pages (with a back button) and Alerts
+  // itself leave it out.
+  const showBell = !back && pathname !== "/notifications";
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 border-b border-slate-200 pt-[var(--sat)] backdrop-blur",
-        gradient ? "bg-gradient-to-r from-brand-50/60 via-surface/95 to-surface/95" : "bg-surface/95",
+        "sticky top-0 z-30 border-b pt-[var(--sat)] backdrop-blur",
+        gradient
+            ? "border-slate-200 bg-gradient-to-r from-brand-50/60 via-surface/95 to-surface/95"
+            : "border-slate-200 bg-surface/95",
         // From md up the top bar (TopNav) is the one and only bar: this
         // becomes a plain page-title row that scrolls with the page, and a
         // header with nothing but the logo (Home) isn't shown at all.
@@ -130,24 +137,29 @@ export function AppHeader({
         logo && !subtitle && !right && !below && !back && "md:hidden",
       )}
     >
-      <div className={cn("mx-auto py-2 md:pb-1 md:pt-5", PAGE_WIDTH, PAGE_GUTTER)}>
-        <div className="flex items-center gap-3">
+      <div className={cn("mx-auto md:pb-1 md:pt-5", PAGE_WIDTH, PAGE_GUTTER)}>
+        {/* 64px on every phone screen, Home included - the same as the
+            website's bar (SiteHeader). */}
+        <div className="flex min-h-16 items-center gap-2 py-2 md:min-h-0 md:gap-3 md:py-0">
           {back}
           {leading}
           {logo ? (
-            <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <div className="flex min-w-0 flex-1 items-center">
               {/* The top bar already shows the logo from md up. Like that
                   one, it goes to the website's home. */}
-              <Link to="/" aria-label={t("siteHomeAria")} className="shrink-0 rounded-xl md:hidden">
-                <img src={dulekoMark} alt="" className="h-8 w-8 rounded-xl object-cover shadow-sm" />
+              <Link
+                to="/"
+                aria-label={t("siteHomeAria")}
+                className="flex min-w-0 shrink items-center gap-2.5 rounded-xl md:hidden"
+              >
+                <img src={dulekoMark} alt="" className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm" />
+                <h1 className="truncate text-lg font-bold tracking-tight text-slate-900">{title}</h1>
               </Link>
-              {/* Still announced to screen readers/tab title - just not spelled out visually next to its own mark. */}
-              <h1 className="sr-only">{title}</h1>
               {subtitle && <p className="truncate text-xs text-slate-500 md:text-sm">{subtitle}</p>}
             </div>
           ) : (
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-base font-semibold text-slate-900 md:text-xl md:font-bold md:tracking-tight">
+              <h1 className="truncate text-lg font-bold tracking-tight text-slate-900 md:text-xl">
                 {title}
               </h1>
               {subtitle && <p className="truncate text-xs text-slate-500 md:text-sm">{subtitle}</p>}
@@ -156,9 +168,10 @@ export function AppHeader({
           {right}
           {/* On every phone screen that uses this header - from md up they
               live in the top bar instead, so they're never shown twice. */}
-          <HeaderToggles className="md:hidden" />
+          <HeaderToggles className="h-9 rounded-xl md:hidden" />
+          {showBell && <AlertsBellButton className="md:hidden" />}
         </div>
-        {below}
+        {below && <div className="pb-2">{below}</div>}
       </div>
     </header>
   );
@@ -174,11 +187,11 @@ export function PageContainer({ children, className }: { children: React.ReactNo
 
 // The search bar at the top of Home/Search is enough on its own - no separate
 // nav item for it (it's still reachable via /search, just not pinned here).
+// Alerts is the bell in the headers (AlertsBellButton), not a tab.
 const NAV = [
   { to: "/home", key: "navHome", icon: Home },
-  { to: "/work", key: "navWork", icon: Briefcase },
-  { to: "/notifications", key: "navAlerts", icon: Bell },
-  { to: "/chats", key: "navChats", icon: MessageCircle },
+  { to: "/work", key: "navMyWork", icon: Briefcase },
+  { to: "/chats", key: "navMessages", icon: MessageSquare },
   { to: "/profile", key: "navProfile", icon: User },
 ] as const;
 
@@ -258,9 +271,43 @@ export function useNotificationsBadgeSync() {
 }
 
 function navBadgeFor(to: (typeof NAV)[number]["to"], badges: { notifications: number; chats: number }) {
-  if (to === "/notifications") return badges.notifications;
   if (to === "/chats") return badges.chats;
   return 0;
+}
+
+/**
+ * Alerts: a round bell with the unread count, at the right end of every
+ * top-level phone header and of the desktop top bar.
+ */
+export function AlertsBellButton({ className }: { className?: string }) {
+  const { t, lang } = useI18n();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { notifications } = useNavBadges();
+  const active = pathname === "/notifications";
+  return (
+    <Link
+      to="/notifications"
+      aria-label={
+        notifications > 0
+          ? t("alertsButtonCount", { count: formatNumber(notifications, lang) })
+          : t("alertsButton")
+      }
+      aria-current={active ? "page" : undefined}
+      title={t("alertsButton")}
+      className={cn(
+        "relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border bg-surface transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
+        active ? "border-brand-300 text-brand-700" : "border-slate-200 text-slate-700 hover:bg-slate-50",
+        className,
+      )}
+    >
+      <Bell className="h-4 w-4" aria-hidden />
+      {notifications > 0 && (
+        <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-[18px] text-white ring-2 ring-surface">
+          {formatNumber(notifications > 9 ? "9+" : notifications, lang)}
+        </span>
+      )}
+    </Link>
+  );
 }
 
 /** Phones: a fixed tab bar at the bottom, hidden once the top bar takes over. */
@@ -285,13 +332,18 @@ export function BottomNav() {
             <Link
               key={to}
               to={to}
+              aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-medium transition-colors duration-200",
-                active ? "text-teal-700" : "text-slate-500",
+                "relative flex flex-1 flex-col items-center gap-0.5 pb-1.5 pt-2 text-[11px] font-semibold transition-colors duration-200",
+                active ? "text-brand-700" : "text-slate-500",
               )}
             >
               <span className="relative">
-                <Icon className="h-6 w-6" aria-hidden />
+                <Icon
+                  className={cn("h-6 w-6", active && "fill-brand-100")}
+                  strokeWidth={active ? 2.25 : 1.9}
+                  aria-hidden
+                />
                 {badge > 0 && (
                   <span className="absolute -right-2 -top-1.5 min-w-4 rounded-full bg-red-500 px-1 text-[10px] font-bold leading-4 text-white">
                     {formatNumber(badge > 9 ? "9+" : badge, lang)}
@@ -323,7 +375,8 @@ export function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 hidden border-b border-slate-200 bg-surface/95 pt-[var(--sat)] backdrop-blur md:block">
-      <div className="flex h-14 items-center gap-4 px-4 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-6">
+      {/* Same height, logo and controls as the website's bar (SiteHeader). */}
+      <div className="flex h-16 items-center gap-4 px-4 lg:grid lg:h-[72px] lg:grid-cols-[1fr_auto_1fr] lg:px-6">
         {/* The logo goes to the website's home (the Android app, which has
             no website, is sent on to /home by the "/" route). */}
         <Link
@@ -331,8 +384,8 @@ export function TopNav() {
           className="flex shrink-0 items-center gap-2.5 justify-self-start rounded-xl"
           aria-label={t("siteHomeAria")}
         >
-          <img src={dulekoMark} alt="" className="h-8 w-8 rounded-lg object-cover" />
-          <span className="text-base font-bold tracking-tight text-slate-900">{t("appName")}</span>
+          <img src={dulekoMark} alt="" className="h-9 w-9 rounded-xl object-cover shadow-sm" />
+          <span className="text-lg font-bold tracking-tight text-slate-900">{t("appName")}</span>
         </Link>
         <nav className="flex flex-1 items-center justify-center gap-1" aria-label={t("mainNavLabel")}>
           {NAV.map(({ to, key, icon: Icon }) => {
@@ -344,7 +397,7 @@ export function TopNav() {
                 to={to}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand-500",
+                  "relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand-500",
                   active ? "bg-brand-50 text-brand-800" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
                 )}
               >
@@ -364,8 +417,9 @@ export function TopNav() {
         {/* Right column: the theme and language switches - here on desktop
             instead of in each screen's header. It also balances the logo
             column so the links stay truly centred. */}
-        <div className="flex shrink-0 justify-end">
-          <HeaderToggles />
+        <div className="flex shrink-0 items-center justify-end gap-2">
+          <HeaderToggles className="h-9 rounded-xl" />
+          <AlertsBellButton />
         </div>
       </div>
     </header>

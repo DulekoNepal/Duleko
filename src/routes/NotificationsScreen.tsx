@@ -9,6 +9,7 @@ import {
   CalendarCheck,
   CheckCheck,
   ExternalLink,
+  HandCoins,
   Megaphone,
   MessageCircle,
   Pin,
@@ -68,6 +69,9 @@ const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
   notice: { icon: Pin, tone: "amber" },
   fee_payment: { icon: Wallet, tone: "green" },
   fee_review: { icon: Wallet, tone: "amber" },
+  job_post: { icon: Briefcase, tone: "brand" },
+  job_offer: { icon: HandCoins, tone: "amber" },
+  job_closed: { icon: XCircle, tone: "slate" },
 };
 
 export function NotificationsScreen() {
@@ -147,7 +151,7 @@ export function NotificationsScreen() {
 
   async function openTarget(n: (typeof items)[number]) {
     if (!n.is_read) readOne.mutate(n.id);
-    await openNotification(n, navigate, profile!.id);
+    await openNotification(n, navigate);
   }
 
   if (!profile) return <SignInRequiredScreen title={t("notifications")} />;

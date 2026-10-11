@@ -14,7 +14,7 @@ import {
   UserSearch,
   type LucideIcon,
 } from "lucide-react";
-import { Card, CardBody, SectionTitle } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useI18n, type StringKey } from "@/lib/i18n";
 
@@ -73,33 +73,34 @@ function telHref(number: string) {
 }
 
 /**
- * Same bare icon-and-label grid the skill categories use (see SkillGrid) -
- * no per-item box, no per-item colour, just icon over label over a small
- * caption. Here the caption is the number instead of a worker count, and
- * each cell is a `tel:` link instead of a route link, so tapping it calls
- * straight away.
+ * Call buttons: the number large (it is what people look for in a hurry),
+ * the service's name small above it, each a `tel:` link that dials
+ * straight away. Two to a row in narrow places, four where there's room.
  */
-function EmergencyContactGrid({ contacts }: { contacts: EmergencyContact[] }) {
+function EmergencyContactGrid({ contacts, className }: { contacts: EmergencyContact[]; className?: string }) {
   const { t } = useI18n();
   return (
-    <div className="grid grid-cols-4 gap-1">
+    <div className={cn("grid grid-cols-2 gap-2", className)}>
       {contacts.map((contact) => {
         const Icon = contact.icon;
         return (
           <a
             key={contact.id}
             href={telHref(contact.number)}
-            className="group flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-center transition-colors duration-200 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
+            className="group flex min-w-0 items-center gap-2 rounded-xl border border-red-100 bg-surface px-2 py-2 transition-colors duration-200 hover:border-red-200 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
             aria-label={`${t(contact.labelKey)}: ${contact.number}`}
           >
-            <Icon
-              className="h-5 w-5 text-red-600 transition-transform duration-200 group-hover:scale-110"
-              aria-hidden
-            />
-            <span className="line-clamp-2 text-[11px] font-medium leading-tight text-slate-700">
-              {t(contact.labelKey)}
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-colors group-hover:bg-red-100">
+              <Icon className="h-3.5 w-3.5" aria-hidden />
             </span>
-            <span className="text-[10px] font-medium text-slate-400">{contact.number}</span>
+            <span className="min-w-0 flex-1">
+              <span className="line-clamp-2 text-[11px] font-medium leading-tight text-slate-500">
+                {t(contact.labelKey)}
+              </span>
+              <span className="block truncate text-sm font-bold tabular-nums leading-snug text-slate-900">
+                {contact.number}
+              </span>
+            </span>
           </a>
         );
       })}
@@ -108,13 +109,12 @@ function EmergencyContactGrid({ contacts }: { contacts: EmergencyContact[] }) {
 }
 
 /**
- * The "one more category" for the home page, built like the skill
- * categories used to be - a card, a title with an icon badge, a "see
- * all"/"show less" toggle once there are more than four items, then the
- * same bare icon grid - just tinted red throughout so it still reads as
- * safety-critical rather than another thing to browse.
+ * Home's safety card: the four national numbers people need most, with
+ * the full list one tap away. Tinted red throughout so it reads as
+ * safety-critical rather than another thing to browse. `gridClassName`
+ * sets the column count where the card is placed.
  */
-export function EmergencyContactsSection() {
+export function EmergencyContactsSection({ gridClassName }: { gridClassName?: string }) {
   const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
 
@@ -124,34 +124,33 @@ export function EmergencyContactsSection() {
   return (
     <Card tone="danger">
       <CardBody>
-        <SectionTitle
-          action={
-            hasMore && (
-              <button
-                type="button"
-                onClick={() => setExpanded((v) => !v)}
-                aria-expanded={expanded}
-                className="inline-flex shrink-0 items-center gap-0.5 text-xs font-semibold text-accent-600 transition-colors duration-200 hover:text-accent-700"
-              >
-                {expanded ? t("showLess") : t("seeAll")}
-                <ChevronDown
-                  className={cn("h-3.5 w-3.5 transition-transform duration-200", expanded && "rotate-180")}
-                  strokeWidth={1.75}
-                  aria-hidden
-                />
-              </button>
-            )
-          }
-        >
-          <span className="inline-flex items-center gap-2">
-            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-red-100 text-red-700">
-              <Siren className="h-3.5 w-3.5" aria-hidden />
+        <div className="mb-2.5 flex items-center justify-between gap-3">
+          <h2 className="inline-flex min-w-0 items-center gap-2 text-sm font-bold text-slate-900">
+            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-700">
+              <Siren className="h-4 w-4" aria-hidden />
             </span>
-            {t("emergencyContacts")}
-          </span>
-        </SectionTitle>
-        <p className="-mt-1.5 mb-2 text-[11px] text-slate-500">{t("emergencyContactsHint")}</p>
-        <EmergencyContactGrid contacts={visible} />
+            <span className="min-w-0">
+              <span className="block truncate">{t("emergencyContacts")}</span>
+              <span className="block truncate text-[11px] font-normal text-slate-500">{t("emergencyContactsHint")}</span>
+            </span>
+          </h2>
+          {hasMore && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              className="inline-flex shrink-0 items-center gap-0.5 text-xs font-semibold text-accent-600 transition-colors duration-200 hover:text-accent-700"
+            >
+              {expanded ? t("showLess") : t("seeAll")}
+              <ChevronDown
+                className={cn("h-3.5 w-3.5 transition-transform duration-200", expanded && "rotate-180")}
+                strokeWidth={1.75}
+                aria-hidden
+              />
+            </button>
+          )}
+        </div>
+        <EmergencyContactGrid contacts={visible} className={gridClassName} />
       </CardBody>
     </Card>
   );

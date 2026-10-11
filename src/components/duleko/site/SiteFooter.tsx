@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowUp, ArrowUpRight, Globe, Mail, MapPin } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { ArrowUp, ArrowUpRight, Globe, Mail, MapPin, Play } from "lucide-react";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { CONTACT_EMAIL, NEPALI_TAGLINE, mailto, useSiteActions } from "./actions";
+import { CONTACT_EMAIL, NEPALI_TAGLINE, PLAY_STORE_URL, mailto, useSiteActions } from "./actions";
 import type { SitePath } from "./nav";
 import { Brand, Container } from "./ui";
 
@@ -63,6 +64,8 @@ const COLUMNS: { id: string; titleKey: StringKey; links: FooterLink[] }[] = [
     ],
   },
 ];
+
+const IS_NATIVE_APP = Capacitor.isNativePlatform();
 
 const linkClass =
   "group inline-flex items-center gap-1 py-0.5 text-left text-sm text-teal-50/70 transition-colors hover:text-white sm:py-0";
@@ -161,10 +164,10 @@ export function SiteFooter() {
             <Link to="/" aria-label={t("siteHomeAria")} className="inline-block">
               <Brand inverted />
             </Link>
-            <p className="mt-4 max-w-xs text-[15px] leading-relaxed text-teal-50/75">
+            <p className="font-display mt-5 max-w-xs text-2xl font-semibold leading-tight text-white">
               {t("siteTagline")}
             </p>
-            <p lang="ne" className="mt-1.5 text-[15px] font-semibold text-brand-300">
+            <p lang="ne" className="mt-2 text-base font-semibold text-brand-300">
               {NEPALI_TAGLINE}
             </p>
 
@@ -185,6 +188,17 @@ export function SiteFooter() {
                 <Globe className="h-4 w-4 shrink-0 text-brand-300" aria-hidden />
                 duleko.com
               </a>
+              {!IS_NATIVE_APP && (
+                <a
+                  href={PLAY_STORE_URL}
+                  target="_blank"
+                  rel="noopener"
+                  className={cn(pillClass, "col-span-2 transition-colors hover:bg-white/15")}
+                >
+                  <Play className="h-4 w-4 shrink-0 fill-current text-brand-300" aria-hidden />
+                  {t("playStoreTitle")}
+                </a>
+              )}
             </div>
           </div>
 

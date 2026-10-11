@@ -1,0 +1,186 @@
+/* Duleko's map - the same treatment as FLITO's (mapHtml.js), in green. */
+
+.dk-map {
+  position: relative;
+  isolation: isolate;
+  background: #e9edf0;
+  font-family: var(--font-sans);
+}
+.dk-map.dk-map-dark {
+  background: #171c21;
+}
+
+/* OpenStreetMap's tiles are drawn for reading, not for carrying pins:
+   toned down, the pins stand out. In the dark theme the same tiles are
+   inverted into a night map. */
+.dk-map .leaflet-tile-pane {
+  filter: saturate(0.55) contrast(0.94) brightness(1.04);
+}
+.dk-map.dk-map-dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.86) saturate(0.4);
+}
+/* At half zoom steps tiles meet at fractions of a pixel and leave hairline
+   seams under the filter; one pixel of overlap covers them. */
+.dk-map .leaflet-tile-container img.leaflet-tile {
+  width: 257px !important;
+  height: 257px !important;
+  mix-blend-mode: normal;
+}
+/* The app's own dark-mode photo dimming (styles.css) must not reach tiles. */
+html.dark .dk-map img {
+  filter: none;
+}
+
+/* Pins */
+.dk-pin svg {
+  display: block;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+  transition: transform 0.15s ease;
+}
+.dk-pin.selected svg {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45));
+}
+
+/* Clusters: a count in a ringed disc - green for people, orange for work. */
+.dk-cluster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.dk-cluster.people {
+  background: #15803d;
+}
+.dk-cluster.jobs {
+  background: #ea580c;
+}
+.dk-cluster span {
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+/* You: a blue dot with a soft pulse. */
+.dk-me {
+  position: relative;
+  width: 36px;
+  height: 36px;
+}
+.dk-me-halo {
+  position: absolute;
+  inset: 4px;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.35);
+  animation: dk-pulse 2s ease-out infinite;
+}
+.dk-me-dot {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #2563eb;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+@keyframes dk-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Names over pins */
+.leaflet-tooltip.dk-label {
+  background: #fff;
+  color: #0f172a;
+  border: 0;
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.leaflet-tooltip-top.dk-label::before {
+  display: none;
+}
+.dk-map-dark .leaflet-tooltip.dk-label {
+  background: #1e242b;
+  color: #f4f6f8;
+}
+
+/* Leaflet's own bits, in the app's style */
+.dk-map .leaflet-control-attribution {
+  font-size: 10px;
+  border-radius: 6px 6px 6px 0;
+  background: rgba(255, 255, 255, 0.75) !important;
+  color: #5d6e6f;
+}
+.dk-map .leaflet-control-attribution a {
+  color: #15803d;
+}
+.dk-map-dark .leaflet-control-attribution {
+  background: rgba(23, 28, 33, 0.75) !important;
+  color: #9aa8aa;
+}
+.dk-map-dark .leaflet-control-attribution a {
+  color: #4ade80;
+}
+.dk-map .leaflet-control-scale-line {
+  border-color: rgba(30, 36, 43, 0.55);
+  color: #1e242b;
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 10px;
+}
+.dk-map-dark .leaflet-control-scale-line {
+  border-color: rgba(244, 246, 248, 0.6);
+  color: #f4f6f8;
+  background: rgba(23, 28, 33, 0.6);
+}
+
+/* "Use two fingers to move the map" */
+.dk-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(18, 22, 26, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.dk-hint span {
+  max-width: 260px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(18, 22, 26, 0.88);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+.dk-hint.on {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dk-me-halo {
+    animation: none;
+    opacity: 0.5;
+  }
+}

@@ -70,17 +70,70 @@ const workerRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/WorkerScreen"), "WorkerScreen"),
 });
 
+export type WorkRole = "worker" | "employer";
+export type WorkView = "active" | "offers" | "posts" | "history";
+
+// Everything you're part of: the work you do and the work you hire for,
+// each split into what's active, what's on the job board (offers you sent,
+// posts you made) and history.
+// ?role= and ?view= pick the side and the list (without ?role= it opens
+// the side you last looked at). ?job=<engagement id> opens that job's
+// details on top - where notifications about it land.
+// ?from=notifications makes closing the sheet return there.
 const workRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/work",
-  // ?job=<engagement id> opens that job's details straight away - the
-  // landing spot for notifications about it.
-  // ?from=notifications makes closing the sheet return there.
-  validateSearch: (search: Record<string, unknown>): { job?: string; from?: "notifications" } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { role?: WorkRole; view?: WorkView; job?: string; from?: "notifications" } => ({
+    role: search.role === "worker" || search.role === "employer" ? search.role : undefined,
+    view:
+      search.view === "offers" || search.view === "posts" || search.view === "history" ? search.view : undefined,
     job: typeof search.job === "string" && search.job ? search.job : undefined,
     from: search.from === "notifications" ? "notifications" : undefined,
   }),
   component: lazyRouteComponent(() => import("@/routes/WorkScreen"), "WorkScreen"),
+});
+
+// The job board: open work requests to browse, and posting one. What you
+// posted and the offers you sent are tracked in My Work - the old
+// ?tab=mine and ?tab=offers links lead there. ?district= and ?skill=
+// narrow the list; without a district it starts from the area Home is
+// showing.
+const jobsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/jobs",
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: "mine" | "offers"; district?: string; skill?: string } => ({
+    tab: search.tab === "mine" || search.tab === "offers" ? search.tab : undefined,
+    district: typeof search.district === "string" && search.district ? search.district : undefined,
+    skill: typeof search.skill === "string" && search.skill ? search.skill : undefined,
+  }),
+  beforeLoad: ({ search }) => {
+    if (search.tab === "mine") throw redirect({ to: "/work", search: { role: "employer", view: "posts" }, replace: true });
+    if (search.tab === "offers") throw redirect({ to: "/work", search: { role: "worker", view: "offers" }, replace: true });
+  },
+  component: lazyRouteComponent(() => import("@/routes/JobsScreen"), "JobsScreen"),
+});
+
+// One work request - where its alerts and emails lead.
+const jobRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/jobs/$jobId",
+  component: lazyRouteComponent(() => import("@/routes/JobsScreen"), "JobScreen"),
+});
+
+// The map of skilled people and open work requests. ?show= picks one
+// layer, ?skill= narrows both.
+const mapRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/map",
+  validateSearch: (search: Record<string, unknown>): { show?: "people" | "jobs"; skill?: string } => ({
+    show: search.show === "people" || search.show === "jobs" ? search.show : undefined,
+    skill: typeof search.skill === "string" && search.skill ? search.skill : undefined,
+  }),
+  component: lazyRouteComponent(() => import("@/routes/MapScreen"), "MapScreen"),
 });
 
 const notificationsRoute = createRoute({
@@ -241,6 +294,9 @@ const routeTree = rootRoute.addChildren([
   searchRoute,
   workerRoute,
   workRoute,
+  jobsRoute,
+  jobRoute,
+  mapRoute,
   notificationsRoute,
   profileRoute,
   friendsRoute,

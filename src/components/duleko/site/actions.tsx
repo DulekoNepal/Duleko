@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 
 export const CONTACT_EMAIL = "dulekonepal@gmail.com";
 export const NEPALI_TAGLINE = "सीपलाई अवसरमा बदलौँ।";
+export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.duleko.app";
 
 export function mailto(subject: string): string {
   return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}`;

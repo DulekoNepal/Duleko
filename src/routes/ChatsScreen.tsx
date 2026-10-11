@@ -40,7 +40,7 @@ export function ChatsScreen() {
   return (
     // Same width and gutters as every other screen (PAGE_WIDTH/PAGE_GUTTER),
     // starting 1.5rem under the top bar like their titles.
-    <div className="h-dvh md:h-[calc(100dvh-3.5rem-1px-var(--sat))] md:py-4">
+    <div className="h-dvh md:h-[calc(100dvh-4rem-1px-var(--sat))] lg:h-[calc(100dvh-72px-1px-var(--sat))] md:py-4">
       <div className={cn("mx-auto h-full w-full", PAGE_WIDTH, PAGE_GUTTER)}>
       <div className="flex h-full overflow-hidden bg-cream-50/60 md:rounded-2xl md:border md:border-slate-200 md:shadow-sm">
       <ChatsPane typingFrom={typingFrom} />
@@ -70,7 +70,7 @@ export function ChatsPane({
   const { t } = useI18n();
   return (
     <aside className="flex w-[320px] shrink-0 flex-col border-r border-slate-200 bg-surface pt-[var(--sat)] md:pt-0 xl:w-[360px]">
-      <div className="flex h-14 items-center justify-between gap-3 px-4 lg:h-16">
+      <div className="flex h-16 items-center justify-between gap-3 px-4">
         <h1 className="text-lg font-bold text-slate-900">{t("chatsTitle")}</h1>
       </div>
       <ChatSidebar typingFrom={typingFrom} activeId={activeId} showDivisions={showDivisions} className="flex-1" />

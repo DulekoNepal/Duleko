@@ -2,6 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { Lang } from "./types";
 import { siteStrings } from "./i18n-site";
 import { paymentStrings } from "./i18n-payments";
+import { jobStrings } from "./i18n-jobs";
+import { profileStrings } from "./i18n-profile";
+import { workStrings } from "./i18n-work";
 import { setActiveCalendar, storeCalendar, storedCalendar, type CalendarChoice } from "./bs-calendar";
 
 /**
@@ -284,7 +287,6 @@ const strings = {
   skillsAndRates: ["Skills & rates", "सीप र दर"],
   busyDaysLabel: ["Busy days", "व्यस्त दिन"],
   rateNotSet: ["No rate set", "दर राखिएको छैन"],
-  editSkills: ["Edit skills", "सीप सम्पादन"],
   addCertificate: ["Add a certificate", "प्रमाणपत्र थप्नुहोस्"],
   saveChanges: ["Save changes", "परिवर्तन सुरक्षित गर्नुहोस्"],
   searchChats: ["Search chats", "कुराकानी खोज्नुहोस्"],
@@ -680,13 +682,7 @@ const strings = {
 
   // ---- appearance ----------------------------------------------------
   appearance: ["Appearance", "देखावट"],
-  appearanceHint: [
-    "Dark mode is easier on the eyes at night. Saved on this phone only.",
-    "राति आँखालाई सजिलो हुन्छ। यो फोनमा मात्र सुरक्षित हुन्छ।",
-  ],
   themeSystem: ["Auto", "स्वतः"],
-  themeSystemNowDark: ["Following your phone - dark right now.", "तपाईंको फोन अनुसार - अहिले अँध्यारो।"],
-  themeSystemNowLight: ["Following your phone - light right now.", "तपाईंको फोन अनुसार - अहिले उज्यालो।"],
   themeLight: ["Light", "उज्यालो"],
   themeDark: ["Dark", "अँध्यारो"],
   darkMode: ["Dark mode", "अँध्यारो मोड"],
@@ -766,7 +762,6 @@ const strings = {
     "काम दिनेहरूले तपाईंलाई भेट्टाउन र काम दिन सक्ने गरी सीप थप्नुहोस्।",
   ],
   noAboutYetOther: ["Hasn't added a bio yet.", "अझै चिनारी थपेका छैनन्।"],
-  editingProfile: ["Editing your profile", "तपाईंको प्रोफाइल सम्पादन गर्दै"],
   daysMarkedBusy: ["{count} days marked busy", "{count} दिन व्यस्त चिन्ह लागेको"],
   uploadCertificateHint: ["PNG, JPG, or PDF up to 5 MB", "PNG, JPG, वा PDF (५ MB सम्म)"],
 
@@ -1382,6 +1377,15 @@ const strings = {
 
   // ---- payment details and Duleko's fees (see i18n-payments.ts) -------
   ...paymentStrings,
+
+  // ---- Home and the job board (see i18n-jobs.ts) -----------------------
+  ...jobStrings,
+
+  // ---- your own Profile screen (see i18n-profile.ts) -------------------
+  ...profileStrings,
+
+  // ---- My Work: lists, steps and the job sheet (see i18n-work.ts) ------
+  ...workStrings,
 } as const;
 
 export type StringKey = keyof typeof strings;

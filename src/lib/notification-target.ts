@@ -1,5 +1,4 @@
 import type { useNavigate } from "@tanstack/react-router";
-import { getEngagement } from "@/lib/queries";
 import type { AppNotification } from "@/lib/types";
 
 /**
@@ -29,7 +28,6 @@ export function linkIn(n: {
 export async function openNotification(
   n: AppNotification,
   navigate: ReturnType<typeof useNavigate>,
-  myProfileId: string,
 ): Promise<void> {
   // A link written into the notification wins: it opens in a new tab,
   // leaving this list where it was.
@@ -45,17 +43,11 @@ export async function openNotification(
     return;
   }
 
-  // "Someone accepted your request" is about a person - show who.
-  if (n.kind === "accepted" && n.engagement_id) {
-    try {
-      const job = await getEngagement(n.engagement_id, myProfileId);
-      if (job) {
-        void navigate({ to: "/worker/$workerId", params: { workerId: job.worker_profile_id } });
-        return;
-      }
-    } catch {
-      // Fall through to the job itself.
-    }
+  // The job board: a new post nearby, an offer on yours, or the post you
+  // offered on settled - all open the post itself.
+  if ((n.kind === "job_post" || n.kind === "job_offer" || n.kind === "job_closed") && n.job_post_id) {
+    void navigate({ to: "/jobs/$jobId", params: { jobId: n.job_post_id } });
+    return;
   }
 
   // Duleko's fees: the verdict on your payment, or (staff) one to check.

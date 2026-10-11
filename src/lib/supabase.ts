@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { translateStatic } from "./i18n";
+import { translateStatic, type StringKey } from "./i18n";
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -22,6 +22,21 @@ export const supabase: SupabaseClient = createClient(
     },
   },
 );
+
+/** The job board's error codes and what each tells the person. */
+const JOB_ERRORS: [string, StringKey][] = [
+  ["JOB_DATE_PAST", "errJobDatePast"],
+  ["JOB_POST_LIMIT", "errJobPostLimit"],
+  ["JOB_NOT_OPEN", "errJobNotOpen"],
+  ["JOB_EXPIRED", "errJobExpired"],
+  ["JOB_OWN_POST", "errJobOwnPost"],
+  ["JOB_NEEDS_SKILLS", "errJobNeedsSkills"],
+  ["JOB_NOT_FOUND", "errJobNotFound"],
+  ["JOB_OFFER_NOT_PENDING", "errJobOfferNotPending"],
+  ["JOB_BAD_AMOUNT", "errJobBadAmount"],
+  ["JOB_SKILL_REQUIRED", "errJobSkillRequired"],
+  ["ACCOUNT_SUSPENDED", "errAccountSuspended"],
+];
 
 /** Turns any thrown value into a short message we can show a user. */
 export function errorMessage(error: unknown): string {
@@ -66,6 +81,9 @@ export function errorMessage(error: unknown): string {
   }
   if (message.includes("payment_methods_wallet_id_check")) return translateStatic("payBadWallet");
   if (message.includes("payment_methods_account_number_check")) return translateStatic("payBadNumber");
+  // The job board (5800_job_board.sql).
+  const jobError = JOB_ERRORS.find(([code]) => message.includes(code));
+  if (jobError) return translateStatic(jobError[1]);
   // The resend/reset-code cooldown Supabase enforces server-side.
   if (e.code === "over_email_send_rate_limit" || /security purposes.*after \d+ seconds/i.test(e.message || "")) {
     return translateStatic("pleaseWaitBeforeRetry");

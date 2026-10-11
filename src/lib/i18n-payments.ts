@@ -6,12 +6,8 @@
 export const paymentStrings = {
   // ---- calendar --------------------------------------------------------
   dateCalendarTitle: ["Dates", "मिति"],
-  dateCalendarHint: [
-    "Dates show in the Nepali calendar (BS) unless you choose English (AD).",
-    "तपाईंले अंग्रेजी (AD) नरोजेसम्म मिति नेपाली पात्रो (वि.सं.) मा देखिन्छ।",
-  ],
-  dateCalendarBs: ["Nepali (BS)", "नेपाली (वि.सं.)"],
-  dateCalendarAd: ["English (AD)", "अंग्रेजी (AD)"],
+  dateCalendarBs: ["BS", "वि.सं."],
+  dateCalendarAd: ["AD", "ई.सं."],
 
   // ---- kinds and banks -------------------------------------------------
   payKindBank: ["Bank account", "बैंक खाता"],
