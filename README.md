@@ -712,19 +712,25 @@ The same React app wrapped with **Capacitor 8**.
 | | |
 |---|---|
 | App id | `com.duleko.app` |
-| Current version | `1.2` (versionCode `6`) |
+| Current version | `1.3` (versionCode `7`) |
 | SDK | min 24 (Android 7.0), target and compile 36 |
-| Native plugins | App, Status Bar, Splash Screen, Geolocation, Share, Clipboard, Filesystem, Badge |
+| Native plugins | App, Browser, Status Bar, Splash Screen, Geolocation, Share, Clipboard, Filesystem, Badge |
 | Native code | `MainActivity`, `PhoneAlertsPlugin` and `PhoneAlertsWorker` (Java) |
 | Permissions | Internet, post notifications, coarse and fine location |
 
 Native-only behaviour lives in `src/lib/native-android.ts`: the hardware back button navigates
 back instead of exiting, and the status bar matches the light or dark theme.
 
+Google sign-in in the app (`src/lib/google-sign-in.ts`) opens Google in a Chrome Custom Tab,
+because Google refuses to sign in inside a WebView. Supabase then sends the browser to
+`com.duleko.app://auth-callback`, which Android hands back to the app, and the app swaps the
+one-time code for a session (PKCE).
+
 ### Release history
 
 | Version | Code | Date | Highlights |
 |---|---|---|---|
+| 1.3 | 7 | 11 Oct 2026 | Mobile number + PIN sign-in, a calmer first screen, Google sign-in that works in the app, job board and My Work, a real map with private locations, payment details and Nepali (BS) dates |
 | 1.2 | 6 | 3 Oct 2026 | Phone alerts and an unread count on the app icon (no push service), Membership IDs, notice board |
 | 1.1 | 5 | 2 Oct 2026 | Light/dark mode, a more compact app throughout, redesigned profiles, faster photos and pages |
 | 1.0 | 4 | 20 Sep 2026 | Compact header and tab bar, fixed system-bar overlap |
@@ -789,7 +795,9 @@ Pushing to `main` deploys the web app on **Vercel**. [`vercel.json`](vercel.json
 
 Set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` and `VITE_SITE_URL` in Vercel → Settings →
 Environment Variables. In Supabase → Authentication → URL Configuration, set the **Site URL**
-to the production address and add it to **Redirect URLs** (Google sign-in returns there).
+to the production address and add it to **Redirect URLs** (Google sign-in returns there). Add
+`com.duleko.app://auth-callback` to Redirect URLs as well, for Google sign-in in the Android app.
+Without it, Supabase sends app users to the website instead.
 
 **Mobile number + PIN sign-in** needs two dashboard settings, after migration `6000` has run:
 

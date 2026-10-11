@@ -113,16 +113,11 @@ const strings = {
 
   // ---- guest browsing --------------------------------------------------
   exploreDuleko: ["Explore Duleko", "डुलेको हेर्नुहोस्"],
-  exploreDulekoHint: [
-    "Look around first - browse workers and skills, no account needed.",
-    "पहिले हेर्नुहोस् - कामदार र सीपहरू खाता बिना नै हेर्न सकिन्छ।",
-  ],
   signUpOrLogIn: ["Sign up / Log in", "खाता खोल्नुहोस् / लगइन"],
   signUpOrLogInHint: [
     "Create work requests, chat, and build your own profile.",
     "काम अनुरोध, कुराकानी, र आफ्नो प्रोफाइल बनाउनुहोस्।",
   ],
-  howDulekoWorks: ["How Duleko works", "डुलेको कसरी काम गर्छ"],
   landingFreeNote: [
     "Free to join. Free to browse.",
     "जोडिन निःशुल्क। हेर्न निःशुल्क।",

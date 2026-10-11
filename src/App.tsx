@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePhoneAlerts } from "@/hooks/use-phone-alerts";
 import { GuestModeProvider, readGuestMode, persistGuestMode } from "@/hooks/use-guest-mode";
 import { useI18n } from "@/lib/i18n";
+import { clearGoogleFailure, useGoogleReturn } from "@/lib/google-sign-in";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { WelcomeChoiceScreen } from "@/components/duleko/WelcomeChoiceScreen";
 import { SiteActionsProvider, type SiteActions } from "@/components/duleko/Site";
@@ -78,6 +79,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // components (bottom bar, top bar) are mounted at once.
   useNotificationsBadgeSync();
   usePhoneAlerts();
+
+  // The Android app coming back from Google's sign-in tab. Shown here, not
+  // on the sign-in screen: if the phone closed the app while Google was
+  // open, it comes back to the welcome screen instead.
+  const googleReturn = useGoogleReturn();
+  useEffect(() => {
+    if (!googleReturn.failure) return;
+    toast(googleReturn.failure, "error");
+    clearGoogleFailure();
+  }, [googleReturn.failure, toast]);
 
   // Pre-account browsing: "Explore" persists across a refresh; "sign in
   // now" (from the choice screen, or from any gated action while browsing
@@ -189,7 +200,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (isStaticPage) return <SiteActionsProvider value={siteActions}>{children}</SiteActionsProvider>;
 
   if (!isSupabaseConfigured) return <SetupScreen />;
-  if (loadingSession) return <FullPageLoader label={t("loading")} />;
+  if (loadingSession || (googleReturn.finishing && !session)) return <FullPageLoader label={t("loading")} />;
 
   // A recovery code just verified, which does sign them in - but that's a
   // side effect of the code, not the point of it. Keep them on the

@@ -10,8 +10,8 @@ import { HeaderToggles } from "@/components/duleko/Layout";
 import { MobileNumberInput, PinField } from "@/components/duleko/PhonePinFields";
 import { PolicyDialog } from "@/components/duleko/PolicyDialog";
 import { mailto } from "@/components/duleko/site/actions";
+import { onBackFromGoogle, signInWithGoogle } from "@/lib/google-sign-in";
 import { authPhone, isNepaliMobile, isWeakPin, phoneAccountExists, pinToPassword } from "@/lib/phone-auth";
-import { siteOrigin } from "@/lib/share";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
@@ -105,6 +105,11 @@ export function AuthScreen({
     resetTransient();
   }
 
+  // In the Android app Google opens in a browser tab over the app. Back on
+  // this screen, the button works again; coming back signed in is
+  // AppShell's to finish (see listenForGoogleReturn).
+  useEffect(() => onBackFromGoogle(() => setGoogleBusy(false)), []);
+
   async function onGoogle() {
     if (mode === "signup" && !agreed) {
       setError(t("mustAgreeToPolicies"));
@@ -113,22 +118,7 @@ export function AuthScreen({
     setGoogleBusy(true);
     setError(null);
     try {
-      // The real domain, not whatever host happens to be serving this
-      // page - visiting the Vercel default URL directly (or a preview
-      // deploy) must still bounce back to the live site, not to itself.
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: siteOrigin(),
-          // Without this, Google silently reuses whatever account is
-          // already signed into the browser and bounces straight back -
-          // no picker, no chance to pick a different account. Forcing it
-          // means every click here really does ask, every time.
-          queryParams: { prompt: "select_account" },
-        },
-      });
-      if (oauthError) throw oauthError;
-      // On success the browser navigates away to Google, so nothing else to do here.
+      await signInWithGoogle();
     } catch (err) {
       setError(errorMessage(err));
       setGoogleBusy(false);

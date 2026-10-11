@@ -42,6 +42,13 @@ export const authStrings = {
   authUseEmail: ["Continue with email", "इमेलबाट जारी राख्नुहोस्"],
   authUsePhone: ["Continue with mobile number", "मोबाइल नम्बरबाट जारी राख्नुहोस्"],
 
+  // ---- back from Google in the Android app (google-sign-in.ts) ---------
+  authGoogleCancelled: ["Google sign-in was cancelled.", "Google बाट लगइन रद्द भयो।"],
+  authGoogleFailed: [
+    "Google sign-in didn't finish. Please try again.",
+    "Google बाट लगइन पूरा भएन। कृपया फेरि प्रयास गर्नुहोस्।",
+  ],
+
   // ---- forgot PIN: no SMS yet, so staff reset it ------------------------
   authForgotPin: ["Forgot PIN?", "पिन बिर्सनुभयो?"],
   authForgotPinTitle: ["Forgot your PIN?", "पिन बिर्सनुभयो?"],

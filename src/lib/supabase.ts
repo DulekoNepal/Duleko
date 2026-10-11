@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { Capacitor } from "@capacitor/core";
 import { translateStatic, type StringKey } from "./i18n";
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
@@ -19,6 +20,10 @@ export const supabase: SupabaseClient = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      // The Android app gets Google's answer back through an address any
+      // app could claim, so it carries a one-time code that only this app
+      // can redeem, not the session itself (see google-sign-in.ts).
+      flowType: Capacitor.isNativePlatform() ? "pkce" : "implicit",
     },
   },
 );
