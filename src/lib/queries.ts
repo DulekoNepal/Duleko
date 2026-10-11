@@ -1,4 +1,6 @@
 import { supabase } from "./supabase";
+import { translateStatic } from "./i18n";
+import { authPhone, pinToPassword } from "./phone-auth";
 import { IMAGE_MAX_SIDE, shrinkImage } from "./image";
 import { addDays, toDateKey, todayKey } from "./utils";
 import type {
@@ -187,8 +189,26 @@ export async function deleteMyAccount(userId: string): Promise<void> {
  * irreversible. Re-signing in is the only way to check a password with
  * the anon key; it just refreshes the session we are about to discard.
  */
-export async function verifyPassword(email: string, password: string): Promise<void> {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+export async function verifyPassword(
+  login: { email: string } | { phone: string },
+  password: string,
+): Promise<void> {
+  const { error } = await supabase.auth.signInWithPassword({ ...login, password });
+  if (error) throw error;
+}
+
+/**
+ * A phone account's new PIN (migration 6000). The current PIN is checked
+ * first, the same way verifyPassword does, so an unlocked phone left lying
+ * around can't be used to lock its owner out.
+ */
+export async function changePin(mobile: string, currentPin: string, newPin: string): Promise<void> {
+  try {
+    await verifyPassword({ phone: authPhone(mobile) }, pinToPassword(currentPin));
+  } catch {
+    throw new Error(translateStatic("wrongPin"));
+  }
+  const { error } = await supabase.auth.updateUser({ password: pinToPassword(newPin) });
   if (error) throw error;
 }
 
@@ -324,6 +344,15 @@ export interface SearchParams {
 
 export const SEARCH_PAGE = 24;
 
+/**
+ * The middle of the ~1 km square a point is in - the same squares the
+ * database shows people in (area_coord, 6100). Your own position goes out
+ * this coarse, so the exact one never leaves the phone.
+ */
+export function areaCoord(v: number): number {
+  return (Math.floor(v / 0.01) + 0.5) * 0.01;
+}
+
 export async function searchWorkers(params: SearchParams): Promise<WorkerCardData[]> {
   const { data, error } = await supabase.rpc("search_workers", {
     p_skill: params.skill ?? null,
@@ -336,15 +365,15 @@ export async function searchWorkers(params: SearchParams): Promise<WorkerCardDat
     p_sort: params.sort ?? "relevance",
     p_limit: params.limit ?? 30,
     p_offset: params.offset ?? 0,
-    p_lat: params.lat ?? null,
-    p_lng: params.lng ?? null,
+    p_lat: params.lat == null ? null : areaCoord(params.lat),
+    p_lng: params.lng == null ? null : areaCoord(params.lng),
   });
   if (error) throw error;
   return (data ?? []) as WorkerCardData[];
 }
 
 // ---------------------------------------------------------------------
-// Live location - asked once, remembered on the profile from then on.
+// Your work area - picked once on a map (6100), never tracked.
 // ---------------------------------------------------------------------
 export async function setLocationConsent(
   profileId: string,
@@ -362,42 +391,44 @@ export async function setCallPermission(profileId: string, value: CallPermission
   if (error) throw error;
 }
 
-// The exact point lives in profile_locations, which only its owner can
-// read (5900_map_and_private_location.sql). Everyone else sees it through
-// map_people/search_workers, snapped to ~300 m unless show_exact is on.
+// The point lives in profile_locations, which only its owner can read
+// (5900, 6100). Signed-in members see it through map_people/search_workers
+// as its ~1 km square - or at the spot itself for a shop or workshop -
+// and the other side of an accepted job through engagement_places.
 export interface MyLocation {
   lat: number;
   lng: number;
-  show_exact: boolean;
+  is_shop: boolean;
   shared_at: string;
 }
 
 export async function getMyLocation(profileId: string): Promise<MyLocation | null> {
   const { data, error } = await supabase
     .from("profile_locations")
-    .select("lat,lng,show_exact,shared_at")
+    .select("lat,lng,is_shop,shared_at")
     .eq("profile_id", profileId)
     .maybeSingle();
   if (error) throw error;
   return (data as MyLocation | null) ?? null;
 }
 
-export async function shareLocation(profileId: string, lat: number, lng: number): Promise<void> {
+/** Saves the work area picked on the map, and records the yes. */
+export async function saveWorkArea(profileId: string, lat: number, lng: number, isShop: boolean): Promise<void> {
   const { error } = await supabase
     .from("profile_locations")
-    .upsert({ profile_id: profileId, lat, lng, shared_at: new Date().toISOString() }, { onConflict: "profile_id" });
+    .upsert(
+      { profile_id: profileId, lat, lng, is_shop: isShop, shared_at: new Date().toISOString() },
+      { onConflict: "profile_id" },
+    );
   if (error) throw error;
+  await setLocationConsent(profileId, "granted");
 }
 
-export async function clearLocation(profileId: string): Promise<void> {
+/** Takes the work area off Duleko entirely, and records the no. */
+export async function removeWorkArea(profileId: string): Promise<void> {
   const { error } = await supabase.from("profile_locations").delete().eq("profile_id", profileId);
   if (error) throw error;
-}
-
-/** "Show my exact spot on the map" - off means the ~300 m area only. */
-export async function setShowExactLocation(profileId: string, showExact: boolean): Promise<void> {
-  const { error } = await supabase.from("profile_locations").update({ show_exact: showExact }).eq("profile_id", profileId);
-  if (error) throw error;
+  await setLocationConsent(profileId, "declined");
 }
 
 export interface MapBounds {
@@ -407,7 +438,7 @@ export interface MapBounds {
   east: number;
 }
 
-/** A worker on the map, at their public (usually ~300 m) point. */
+/** A worker on the map: the middle of their ~1 km square, or a shop's own spot (`exact`). */
 export interface MapPerson {
   id: string;
   full_name: string;
@@ -420,9 +451,11 @@ export interface MapPerson {
   skills: Skill[];
   lat: number;
   lng: number;
+  /** A shop or workshop, shown where it really is. */
   exact: boolean;
 }
 
+/** Signed-in members only (map_people refuses guests). */
 export async function mapPeople(bounds: MapBounds, skill?: string | null): Promise<MapPerson[]> {
   const { data, error } = await supabase.rpc("map_people", {
     p_south: bounds.south,
@@ -433,6 +466,45 @@ export async function mapPeople(bounds: MapBounds, skill?: string | null): Promi
   });
   if (error) throw error;
   return ((data ?? []) as MapPerson[]).map((p) => ({ ...p, rating: Number(p.rating) }));
+}
+
+/** What a guest sees instead of people: how many are in each ~5 km square. */
+export interface MapAreaCount {
+  lat: number;
+  lng: number;
+  people: number;
+  district: string | null;
+  municipality: string | null;
+}
+
+export async function mapAreaCounts(bounds: MapBounds, skill?: string | null): Promise<MapAreaCount[]> {
+  const { data, error } = await supabase.rpc("map_area_counts", {
+    p_south: bounds.south,
+    p_west: bounds.west,
+    p_north: bounds.north,
+    p_east: bounds.east,
+    p_skill: skill ?? null,
+  });
+  if (error) throw error;
+  return (data ?? []) as MapAreaCount[];
+}
+
+/**
+ * Exact places inside a job, for the two people in it (engagement_places,
+ * 6100): the job post's own pin while the request is live, and the other
+ * person's saved place once it's accepted, until it's done.
+ */
+export interface EngagementPlace {
+  kind: "job" | "person";
+  lat: number;
+  lng: number;
+  is_shop: boolean;
+}
+
+export async function engagementPlaces(engagementId: string): Promise<EngagementPlace[]> {
+  const { data, error } = await supabase.rpc("engagement_places", { p_engagement_id: engagementId });
+  if (error) throw error;
+  return (data ?? []) as EngagementPlace[];
 }
 
 // ---------------------------------------------------------------------
@@ -1823,9 +1895,30 @@ export interface JobPostInput {
   work_date: string;
   budget_min: number | null;
   budget_max: number | null;
-  /** Optional map pin; the database keeps only its ~300 m cell. */
+  /**
+   * The exact place and pin. The database keeps both for the poster and
+   * the chosen worker only (job_post_places, 6100); the post itself shows
+   * its area and the pin's ~1 km square.
+   */
   lat: number | null;
   lng: number | null;
+}
+
+/** The exact place of my own post - nobody else can read it. */
+export interface JobPostPlace {
+  location_text: string | null;
+  lat: number | null;
+  lng: number | null;
+}
+
+export async function getJobPostPlace(postId: string): Promise<JobPostPlace | null> {
+  const { data, error } = await supabase
+    .from("job_post_places")
+    .select("location_text,lat,lng")
+    .eq("job_post_id", postId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as JobPostPlace | null) ?? null;
 }
 
 /** Open posts with a pin inside the map's view. */

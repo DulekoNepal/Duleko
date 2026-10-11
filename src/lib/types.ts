@@ -491,7 +491,11 @@ export interface JobPost {
   details: string | null;
   district: string;
   municipality: string | null;
-  location_text: string;
+  /**
+   * Always empty since 6100: the exact place is private (getJobPostPlace
+   * for the poster; the chosen worker gets it on their work request).
+   */
+  location_text: string | null;
   work_date: string;
   budget_min: number | null;
   budget_max: number | null;
@@ -500,7 +504,7 @@ export interface JobPost {
   engagement_id: string | null;
   /** Live offers (waiting + chosen). */
   offer_count: number;
-  /** The post's map pin, ~300 m cell. */
+  /** The post's map pin: the middle of its ~1 km square. */
   lat: number | null;
   lng: number | null;
   created_at: string;

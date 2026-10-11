@@ -7,6 +7,7 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { Avatar } from "@/components/ui/avatar";
 import { HeaderToggles } from "@/components/duleko/Layout";
 import { LocationFields, type LocationValue } from "@/components/duleko/LocationFields";
+import { MobileNumberInput } from "@/components/duleko/PhonePinFields";
 import { SkillPicker } from "@/components/duleko/SkillGrid";
 import { PaymentCard } from "@/components/duleko/payments/PaymentCard";
 import { PaymentMethodForm, type PaymentFormResult } from "@/components/duleko/payments/PaymentMethodForm";
@@ -25,6 +26,7 @@ import {
   uploadAvatar,
 } from "@/lib/queries";
 import { MAX_PHOTO_INPUT_BYTES } from "@/lib/image";
+import { signInMobile } from "@/lib/phone-auth";
 import { errorMessage } from "@/lib/supabase";
 import { cn, isValidNepaliPhone, normalisePhone } from "@/lib/utils";
 import type { PaymentKind } from "@/lib/types";
@@ -43,9 +45,12 @@ export function OnboardingScreen() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Joined with a mobile number: that's their phone here too, already
+  // checked as free at sign-up, so it isn't asked for twice.
+  const accountMobile = signInMobile(user);
   const [step, setStep] = useState(1);
   const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(accountMobile ?? "");
   const [about, setAbout] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -243,14 +248,22 @@ export function OnboardingScreen() {
                   />
                 </Field>
 
-                <Field label={t("phoneNumber")} hint={t("phoneHint")} error={errors.phone}>
-                  <Input
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="98XXXXXXXX"
-                    inputMode="tel"
-                    autoComplete="tel"
-                  />
+                <Field
+                  label={t("phoneNumber")}
+                  hint={accountMobile ? t("onboardPhoneLocked") : t("phoneHint")}
+                  error={errors.phone}
+                >
+                  {accountMobile ? (
+                    <MobileNumberInput value={phone} onChange={setPhone} readOnly />
+                  ) : (
+                    <Input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="98XXXXXXXX"
+                      inputMode="tel"
+                      autoComplete="tel"
+                    />
+                  )}
                 </Field>
 
                 <Field label={`${t("aboutYou")} (${t("optional")})`} className="mb-0">

@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Eye, Info, Languages, LogOut, Mail, MapPinned, MessageSquare, Navigation, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Eye, Info, KeyRound, Languages, LogOut, Mail, MapPin, MessageSquare, Store, Trash2, Users } from "lucide-react";
 import { AppearancePicker } from "@/components/duleko/AppearancePicker";
 import { CalendarPicker } from "@/components/duleko/CalendarPicker";
 import { ContactPrivacyRows } from "@/components/duleko/ContactPrivacyRows";
 import { DulekoPagesHub } from "@/components/duleko/DulekoPagesHub";
+import { PinField } from "@/components/duleko/PhonePinFields";
 import { ListGroup, ListRow } from "@/components/duleko/SettingsList";
 import { CONTACT_EMAIL } from "@/components/duleko/site/actions";
 import { Button } from "@/components/ui/button";
@@ -15,16 +16,13 @@ import { Switch } from "@/components/ui/switch";
 import { useMyLocation } from "@/hooks/use-my-location";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
-import { getCurrentPosition } from "@/lib/geolocation";
 import { useI18n } from "@/lib/i18n";
+import { authPhone, isWeakPin, pinToPassword, signInMobile } from "@/lib/phone-auth";
 import {
-  clearLocation,
+  changePin,
   deleteMyAccount,
   getNotificationPrefs,
   saveNotificationPrefs,
-  setLocationConsent,
-  setShowExactLocation,
-  shareLocation,
   updateProfile,
   verifyPassword,
 } from "@/lib/queries";
@@ -32,18 +30,25 @@ import { errorMessage } from "@/lib/supabase";
 import type { Lang, NotificationPrefs } from "@/lib/types";
 import { relativeTime } from "@/lib/utils";
 
+// The map (Leaflet) loads only when someone opens their work area.
+const WorkAreaPicker = lazy(() =>
+  import("@/components/duleko/map/WorkAreaPicker").then((m) => ({ default: m.WorkAreaPicker })),
+);
+
 /**
  * Settings, grouped the way a phone's own settings are: how Duleko looks
  * and talks to you, who can see and reach you, your account, and help.
  * Two columns once there's room.
  */
 export function SettingsTab({ onOpenAbout }: { onOpenAbout: () => void }) {
-  const { t, lang } = useI18n();
-  const { profile, refreshProfile } = useSession();
+  const { t } = useI18n();
+  const { user, profile } = useSession();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [changePinOpen, setChangePinOpen] = useState(false);
+  const accountMobile = signInMobile(user);
 
   const alertPrefs = useQuery({
     queryKey: ["notification-prefs", profile?.id],
@@ -65,39 +70,7 @@ export function SettingsTab({ onOpenAbout }: { onOpenAbout: () => void }) {
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
-  // One switch instead of a button: turning it on records consent and
-  // shares a fresh location right away (the same thing AutoShareLocation
-  // then keeps doing silently on every future login, no dialog, no
-  // button); turning it off withdraws consent and wipes the stored
-  // coordinates, same tap.
-  const toggleLocationSharing = useMutation({
-    mutationFn: async (next: boolean) => {
-      if (next) {
-        await setLocationConsent(profile!.id, "granted");
-        await new Promise<void>((resolve, reject) => {
-          getCurrentPosition(
-            (pos) => {
-              shareLocation(profile!.id, pos.coords.latitude, pos.coords.longitude).then(resolve, reject);
-            },
-            () => reject(new Error(t("locationPermissionDenied"))),
-            { enableHighAccuracy: true, timeout: 10_000 },
-          );
-        });
-      } else {
-        await setLocationConsent(profile!.id, "declined");
-        await clearLocation(profile!.id);
-      }
-    },
-    onSuccess: async () => {
-      await refreshProfile();
-      queryClient.invalidateQueries({ queryKey: ["my-location"] });
-      toast(t("profileSaved"));
-    },
-    onError: (error) => toast(errorMessage(error), "error"),
-  });
-
   if (!profile) return null;
-  const sharing = profile.location_consent === "granted";
   // Optimistic: an alert switch shows its new state while it saves.
   const pendingAlerts = saveAlerts.isPending ? saveAlerts.variables : undefined;
 
@@ -112,20 +85,23 @@ export function SettingsTab({ onOpenAbout }: { onOpenAbout: () => void }) {
           </ListGroup>
 
           <ListGroup title={t("notifications")}>
-            <ListRow
-              icon={Mail}
-              title={t("emailAlerts")}
-              hint={t("emailAlertsHint")}
-              trailing={
-                <Switch
-                  size="sm"
-                  checked={pendingAlerts?.email_enabled ?? alertPrefs.data?.email_enabled ?? true}
-                  disabled={saveAlerts.isPending}
-                  onChange={(next) => saveAlerts.mutate({ email_enabled: next })}
-                  aria-label={t("emailAlerts")}
-                />
-              }
-            />
+            {/* A mobile-number account has no email to send to. */}
+            {user?.email && (
+              <ListRow
+                icon={Mail}
+                title={t("emailAlerts")}
+                hint={t("emailAlertsHint")}
+                trailing={
+                  <Switch
+                    size="sm"
+                    checked={pendingAlerts?.email_enabled ?? alertPrefs.data?.email_enabled ?? true}
+                    disabled={saveAlerts.isPending}
+                    onChange={(next) => saveAlerts.mutate({ email_enabled: next })}
+                    aria-label={t("emailAlerts")}
+                  />
+                }
+              />
+            )}
             <ListRow
               icon={MessageSquare}
               title={t("smsAlerts")}
@@ -145,31 +121,19 @@ export function SettingsTab({ onOpenAbout }: { onOpenAbout: () => void }) {
 
         <div className="min-w-0 space-y-5">
           <ListGroup title={t("settingsPrivacy")}>
-            <ListRow
-              icon={Navigation}
-              title={t("shareLocation")}
-              hint={
-                sharing
-                  ? profile.location_shared_at
-                    ? t("locationShared", { time: relativeTime(profile.location_shared_at, lang) })
-                    : t("locationSharedPending")
-                  : t("shareLocationHint")
-              }
-              trailing={
-                <Switch
-                  size="sm"
-                  checked={toggleLocationSharing.isPending ? Boolean(toggleLocationSharing.variables) : sharing}
-                  disabled={toggleLocationSharing.isPending}
-                  onChange={(next) => toggleLocationSharing.mutate(next)}
-                  aria-label={t("shareLocation")}
-                />
-              }
-            />
-            {sharing && <ExactSpotRow />}
+            <WorkAreaRow />
             <ContactPrivacyRows />
           </ListGroup>
 
           <ListGroup title={t("accountTitle")}>
+            {accountMobile && (
+              <ListRow
+                icon={KeyRound}
+                title={t("changePin")}
+                hint={t("changePinHint", { phone: accountMobile })}
+                onClick={() => setChangePinOpen(true)}
+              />
+            )}
             <ListRow icon={Users} title={t("myFriends")} to="/friends" />
             <ListRow
               icon={Eye}
@@ -205,7 +169,102 @@ export function SettingsTab({ onOpenAbout }: { onOpenAbout: () => void }) {
 
       <SignOutDialog open={signOutOpen} onClose={() => setSignOutOpen(false)} />
       <DeleteAccountDialog open={deleteOpen} onClose={() => setDeleteOpen(false)} />
+      {accountMobile && (
+        <ChangePinDialog mobile={accountMobile} open={changePinOpen} onClose={() => setChangePinOpen(false)} />
+      )}
     </>
+  );
+}
+
+/**
+ * Settings > Change PIN, for an account that signs in with a mobile number.
+ * The current PIN first, then the new one twice - the same rules as when
+ * the account was made.
+ */
+function ChangePinDialog({ mobile, open, onClose }: { mobile: string; open: boolean; onClose: () => void }) {
+  const { t } = useI18n();
+  const { toast } = useToast();
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [again, setAgain] = useState("");
+  const [masked, setMasked] = useState(true);
+  const [errors, setErrors] = useState<{ current?: string; next?: string; again?: string }>({});
+
+  const save = useMutation({
+    mutationFn: () => changePin(mobile, current, next),
+    onSuccess: () => {
+      close();
+      toast(t("pinChanged"));
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  function submit() {
+    const found: typeof errors = {};
+    if (!/^\d{6}$/.test(current)) found.current = t("authPinIncomplete");
+    if (!/^\d{6}$/.test(next)) found.next = t("authPinIncomplete");
+    else if (isWeakPin(next)) found.next = t("authPinWeak");
+    else if (next === current) found.next = t("pinSameAsOld");
+    if (!found.next && again !== next) found.again = t("authPinsDontMatch");
+    setErrors(found);
+    if (Object.keys(found).length === 0) save.mutate();
+  }
+
+  function close() {
+    setCurrent("");
+    setNext("");
+    setAgain("");
+    setMasked(true);
+    setErrors({});
+    onClose();
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onClose={close}
+      title={t("changePin")}
+      footer={
+        <>
+          <Button variant="outline" onClick={close}>
+            {t("cancel")}
+          </Button>
+          <Button loading={save.isPending} onClick={submit}>
+            <KeyRound className="h-4 w-4" aria-hidden />
+            {t("changePin")}
+          </Button>
+        </>
+      }
+    >
+      <p className="mb-4 text-sm text-slate-600">{t("changePinHint", { phone: mobile })}</p>
+      <PinField
+        label={t("currentPin")}
+        value={current}
+        onChange={setCurrent}
+        masked={masked}
+        onToggleMasked={() => setMasked((v) => !v)}
+        error={errors.current}
+        disabled={save.isPending}
+      />
+      <PinField
+        label={t("newPin")}
+        hint={t("authPinCreateHint")}
+        value={next}
+        onChange={setNext}
+        masked={masked}
+        error={errors.next}
+        disabled={save.isPending}
+      />
+      <PinField
+        label={t("newPinAgain")}
+        value={again}
+        onChange={setAgain}
+        masked={masked}
+        error={errors.again}
+        disabled={save.isPending}
+        className="mb-0"
+      />
+    </Dialog>
   );
 }
 
@@ -265,35 +324,40 @@ function LanguagePicker() {
 }
 
 /**
- * "Show my exact spot on the map": off, others see the ~300 m area around
- * the point you last shared; on, the point itself.
+ * "Your work area": where others see you on the map, picked on a map of
+ * its own (WorkAreaPicker) and kept until you change it - an area about
+ * 1 km wide, or a shop's exact spot.
  */
-function ExactSpotRow() {
-  const { t } = useI18n();
-  const { profile } = useSession();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+function WorkAreaRow() {
+  const { t, lang } = useI18n();
   const location = useMyLocation();
-  const save = useMutation({
-    mutationFn: (next: boolean) => setShowExactLocation(profile!.id, next),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-location"] }),
-    onError: (error) => toast(errorMessage(error), "error"),
-  });
+  const [open, setOpen] = useState(false);
+  const when = location ? relativeTime(location.shared_at, lang) : "";
   return (
-    <ListRow
-      icon={MapPinned}
-      title={t("mapShowExact")}
-      hint={t("mapShowExactHint")}
-      trailing={
-        <Switch
-          size="sm"
-          checked={save.isPending ? Boolean(save.variables) : Boolean(location?.show_exact)}
-          disabled={!location || save.isPending}
-          onChange={(next) => save.mutate(next)}
-          aria-label={t("mapShowExact")}
-        />
-      }
-    />
+    <>
+      <ListRow
+        icon={location?.is_shop ? Store : MapPin}
+        title={t("workAreaTitle")}
+        hint={
+          !location
+            ? t("workAreaNotSet")
+            : location.is_shop
+              ? t("workAreaShopSetHint", { time: when })
+              : t("workAreaSetHint", { time: when })
+        }
+        trailing={
+          <span className="shrink-0 text-xs font-semibold text-brand-700">
+            {location ? t("workAreaChange") : t("workAreaSet")}
+          </span>
+        }
+        onClick={() => setOpen(true)}
+      />
+      {open && (
+        <Suspense fallback={null}>
+          <WorkAreaPicker open onClose={() => setOpen(false)} />
+        </Suspense>
+      )}
+    </>
   );
 }
 
@@ -342,25 +406,38 @@ function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose: () => 
   const { toast } = useToast();
   const [confirmWord, setConfirmWord] = useState("");
   const [password, setPassword] = useState("");
+  const [pin, setPin] = useState("");
 
   // Google sign-ins have no password to check against, so those confirm by
   // typing the word instead. A restored session doesn't always carry
   // `identities`, so app_metadata is read as a second signal rather than
   // wrongly downgrading a password account to the typed confirmation.
+  // A mobile-number account confirms with its PIN.
   const signInMethods = [
     ...(user?.identities?.map((i) => i.provider) ?? []),
     ...((user?.app_metadata?.providers as string[] | undefined) ?? []),
     user?.app_metadata?.provider,
   ];
-  const hasPassword = signInMethods.includes("email");
-  const ready = hasPassword ? password.length > 0 : confirmWord.trim().toUpperCase() === t("deleteAccountWord");
+  const mobile = signInMobile(user);
+  const hasPassword = !mobile && signInMethods.includes("email");
+  const ready = mobile
+    ? /^\d{6}$/.test(pin)
+    : hasPassword
+      ? password.length > 0
+      : confirmWord.trim().toUpperCase() === t("deleteAccountWord");
 
   const remove = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error(t("somethingWrong"));
-      if (hasPassword) {
+      if (mobile) {
         try {
-          await verifyPassword(user.email ?? "", password);
+          await verifyPassword({ phone: authPhone(mobile) }, pinToPassword(pin));
+        } catch {
+          throw new Error(t("wrongPin"));
+        }
+      } else if (hasPassword) {
+        try {
+          await verifyPassword({ email: user.email ?? "" }, password);
         } catch {
           throw new Error(t("wrongPassword"));
         }
@@ -378,6 +455,7 @@ function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose: () => 
   function close() {
     setConfirmWord("");
     setPassword("");
+    setPin("");
     onClose();
   }
 
@@ -400,7 +478,16 @@ function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose: () => 
     >
       <p className="text-sm text-slate-600">{t("deleteAccountBody")}</p>
 
-      {hasPassword ? (
+      {mobile ? (
+        <PinField
+          label={t("deleteAccountPinLabel")}
+          value={pin}
+          onChange={setPin}
+          masked
+          disabled={remove.isPending}
+          className="mb-0 mt-4"
+        />
+      ) : hasPassword ? (
         <Field label={t("deleteAccountPasswordLabel")} className="mt-4">
           <Input
             type="password"

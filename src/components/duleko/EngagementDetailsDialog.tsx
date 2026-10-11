@@ -14,6 +14,7 @@ import {
   Inbox,
   MapPin,
   MessageCircle,
+  Navigation,
   Phone,
   Sparkles,
   Star,
@@ -38,6 +39,7 @@ import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import {
   cancelEngagement,
+  engagementPlaces,
   getContact,
   getFeeForJob,
   listBids,
@@ -122,6 +124,17 @@ export function EngagementDetailsDialog({
     queryKey: ["contact", other.id],
     queryFn: () => getContact(other.id),
     enabled: open && contactVisible,
+    staleTime: 5 * 60_000,
+  });
+
+  // Exact places, only while the job is live (engagement_places, 6100):
+  // the job post's pin from the start, the other person's saved place once
+  // it's accepted. The database decides; this just asks.
+  const placesLive = ["pending", "accepted", "confirmed"].includes(engagement.status);
+  const places = useQuery({
+    queryKey: ["engagement-places", engagement.id, engagement.status],
+    queryFn: () => engagementPlaces(engagement.id),
+    enabled: open && placesLive,
     staleTime: 5 * 60_000,
   });
 
@@ -490,6 +503,27 @@ export function EngagementDetailsDialog({
           )}
           <Fact icon={MapPin} label={t("jobWhere")} wide>
             {engagement.location_text}
+            {placesLive && places.data && places.data.length > 0 && (
+              <span className="mt-1.5 flex flex-col items-start gap-1">
+                {places.data.map((place) => (
+                  <a
+                    key={place.kind}
+                    href={mapsLink(place.lat, place.lng)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:underline"
+                  >
+                    <Navigation className="h-3.5 w-3.5" aria-hidden />
+                    {place.kind === "job"
+                      ? t("placeJobSpot")
+                      : place.is_shop
+                        ? t("placeShop", { name: otherFirst })
+                        : t("placePerson", { name: otherFirst })}
+                  </a>
+                ))}
+                <span className="text-[11px] font-normal leading-snug text-slate-400">{t("placePrivateNote")}</span>
+              </span>
+            )}
           </Fact>
           {feeLine && (
             <p
@@ -624,6 +658,11 @@ function Banner({ tone, icon: Icon, title, hint }: { tone: Tone; icon: LucideIco
       </div>
     </div>
   );
+}
+
+/** Opens the point in the phone's maps app (or Google Maps on a computer), for directions. */
+function mapsLink(lat: number, lng: number): string {
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 }
 
 function Fact({

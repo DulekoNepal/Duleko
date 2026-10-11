@@ -5,8 +5,9 @@ import { Maximize2, Minus, Plus } from "lucide-react";
 import { DulekoMap, type DulekoMapHandle, type MapPin } from "./DulekoMap";
 import { NEPAL, useMapView } from "./use-map-view";
 import { useI18n } from "@/lib/i18n";
+import { useGuestMode } from "@/hooks/use-guest-mode";
 import { useMyLocation } from "@/hooks/use-my-location";
-import { mapPeople, type MapBounds } from "@/lib/queries";
+import { mapAreaCounts, mapPeople, type MapBounds } from "@/lib/queries";
 import { districtLabel } from "@/lib/nepal";
 import { cn, formatNumber } from "@/lib/utils";
 
@@ -23,6 +24,9 @@ const ZOOM_BUTTON =
  * (two fingers on a touch screen, so one still scrolls the page), click
  * it to zoom with the wheel, click a pin for that person's profile, and
  * "Open full map" for /map.
+ *
+ * Guests see how many people are in each area instead (6100); tapping one
+ * opens /map, which explains and offers sign-in.
  */
 export function HomeMapCard({
   area,
@@ -34,6 +38,7 @@ export function HomeMapCard({
   className?: string;
 }) {
   const { t, lang } = useI18n();
+  const { isGuest } = useGuestMode();
   const navigate = useNavigate();
   const mapRef = useRef<DulekoMapHandle>(null);
   const view = useMapView(area);
@@ -49,21 +54,36 @@ export function HomeMapCard({
   const people = useQuery({
     queryKey: ["map", "people", "home", roundBounds(box)],
     queryFn: () => mapPeople(box),
-    enabled: view.ready,
+    enabled: view.ready && !isGuest,
+    staleTime: 2 * 60_000,
+  });
+  const areas = useQuery({
+    queryKey: ["map", "areas", "home", roundBounds(box)],
+    queryFn: () => mapAreaCounts(box),
+    enabled: view.ready && isGuest,
     staleTime: 2 * 60_000,
   });
 
   const pins = useMemo<MapPin[]>(
     () =>
-      (people.data ?? []).map((p) => ({
-        id: p.id,
-        kind: "person",
-        lat: p.lat,
-        lng: p.lng,
-        label: p.full_name,
-        available: p.is_available,
-      })),
-    [people.data],
+      isGuest
+        ? (areas.data ?? []).map((a) => ({
+            id: `area:${a.lat.toFixed(3)},${a.lng.toFixed(3)}`,
+            kind: "area",
+            lat: a.lat,
+            lng: a.lng,
+            label: formatNumber(a.people, lang),
+            count: a.people,
+          }))
+        : (people.data ?? []).map((p) => ({
+            id: p.id,
+            kind: "person",
+            lat: p.lat,
+            lng: p.lng,
+            label: p.full_name,
+            available: p.is_available,
+          })),
+    [isGuest, areas.data, people.data, lang],
   );
 
   const place = area ? districtLabel(area, lang) : t("homeLocationAll");
@@ -109,7 +129,8 @@ export function HomeMapCard({
     );
   }
 
-  const count = people.data?.length ?? 0;
+  const count = isGuest ? (areas.data ?? []).reduce((sum, a) => sum + a.people, 0) : (people.data?.length ?? 0);
+  const loading = isGuest ? areas.isLoading : people.isLoading;
 
   return (
     <section aria-label={t("mapLocalServices")} className={frame} style={style}>
@@ -124,7 +145,9 @@ export function HomeMapCard({
           pins={pins}
           me={me}
           fitPins
-          onSelect={(pin) => navigate({ to: "/worker/$workerId", params: { workerId: pin.id } })}
+          onSelect={(pin) =>
+            pin.kind === "area" ? navigate({ to: "/map" }) : navigate({ to: "/worker/$workerId", params: { workerId: pin.id } })
+          }
           className="absolute inset-0 h-full w-full"
         />
       )}
@@ -135,7 +158,7 @@ export function HomeMapCard({
           {t("mapLocalServices")} · {t("mapNearYou")}
         </p>
         <p className="mt-0.5 truncate text-xs text-slate-500">
-          {people.isLoading
+          {loading
             ? t("mapLoading")
             : `${count === 1 ? t("mapPeopleCountOne") : t("mapPeopleCount", { count: formatNumber(count, lang) })} · ${place}`}
         </p>

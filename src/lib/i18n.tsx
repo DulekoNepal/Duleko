@@ -5,6 +5,7 @@ import { paymentStrings } from "./i18n-payments";
 import { jobStrings } from "./i18n-jobs";
 import { profileStrings } from "./i18n-profile";
 import { workStrings } from "./i18n-work";
+import { authStrings } from "./i18n-auth";
 import { setActiveCalendar, storeCalendar, storedCalendar, type CalendarChoice } from "./bs-calendar";
 
 /**
@@ -46,8 +47,8 @@ const strings = {
   signOut: ["Sign out", "लगआउट"],
   signOutConfirmTitle: ["Sign out?", "लगआउट गर्ने हो?"],
   signOutConfirmBody: [
-    "You can sign back in anytime with the same email and password.",
-    "तपाईं जुनसुकै बेला उही इमेल र पासवर्डले फेरि लगइन गर्न सक्नुहुन्छ।",
+    "You can sign back in anytime the same way you signed in today.",
+    "तपाईं आज जसरी लगइन गर्नुभयो, जुनसुकै बेला त्यसरी नै फेरि लगइन गर्न सक्नुहुन्छ।",
   ],
   email: ["Email", "इमेल"],
   password: ["Password", "पासवर्ड"],
@@ -478,17 +479,7 @@ const strings = {
   removeFriend: ["Remove", "हटाउनुहोस्"],
   removeFriendConfirm: ["Remove this friend?", "यो मित्रलाई हटाउने?"],
 
-  // ---- live location ----------------------------------------------------
-  shareLocation: ["Share my location", "मेरो स्थान साझा गर्नुहोस्"],
-  updateLocation: ["Update location", "स्थान अद्यावधिक गर्नुहोस्"],
-  clearLocationAction: ["Clear", "हटाउनुहोस्"],
-  locationShared: ["Shared {time} ago", "{time} अघि साझा गरियो"],
-  locationSharedPending: ["On - sharing automatically", "सक्रिय - स्वतः साझा हुँदैछ"],
-  locationNotShared: ["Off", "बन्द"],
-  shareLocationHint: [
-    "Useful for drivers and delivery - lets nearby people find you. Optional.",
-    "चालक र डेलिभरीका लागि उपयोगी - नजिकैका मानिसले भेट्टाउन सक्छन्। वैकल्पिक।",
-  ],
+  // ---- location (your work area is in i18n-jobs.ts) --------------------
   locationPermissionDenied: [
     "Could not get your location. Check your browser's location permission.",
     "स्थान लिन सकिएन। ब्राउजरको लोकेसन अनुमति जाँच्नुहोस्।",
@@ -860,10 +851,10 @@ const strings = {
   ],
 
   // ---- location permission prompt (asked only when a feature needs it) --
-  locationConsentTitle: ["Share your location with Duleko?", "डुलेकोसँग तपाईंको स्थान साझा गर्ने हो?"],
+  locationConsentTitle: ["Sort by distance?", "दूरीअनुसार मिलाउने हो?"],
   locationConsentBody: [
-    "If you allow it, your location is shared automatically every time you sign in from now on - no need to ask again. It lets nearby people see roughly how far away you are. You can turn this off anytime from Profile.",
-    "अनुमति दिनुभयो भने, अबदेखि तपाईं लगइन गर्दा हरेक पटक स्वतः स्थान साझा हुनेछ - फेरि सोध्नु पर्दैन। यसले नजिकैका मानिसहरूलाई तपाईं कति टाढा हुनुहुन्छ भनेर देख्न मद्दत गर्छ। तपाईं जुनसुकै बेला प्रोफाइलबाट यो बन्द गर्न सक्नुहुन्छ।",
+    "Duleko uses your phone's location for this search only. Your exact position stays on this phone - just its area, about 1 km, is used - and nothing is saved.",
+    "डुलेकोले यो खोजका लागि मात्र फोनको स्थान प्रयोग गर्छ। तपाईंको ठ्याक्कै स्थान यही फोनमा रहन्छ - करिब १ किलोमिटरको क्षेत्र मात्र प्रयोग हुन्छ - र केही पनि सुरक्षित गरिँदैन।",
   ],
   allowLocation: ["Allow Location", "स्थान अनुमति दिनुहोस्"],
   continueAction: ["Continue", "जारी राख्नुहोस्"],
@@ -1386,6 +1377,9 @@ const strings = {
 
   // ---- My Work: lists, steps and the job sheet (see i18n-work.ts) ------
   ...workStrings,
+
+  // ---- mobile number + PIN sign-in (see i18n-auth.ts) ------------------
+  ...authStrings,
 } as const;
 
 export type StringKey = keyof typeof strings;

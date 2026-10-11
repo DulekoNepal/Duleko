@@ -105,7 +105,8 @@ export function SearchScreen() {
   // automatically, using an already-shared location or a quiet GPS prompt.
   // If neither works out, results just stay in relevance order.
   useEffect(() => {
-    if (!filters.skill || filters.sort) return;
+    // Distances are for signed-in members (6100); a guest stays in relevance order.
+    if (!filters.skill || filters.sort || !profile) return;
     if (myLocation) {
       setCoords({ lat: myLocation.lat, lng: myLocation.lng });
       update({ sort: "nearest" });
@@ -153,8 +154,11 @@ export function SearchScreen() {
   function chooseSort(next: Sort) {
     // Duleko's own explanation first - the browser's native prompt follows
     // only after someone taps "Allow Location".
-    if (next === "nearest") setLocationConsentOpen(true);
-    else update({ sort: next });
+    if (next === "nearest") {
+      // Distances are for signed-in members (6100).
+      if (!profile) requestSignIn();
+      else setLocationConsentOpen(true);
+    } else update({ sort: next });
   }
 
   const activeSkill = skills.data?.find((s) => s.id === filters.skill);

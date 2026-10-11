@@ -76,7 +76,8 @@ export function JobCard({ post, showStatus = false }: { post: JobPost; showStatu
   const { t, lang } = useI18n();
   const budget = jobBudgetText(post, lang);
   const place = districtLabel(post.district, lang);
-  const summary = post.details || post.location_text;
+  // The exact place is private (6100); the card shows the district and what's needed.
+  const summary = post.details;
 
   return (
     <Link

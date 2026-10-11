@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useCanGoBack, useNavigate, useRouter, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Briefcase, Info, LocateFixed, Minus, Plus, Users, X } from "lucide-react";
+import { ArrowLeft, Briefcase, Info, List, LocateFixed, LogIn, Minus, Plus, Users, X } from "lucide-react";
 import { AppHeader } from "@/components/duleko/Layout";
 import { DulekoMap, type DulekoMapHandle, type MapPin } from "@/components/duleko/map/DulekoMap";
 import { useMapView } from "@/components/duleko/map/use-map-view";
@@ -12,12 +12,22 @@ import { Avatar } from "@/components/ui/avatar";
 import { Select } from "@/components/ui/field";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
+import { useGuestMode } from "@/hooks/use-guest-mode";
 import { useHomeArea } from "@/hooks/use-home-area";
 import { useLivePosition, useMyLocation } from "@/hooks/use-my-location";
 import { useToast } from "@/hooks/use-toast";
-import { listJobPostsInBounds, listSkills, mapPeople, type MapBounds, type MapPerson } from "@/lib/queries";
+import {
+  listJobPostsInBounds,
+  listSkills,
+  mapAreaCounts,
+  mapPeople,
+  type MapAreaCount,
+  type MapBounds,
+  type MapPerson,
+} from "@/lib/queries";
+import { districtLabel, municipalityLabel } from "@/lib/nepal";
 import { cn, formatNumber, skillName } from "@/lib/utils";
-import type { JobPost } from "@/lib/types";
+import type { JobPost, Lang } from "@/lib/types";
 
 export type MapShow = "people" | "jobs" | "both";
 
@@ -43,15 +53,27 @@ function boundsKey(b: MapBounds | null): string | null {
   return [b.south, b.west, b.north, b.east].map((v) => v.toFixed(2)).join(",");
 }
 
+/** "Taulihawa", or the district when most people there gave no municipality. */
+function areaPlace(area: MapAreaCount, lang: Lang): string {
+  if (area.district && area.municipality) return municipalityLabel(area.district, area.municipality, lang) || area.municipality;
+  return area.district ? districtLabel(area.district, lang) : "";
+}
+
+function areaId(area: MapAreaCount): string {
+  return `area:${area.lat.toFixed(3)},${area.lng.toFixed(3)}`;
+}
+
 /**
- * The map of skilled people and open work requests: pins by area (people
- * are ~300 m unless they chose to show their exact spot), clusters when
- * zoomed out, your live position as a blue dot. Tapping a pin opens its
- * card at the bottom.
+ * The map of skilled people and open work requests: people at the middle
+ * of their ~1 km square (a shop at its own spot), clusters when zoomed
+ * out, your live position as a blue dot. Tapping a pin opens its card at
+ * the bottom. Guests see how many people are in each area instead of who
+ * (map_area_counts, 6100); the names are for signed-in members.
  */
 export function MapScreen() {
   const { t, lang } = useI18n();
   const { profile } = useSession();
+  const { isGuest } = useGuestMode();
   const { toast } = useToast();
   const search = useSearch({ from: "/map" });
   const navigate = useNavigate({ from: "/map" });
@@ -91,7 +113,14 @@ export function MapScreen() {
   const people = useQuery({
     queryKey: ["map", "people", key, skill],
     queryFn: () => mapPeople(bounds!, skill),
-    enabled: Boolean(bounds) && show !== "jobs",
+    enabled: Boolean(bounds) && show !== "jobs" && !isGuest,
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
+  });
+  const areas = useQuery({
+    queryKey: ["map", "areas", key, skill],
+    queryFn: () => mapAreaCounts(bounds!, skill),
+    enabled: Boolean(bounds) && show !== "jobs" && isGuest,
     staleTime: 60_000,
     placeholderData: (prev) => prev,
   });
@@ -104,11 +133,23 @@ export function MapScreen() {
   });
 
   const peopleById = useMemo(() => new Map((people.data ?? []).map((p) => [p.id, p])), [people.data]);
+  const areasById = useMemo(() => new Map((areas.data ?? []).map((a) => [areaId(a), a])), [areas.data]);
+  const headCount = isGuest
+    ? (areas.data ?? []).reduce((sum, a) => sum + a.people, 0)
+    : (people.data?.length ?? 0);
+  const peopleLoaded = isGuest ? Boolean(areas.data) : Boolean(people.data);
   const jobsById = useMemo(() => new Map((jobs.data ?? []).map((j) => [j.id, j])), [jobs.data]);
 
   const pins = useMemo<MapPin[]>(() => {
     const out: MapPin[] = [];
-    if (show !== "jobs") {
+    if (show !== "jobs" && isGuest) {
+      for (const a of areas.data ?? []) {
+        const place = areaPlace(a, lang);
+        const label =
+          a.people === 1 ? t("mapAreaPeopleOne", { place }) : t("mapAreaPeople", { count: formatNumber(a.people, lang), place });
+        out.push({ id: areaId(a), kind: "area", lat: a.lat, lng: a.lng, label, count: a.people });
+      }
+    } else if (show !== "jobs") {
       for (const p of people.data ?? []) {
         out.push({ id: p.id, kind: "person", lat: p.lat, lng: p.lng, label: p.full_name, available: p.is_available });
       }
@@ -119,9 +160,10 @@ export function MapScreen() {
       }
     }
     return out;
-  }, [people.data, jobs.data, show]);
+  }, [people.data, areas.data, jobs.data, show, isGuest, lang, t]);
 
-  const loading = (show !== "jobs" && people.isFetching) || (show !== "people" && jobs.isFetching);
+  const loading =
+    (show !== "jobs" && (isGuest ? areas.isFetching : people.isFetching)) || (show !== "people" && jobs.isFetching);
   const nothing = Boolean(bounds) && !loading && pins.length === 0;
 
   function setShow(next: MapShow) {
@@ -157,7 +199,9 @@ export function MapScreen() {
     "flex h-10 w-10 items-center justify-center bg-surface text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600";
 
   const person = selected?.kind === "person" ? peopleById.get(selected.id) : undefined;
+  const area = selected?.kind === "area" ? areasById.get(selected.id) : undefined;
   const job = selected?.kind === "job" ? jobsById.get(selected.id) : undefined;
+  const skillLabel = skill ? skills.data?.find((s) => s.id === skill) : undefined;
 
   return (
     <>
@@ -189,8 +233,8 @@ export function MapScreen() {
             <button type="button" className={chip(show !== "jobs")} onClick={() => toggle("people")} aria-pressed={show !== "jobs"}>
               <Users className="h-3.5 w-3.5" aria-hidden />
               {t("mapPeople")}
-              {show !== "jobs" && people.data && (
-                <span className="rounded-full bg-white/25 px-1.5 text-[10px]">{formatNumber(people.data.length, lang)}</span>
+              {show !== "jobs" && peopleLoaded && (
+                <span className="rounded-full bg-white/25 px-1.5 text-[10px]">{formatNumber(headCount, lang)}</span>
               )}
             </button>
             <button type="button" className={chip(show !== "people")} onClick={() => toggle("jobs")} aria-pressed={show !== "people"}>
@@ -246,12 +290,19 @@ export function MapScreen() {
           <div className="absolute inset-x-0 bottom-0 z-[1000] px-3 pb-6 md:pb-4">
             {person ? (
               <PersonSheet person={person} onClose={() => setSelected(null)} />
+            ) : area ? (
+              <AreaSheet
+                area={area}
+                skillId={skill}
+                skillName={skillLabel ? skillName(skillLabel, lang) : null}
+                onClose={() => setSelected(null)}
+              />
             ) : job ? (
               <JobSheet job={job} onClose={() => setSelected(null)} />
             ) : (
               <p className="mx-auto flex w-fit max-w-full items-center gap-1.5 rounded-full bg-surface/95 px-3 py-1.5 text-[11px] text-slate-600 shadow-md">
                 <Info className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
-                {loading ? t("mapLoading") : nothing ? t("mapNothingHere") : t("mapAreaNote")}
+                {loading ? t("mapLoading") : nothing ? t("mapNothingHere") : isGuest ? t("mapGuestNote") : t("mapAreaNote")}
               </p>
             )}
           </div>
@@ -312,6 +363,64 @@ function PersonSheet({ person, onClose }: { person: MapPerson; onClose: () => vo
           {t("view")}
         </span>
       </Link>
+    </SheetShell>
+  );
+}
+
+/**
+ * A guest tapped an area: how many people, roughly where, and the two
+ * ways on - sign in to see who, or the public list for that district.
+ */
+function AreaSheet({
+  area,
+  skillId,
+  skillName,
+  onClose,
+}: {
+  area: MapAreaCount;
+  skillId: string | null;
+  skillName: string | null;
+  onClose: () => void;
+}) {
+  const { t, lang } = useI18n();
+  const { requestSignIn } = useGuestMode();
+  const place = areaPlace(area, lang);
+  return (
+    <SheetShell onClose={onClose}>
+      <div className="rounded-2xl border border-slate-200 bg-surface p-3.5 shadow-lg">
+        <div className="flex items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-700 text-sm font-bold text-white">
+            {formatNumber(area.people, lang)}
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-slate-900">
+              {area.people === 1
+                ? t("mapAreaPeopleOne", { place })
+                : t("mapAreaPeople", { count: formatNumber(area.people, lang), place })}
+            </p>
+            {skillName && <p className="text-xs text-slate-600">{t("mapAreaSkill", { skill: skillName })}</p>}
+            <p className="mt-1 text-[11px] leading-snug text-slate-500">{t("mapAreaWhy")}</p>
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={requestSignIn}
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-brand-700 px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-800"
+          >
+            <LogIn className="h-3.5 w-3.5" aria-hidden />
+            {t("mapAreaSignIn")}
+          </button>
+          <Link
+            to="/search"
+            search={{ district: area.district ?? undefined, skill: skillId ?? undefined }}
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            <List className="h-3.5 w-3.5" aria-hidden />
+            {t("mapAreaList")}
+          </Link>
+        </div>
+      </div>
     </SheetShell>
   );
 }

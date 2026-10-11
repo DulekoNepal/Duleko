@@ -16,7 +16,7 @@ import {
   useNotificationsBadgeSync,
 } from "@/components/duleko/Layout";
 import { WelcomeWalkthrough, hasSeenWalkthrough } from "@/components/duleko/WelcomeWalkthrough";
-import { AutoShareLocation } from "@/components/duleko/AutoShareLocation";
+import { WorkAreaPrompt } from "@/components/duleko/WorkAreaPrompt";
 import { FullPageLoader } from "@/components/ui/states";
 
 // Sign-in and onboarding pull in the form libraries (react-hook-form, zod).
@@ -251,7 +251,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {children}
       <BottomNav />
       {showWalkthrough && <WelcomeWalkthrough onDone={() => setShowWalkthrough(false)} />}
-      <AutoShareLocation />
+      <WorkAreaPrompt />
     </div>
   );
 }

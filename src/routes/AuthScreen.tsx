@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, ChevronDown, ChevronRight } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, ChevronDown, ChevronRight, Mail, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { OtpInput } from "@/components/ui/otp-input";
 import { HeaderToggles } from "@/components/duleko/Layout";
+import { MobileNumberInput, PinField } from "@/components/duleko/PhonePinFields";
 import { PolicyDialog } from "@/components/duleko/PolicyDialog";
+import { mailto } from "@/components/duleko/site/actions";
+import { authPhone, isNepaliMobile, isWeakPin, phoneAccountExists, pinToPassword } from "@/lib/phone-auth";
 import { siteOrigin } from "@/lib/share";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
@@ -29,12 +32,28 @@ const RESEND_COOLDOWN_SECONDS = 45;
 const OTP_LENGTH = 6;
 
 /**
- * Everything past the initial email+password form: confirming a brand new
+ * Everything past the initial sign-in form: confirming a brand new email
  * account by code, and resetting a forgotten password by code. Both reuse
  * the same three beats - request a code, enter it, then finish the action
- * it unlocked - which is why they share one screen instead of two.
+ * it unlocked - which is why they share one screen instead of two. A
+ * forgotten PIN has no code yet (no SMS), so "forgotPin" says who resets it.
  */
-type View = "auth" | "verify" | "forgotEmail" | "forgotCode" | "forgotPassword" | "locationConsent";
+type View = "auth" | "verify" | "forgotEmail" | "forgotCode" | "forgotPassword" | "forgotPin" | "locationConsent";
+
+/**
+ * Mobile number + PIN is the default way in. Email (and Google) stay for
+ * everyone who joined that way; whichever was used last is remembered.
+ */
+type Method = "phone" | "email";
+const METHOD_KEY = "duleko.authMethod";
+
+function readMethod(): Method {
+  try {
+    return window.localStorage.getItem(METHOD_KEY) === "email" ? "email" : "phone";
+  } catch {
+    return "phone";
+  }
+}
 
 export function AuthScreen({
   onBack,
@@ -47,6 +66,7 @@ export function AuthScreen({
   const { clearPasswordRecovery } = useSession();
   const [view, setView] = useState<View>("auth");
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
+  const [method, setMethod] = useState<Method>(readMethod);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -283,6 +303,16 @@ export function AuthScreen({
     resetTransient();
   }
 
+  function switchMethod(next: Method) {
+    setMethod(next);
+    resetTransient();
+    try {
+      window.localStorage.setItem(METHOD_KEY, next);
+    } catch {
+      // No storage - it just won't be remembered.
+    }
+  }
+
   const heading =
     view === "verify"
       ? { title: t("verifyEmailTitle"), blurb: t("verifyEmailBlurb", { email: pendingEmail }) }
@@ -292,7 +322,82 @@ export function AuthScreen({
           ? { title: t("resetPasswordTitle"), blurb: t("verifyResetCodeBlurb", { email: pendingEmail }) }
           : view === "forgotPassword"
             ? { title: t("resetPasswordTitle"), blurb: null }
-            : { title: t("authWelcome"), blurb: t("authBlurb") };
+            : view === "forgotPin"
+              ? { title: t("authForgotPinTitle"), blurb: null }
+              : { title: t("authWelcome"), blurb: t("authBlurb") };
+
+  // Both ways of creating an account ask for the same agreement.
+  const agreement =
+    mode === "signup" ? (
+      <>
+        <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <button
+            type="button"
+            onClick={() => setPoliciesExpanded(!policiesExpanded)}
+            className="flex w-full items-center justify-between text-left font-medium text-slate-900 hover:text-brand-700 transition-colors"
+          >
+            <span>{t("registrationAgreement")}</span>
+            {policiesExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </button>
+
+          {policiesExpanded && (
+            <div className="mt-3 space-y-2 text-sm text-slate-700">
+              <p>{t("registrationPolicyIntro")}</p>
+              <div className="space-y-1 pl-2">
+                <p className="text-xs">• {t("regPolicyAge")}</p>
+                <p className="text-xs">• {t("regPolicyGenuineInfo")}</p>
+                <p className="text-xs">• {t("regPolicyPhoneVerification")}</p>
+                <p className="text-xs">• {t("regPolicyResponsibleUse")}</p>
+                <p className="text-xs">• {t("regPolicyTruthfulSkills")}</p>
+                <p className="text-xs">• {t("regPolicyRespectOthers")}</p>
+                <p className="text-xs">• {t("regPolicyProtectInfo")}</p>
+                <p className="text-xs">• {t("regPolicyWorkPayment")}</p>
+                <p className="text-xs">• {t("regPolicySafetyFirst")}</p>
+                <p className="text-xs">• {t("regPolicyAccountAction")}</p>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPolicyOpen("terms")}
+                  className="text-xs font-medium text-brand-700 underline"
+                >
+                  {t("termsOfService")}
+                </button>
+                <span className="text-xs text-slate-400">•</span>
+                <button
+                  type="button"
+                  onClick={() => setPolicyOpen("privacy")}
+                  className="text-xs font-medium text-brand-700 underline"
+                >
+                  {t("privacyPolicy")}
+                </button>
+                <span className="text-xs text-slate-400">•</span>
+                <button
+                  type="button"
+                  onClick={() => setPolicyOpen("registration")}
+                  className="text-xs font-medium text-brand-700 underline"
+                >
+                  {t("registrationPolicyTitle")}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <label className="mb-4 flex items-start gap-2.5 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 accent-brand-700"
+            checked={agreed}
+            onChange={(e) => {
+              setAgreed(e.target.checked);
+              if (e.target.checked) setError(null);
+            }}
+          />
+          <span>{t("registrationAgreePolicies")}</span>
+        </label>
+      </>
+    ) : null;
 
   return (
     <div className="flex min-h-dvh flex-col bg-cream-50">
@@ -460,6 +565,26 @@ export function AuthScreen({
             </>
           )}
 
+          {view === "forgotPin" && (
+            <>
+              <p className="mb-4 text-sm leading-relaxed text-slate-600">{t("authForgotPinBody")}</p>
+              <a
+                href={mailto(t("authForgotPinSubject"))}
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+              >
+                <Mail className="h-4 w-4" aria-hidden />
+                {t("authForgotPinEmail")}
+              </a>
+              <button
+                type="button"
+                onClick={goToAuth}
+                className="mt-3 block w-full text-center text-sm text-slate-500 hover:text-slate-700"
+              >
+                {t("backToSignIn")}
+              </button>
+            </>
+          )}
+
           {view === "auth" && (
             <>
               <div
@@ -493,145 +618,107 @@ export function AuthScreen({
                 </button>
               </div>
 
-              <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-                <Field label={t("email")} error={form.formState.errors.email && t("required")}>
-                  <Input
-                    type="email"
-                    autoComplete="email"
-                    inputMode="email"
-                    placeholder={t("emailPlaceholder")}
-                    {...form.register("email")}
-                  />
-                </Field>
-
-                <Field
-                  label={t("password")}
-                  hint={mode === "signup" ? t("passwordHint") : undefined}
-                  error={form.formState.errors.password && t("passwordHint")}
-                >
-                  <div className="relative">
+              {method === "phone" ? (
+                <PhonePinForm
+                  mode={mode}
+                  agreed={agreed}
+                  agreement={agreement}
+                  onError={(message) => {
+                    setNotice(null);
+                    setError(message);
+                  }}
+                  onForgotPin={() => {
+                    setView("forgotPin");
+                    resetTransient();
+                  }}
+                />
+              ) : (
+                <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+                  <Field label={t("email")} error={form.formState.errors.email && t("required")}>
                     <Input
-                      type={showPassword ? "text" : "password"}
-                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                      className="pr-11"
-                      {...form.register("password")}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                      className="absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
-                    </button>
-                  </div>
-                </Field>
-
-                {mode === "signup" && (
-                  <Field label={t("confirmPassword")}>
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      type="email"
+                      autoComplete="email"
+                      inputMode="email"
+                      placeholder={t("emailPlaceholder")}
+                      {...form.register("email")}
                     />
                   </Field>
-                )}
 
-                {mode === "signin" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setView("forgotEmail");
-                      resetTransient();
-                    }}
-                    className="mb-4 -mt-2 block text-sm font-medium text-brand-700 hover:text-brand-800"
+                  <Field
+                    label={t("password")}
+                    hint={mode === "signup" ? t("passwordHint") : undefined}
+                    error={form.formState.errors.password && t("passwordHint")}
                   >
-                    {t("forgotPassword")}
-                  </button>
-                )}
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                        className="pr-11"
+                        {...form.register("password")}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        className="absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:text-slate-600"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+                      </button>
+                    </div>
+                  </Field>
 
-                {mode === "signup" && (
-                  <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  {mode === "signup" && (
+                    <Field label={t("confirmPassword")}>
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                    </Field>
+                  )}
+
+                  {mode === "signin" && (
                     <button
                       type="button"
-                      onClick={() => setPoliciesExpanded(!policiesExpanded)}
-                      className="flex w-full items-center justify-between text-left font-medium text-slate-900 hover:text-brand-700 transition-colors"
-                    >
-                      <span>{t("registrationAgreement")}</span>
-                      {policiesExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </button>
-                    
-                    {policiesExpanded && (
-                      <div className="mt-3 space-y-2 text-sm text-slate-700">
-                        <p>{t("registrationPolicyIntro")}</p>
-                        <div className="space-y-1 pl-2">
-                          <p className="text-xs">• {t("regPolicyAge")}</p>
-                          <p className="text-xs">• {t("regPolicyGenuineInfo")}</p>
-                          <p className="text-xs">• {t("regPolicyPhoneVerification")}</p>
-                          <p className="text-xs">• {t("regPolicyResponsibleUse")}</p>
-                          <p className="text-xs">• {t("regPolicyTruthfulSkills")}</p>
-                          <p className="text-xs">• {t("regPolicyRespectOthers")}</p>
-                          <p className="text-xs">• {t("regPolicyProtectInfo")}</p>
-                          <p className="text-xs">• {t("regPolicyWorkPayment")}</p>
-                          <p className="text-xs">• {t("regPolicySafetyFirst")}</p>
-                          <p className="text-xs">• {t("regPolicyAccountAction")}</p>
-                        </div>
-                        <div className="mt-3 flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setPolicyOpen("terms")}
-                            className="text-xs font-medium text-brand-700 underline"
-                          >
-                            {t("termsOfService")}
-                          </button>
-                          <span className="text-xs text-slate-400">•</span>
-                          <button
-                            type="button"
-                            onClick={() => setPolicyOpen("privacy")}
-                            className="text-xs font-medium text-brand-700 underline"
-                          >
-                            {t("privacyPolicy")}
-                          </button>
-                          <span className="text-xs text-slate-400">•</span>
-                          <button
-                            type="button"
-                            onClick={() => setPolicyOpen("registration")}
-                            className="text-xs font-medium text-brand-700 underline"
-                          >
-                            {t("registrationPolicyTitle")}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {mode === "signup" && (
-                  <label className="mb-4 flex items-start gap-2.5 text-sm text-slate-600">
-                    <input
-                      type="checkbox"
-                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 accent-brand-700"
-                      checked={agreed}
-                      onChange={(e) => {
-                        setAgreed(e.target.checked);
-                        if (e.target.checked) setError(null);
+                      onClick={() => {
+                        setView("forgotEmail");
+                        resetTransient();
                       }}
-                    />
-                    <span>{t("registrationAgreePolicies")}</span>
-                  </label>
-                )}
+                      className="mb-4 -mt-2 block text-sm font-medium text-brand-700 hover:text-brand-800"
+                    >
+                      {t("forgotPassword")}
+                    </button>
+                  )}
 
-                <Button type="submit" size="lg" className="w-full" loading={busy}>
-                  {mode === "signin" ? t("signIn") : t("signUp")}
-                </Button>
-              </form>
+                  {agreement}
+
+                  <Button type="submit" size="lg" className="w-full" loading={busy}>
+                    {mode === "signin" ? t("signIn") : t("signUp")}
+                  </Button>
+                </form>
+              )}
 
               <div className="my-5 flex items-center gap-3 text-xs uppercase text-slate-400">
                 <span className="h-px flex-1 bg-slate-200" />
                 {t("orDivider")}
                 <span className="h-px flex-1 bg-slate-200" />
               </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="mb-2.5 w-full"
+                onClick={() => switchMethod(method === "phone" ? "email" : "phone")}
+              >
+                {method === "phone" ? (
+                  <Mail className="h-4 w-4" aria-hidden />
+                ) : (
+                  <Smartphone className="h-4 w-4" aria-hidden />
+                )}
+                {method === "phone" ? t("authUseEmail") : t("authUsePhone")}
+              </Button>
 
               <Button
                 type="button"
@@ -653,6 +740,151 @@ export function AuthScreen({
       <PolicyDialog open={policyOpen === "terms"} onClose={() => setPolicyOpen(null)} kind="terms" />
       <PolicyDialog open={policyOpen === "privacy"} onClose={() => setPolicyOpen(null)} kind="privacy" />
     </div>
+  );
+}
+
+/**
+ * Mobile number + 6-digit PIN, for both signing in and creating an account.
+ * No SMS code yet (see migration 6000): a new account is signed in the
+ * moment it's made, and onboarding takes it from there.
+ */
+function PhonePinForm({
+  mode,
+  agreed,
+  agreement,
+  onError,
+  onForgotPin,
+}: {
+  mode: "signin" | "signup";
+  agreed: boolean;
+  agreement: React.ReactNode;
+  onError: (message: string | null) => void;
+  onForgotPin: () => void;
+}) {
+  const { t } = useI18n();
+  const [phone, setPhone] = useState("");
+  const [pin, setPin] = useState("");
+  const [pinAgain, setPinAgain] = useState("");
+  const [pinMasked, setPinMasked] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [errors, setErrors] = useState<{ phone?: string; pin?: string; pinAgain?: string }>({});
+
+  // Switching between Sign in and Create account keeps the number, not the
+  // complaints about it.
+  useEffect(() => {
+    setErrors({});
+    setPinAgain("");
+  }, [mode]);
+
+  /** Supabase's wording for the phone cases, in the person's own terms. */
+  function phoneError(err: unknown): string {
+    const e = err as { code?: string; message?: string };
+    const message = e?.message ?? "";
+    if (e?.code === "invalid_credentials" || /invalid login credentials/i.test(message)) {
+      return t("authWrongPhoneOrPin");
+    }
+    if (e?.code === "user_already_exists" || e?.code === "phone_exists" || /already registered/i.test(message)) {
+      return t("authPhoneTaken");
+    }
+    // The Phone provider is off, or phone confirmations are on and the SMS
+    // hook said no - either way the dashboard setup isn't done.
+    if (e?.code === "phone_provider_disabled" || /phone (signups|logins) are disabled|sms/i.test(message)) {
+      return t("authPhoneOff");
+    }
+    return errorMessage(err);
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const next: typeof errors = {};
+    if (!isNepaliMobile(phone)) next.phone = t("authPhoneInvalid");
+    if (!/^\d{6}$/.test(pin)) next.pin = t("authPinIncomplete");
+    else if (mode === "signup" && isWeakPin(pin)) next.pin = t("authPinWeak");
+    if (mode === "signup" && !next.pin && pinAgain !== pin) next.pinAgain = t("authPinsDontMatch");
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+    if (mode === "signup" && !agreed) {
+      onError(t("mustAgreeToPolicies"));
+      return;
+    }
+
+    setBusy(true);
+    onError(null);
+    try {
+      const credentials = { phone: authPhone(phone), password: pinToPassword(pin) };
+      if (mode === "signup") {
+        // A number already on an account (a phone sign-in, or an email
+        // account's contact number) would only fail later, at onboarding.
+        // If the check itself fails, sign-up still has its own guard.
+        if (await phoneAccountExists(phone).catch(() => false)) {
+          onError(t("authPhoneTaken"));
+          return;
+        }
+        const { data, error } = await supabase.auth.signUp(credentials);
+        if (error) throw error;
+        // Only when phone confirmations are still on in the dashboard.
+        if (!data.session) throw new Error(t("authPhoneOff"));
+      } else {
+        const { error } = await supabase.auth.signInWithPassword(credentials);
+        if (error) throw error;
+      }
+      // A session now exists - AppShell notices and moves on by itself.
+    } catch (err) {
+      onError(phoneError(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={onSubmit} noValidate>
+      <Field
+        label={t("authPhoneLabel")}
+        hint={mode === "signup" ? t("authPhoneSignUpHint") : undefined}
+        error={errors.phone}
+      >
+        <MobileNumberInput value={phone} onChange={setPhone} disabled={busy} />
+      </Field>
+
+      <PinField
+        label={mode === "signup" ? t("authPinCreate") : t("authPinLabel")}
+        hint={mode === "signup" ? t("authPinCreateHint") : undefined}
+        error={errors.pin}
+        value={pin}
+        onChange={setPin}
+        masked={pinMasked}
+        onToggleMasked={() => setPinMasked((v) => !v)}
+        disabled={busy}
+        action={
+          mode === "signin" && (
+            <button
+              type="button"
+              onClick={onForgotPin}
+              className="mt-2 block text-sm font-medium text-brand-700 hover:text-brand-800"
+            >
+              {t("authForgotPin")}
+            </button>
+          )
+        }
+      />
+
+      {mode === "signup" && (
+        <PinField
+          label={t("authPinConfirm")}
+          error={errors.pinAgain}
+          value={pinAgain}
+          onChange={setPinAgain}
+          masked={pinMasked}
+          disabled={busy}
+        />
+      )}
+
+      {agreement}
+
+      <Button type="submit" size="lg" className="w-full" loading={busy}>
+        {mode === "signin" ? t("signIn") : t("signUp")}
+      </Button>
+    </form>
   );
 }
 

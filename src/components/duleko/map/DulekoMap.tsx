@@ -12,8 +12,9 @@ import type { MapBounds } from "@/lib/queries";
  * glyph, rounded controls, a scale bar) in Duleko's green.
  *
  * Pins are people (green; grey when busy) and work requests (orange),
- * gathered into numbered clusters when zoomed out. Your own position is a
- * blue dot with its accuracy ring.
+ * gathered into numbered clusters when zoomed out. Guests see areas
+ * instead of people: a green disc with how many are there. Your own
+ * position is a blue dot with its accuracy ring.
  *
  * `gestures`:
  *   none        a picture of the map - Home's card; the whole thing is a tap target
@@ -25,13 +26,15 @@ export const KATHMANDU = { lat: 27.7172, lng: 85.324 };
 
 export interface MapPin {
   id: string;
-  kind: "person" | "job";
+  kind: "person" | "job" | "area";
   lat: number;
   lng: number;
   /** Shown in the pin's tooltip. */
   label: string;
   /** People only: free to take work now (green) or not (grey). */
   available?: boolean;
+  /** Areas only: how many people are there. */
+  count?: number;
 }
 
 export interface MapMe {
@@ -45,6 +48,7 @@ export interface DulekoMapHandle {
   zoomIn: () => void;
   zoomOut: () => void;
   bounds: () => MapBounds | null;
+  center: () => { lat: number; lng: number } | null;
 }
 
 const GLYPH = {
@@ -63,7 +67,21 @@ function pinColour(pin: MapPin): string {
   return pin.available === false ? "#64748b" : "#15803d";
 }
 
+/** An area: a disc with its head count, a little bigger for more people. */
+function areaIcon(pin: MapPin, selected: boolean): L.DivIcon {
+  const count = pin.count ?? 1;
+  const size = (count < 10 ? 34 : count < 50 ? 40 : 46) + (selected ? 6 : 0);
+  return L.divIcon({
+    className: "",
+    html: `<div class="dk-area${selected ? " selected" : ""}" style="width:${size}px;height:${size}px"><span>${count}</span></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    tooltipAnchor: [0, -size / 2],
+  });
+}
+
 function pinIcon(pin: MapPin, selected: boolean, small = false): L.DivIcon {
+  if (pin.kind === "area") return areaIcon(pin, selected);
   const colour = pinColour(pin);
   const scale = selected ? 1.25 : small ? 0.72 : 1;
   const w = Math.round(32 * scale);
@@ -92,8 +110,10 @@ const meIcon = L.divIcon({
 
 function clusterIcon(cluster: L.MarkerCluster): L.DivIcon {
   const markers = cluster.getAllChildMarkers();
+  // An area stands for its head count; every other pin for one.
+  const weight = (m: L.Marker) => (m.options as { count?: number }).count ?? 1;
   const jobs = markers.filter((m) => (m.options as { kind?: string }).kind === "job").length;
-  const count = markers.length;
+  const count = markers.reduce((sum, m) => sum + weight(m), 0);
   const size = count < 10 ? 36 : count < 50 ? 42 : 48;
   const tone = jobs === count ? "jobs" : jobs > 0 ? "mixed" : "people";
   // A mixed cluster's ring shows its share of people (green) and work (orange).
@@ -286,9 +306,10 @@ export const DulekoMap = forwardRef<
         keyboard: gestures !== "none",
         interactive: gestures !== "none",
         zIndexOffset: pin.id === selectedId ? 1000 : 0,
-        // Read back by clusterIcon to colour a cluster of work requests.
+        // Read back by clusterIcon: work requests colour it, areas add their head count.
         kind: pin.kind,
-      } as L.MarkerOptions & { kind: string });
+        count: pin.count,
+      } as L.MarkerOptions & { kind: string; count?: number });
       if (gestures !== "none") {
         marker.bindTooltip(pin.label, { direction: "top", className: "dk-label", offset: [0, -2] });
         marker.on("click", (e) => {
@@ -356,6 +377,10 @@ export const DulekoMap = forwardRef<
     bounds: () => {
       const b = mapRef.current?.getBounds();
       return b ? { south: b.getSouth(), west: b.getWest(), north: b.getNorth(), east: b.getEast() } : null;
+    },
+    center: () => {
+      const c = mapRef.current?.getCenter();
+      return c ? { lat: c.lat, lng: c.lng } : null;
     },
   }));
 

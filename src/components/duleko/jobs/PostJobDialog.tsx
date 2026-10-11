@@ -229,7 +229,7 @@ export function PostJobDialog({
         </Field>
       </div>
 
-      <Field label={t("postJobPlace")} error={errors.place}>
+      <Field label={t("postJobPlace")} error={errors.place} hint={t("postJobPlaceHint")}>
         <Input
           value={place}
           onChange={(e) => {

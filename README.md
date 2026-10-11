@@ -91,8 +91,9 @@ workers come to you. Agree a price, get the work done, then rate each other.
 
 | | Feature | Details |
 |---|---|---|
+| 📱 | **Join with a mobile number** | Create an account and sign in with a Nepali mobile number and a 6-digit PIN. No SMS code for now. Email + password and Google sign-in still work for everyone who joined that way. |
 | 🔎 | **Search and browse** | Typo-tolerant search (`pg_trgm`) across names, skills and places, sorted by distance. 31 skills in three groups: *Trades & Local Services*, *Professional & Skilled Services*, *Personal & Everyday Services*. Guests can browse without an account. |
-| 🗺️ | **Map** | Leaflet + OpenStreetMap with clustered pins, on Home and at `/map`. Other people's pins are snapped to a ~300 m grid unless they turn on "Show my exact spot on the map". Your own blue dot is live GPS. |
+| 🗺️ | **Map** | Leaflet + OpenStreetMap with clustered pins, on Home and at `/map`. Signed-in members see people at the middle of their ~1 km square (a shop or workshop at its own spot). Guests see only how many people are in each ~5 km area. Each person's place is a work area they picked once on a map, never their live GPS. Your own blue dot stays on your phone. |
 | 📋 | **Job board** | `/jobs`: post what you need done (skill, place, day, optional budget). Up to 30 available workers with that skill in that district are alerted. Workers send offers, and you pick one. |
 | 🤝 | **Work requests and price negotiation** | Send a worker a request and go back and forth on price. Whoever didn't make the latest offer is the one who can accept it or counter it. |
 | 🧰 | **My Work** | `/work` is your hub, split into *Work I do* and *Work I gave*. Each has Active ("Needs you" first), offers or posts, and History. |
@@ -119,7 +120,7 @@ workers come to you. Agree a price, get the work done, then rate each other.
 | Routing and data | **TanStack Router** (code-based route tree in `src/router.tsx`), **TanStack Query** |
 | Forms | `react-hook-form` + `zod` |
 | Maps | **Leaflet 1.9** + `leaflet.markercluster`, OpenStreetMap tiles |
-| Backend | **Supabase**: Postgres, Auth (email + password with emailed codes, Google sign-in), Storage, Realtime |
+| Backend | **Supabase**: Postgres, Auth (mobile number + PIN, email + password with emailed codes, Google sign-in), Storage, Realtime |
 | Server logic | Postgres functions and triggers (`SECURITY DEFINER` where needed), RLS on every table, `pg_trgm`, `pg_cron`, `pg_net`, Vault |
 | Edge functions | Deno: `send-notifications` (email/SMS outbox), `sync-brevo-contacts` (marketing list) |
 | Email / SMS | Brevo (email). Sparrow SMS or Twilio (optional) |
@@ -185,7 +186,7 @@ the auth user cascades through all of it.
 ```mermaid
 erDiagram
   profiles ||--o| profile_contacts : "phone (private)"
-  profiles ||--o| profile_locations : "exact point (owner only)"
+  profiles ||--o| profile_locations : "work area (owner only)"
   profiles ||--o{ user_skills : has
   skills ||--o{ user_skills : ""
   profiles ||--o{ availability : "free days"
@@ -197,6 +198,7 @@ erDiagram
   profiles ||--o{ job_posts : posts
   skills ||--o{ job_posts : ""
   job_posts ||--o{ job_offers : receives
+  job_posts ||--o| job_post_places : "exact place (poster only)"
   profiles ||--o{ job_offers : "worker offers"
   job_posts |o--o| work_engagements : "chosen offer"
   work_engagements ||--o| fee_charges : "one fee"
@@ -231,7 +233,7 @@ erDiagram
 |---|---|
 | `profiles` | The public profile: name, photo, cover, about, place, rating, membership number, `public_slug`, `call_permission` |
 | `profile_contacts` | Phone numbers, behind `can_call()` |
-| `profile_locations` | Exact GPS point and `show_exact`, readable only by the owner |
+| `profile_locations` | The work area someone picked on a map, and `is_shop`. Readable only by the owner |
 | `skills`, `user_skills` | The skills catalogue (bilingual, categorised) and who offers what |
 | `availability` | Workers' free and booked days |
 | `certificates` | Uploaded certificates shown on profiles |
@@ -239,6 +241,7 @@ erDiagram
 | `bids` | The price negotiation on a pending request |
 | `reviews` | One per reviewer per job, which feeds `profiles.rating` |
 | `job_posts`, `job_offers` | The job board and workers' offers |
+| `job_post_places` | A post's exact place and pin, readable only by the poster. The chosen worker gets them through the work request |
 | `friendships` | Requests and accepted friends |
 | `messages`, `message_reactions` | 1:1 chat |
 | `presence` | Last seen, for "online" and for holding back chat emails |
@@ -270,9 +273,12 @@ that needs a rule or touches several rows, and Realtime channels. All of it goes
 
 | RPC | Who | What it does |
 |---|---|---|
-| `search_workers` | everyone | Fuzzy, skill-aware search with snapped, rounded distances |
+| `phone_account_exists` | everyone | Whether a mobile number is already on an account, checked before sign-up. Says only yes or no |
+| `search_workers` | everyone | Fuzzy, skill-aware search. Distances (whole km, from ~1 km squares) for members only |
 | `skill_counts` | everyone | How many workers offer each skill (Home grid) |
-| `map_people` | everyone | People inside a map bounding box, with approximate points |
+| `map_people` | members | People inside a map bounding box, at the middle of their ~1 km square (shops exact) |
+| `map_area_counts` | everyone | How many people are in each ~5 km square, for guests' map |
+| `engagement_places` | the two people in a job | The job post's exact pin while the request is live, the other person's work area once accepted |
 | `make_job_offer` / `withdraw_job_offer` | workers | Offer a price on a job post, or take the offer back |
 | `choose_job_offer` | post owner | Turn an offer into a work request and decline the rest |
 | `close_job_post` | post owner | Close a post without choosing anyone |
@@ -287,7 +293,7 @@ The Android background job also calls `device_alerts(key)` directly from Java.
 ### Server-side helpers worth knowing
 
 `current_profile_id()` · `can_call()` · `can_chat_with()` · `is_staff()` · `is_admin_or_above()` ·
-`is_technical_admin()` · `is_profile_suspended()` · `duleko_fee_for()` · `snap_coord()` ·
+`is_technical_admin()` · `is_profile_suspended()` · `duleko_fee_for()` · `area_coord()` ·
 `public_point()` · `km_between()` · `requeue_stuck_deliveries()` · `deliver_welcome()`
 
 ### Realtime channels
@@ -458,11 +464,13 @@ Migrations are pasted into the Supabase **SQL editor** one at a time, in filenam
 | `5600`–`5700` | Payment details, Duleko's accounts, monthly fees, BS months, development banks |
 | `5800` | Job board (`job_posts`, `job_offers`, offer/choose/close RPCs) |
 | `5900` | Map (`map_people`), exact points moved to owner-only `profile_locations` |
+| `6000` | Mobile number + PIN sign-in (`phone_account_exists`, a placeholder Send SMS hook) |
+| `6100` | Map privacy: members-only people map, guest area counts, ~1 km squares, shop pins, private job places (`job_post_places`, `engagement_places`) |
 
 ### Writing a new migration
 
-1. Name it `20260101006000_short_name.sql`, the next free number in steps of 100.
-2. Start with a `-- Duleko MVP :: 6000 :: Title` comment block saying what it does and why.
+1. Name it `20260101006200_short_name.sql`, the next free number in steps of 100.
+2. Start with a `-- Duleko MVP :: 6200 :: Title` comment block saying what it does and why.
 3. Make it **safe to run more than once** (`create ... if not exists`, `create or replace`,
    `drop policy if exists`, and `not exists` guards on inserts).
 4. Enable RLS on every new table and write its policies in the same file.
@@ -541,7 +549,8 @@ is paid or a staff member records the payment. Jobs already accepted carry on.
 | Public profile (name, photo, skills, rating, reviews, certificates) | Everyone, guests included |
 | Phone number (`profile_contacts`) | Decided by the owner's **"Who can call me"** setting: `everyone`, `accepted_work` (default, only after an accepted job), `friends` or `nobody`. Friends can always call. |
 | Payment details | The other side of an accepted, confirmed or completed job, and anyone who may call the owner |
-| Exact location (`profile_locations`) | **Only the owner.** Others get a point snapped to ~300 m, or the exact point only if the owner opts in. Distances are rounded to half a kilometre. |
+| Work area (`profile_locations`) | **Only the owner.** It's a place picked once on a map, never tracked. Signed-in members see the middle of its ~1 km square, or the spot itself if the owner marked it as their shop or workshop. Guests see only counts per ~5 km area. Distances are whole kilometres, for members only. The other side of an accepted job can open the exact point while the job is active. |
+| A job post's exact place (`job_post_places`) | The poster, and the worker they choose (on the work request). Everyone else sees the municipality, district and a ~1 km pin |
 | Chats, notifications, engagements, friendships, bids | Only the people involved (`to authenticated`) |
 | Staff roles, verification, suspensions | Kept in separate tables, so nobody can grant themselves a badge or role by editing their own profile |
 
@@ -552,6 +561,9 @@ Other safeguards:
 - Older app builds that still write `profiles.lat/lng` are caught by a trigger that moves the
   point into `profile_locations` and blanks the public columns.
 - Members must be 18 or older.
+- A PIN has only a million possibilities and there's no SMS check yet, so sign-up refuses easy
+  ones (`111111`, `123456`, `123123`) and Supabase's sign-in rate limit slows guessing. Turning
+  on SMS codes or CAPTCHA would make guessing harder still.
 - Photos are resized on the device (`src/lib/image.ts`) and stored as WebP with long cache headers.
 - Android release signing (`*.jks`, `keystore.properties`) and all `.env*` files are gitignored.
   The service-role key is only ever read from the environment (scripts) or Vault (cron).
@@ -778,6 +790,18 @@ Set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` and `VITE_SITE_URL` in Vercel 
 Environment Variables. In Supabase → Authentication → URL Configuration, set the **Site URL**
 to the production address and add it to **Redirect URLs** (Google sign-in returns there).
 
+**Mobile number + PIN sign-in** needs two dashboard settings, after migration `6000` has run:
+
+1. **Authentication → Auth Hooks → Add hook → Send SMS hook**: type *Postgres*, schema
+   `public`, function `send_sms_hook`. The dashboard won't switch the Phone provider on without
+   an SMS provider unless this hook is on. It sends nothing.
+2. **Authentication → Sign In / Providers → Phone**: turn on *Enable Phone provider* and turn
+   **off** *Enable phone confirmations*, so a new account works with no SMS code.
+
+The PIN is the account's Supabase password, stored as `Duleko-PIN-` followed by the 6 digits
+(`src/lib/phone-auth.ts`). That keeps it valid under any password rule set for email accounts.
+To add SMS codes later, point the Send SMS hook at an SMS provider and turn confirmations on.
+
 **Before every push to `main`**
 
 - [ ] Every new migration the change depends on has been run in the SQL editor
@@ -807,6 +831,8 @@ to the production address and add it to **Redirect URLs** (Google sign-in return
 | Emails stopped for the day | `email_daily_limit` was reached | Rows show `skipped`. They resume after 00:00 UTC (5:45 am in Nepal) |
 | An email or SMS never arrived | The provider rejected it | `select last_error from notification_deliveries where status = 'failed'` |
 | Phone alerts arrive late | Android runs background jobs at most every 15 minutes | Expected. Opening the app shows everything right away |
+| "Mobile number sign-in isn't switched on yet" | The Phone provider is off, or *Enable phone confirmations* is still on | Do the two dashboard steps under [Deployment](#deployment-and-release-checklist) |
+| Someone forgot their PIN | There's no SMS yet, so they can't reset it themselves | Check it's really them, then in the SQL editor: `update auth.users set encrypted_password = extensions.crypt('Duleko-PIN-' \|\| '<new PIN>', extensions.gen_salt('bf')) where phone = '977<number>';` |
 | Old map pins look exact | An old app build wrote `profiles.lat/lng` | The `5900` trigger moves it into `profile_locations`. Make sure 5900 has been run |
 
 ---

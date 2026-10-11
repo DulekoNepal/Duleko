@@ -44,6 +44,7 @@ import {
   closeJobPost,
   countMyBoardActivity,
   getJobPost,
+  getJobPostPlace,
   getMyOffer,
   getUserSkills,
   listJobPosts,
@@ -304,7 +305,7 @@ export function JobScreen() {
         ) : (
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] md:items-start md:gap-4">
             <div className="space-y-3 md:space-y-4">
-              <JobSummary job={job} />
+              <JobSummary job={job} mine={mine} />
               {mine && profile ? <OwnerOffers job={job} /> : null}
             </div>
             <div className="space-y-3 md:sticky md:top-20 md:space-y-4">
@@ -333,12 +334,24 @@ function Fact({ icon: Icon, label, children }: { icon: typeof MapPin; label: str
   );
 }
 
-function JobSummary({ job }: { job: JobPost }) {
+/**
+ * The post itself. Everyone sees its area - municipality and district; the
+ * exact place is private (job_post_places, 6100), so only its poster sees
+ * it here, and the chosen worker gets it on their work request.
+ */
+function JobSummary({ job, mine }: { job: JobPost; mine: boolean }) {
   const { t, lang } = useI18n();
   const budget = jobBudgetText(job, lang);
-  const where = [job.location_text, municipalityLabel(job.district, job.municipality, lang), districtLabel(job.district, lang)]
+  const area = [...new Set([municipalityLabel(job.district, job.municipality, lang), districtLabel(job.district, lang)])]
     .filter(Boolean)
     .join(", ");
+  const place = useQuery({
+    queryKey: ["job-place", job.id],
+    queryFn: () => getJobPostPlace(job.id),
+    enabled: mine,
+    staleTime: 5 * 60_000,
+  });
+  const exact = mine ? place.data?.location_text : null;
 
   return (
     <Card>
@@ -365,7 +378,22 @@ function JobSummary({ job }: { job: JobPost }) {
 
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <Fact icon={MapPin} label={t("jobWhere")}>
-            {where}
+            {exact ? (
+              <>
+                {exact}
+                <span className="block text-xs font-normal text-slate-500">{area}</span>
+                <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-400">{t("jobPlaceMine")}</span>
+              </>
+            ) : (
+              <>
+                {area}
+                {!mine && (
+                  <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-400">
+                    {t("jobPlaceHidden")}
+                  </span>
+                )}
+              </>
+            )}
           </Fact>
           <Fact icon={CalendarDays} label={t("jobWhen")}>
             {formatDate(job.work_date, lang)}
