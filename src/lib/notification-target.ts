@@ -60,14 +60,20 @@ export async function openNotification(
     return;
   }
 
+  // ID checks: (staff) one to check, or the reminder / a rejected ID,
+  // which both lead to sending one.
+  if (n.kind === "kyc_review") {
+    void navigate({ to: "/staff/verify" });
+    return;
+  }
+  if (n.kind === "kyc_result" || n.kind === "verify_reminder") {
+    void navigate({ to: "/verify" });
+    return;
+  }
+
   if (n.kind === "friend_request" || n.kind === "friend_accepted") {
     void navigate({ to: "/friends" });
-  } else if (
-    n.kind === "welcome" ||
-    n.kind === "verified" ||
-    n.kind === "verify_reminder" ||
-    n.kind === "announcement"
-  ) {
+  } else if (n.kind === "welcome" || n.kind === "verified" || n.kind === "announcement") {
     void navigate({ to: "/profile" });
   } else if (n.engagement_id) {
     // Job updates and reviews land on the job itself, not just the list.

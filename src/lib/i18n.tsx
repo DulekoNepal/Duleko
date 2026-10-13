@@ -6,6 +6,7 @@ import { jobStrings } from "./i18n-jobs";
 import { profileStrings } from "./i18n-profile";
 import { workStrings } from "./i18n-work";
 import { authStrings } from "./i18n-auth";
+import { kycStrings } from "./i18n-kyc";
 import { setActiveCalendar, storeCalendar, storedCalendar, type CalendarChoice } from "./bs-calendar";
 
 /**
@@ -425,9 +426,7 @@ const strings = {
   moderatorRoleLabel: ["Moderator", "मोडेरेटर"],
   adminRoleLabel: ["Admin", "एड्मिन"],
   technicalAdminRoleLabel: ["Technical admin", "प्राविधिक एड्मिन"],
-  verifyProfile: ["Verify profile", "प्रोफाइल प्रमाणित गर्नुहोस्"],
   unverifyProfile: ["Remove verification", "प्रमाणीकरण हटाउनुहोस्"],
-  verifiedSuccess: ["Profile verified.", "प्रोफाइल प्रमाणित भयो।"],
   unverifiedSuccess: ["Verification removed.", "प्रमाणीकरण हटाइयो।"],
   suspendUser: ["Suspend user", "प्रयोगकर्ता निलम्बन गर्नुहोस्"],
   unsuspendUser: ["Unsuspend user", "निलम्बन हटाउनुहोस्"],
@@ -1375,6 +1374,9 @@ const strings = {
 
   // ---- mobile number + PIN sign-in (see i18n-auth.ts) ------------------
   ...authStrings,
+
+  // ---- ID checks for the verified badge (see i18n-kyc.ts) --------------
+  ...kycStrings,
 } as const;
 
 export type StringKey = keyof typeof strings;

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Award, Briefcase, Camera, GraduationCap, Cake, IdCard, Info, MapPin, Pencil, Phone, Plus, Trash2, type LucideIcon } from "lucide-react";
 import { SectionCard } from "@/components/duleko/ProfileParts";
+import { KycProfileCard } from "@/components/duleko/kyc/KycParts";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { useSession } from "@/hooks/use-session";
@@ -43,6 +44,7 @@ export function OverviewTab({ onEdit, avatar }: { onEdit: (kind: EditorKind) => 
   return (
     <div className="space-y-3 md:space-y-4">
       <FinishProfileCard onEdit={onEdit} avatar={avatar} />
+      <KycProfileCard />
 
       <ProfileColumns>
         <ProfileColumn>

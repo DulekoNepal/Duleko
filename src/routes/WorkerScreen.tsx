@@ -89,7 +89,6 @@ import {
   suspendProfile,
   unsuspendProfile,
   unverifyProfile,
-  verifyProfile,
 } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
 import { addDays, cn, formatNumber, locationLine, toDateKey, todayKey } from "@/lib/utils";
@@ -242,15 +241,6 @@ export function WorkerScreen() {
     queryClient.invalidateQueries({ queryKey: ["profile", handle] });
     queryClient.invalidateQueries({ queryKey: ["suspended", workerId] });
   }
-
-  const verify = useMutation({
-    mutationFn: () => verifyProfile(workerId, me!.id),
-    onSuccess: () => {
-      toast(t("verifiedSuccess"));
-      invalidateWorker();
-    },
-    onError: (error) => toast(errorMessage(error), "error"),
-  });
 
   const unverify = useMutation({
     mutationFn: () => unverifyProfile(workerId),
@@ -504,7 +494,8 @@ export function WorkerScreen() {
                           {w.is_verified ? (
                             <MenuItem icon={ShieldOff} label={t("unverifyProfile")} onClick={menuAction(() => unverify.mutate())} />
                           ) : (
-                            <MenuItem icon={ShieldCheck} label={t("verifyProfile")} onClick={menuAction(() => verify.mutate())} />
+                            // The badge is only given by approving an ID check.
+                            <MenuItem icon={IdCard} label={t("kycQueueTitle")} onClick={menuAction(() => navigate({ to: "/staff/verify" }))} />
                           )}
                           {canSuspend &&
                             (suspension.data ? (

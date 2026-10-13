@@ -23,6 +23,10 @@ import type {
   JobOffer,
   JobPerson,
   JobPost,
+  KycDocType,
+  KycQueueItem,
+  KycRejectionCode,
+  KycSubmission,
   Lang,
   MessageReaction,
   Notice,
@@ -150,7 +154,7 @@ export async function createProfile(userId: string, input: ProfileInput): Promis
   )!;
 }
 
-const USER_BUCKETS = ["avatars", "covers", "certificates", "payments"] as const;
+const USER_BUCKETS = ["avatars", "covers", "certificates", "payments", "kyc"] as const;
 
 /**
  * Clears the person's uploads. Storage rows cannot be deleted with SQL
@@ -1048,14 +1052,8 @@ export async function reportUser(input: {
 // ---------------------------------------------------------------------
 // Staff: verification, suspension, reports queue
 // ---------------------------------------------------------------------
-
-/** Grants the verified badge. Staff-only - enforced by RLS on profile_verifications. */
-export async function verifyProfile(profileId: string, verifiedBy: string): Promise<void> {
-  const { error } = await supabase
-    .from("profile_verifications")
-    .upsert({ profile_id: profileId, verified_by: verifiedBy });
-  if (error) throw error;
-}
+// The badge itself is only ever given by approving an ID check
+// (reviewKyc below); staff can still take one away.
 
 export async function unverifyProfile(profileId: string): Promise<void> {
   const { error } = await supabase.from("profile_verifications").delete().eq("profile_id", profileId);
@@ -1115,6 +1113,164 @@ export async function resolveReport(
     .from("reports")
     .update({ status, resolved_by: resolvedBy, resolved_at: new Date().toISOString() })
     .eq("id", reportId);
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------
+// ID checks (KYC) for the verified badge - 6300_kyc_verification.sql
+// ---------------------------------------------------------------------
+// The photos live in the private 'kyc' bucket: no public URLs, only
+// short-lived signed links for the owner and staff.
+
+/** The order the documents are offered in - the one most people carry first. */
+export const KYC_DOC_TYPES: KycDocType[] = ["citizenship", "national_id", "driving_license", "passport"];
+
+/** Every kind is a two-sided card except the passport, which has one photo page. */
+export function kycHasBack(type: KycDocType): boolean {
+  return type !== "passport";
+}
+
+const KYC_COLUMNS =
+  "id,profile_id,status,created_at,reviewed_at,rejection_code,rejection_note," +
+  "documents:kyc_documents(doc_type,front_path,back_path)";
+
+// Both FKs point at profiles, so each embed names its constraint.
+const KYC_QUEUE_COLUMNS =
+  KYC_COLUMNS +
+  ",person:profiles!kyc_submissions_profile_id_fkey(id,full_name,avatar_url,member_no,district,municipality,created_at)" +
+  ",reviewer:profiles!kyc_submissions_reviewed_by_fkey(full_name)";
+
+/** How long a link to an ID photo works - long enough to look, short enough not to leak. */
+const KYC_URL_SECONDS = 10 * 60;
+
+/** Your latest ID check, or null if you've never sent one. */
+export async function getMyKyc(profileId: string): Promise<KycSubmission | null> {
+  const { data, error } = await supabase
+    .from("kyc_submissions")
+    .select(KYC_COLUMNS)
+    .eq("profile_id", profileId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as KycSubmission | null) ?? null;
+}
+
+/** One document picked on the Get verified screen, before it's sent. */
+export interface KycDraft {
+  type: KycDocType;
+  front: File;
+  back: File | null;
+}
+
+/**
+ * Uploads the photos, then sends them for checking. If sending fails,
+ * the photos just uploaded are removed again rather than left behind.
+ */
+export async function submitKyc(
+  userId: string,
+  drafts: KycDraft[],
+  onProgress?: (done: number, total: number) => void,
+): Promise<void> {
+  const total = drafts.reduce((n, d) => n + 1 + (d.back && kycHasBack(d.type) ? 1 : 0), 0);
+  const uploaded: string[] = [];
+  async function put(original: File, name: string): Promise<string> {
+    onProgress?.(uploaded.length + 1, total);
+    const file = await shrinkImage(original, IMAGE_MAX_SIDE.kyc, 0.88);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${userId}/${name}-${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("kyc").upload(path, file, { contentType: file.type });
+    if (error) throw error;
+    uploaded.push(path);
+    return path;
+  }
+
+  try {
+    const documents: { type: KycDocType; front: string; back: string | null }[] = [];
+    for (const d of drafts) {
+      documents.push({
+        type: d.type,
+        front: await put(d.front, `${d.type}-front`),
+        back: d.back && kycHasBack(d.type) ? await put(d.back, `${d.type}-back`) : null,
+      });
+    }
+    const { error } = await supabase.rpc("submit_kyc", { p_documents: documents });
+    if (error) throw error;
+  } catch (error) {
+    if (uploaded.length > 0) {
+      try {
+        await supabase.storage.from("kyc").remove(uploaded);
+      } catch {
+        // Best-effort; the error that matters is the one below.
+      }
+    }
+    throw error;
+  }
+}
+
+function mapKycRow(row: unknown): KycQueueItem {
+  const r = row as Record<string, unknown>;
+  return { ...r, person: one(r.person), reviewer: one(r.reviewer) } as KycQueueItem;
+}
+
+/** Staff: ID checks waiting, oldest first - first sent, first checked. */
+export async function listKycQueue(): Promise<KycQueueItem[]> {
+  const { data, error } = await supabase
+    .from("kyc_submissions")
+    .select(KYC_QUEUE_COLUMNS)
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return ((data ?? []) as unknown[]).map(mapKycRow);
+}
+
+/** Staff: the latest ID checks already decided, newest first. */
+export async function listRecentKycReviews(limit = 20): Promise<KycQueueItem[]> {
+  const { data, error } = await supabase
+    .from("kyc_submissions")
+    .select(KYC_QUEUE_COLUMNS)
+    .neq("status", "pending")
+    .order("reviewed_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return ((data ?? []) as unknown[]).map(mapKycRow);
+}
+
+/** Staff: how many ID checks are waiting. */
+export async function countKycQueue(): Promise<number> {
+  const { count, error } = await supabase
+    .from("kyc_submissions")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "pending");
+  if (error) throw error;
+  return count ?? 0;
+}
+
+/** Signed links to ID photos, by path. */
+export async function kycPhotoUrls(paths: string[]): Promise<Record<string, string>> {
+  if (paths.length === 0) return {};
+  const { data, error } = await supabase.storage.from("kyc").createSignedUrls(paths, KYC_URL_SECONDS);
+  if (error) throw error;
+  const out: Record<string, string> = {};
+  for (const item of data ?? []) {
+    if (item.path && item.signedUrl) out[item.path] = item.signedUrl;
+  }
+  return out;
+}
+
+/** Staff: approve (gives the verified badge) or reject with a reason. */
+export async function reviewKyc(
+  submissionId: string,
+  approve: boolean,
+  reason?: KycRejectionCode,
+  note?: string,
+): Promise<void> {
+  const { error } = await supabase.rpc("review_kyc", {
+    p_submission: submissionId,
+    p_approve: approve,
+    p_reason: approve ? null : (reason ?? "other"),
+    p_note: approve ? null : note?.trim() || null,
+  });
   if (error) throw error;
 }
 

@@ -10,6 +10,7 @@ import {
   CheckCheck,
   ExternalLink,
   HandCoins,
+  IdCard,
   Megaphone,
   MessageCircle,
   Pin,
@@ -72,6 +73,8 @@ const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
   job_post: { icon: Briefcase, tone: "brand" },
   job_offer: { icon: HandCoins, tone: "amber" },
   job_closed: { icon: XCircle, tone: "slate" },
+  kyc_review: { icon: IdCard, tone: "amber" },
+  kyc_result: { icon: IdCard, tone: "slate" },
 };
 
 export function NotificationsScreen() {

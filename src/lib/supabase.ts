@@ -43,6 +43,21 @@ const JOB_ERRORS: [string, StringKey][] = [
   ["ACCOUNT_SUSPENDED", "errAccountSuspended"],
 ];
 
+/** ID checks for the verified badge (6300_kyc_verification.sql). */
+const KYC_ERRORS: [string, StringKey][] = [
+  ["KYC_PENDING", "errKycPending"],
+  ["KYC_ALREADY_VERIFIED", "errKycAlreadyVerified"],
+  ["KYC_STAFF", "errKycStaff"],
+  ["KYC_DOCUMENT_REQUIRED", "errKycDocumentRequired"],
+  ["KYC_BACK_REQUIRED", "errKycBackRequired"],
+  ["KYC_FRONT_REQUIRED", "errKycPhotos"],
+  ["KYC_BAD_DOCUMENT", "errKycPhotos"],
+  ["KYC_BAD_FILE", "errKycPhotos"],
+  ["KYC_ALREADY_REVIEWED", "errKycAlreadyReviewed"],
+  ["KYC_NOT_FOUND", "errKycAlreadyReviewed"],
+  ["KYC_REASON_REQUIRED", "errKycReasonRequired"],
+];
+
 /** Turns any thrown value into a short message we can show a user. */
 export function errorMessage(error: unknown): string {
   if (!error) return "";
@@ -89,6 +104,8 @@ export function errorMessage(error: unknown): string {
   // The job board (5800_job_board.sql).
   const jobError = JOB_ERRORS.find(([code]) => message.includes(code));
   if (jobError) return translateStatic(jobError[1]);
+  const kycError = KYC_ERRORS.find(([code]) => message.includes(code));
+  if (kycError) return translateStatic(kycError[1]);
   // The resend/reset-code cooldown Supabase enforces server-side.
   if (e.code === "over_email_send_rate_limit" || /security purposes.*after \d+ seconds/i.test(e.message || "")) {
     return translateStatic("pleaseWaitBeforeRetry");

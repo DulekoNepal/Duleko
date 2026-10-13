@@ -33,11 +33,11 @@ each other afterwards. Built for Kapilvastu first, mobile-first, and designed to
 
 <table>
 <tr>
-<td align="center"><b>33</b><br/><sub>Postgres tables</sub></td>
-<td align="center"><b>59</b><br/><sub>migrations</sub></td>
-<td align="center"><b>93</b><br/><sub>SQL functions</sub></td>
-<td align="center"><b>65</b><br/><sub>RLS policies</sub></td>
-<td align="center"><b>46</b><br/><sub>triggers</sub></td>
+<td align="center"><b>35</b><br/><sub>Postgres tables</sub></td>
+<td align="center"><b>64</b><br/><sub>migrations</sub></td>
+<td align="center"><b>99</b><br/><sub>SQL functions</sub></td>
+<td align="center"><b>69</b><br/><sub>RLS policies</sub></td>
+<td align="center"><b>49</b><br/><sub>triggers</sub></td>
 <td align="center"><b>2</b><br/><sub>edge functions</sub></td>
 </tr>
 <tr>
@@ -104,7 +104,8 @@ workers come to you. Agree a price, get the work done, then rate each other.
 | 💳 | **Payment details** | Bank accounts at Nepal's 20 commercial and 16 development banks (with official logos and payment QR), or eSewa / Khalti wallets. Only the other side of a job and people allowed to call you can see them. |
 | 🧾 | **Duleko's monthly fee** | A marginal fee: 5% of the first Rs 5,000, 4% from Rs 5,000 to Rs 20,000, 3% above. It applies to jobs requested from 1 Mangsir 2083 (17 Nov 2026), and each worker's first 5 such jobs are free. Fees are billed per Nepali month and due by the 15th. Duleko never moves money itself. |
 | 🪪 | **Membership ID and Professional ID card** | Every member gets a permanent `DLK-26AA0001`-style number and a downloadable ID card with a QR code. |
-| ✅ | **Staff tools** | Moderators verify profiles and handle reports. Admins also suspend users and confirm fee payments. A notice board (`/notices`) sends staff announcements to every member. |
+| 🛡️ | **ID checks for the verified badge** | Members send a photo of their citizenship certificate, national ID card, driving licence or passport (`/verify`). One is required; once one is in, the rest are optional. Staff check them in a queue (`/staff/verify`), and approving one is the only way to give the verified badge. A new name removes the badge until the ID is checked again. Staff need no check: their staff badge already counts. Every badge given by hand before ID checks was removed (`6400`). |
+| ✅ | **Staff tools** | Staff check IDs and handle reports. Admins also suspend users and confirm fee payments. A notice board (`/notices`) sends staff announcements to every member. |
 | 🔔 | **Alerts everywhere** | In-app (Realtime), email (Brevo), optional SMS, and Android phone alerts with no Firebase. |
 | 🌐 | **Bilingual, Nepali-first** | Every string is in English and Nepali. Dates show in **Bikram Sambat (BS)** by default, with AD as an option, and are always stored as AD. |
 | 🌗 | **Light / dark / system theme** | Applied before first paint, so dark-mode users never see a white flash. |
@@ -221,6 +222,8 @@ erDiagram
   profiles ||--o{ alert_devices : "Android phones"
   profiles ||--o| staff_roles : "moderator / admin"
   profiles ||--o| profile_verifications : "verified badge"
+  profiles ||--o{ kyc_submissions : "ID checks"
+  kyc_submissions ||--|{ kyc_documents : "one per ID"
   profiles ||--o| profile_suspensions : ""
   profiles ||--o{ reports : "reporter / reported"
   profiles ||--o{ notices : authors
@@ -254,7 +257,8 @@ erDiagram
 | `fee_charges`, `fee_payments` | Duleko's fee per completed job, and payments against them |
 | `bs_months` | Bikram Sambat month boundaries used for billing |
 | `staff_roles`, `profile_verifications`, `profile_suspensions`, `reports` | Moderation |
-| `welcome_senders` | Which official accounts send the welcome chat message, and its text |
+| `kyc_submissions`, `kyc_documents` | ID checks for the verified badge; the photos are in the private `kyc` bucket |
+| `welcome_senders` | Official accounts every member can chat with (Sunil, Sanjay). Since `6400` they no longer send a welcome chat |
 | `member_number_counters` | Running numbers for membership IDs, per sign-up year |
 | `marketing_contact_syncs` | Outbox for the Brevo contact list |
 | `app_settings` | Settings you can edit without a deploy (`email_daily_limit`, `sms_kinds`, welcome text ...) |
@@ -448,7 +452,7 @@ Migrations are pasted into the Supabase **SQL editor** one at a time, in filenam
 | `1700`–`2000` | Cover photos, profile fields, certificates, free schedule, early completion |
 | `2100`–`2200` | Price negotiation (bids) on work requests |
 | `2300` | Guest browsing (anon read of the public directory) and online presence |
-| `2400`, `3700`, `4200`–`4500` | The official account's welcome notification and chat message |
+| `2400`, `3700`, `4200`–`4500`, `6400` | The welcome alert (and its email). Until `6400` the founders also sent a welcome chat |
 | `2500`, `5200` | Notification outbox (email/SMS) and the daily email limit |
 | `2600`, `4300`–`4400` | Who may chat and who may call ("Who can call me"), no phone numbers in chat |
 | `2800`–`2900` | Delete my account |
@@ -467,6 +471,8 @@ Migrations are pasted into the Supabase **SQL editor** one at a time, in filenam
 | `6000` | Mobile number + PIN sign-in (`phone_account_exists`, a placeholder Send SMS hook) |
 | `6100` | Map privacy: members-only people map, guest area counts, ~1 km squares, shop pins, private job places (`job_post_places`, `engagement_places`) |
 | `6200` | Guest map areas named after one real district + municipality pair |
+| `6300` | ID checks (KYC): `kyc_submissions`, `kyc_documents`, the private `kyc` bucket, `submit_kyc` / `review_kyc`. The verified badge can only come from an approved ID |
+| `6400` | Hand-given badges removed (staff untouched); a new member gets one welcome alert and email (welcome, complete your profile, get verified) instead of the founders' chats |
 
 ### Writing a new migration
 
@@ -554,6 +560,7 @@ is paid or a staff member records the payment. Jobs already accepted carry on.
 | A job post's exact place (`job_post_places`) | The poster, and the worker they choose (on the work request). Everyone else sees the municipality, district and a ~1 km pin |
 | Chats, notifications, engagements, friendships, bids | Only the people involved (`to authenticated`) |
 | Staff roles, verification, suspensions | Kept in separate tables, so nobody can grant themselves a badge or role by editing their own profile |
+| ID photos (`kyc` bucket) | **Only the owner and staff**, through links that expire after 10 minutes. The bucket is private, so no photo has a public address |
 
 Other safeguards:
 
@@ -596,6 +603,7 @@ flowchart LR
 | People | `friend_request` `friend_accepted` `message` |
 | Duleko | `welcome` `verified` `verify_reminder` `announcement` `notice` |
 | Fees | `fee_payment` `fee_review` |
+| ID checks | `kyc_review` (to staff) `kyc_result` (to the member, when an ID isn't accepted) |
 
 - **Email** is on by default. Chat emails only go out when the person hasn't been seen for three
   minutes, at most one per sender per fifteen minutes. Once the day's Brevo allowance is used

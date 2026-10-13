@@ -192,6 +192,20 @@ const staffFeesRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/StaffFeesScreen"), "StaffFeesScreen"),
 });
 
+// Get verified: send your ID for the verified badge.
+const verifyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/verify",
+  component: lazyRouteComponent(() => import("@/routes/VerifyScreen"), "VerifyScreen"),
+});
+
+// Staff: ID checks waiting, approve (gives the badge) or reject.
+const staffVerifyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/staff/verify",
+  component: lazyRouteComponent(() => import("@/routes/KycQueueScreen"), "KycQueueScreen"),
+});
+
 const moderationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/moderation",
@@ -304,6 +318,8 @@ const routeTree = rootRoute.addChildren([
   chatsRoute,
   feesRoute,
   staffFeesRoute,
+  verifyRoute,
+  staffVerifyRoute,
   moderationRoute,
   noticesRoute,
   noticeRoute,

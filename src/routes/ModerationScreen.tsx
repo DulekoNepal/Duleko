@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, ClipboardList, Flag } from "lucide-react";
+import { ChevronRight, ClipboardList, Flag, IdCard } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +11,9 @@ import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
-import { listOpenReports, resolveReport } from "@/lib/queries";
+import { countKycQueue, listOpenReports, resolveReport } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import { relativeTime } from "@/lib/utils";
+import { formatNumber, relativeTime } from "@/lib/utils";
 import type { ReportReason } from "@/lib/types";
 
 const REASON_KEY: Record<ReportReason, StringKey> = {
@@ -43,6 +43,12 @@ export function ModerationScreen() {
     enabled: Boolean(profile?.staff_role),
   });
 
+  const kycWaiting = useQuery({
+    queryKey: ["kyc-queue-count"],
+    queryFn: countKycQueue,
+    enabled: Boolean(profile?.staff_role),
+  });
+
   const resolve = useMutation({
     mutationFn: ({ id, status }: { id: string; status: "reviewed" | "dismissed" }) =>
       resolveReport(id, status, profile!.id),
@@ -59,6 +65,25 @@ export function ModerationScreen() {
     <>
       <AppHeader title={t("moderation")} subtitle={t("moderationHint")} />
       <PageContainer>
+        {profile.staff_role && (
+          <Link
+            to="/staff/verify"
+            className="mb-4 flex items-center gap-3 rounded-2xl border border-slate-200 bg-surface p-3 shadow-sm transition-colors hover:border-brand-300"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+              <IdCard className="h-4.5 w-4.5" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-slate-900">{t("kycQueueTitle")}</span>
+              <span className="block truncate text-xs text-slate-500">{t("kycQueueSubtitle")}</span>
+            </span>
+            {(kycWaiting.data ?? 0) > 0 && (
+              <Badge tone="warning">{t("kycWaitingCount", { count: formatNumber(kycWaiting.data!, lang) })}</Badge>
+            )}
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+          </Link>
+        )}
+
         <div className="mb-3 flex items-center gap-2">
           <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-700">
             <ClipboardList className="h-3.5 w-3.5" aria-hidden />

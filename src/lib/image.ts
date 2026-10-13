@@ -17,6 +17,8 @@ export const IMAGE_MAX_SIDE = {
   qr: 1200,
   // A payment screenshot is read for its transaction ID and amount.
   proof: 2000,
+  // An ID for the verified badge: staff read its name, number and photo.
+  kyc: 2000,
 } as const;
 
 /** Largest original we accept before shrinking - anything bigger is almost certainly not a photo. */

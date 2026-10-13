@@ -69,7 +69,7 @@ export interface Profile {
   call_permission: CallPermission;
   created_at: string;
   updated_at: string;
-  /** Set once a moderator/admin verifies this profile - drives the hollow green badge. */
+  /** Set once staff approve this person's ID check - drives the hollow green badge. */
   is_verified: boolean;
   /** Set when this profile belongs to staff - drives the solid staff badge instead. */
   staff_role: StaffRole | null;
@@ -198,7 +198,11 @@ export interface AppNotification {
     /** To a poster: an offer on their post, new or changed. */
     | "job_offer"
     /** To a worker: the post they offered on went to someone else, or closed. */
-    | "job_closed";
+    | "job_closed"
+    /** To staff: a member sent their ID for the verified badge. */
+    | "kyc_review"
+    /** To a member: staff couldn't accept the ID they sent. */
+    | "kyc_result";
   title_en: string;
   title_ne: string;
   body_en: string | null;
@@ -261,6 +265,38 @@ export interface ReportWithParties {
   resolved_at: string | null;
   reporter: Pick<Profile, "id" | "full_name" | "avatar_url">;
   reported: Pick<Profile, "id" | "full_name" | "avatar_url">;
+}
+
+/** The IDs a member can send for the verified badge (6300_kyc_verification.sql). */
+export type KycDocType = "citizenship" | "national_id" | "driving_license" | "passport";
+
+export type KycStatus = "pending" | "approved" | "rejected";
+
+export type KycRejectionCode = "unclear" | "name_mismatch" | "incomplete" | "not_valid" | "other";
+
+/** One document in an ID check. Paths are in the private 'kyc' bucket; a passport has no back. */
+export interface KycDocument {
+  doc_type: KycDocType;
+  front_path: string;
+  back_path: string | null;
+}
+
+/** One attempt at the verified badge: pending until staff approve or reject it. */
+export interface KycSubmission {
+  id: string;
+  profile_id: string;
+  status: KycStatus;
+  created_at: string;
+  reviewed_at: string | null;
+  rejection_code: KycRejectionCode | null;
+  rejection_note: string | null;
+  documents: KycDocument[];
+}
+
+/** An ID check as staff see it: who sent it, and (once checked) who checked it. */
+export interface KycQueueItem extends KycSubmission {
+  person: Pick<Profile, "id" | "full_name" | "avatar_url" | "member_no" | "district" | "municipality" | "created_at">;
+  reviewer: Pick<Profile, "full_name"> | null;
 }
 
 export type FriendshipStatus = "pending" | "accepted" | "declined";

@@ -19,6 +19,8 @@ const PRIVATE_PREFIXES = [
   "/chat",
   "/chats",
   "/moderation",
+  "/verify",
+  "/staff",
   // Readable without an account, but short-lived news, not a page to index.
   "/notices",
   // Work requests come and go within days.

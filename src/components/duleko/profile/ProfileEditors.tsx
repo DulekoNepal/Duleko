@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, FileText, Image as ImageIcon, Upload } from "lucide-react";
+import { Check, FileText, Image as ImageIcon, ShieldAlert, Upload } from "lucide-react";
 import { LocationFields, type LocationValue } from "@/components/duleko/LocationFields";
 import { SkillPicker } from "@/components/duleko/SkillGrid";
 import { SkillTile } from "@/components/duleko/SkillIcon";
@@ -95,6 +95,11 @@ function SheetSection({ title, children, className }: { title: string; children:
 // Intro: name, headline, about
 // ---------------------------------------------------------------------
 
+/** A name as the badge sees it: spacing and capital letters don't count. */
+function nameKey(name: string): string {
+  return name.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 function IntroEditor({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, lang } = useI18n();
   const { profile, refreshProfile } = useSession();
@@ -156,6 +161,13 @@ function IntroEditor({ open, onClose }: { open: boolean; onClose: () => void }) 
           autoComplete="name"
         />
       </Field>
+      {/* 6300: a new name drops the verified badge until the ID is checked again. */}
+      {profile?.is_verified && nameKey(name) !== nameKey(profile.full_name) && (
+        <p role="status" className="-mt-2 mb-3.5 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+          <ShieldAlert className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
+          {t("kycNameWarning")}
+        </p>
+      )}
       <Field label={`${t("bio")} (${t("optional")})`} hint={t("bioHint")}>
         <Input
           value={headline}
