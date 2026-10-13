@@ -295,12 +295,12 @@ export function AlertsBellButton({ className }: { className?: string }) {
       aria-current={active ? "page" : undefined}
       title={t("alertsButton")}
       className={cn(
-        "relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border bg-surface transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
+        "relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-surface transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
         active ? "border-brand-300 text-brand-700" : "border-slate-200 text-slate-700 hover:bg-slate-50",
         className,
       )}
     >
-      <Bell className="h-4 w-4" aria-hidden />
+      <Bell className="h-5 w-5" aria-hidden />
       {notifications > 0 && (
         <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-[18px] text-white ring-2 ring-surface">
           {formatNumber(notifications > 9 ? "9+" : notifications, lang)}
