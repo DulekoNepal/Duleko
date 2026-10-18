@@ -529,24 +529,28 @@ function ActivityNumbers() {
   const numbers = stats.data;
   if (!numbers) return null;
 
+  // Not a SiteSection: its fade-in only picks up blocks present when the
+  // page first renders, and this one arrives with its numbers a moment later.
   return (
-    <SiteSection>
-      <Eyebrow>{t("siteStatsEyebrow")}</Eyebrow>
-      <SectionHeading>{t("siteStatsTitle")}</SectionHeading>
-      <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {ACTIVITY_ROWS.map(({ key, label, icon: Icon, money }) => {
-          const value = numbers[key] ?? 0;
-          // Rounded down by the database, so anything past 10 reads "120+".
-          const shown = `${money ? formatMoney(value, lang) : formatNumber(value, lang)}${value >= 10 ? "+" : ""}`;
-          return (
-            <div key={key} className={cn(siteCard, "flex flex-col gap-2 p-4", money && "col-span-2 sm:col-span-1")}>
-              <Icon className="h-5 w-5 text-brand-600" aria-hidden />
-              <dd className="font-display text-2xl font-semibold tabular-nums text-teal-800 sm:text-3xl">{shown}</dd>
-              <dt className="text-sm text-slate-600">{t(label)}</dt>
-            </div>
-          );
-        })}
-      </dl>
-    </SiteSection>
+    <section className="relative scroll-mt-20 py-14 sm:py-20 lg:py-24">
+      <Container>
+        <Eyebrow>{t("siteStatsEyebrow")}</Eyebrow>
+        <SectionHeading>{t("siteStatsTitle")}</SectionHeading>
+        <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {ACTIVITY_ROWS.map(({ key, label, icon: Icon, money }) => {
+            const value = numbers[key] ?? 0;
+            // Rounded down by the database, so anything past 10 reads "120+".
+            const shown = `${money ? formatMoney(value, lang) : formatNumber(value, lang)}${value >= 10 ? "+" : ""}`;
+            return (
+              <div key={key} className={cn(siteCard, "flex flex-col gap-2 p-4", money && "col-span-2 sm:col-span-1")}>
+                <Icon className="h-5 w-5 text-brand-600" aria-hidden />
+                <dd className="font-display text-2xl font-semibold tabular-nums text-teal-800 sm:text-3xl">{shown}</dd>
+                <dt className="text-sm text-slate-600">{t(label)}</dt>
+              </div>
+            );
+          })}
+        </dl>
+      </Container>
+    </section>
   );
 }
