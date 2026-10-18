@@ -720,7 +720,7 @@ The same React app wrapped with **Capacitor 8**.
 | | |
 |---|---|
 | App id | `com.duleko.app` |
-| Current version | `1.3` (versionCode `7`) |
+| Current version | `1.4` (versionCode `8`) |
 | SDK | min 24 (Android 7.0), target and compile 36 |
 | Native plugins | App, Browser, Status Bar, Splash Screen, Geolocation, Share, Clipboard, Filesystem, Badge |
 | Native code | `MainActivity`, `PhoneAlertsPlugin` and `PhoneAlertsWorker` (Java) |
@@ -738,6 +738,7 @@ one-time code for a session (PKCE).
 
 | Version | Code | Date | Highlights |
 |---|---|---|---|
+| 1.4 | 8 | 18 Oct 2026 | Skills as four open cards, skill taps show everyone nearest first, a call setting when adding your phone, hiring and service posts, "Did you have a deal?" after a call, verified names locked |
 | 1.3 | 7 | 11 Oct 2026 | Mobile number + PIN sign-in, a calmer first screen, Google sign-in that works in the app, job board and My Work, a real map with private locations, payment details and Nepali (BS) dates |
 | 1.2 | 6 | 3 Oct 2026 | Phone alerts and an unread count on the app icon (no push service), Membership IDs, notice board |
 | 1.1 | 5 | 2 Oct 2026 | Light/dark mode, a more compact app throughout, redesigned profiles, faster photos and pages |
