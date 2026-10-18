@@ -8,7 +8,7 @@ import type { Skill, SkillCategory } from "@/lib/types";
 
 export const SKILL_CATEGORY_ORDER: SkillCategory[] = ["trades", "professional", "personal"];
 
-const SKILL_CATEGORY_LABEL: Record<SkillCategory, StringKey> = {
+export const SKILL_CATEGORY_LABEL: Record<SkillCategory, StringKey> = {
   trades: "skillCategoryTrades",
   professional: "skillCategoryProfessional",
   personal: "skillCategoryPersonal",
@@ -17,7 +17,7 @@ const SKILL_CATEGORY_LABEL: Record<SkillCategory, StringKey> = {
 /** One glyph per category, from the same outline family as the skills
  * themselves - a spanner for trades, a briefcase for the office-shaped
  * work, a handshake for everything personal. */
-const SKILL_CATEGORY_ICON: Record<SkillCategory, LucideIcon> = {
+export const SKILL_CATEGORY_ICON: Record<SkillCategory, LucideIcon> = {
   trades: Wrench,
   professional: Briefcase,
   personal: HeartHandshake,

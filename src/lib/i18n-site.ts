@@ -334,6 +334,7 @@ export const siteStrings = {
   storyYouAreHere: ["You are here", "तपाईं यहाँ हुनुहुन्छ"],
   finalCtaEyebrow: ["Start today", "आजै सुरु गर्नुहोस्"],
   playStoreTitle: ["Get it on Google Play", "Google Play मा पाउनुहोस्"],
+  downloadApp: ["Download app", "एप डाउनलोड गर्नुहोस्"],
   playStoreSub: ["Duleko for Android", "एन्ड्रोइडका लागि डुलेको"],
   teamAttribution: ["The Duleko team", "डुलेको टोली"],
   catTrades: ["Trades & Local Services", "कालिगडी र स्थानीय सेवा"],

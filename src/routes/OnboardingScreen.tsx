@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, SectionIcon } from "@/components/ui/card";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Avatar } from "@/components/ui/avatar";
+import { CallPermissionChoice } from "@/components/duleko/ContactPrivacyRows";
 import { HeaderToggles } from "@/components/duleko/Layout";
 import { LocationFields, type LocationValue } from "@/components/duleko/LocationFields";
 import { MobileNumberInput } from "@/components/duleko/PhonePinFields";
@@ -29,7 +30,7 @@ import { MAX_PHOTO_INPUT_BYTES } from "@/lib/image";
 import { signInMobile } from "@/lib/phone-auth";
 import { errorMessage } from "@/lib/supabase";
 import { cn, isValidNepaliPhone, normalisePhone } from "@/lib/utils";
-import type { PaymentKind } from "@/lib/types";
+import type { CallPermission, PaymentKind } from "@/lib/types";
 
 const TOTAL_STEPS = 4;
 const STEP_ICONS = [User, MapPin, Briefcase, Wallet] as const;
@@ -51,6 +52,7 @@ export function OnboardingScreen() {
   const [step, setStep] = useState(1);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState(accountMobile ?? "");
+  const [callPermission, setCallPermission] = useState<CallPermission>("accepted_work");
   const [about, setAbout] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -102,6 +104,7 @@ export function OnboardingScreen() {
         ward: location.ward,
         locality: location.locality,
         language: lang,
+        call_permission: callPermission,
       };
       const profile = existing
         ? await updateProfile(existing.id, profileInput)
@@ -265,6 +268,8 @@ export function OnboardingScreen() {
                     />
                   )}
                 </Field>
+
+                <CallPermissionChoice value={callPermission} onChange={setCallPermission} />
 
                 <Field label={`${t("aboutYou")} (${t("optional")})`} className="mb-0">
                   <Textarea

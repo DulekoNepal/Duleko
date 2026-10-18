@@ -90,10 +90,25 @@ export const kycStrings = {
   kycCardRejected: ["ID not accepted", "परिचयपत्र स्वीकृत भएन"],
   kycCardTryAgain: ["Send again", "फेरि पठाउनुहोस्"],
   kycCardView: ["View", "हेर्नुहोस्"],
-  kycNameWarning: [
-    "You're verified. A new name removes the badge until Duleko checks your ID again.",
-    "तपाईं प्रमाणित हुनुहुन्छ। नयाँ नाम राख्दा, डुलेकोले फेरि परिचयपत्र नजाँचुन्जेल ब्याज हट्छ।",
+  kycNameLocked: [
+    "Your name was checked against your ID, so it can't be changed here. To change it, contact Duleko.",
+    "तपाईंको नाम परिचयपत्रसँग जाँच गरिएको छ, त्यसैले यहाँबाट बदल्न मिल्दैन। बदल्न डुलेकोलाई सम्पर्क गर्नुहोस्।",
   ],
+  kycAgeLocked: [
+    "Checked against your ID. To change it, contact Duleko.",
+    "परिचयपत्रसँग जाँच गरिएको। बदल्न डुलेकोलाई सम्पर्क गर्नुहोस्।",
+  ],
+  errNameLockedVerified: [
+    "Your name is verified from your ID. To change it, contact Duleko.",
+    "तपाईंको नाम परिचयपत्रबाट प्रमाणित छ। बदल्न डुलेकोलाई सम्पर्क गर्नुहोस्।",
+  ],
+  errAgeLockedVerified: [
+    "Your age is verified from your ID. To change it, contact Duleko.",
+    "तपाईंको उमेर परिचयपत्रबाट प्रमाणित छ। बदल्न डुलेकोलाई सम्पर्क गर्नुहोस्।",
+  ],
+  kycViewId: ["View ID", "परिचयपत्र हेर्नुहोस्"],
+  kycViewIdTitle: ["{name}'s ID", "{name} को परिचयपत्र"],
+  kycViewIdNone: ["No approved ID on file for this profile.", "यो प्रोफाइलको स्वीकृत परिचयपत्र छैन।"],
 
   // ---- staff: ID checks (/staff/verify) -------------------------------------
   kycQueueTitle: ["ID checks", "परिचयपत्र जाँच"],

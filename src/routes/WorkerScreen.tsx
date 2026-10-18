@@ -61,6 +61,7 @@ import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
 import { RequestWorkDialog } from "@/components/duleko/RequestWorkDialog";
 import { ReportDialog } from "@/components/duleko/ReportDialog";
 import { SuspendUserDialog } from "@/components/duleko/SuspendUserDialog";
+import { StaffIdDialog } from "@/components/duleko/kyc/KycStaffParts";
 import { MenuDivider, MenuItem, MenuLabel, MenuPanel } from "@/components/ui/menu";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -116,6 +117,7 @@ export function WorkerScreen() {
   const [requestOpen, setRequestOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [suspendOpen, setSuspendOpen] = useState(false);
+  const [viewingId, setViewingId] = useState(false);
   const [unfriendOpen, setUnfriendOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [tab, setTab] = useState<WorkerTab>("overview");
@@ -492,7 +494,10 @@ export function WorkerScreen() {
                           <MenuDivider />
                           <MenuLabel>{t("moderatorActions")}</MenuLabel>
                           {w.is_verified ? (
-                            <MenuItem icon={ShieldOff} label={t("unverifyProfile")} onClick={menuAction(() => unverify.mutate())} />
+                            <>
+                              <MenuItem icon={IdCard} label={t("kycViewId")} onClick={menuAction(() => setViewingId(true))} />
+                              <MenuItem icon={ShieldOff} label={t("unverifyProfile")} onClick={menuAction(() => unverify.mutate())} />
+                            </>
                           ) : (
                             // The badge is only given by approving an ID check.
                             <MenuItem icon={IdCard} label={t("kycQueueTitle")} onClick={menuAction(() => navigate({ to: "/staff/verify" }))} />
@@ -828,6 +833,9 @@ export function WorkerScreen() {
             reporterProfileId={me.id}
             reportedProfileId={w.id}
           />
+          {showModeration && w.is_verified && (
+            <StaffIdDialog profileId={viewingId ? w.id : null} name={w.full_name} onClose={() => setViewingId(false)} />
+          )}
           {canSuspend && (
             <SuspendUserDialog
               open={suspendOpen}

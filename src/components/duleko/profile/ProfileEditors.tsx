@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, FileText, Image as ImageIcon, ShieldAlert, Upload } from "lucide-react";
+import { Check, FileText, Image as ImageIcon, ShieldCheck, Upload } from "lucide-react";
+import { CallPermissionChoice, callChoice } from "@/components/duleko/ContactPrivacyRows";
 import { LocationFields, type LocationValue } from "@/components/duleko/LocationFields";
 import { SkillPicker } from "@/components/duleko/SkillGrid";
 import { SkillTile } from "@/components/duleko/SkillIcon";
@@ -21,6 +22,7 @@ import {
 } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
 import { cn, formatNumber, isValidNepaliPhone, normalisePhone, skillName } from "@/lib/utils";
+import type { CallPermission } from "@/lib/types";
 import { useMyProfileData } from "./use-my-profile-data";
 
 /** Which part of the profile is being edited - one focused sheet each. */
@@ -95,11 +97,6 @@ function SheetSection({ title, children, className }: { title: string; children:
 // Intro: name, headline, about
 // ---------------------------------------------------------------------
 
-/** A name as the badge sees it: spacing and capital letters don't count. */
-function nameKey(name: string): string {
-  return name.trim().replace(/\s+/g, " ").toLowerCase();
-}
-
 function IntroEditor({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, lang } = useI18n();
   const { profile, refreshProfile } = useSession();
@@ -108,6 +105,7 @@ function IntroEditor({ open, onClose }: { open: boolean; onClose: () => void }) 
   const [headline, setHeadline] = useState("");
   const [about, setAbout] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
+  const nameLocked = Boolean(profile?.is_verified);
 
   useEffect(() => {
     if (!open || !profile) return;
@@ -122,7 +120,7 @@ function IntroEditor({ open, onClose }: { open: boolean; onClose: () => void }) 
   const save = useMutation({
     mutationFn: () =>
       updateProfile(profile!.id, {
-        full_name: name.trim(),
+        ...(nameLocked ? {} : { full_name: name.trim() }),
         bio: headline.trim() || null,
         about: about.trim() || null,
         language: lang,
@@ -157,15 +155,21 @@ function IntroEditor({ open, onClose }: { open: boolean; onClose: () => void }) 
             setName(e.target.value);
             setNameError(null);
           }}
+          // 6600: a verified name is the name on the ID - staff change it.
+          readOnly={nameLocked}
+          aria-describedby={nameLocked ? "profile-name-locked" : undefined}
+          className={cn(nameLocked && "cursor-not-allowed bg-slate-50 text-slate-600")}
           maxLength={80}
           autoComplete="name"
         />
       </Field>
-      {/* 6300: a new name drops the verified badge until the ID is checked again. */}
-      {profile?.is_verified && nameKey(name) !== nameKey(profile.full_name) && (
-        <p role="status" className="-mt-2 mb-3.5 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
-          <ShieldAlert className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
-          {t("kycNameWarning")}
+      {nameLocked && (
+        <p
+          id="profile-name-locked"
+          className="-mt-2 mb-3.5 flex items-start gap-2 rounded-xl bg-brand-50 px-3 py-2 text-xs leading-relaxed text-brand-800"
+        >
+          <ShieldCheck className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
+          {t("kycNameLocked")}
         </p>
       )}
       <Field label={`${t("bio")} (${t("optional")})`} hint={t("bioHint")}>
@@ -208,6 +212,7 @@ function DetailsEditor({ open, onClose }: { open: boolean; onClose: () => void }
   const queryClient = useQueryClient();
   const [phone, setPhone] = useState("");
   const [altPhone, setAltPhone] = useState("");
+  const [callPermission, setCallPermission] = useState<CallPermission>("accepted_work");
   const [age, setAge] = useState("");
   const [education, setEducation] = useState("");
   const [location, setLocation] = useState<LocationValue>({
@@ -223,6 +228,7 @@ function DetailsEditor({ open, onClose }: { open: boolean; onClose: () => void }
     if (!open || !profile) return;
     setPhone(contact.data?.phone ?? "");
     setAltPhone(contact.data?.alt_phone ?? "");
+    setCallPermission(callChoice(profile.call_permission));
     setAge(profile.age != null ? String(profile.age) : "");
     setEducation(profile.education ?? "");
     setLocation({
@@ -237,11 +243,13 @@ function DetailsEditor({ open, onClose }: { open: boolean; onClose: () => void }
   }, [open]);
 
   const ageNumber = age.trim() ? Number(age) : null;
+  // 6600: once verified, an age already given stays as the ID says.
+  const ageLocked = Boolean(profile?.is_verified && profile.age != null);
 
   const save = useMutation({
     mutationFn: async () => {
       await updateProfile(profile!.id, {
-        age: ageNumber,
+        ...(ageLocked ? {} : { age: ageNumber }),
         education: education.trim() || null,
         province: location.province,
         district: location.district,
@@ -249,6 +257,7 @@ function DetailsEditor({ open, onClose }: { open: boolean; onClose: () => void }
         ward: location.ward,
         locality: location.locality,
         language: lang,
+        call_permission: callPermission,
       });
       if (phone) await saveContact(profile!.id, normalisePhone(phone), altPhone ? normalisePhone(altPhone) : null);
     },
@@ -268,7 +277,7 @@ function DetailsEditor({ open, onClose }: { open: boolean; onClose: () => void }
     if (phone && !isValidNepaliPhone(phone)) next.phone = t("phoneInvalid");
     if (altPhone && !isValidNepaliPhone(altPhone)) next.altPhone = t("phoneInvalid");
     // Duleko is for adults (Terms, Registration Policy).
-    if (ageNumber != null && (!Number.isInteger(ageNumber) || ageNumber < 18 || ageNumber > 100)) {
+    if (!ageLocked && ageNumber != null && (!Number.isInteger(ageNumber) || ageNumber < 18 || ageNumber > 100)) {
       next.age = t("profileAgeRule");
     }
     setErrors(next);
@@ -287,9 +296,10 @@ function DetailsEditor({ open, onClose }: { open: boolean; onClose: () => void }
           <Field label={t("phoneNumber")} hint={t("phoneHint")} error={errors.phone}>
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" autoComplete="tel" />
           </Field>
-          <Field label={`${t("altPhone")} (${t("optional")})`} error={errors.altPhone} className="mb-0">
+          <Field label={`${t("altPhone")} (${t("optional")})`} error={errors.altPhone}>
             <Input value={altPhone} onChange={(e) => setAltPhone(e.target.value)} inputMode="tel" />
           </Field>
+          <CallPermissionChoice value={callPermission} onChange={setCallPermission} />
         </SheetSection>
 
         <SheetSection title={t("whereYouAre")} className="border-t border-slate-100 pt-4">
@@ -298,7 +308,11 @@ function DetailsEditor({ open, onClose }: { open: boolean; onClose: () => void }
 
         <SheetSection title={t("profileSectionPersonal")} className="border-t border-slate-100 pt-4">
           <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-[8rem_minmax(0,1fr)]">
-            <Field label={`${t("age")} (${t("optional")})`} error={errors.age}>
+            <Field
+              label={ageLocked ? t("age") : `${t("age")} (${t("optional")})`}
+              hint={ageLocked ? t("kycAgeLocked") : undefined}
+              error={errors.age}
+            >
               <Input
                 type="number"
                 inputMode="numeric"
@@ -306,6 +320,8 @@ function DetailsEditor({ open, onClose }: { open: boolean; onClose: () => void }
                 max={100}
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
+                readOnly={ageLocked}
+                className={cn(ageLocked && "cursor-not-allowed bg-slate-50 text-slate-600")}
               />
             </Field>
             <Field label={`${t("highestEducation")} (${t("optional")})`}>

@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Check, ExternalLink, History, Hourglass, RotateCw, ShieldCheck, X } from "lucide-react";
+import { Check, History, Hourglass, ShieldCheck, X } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { SectionCard } from "@/components/duleko/ProfileParts";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
-import { KYC_DOC_ICON, KYC_DOC_LABEL, KYC_REASON_SHORT, KYC_REJECTION_CODES } from "@/components/duleko/kyc/KycParts";
+import { KYC_REASON_SHORT, KYC_REJECTION_CODES } from "@/components/duleko/kyc/KycParts";
+import { KycDocumentList, PhotoViewer, StaffIdDialog, type Photo } from "@/components/duleko/kyc/KycStaffParts";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,12 +16,10 @@ import { CardSkeleton, EmptyState, ErrorState } from "@/components/ui/states";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
-import { kycHasBack, kycPhotoUrls, listKycQueue, listRecentKycReviews, reviewKyc } from "@/lib/queries";
+import { kycPhotoUrls, listKycQueue, listRecentKycReviews, reviewKyc } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
 import type { KycQueueItem, KycRejectionCode } from "@/lib/types";
 import { cn, relativeTime } from "@/lib/utils";
-
-type Photo = { src: string; title: string };
 
 /**
  * Staff: ID checks. Each member who sent their ID waits here, oldest
@@ -35,6 +34,7 @@ export function KycQueueScreen() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [viewing, setViewing] = useState<Photo | null>(null);
+  const [idOf, setIdOf] = useState<{ id: string; name: string } | null>(null);
   const [rejecting, setRejecting] = useState<KycQueueItem | null>(null);
   const [code, setCode] = useState<KycRejectionCode>("unclear");
   const [note, setNote] = useState("");
@@ -143,35 +143,13 @@ export function KycQueueScreen() {
                             </div>
                           </div>
 
-                          <div className="mt-3 space-y-3">
-                            {item.documents.map((d) => {
-                              const Icon = KYC_DOC_ICON[d.doc_type];
-                              const name = t(KYC_DOC_LABEL[d.doc_type]);
-                              const sides = [
-                                { path: d.front_path, label: kycHasBack(d.doc_type) ? t("kycFront") : t("kycPhotoPage") },
-                                ...(d.back_path ? [{ path: d.back_path, label: t("kycBack") }] : []),
-                              ];
-                              return (
-                                <div key={d.doc_type}>
-                                  <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                                    <Icon className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-                                    {name}
-                                  </p>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    {sides.map((side) => (
-                                      <DocPhoto
-                                        key={side.path}
-                                        url={urls.data?.[side.path]}
-                                        label={side.label}
-                                        loading={urls.isPending}
-                                        onOpen={(src) => setViewing({ src, title: `${name} · ${side.label}` })}
-                                      />
-                                    ))}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+                          <KycDocumentList
+                            className="mt-3"
+                            documents={item.documents}
+                            urls={urls.data}
+                            loading={urls.isPending}
+                            onOpen={setViewing}
+                          />
 
                           <div className="mt-3.5 grid grid-cols-2 gap-2">
                             <Button
@@ -226,9 +204,20 @@ export function KycQueueScreen() {
                             </p>
                           )}
                         </div>
-                        <Badge tone={r.status === "approved" ? "success" : "danger"}>
-                          {t(r.status === "approved" ? "kycStatusApproved" : "kycStatusRejected")}
-                        </Badge>
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                          <Badge tone={r.status === "approved" ? "success" : "danger"}>
+                            {t(r.status === "approved" ? "kycStatusApproved" : "kycStatusRejected")}
+                          </Badge>
+                          {r.status === "approved" && (
+                            <button
+                              type="button"
+                              onClick={() => setIdOf({ id: r.person.id, name: r.person.full_name })}
+                              className="rounded-md px-1 text-xs font-semibold text-brand-700 hover:text-brand-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+                            >
+                              {t("kycViewId")}
+                            </button>
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -240,6 +229,11 @@ export function KycQueueScreen() {
       </PageContainer>
 
       <PhotoViewer photo={viewing} onClose={() => setViewing(null)} />
+      <StaffIdDialog
+        profileId={idOf?.id ?? null}
+        name={idOf?.name ?? ""}
+        onClose={() => setIdOf(null)}
+      />
 
       <Dialog
         open={Boolean(rejecting)}
@@ -291,96 +285,5 @@ export function KycQueueScreen() {
         </Field>
       </Dialog>
     </>
-  );
-}
-
-/** One side of a document: tap to look closely. */
-function DocPhoto({
-  url,
-  label,
-  loading,
-  onOpen,
-}: {
-  url: string | undefined;
-  label: string;
-  loading: boolean;
-  onOpen: (src: string) => void;
-}) {
-  const { t } = useI18n();
-  if (!url) {
-    return loading ? (
-      <span className="skeleton block aspect-[3/2] w-full rounded-xl" />
-    ) : (
-      <span className="flex aspect-[3/2] w-full items-center justify-center rounded-xl bg-slate-100 px-2 text-center text-[11px] text-slate-500">
-        {t("kycPhotoMissing")}
-      </span>
-    );
-  }
-  return (
-    <button
-      type="button"
-      onClick={() => onOpen(url)}
-      className="group relative block w-full overflow-hidden rounded-xl ring-1 ring-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
-    >
-      <img
-        src={url}
-        alt={label}
-        loading="lazy"
-        className="aspect-[3/2] w-full bg-slate-100 object-cover transition-transform duration-200 group-hover:scale-[1.03]"
-      />
-      <span className="absolute left-1.5 top-1.5 rounded-md bg-scrim/60 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-        {label}
-      </span>
-    </button>
-  );
-}
-
-/** A document photo, large, turnable - phone photos of cards are often sideways. */
-function PhotoViewer({ photo, onClose }: { photo: Photo | null; onClose: () => void }) {
-  const { t } = useI18n();
-  const [turn, setTurn] = useState(0);
-  useEffect(() => setTurn(0), [photo?.src]);
-  const sideways = turn % 2 === 1;
-
-  return (
-    <Dialog
-      open={Boolean(photo)}
-      onClose={onClose}
-      title={photo?.title ?? ""}
-      className="sm:max-w-3xl"
-      footer={
-        <>
-          <Button variant="outline" onClick={() => setTurn((n) => (n + 1) % 4)}>
-            <RotateCw className="h-4 w-4" aria-hidden />
-            {t("kycRotate")}
-          </Button>
-          <a
-            href={photo?.src}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-surface px-4 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
-          >
-            <ExternalLink className="h-4 w-4" aria-hidden />
-            {t("kycOpenFull")}
-          </a>
-        </>
-      }
-    >
-      {photo && (
-        <div className="flex h-[60vh] items-center justify-center overflow-hidden rounded-xl bg-slate-100">
-          <img
-            src={photo.src}
-            alt={photo.title}
-            className="max-h-full max-w-full object-contain"
-            // Turned a quarter, the photo's width becomes its height: swap
-            // the limits so it still fits the box.
-            style={{
-              transform: `rotate(${turn * 90}deg)`,
-              ...(sideways ? { maxHeight: "min(calc(100vw - 2rem), 46rem)", maxWidth: "60vh" } : {}),
-            }}
-          />
-        </div>
-      )}
-    </Dialog>
   );
 }

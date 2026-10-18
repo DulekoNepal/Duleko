@@ -56,6 +56,8 @@ const KYC_ERRORS: [string, StringKey][] = [
   ["KYC_ALREADY_REVIEWED", "errKycAlreadyReviewed"],
   ["KYC_NOT_FOUND", "errKycAlreadyReviewed"],
   ["KYC_REASON_REQUIRED", "errKycReasonRequired"],
+  ["NAME_LOCKED_VERIFIED", "errNameLockedVerified"],
+  ["AGE_LOCKED_VERIFIED", "errAgeLockedVerified"],
 ];
 
 /** Turns any thrown value into a short message we can show a user. */

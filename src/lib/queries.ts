@@ -138,6 +138,7 @@ export interface ProfileInput {
   locality?: string | null;
   is_available?: boolean;
   language?: Lang;
+  call_permission?: CallPermission;
 }
 
 export async function createProfile(userId: string, input: ProfileInput): Promise<Profile> {
@@ -344,6 +345,9 @@ export interface SearchParams {
   offset?: number;
   lat?: number | null;
   lng?: number | null;
+  /** Orders "nearest" for anyone without a distance: this district, then province (6500). */
+  nearDistrict?: string | null;
+  nearProvince?: string | null;
 }
 
 export const SEARCH_PAGE = 24;
@@ -371,6 +375,8 @@ export async function searchWorkers(params: SearchParams): Promise<WorkerCardDat
     p_offset: params.offset ?? 0,
     p_lat: params.lat == null ? null : areaCoord(params.lat),
     p_lng: params.lng == null ? null : areaCoord(params.lng),
+    p_near_province: params.nearProvince ?? null,
+    p_near_district: params.nearDistrict ?? null,
   });
   if (error) throw error;
   return (data ?? []) as WorkerCardData[];
@@ -1234,6 +1240,20 @@ export async function listRecentKycReviews(limit = 20): Promise<KycQueueItem[]> 
     .limit(limit);
   if (error) throw error;
   return ((data ?? []) as unknown[]).map(mapKycRow);
+}
+
+/** Staff: the approved ID check behind someone's badge, or null (6600). */
+export async function getApprovedKyc(profileId: string): Promise<KycQueueItem | null> {
+  const { data, error } = await supabase
+    .from("kyc_submissions")
+    .select(KYC_QUEUE_COLUMNS)
+    .eq("profile_id", profileId)
+    .eq("status", "approved")
+    .order("reviewed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? mapKycRow(data) : null;
 }
 
 /** Staff: how many ID checks are waiting. */

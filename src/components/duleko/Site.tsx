@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Capacitor } from "@capacitor/core";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronRight, Compass, LogIn, Play, UserPlus } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronRight, Compass, Download, LogIn, Play, UserPlus } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import seo from "@/lib/seo-pages.json";
 import { cn, formatNumber } from "@/lib/utils";
@@ -9,7 +9,7 @@ import { NEPALI_TAGLINE, PLAY_STORE_URL, useSiteActions } from "./site/actions";
 import { STORY, type SitePath, type StoryKey } from "./site/nav";
 import { SiteFooter } from "./site/SiteFooter";
 import { SiteHeader } from "./site/SiteHeader";
-import { BrandWatermark, Container, RidgeLines, SiteButton } from "./site/ui";
+import { BrandWatermark, Container, RidgeLines, SiteButton, siteButtonClass } from "./site/ui";
 
 /**
  * The public website (Home for signed-out visitors, Mission, About, the
@@ -107,30 +107,47 @@ export function SiteLayout({ title, children }: { title?: string; children: Reac
  * quiet "Log in" link for returning people; the closing band at the foot of
  * every page offers Explore + Log in, so Create profile isn't repeated down
  * the page (the header keeps it one tap away throughout). Members just get
- * "Open Duleko".
+ * "Open Duleko". The hero also offers the Android app beside Explore (the
+ * closing band has its own Google Play badge).
  */
 export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: boolean; closing?: boolean }) {
   const { explore, createProfile, signIn, signedIn } = useSiteActions();
   const { t } = useI18n();
 
+  // The Android app already is the app - no point offering it there.
+  const download =
+    !closing && !IS_NATIVE_APP ? (
+      <a
+        href={PLAY_STORE_URL}
+        target="_blank"
+        rel="noopener"
+        className={siteButtonClass(onDark ? "ghostLight" : "outline", "lg")}
+      >
+        <Download className="h-5 w-5" aria-hidden />
+        {t("downloadApp")}
+      </a>
+    ) : null;
+
   if (signedIn) {
     return (
-      <div className={cn("flex flex-col gap-2.5 sm:flex-row", closing && "sm:justify-start")}>
+      <div className={cn("flex flex-col gap-2.5 sm:flex-row sm:flex-wrap", closing && "sm:justify-start")}>
         <SiteButton size="lg" variant={onDark ? "light" : "primary"} onClick={() => explore("/home")}>
           <Compass className="h-5 w-5" aria-hidden />
           {t("headerOpenDuleko")}
         </SiteButton>
+        {download}
       </div>
     );
   }
 
   return (
     <div>
-      <div className="flex flex-col gap-2.5 sm:flex-row">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
         <SiteButton size="lg" variant={onDark ? "light" : "primary"} onClick={() => explore("/home")}>
           <Compass className="h-5 w-5" aria-hidden />
           {t("exploreDuleko")}
         </SiteButton>
+        {download}
         {closing ? (
           <SiteButton size="lg" variant={onDark ? "ghostLight" : "outline"} onClick={signIn}>
             <LogIn className="h-5 w-5" aria-hidden />

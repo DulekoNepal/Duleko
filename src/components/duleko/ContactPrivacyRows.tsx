@@ -10,11 +10,74 @@ import { errorMessage } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import type { CallPermission } from "@/lib/types";
 
+/**
+ * The three call choices. "Friends only" is stored as 'nobody': friends
+ * can always call whatever is picked (4400), so the two are the same rule.
+ */
 const OPTIONS: { value: CallPermission; label: StringKey; hint: StringKey }[] = [
   { value: "everyone", label: "callEveryone", hint: "callEveryoneHint" },
-  { value: "accepted_work", label: "callAcceptedWork", hint: "callAcceptedWorkHint" },
   { value: "nobody", label: "callNobody", hint: "callNobodyHint" },
+  { value: "accepted_work", label: "callAcceptedWork", hint: "callAcceptedWorkHint" },
 ];
+
+/** 'friends' (gone since 4400) or anything unknown reads as the default. */
+export function callChoice(value: CallPermission | null | undefined): CallPermission {
+  return value === "everyone" || value === "nobody" ? value : "accepted_work";
+}
+
+/**
+ * Who can call me, as three cards to pick from - asked right under the
+ * phone number when joining and when editing it. Saved with the form.
+ */
+export function CallPermissionChoice({
+  value,
+  onChange,
+}: {
+  value: CallPermission;
+  onChange: (value: CallPermission) => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <div className="mb-3.5">
+      <p className="mb-1.5 text-[13px] font-medium text-slate-700">{t("callSettingTitle")}</p>
+      <div role="radiogroup" aria-label={t("callSettingTitle")} className="space-y-1.5">
+        {OPTIONS.map(({ value: option, label, hint }) => {
+          const selected = value === option;
+          return (
+            <button
+              key={option}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => onChange(option)}
+              className={cn(
+                "flex w-full items-start gap-3 rounded-xl border-2 px-3 py-2 text-left transition-colors",
+                selected ? "border-brand-600 bg-brand-50" : "border-slate-200 bg-surface hover:border-slate-300",
+              )}
+            >
+              <span className="min-w-0 flex-1">
+                <span className={cn("block text-sm", selected ? "font-semibold text-brand-800" : "text-slate-800")}>
+                  {t(label)}
+                </span>
+                <span className="mt-0.5 block text-xs leading-snug text-slate-500">{t(hint)}</span>
+              </span>
+              <span
+                className={cn(
+                  "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2",
+                  selected ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300",
+                )}
+                aria-hidden
+              >
+                {selected && <Check className="h-2.5 w-2.5" strokeWidth={3.5} />}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-1.5 text-xs text-slate-500">{t("friendsAlwaysHint")}</p>
+    </div>
+  );
+}
 
 /**
  * Who can call me + the chat rule, as rows for a Settings ListGroup. The
@@ -36,10 +99,7 @@ export function ContactPrivacyRows() {
   });
 
   if (!profile) return null;
-  const current =
-    profile.call_permission === "everyone" || profile.call_permission === "nobody"
-      ? profile.call_permission
-      : "accepted_work";
+  const current = callChoice(profile.call_permission);
   const currentLabel = OPTIONS.find((o) => o.value === current)!.label;
 
   return (

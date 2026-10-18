@@ -32,11 +32,12 @@ import { usePresence } from "@/hooks/use-presence";
 import { useToast } from "@/hooks/use-toast";
 import { SEARCH_PAGE, listSkills, searchWorkers } from "@/lib/queries";
 import { getCurrentPosition } from "@/lib/geolocation";
-import { ALL_DISTRICTS, districtLabel } from "@/lib/nepal";
+import { ALL_DISTRICTS, districtLabel, provinceOfDistrict } from "@/lib/nepal";
 import { errorMessage } from "@/lib/supabase";
 import { addDays, cn, formatDate, formatNumber, locationLine, skillName, toDateKey, todayKey } from "@/lib/utils";
 import type { Skill, WorkerCardData } from "@/lib/types";
 import { useMyLocation } from "@/hooks/use-my-location";
+import { useHomeArea } from "@/hooks/use-home-area";
 
 export interface SearchFilters {
   skill?: string;
@@ -82,6 +83,10 @@ export function SearchScreen() {
   // Search is nationwide by default, same as any real search - a district
   // filter only applies once the user explicitly picks one.
   const district = filters.district;
+  // Where "nearest" starts from when there's no distance to go by.
+  const [homeArea] = useHomeArea();
+  const nearDistrict = homeArea ?? profile?.district ?? null;
+  const nearProvince = provinceOfDistrict(nearDistrict)?.id ?? profile?.province ?? null;
 
   function requestNearest(silent = false) {
     setLocating(true);
@@ -101,18 +106,16 @@ export function SearchScreen() {
     );
   }
 
-  // Coming in from "browse by skill" on Home: try to sort nearest-first
-  // automatically, using an already-shared location or a quiet GPS prompt.
-  // If neither works out, results just stay in relevance order.
+  // Coming in from "browse by skill" on Home: everyone with the skill,
+  // anywhere, nearest first (6500). A member's distances come from an
+  // already-shared location or a quiet GPS prompt; without one - and for
+  // guests, who never get distances (6100) - "nearest" falls back to the
+  // Home area's district, then its province, then the rest of Nepal.
   useEffect(() => {
-    // Distances are for signed-in members (6100); a guest stays in relevance order.
-    if (!filters.skill || filters.sort || !profile) return;
-    if (myLocation) {
-      setCoords({ lat: myLocation.lat, lng: myLocation.lng });
-      update({ sort: "nearest" });
-      return;
-    }
-    requestNearest(true);
+    if (!filters.skill || filters.sort) return;
+    if (profile && myLocation) setCoords({ lat: myLocation.lat, lng: myLocation.lng });
+    else if (profile) requestNearest(true);
+    update({ sort: "nearest" });
     // Only meant to run once, right when a skill-only link is opened.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.skill]);
@@ -120,7 +123,13 @@ export function SearchScreen() {
   // search_workers already took a limit and an offset; nothing ever sent
   // an offset, so results were silently capped at the first page.
   const results = useInfiniteQuery({
-    queryKey: ["workers", "search", filters, district, filters.sort === "nearest" ? coords : null],
+    queryKey: [
+      "workers",
+      "search",
+      filters,
+      district,
+      filters.sort === "nearest" ? [coords, nearDistrict, nearProvince] : null,
+    ],
     queryFn: ({ pageParam }) =>
       searchWorkers({
         skill: filters.skill ?? null,
@@ -133,10 +142,13 @@ export function SearchScreen() {
         offset: pageParam * SEARCH_PAGE,
         lat: filters.sort === "nearest" ? coords?.lat : null,
         lng: filters.sort === "nearest" ? coords?.lng : null,
+        nearDistrict,
+        nearProvince,
       }),
     initialPageParam: 0,
     getNextPageParam: (last, all) => (last.length < SEARCH_PAGE ? undefined : all.length),
-    enabled: filters.sort !== "nearest" || Boolean(coords),
+    // Hold "nearest" only while a location is actually on its way.
+    enabled: filters.sort !== "nearest" || Boolean(coords) || !locating,
   });
 
   const workers = results.data?.pages.flat() ?? [];
@@ -165,7 +177,7 @@ export function SearchScreen() {
   const hasFilters = Boolean(filters.skill || filters.q || filters.district || filters.day || filters.available);
   // Counted on the Filters button - the refinements that live in the panel.
   const panelFilterCount = [filters.district, filters.day, filters.available].filter(Boolean).length;
-  const waitingForLocation = filters.sort === "nearest" && !coords;
+  const waitingForLocation = filters.sort === "nearest" && !coords && locating;
 
   const pills: { key: string; label: React.ReactNode; onRemove: () => void }[] = [
     filters.q && {

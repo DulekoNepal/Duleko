@@ -351,9 +351,9 @@ const strings = {
   ],
   callSettingTitle: ["Who can call me", "मलाई कसले फोन गर्न सक्छ"],
   callEveryone: ["Everyone", "सबैजना"],
-  callAcceptedWork: ["Only after work is accepted", "काम स्वीकार भएपछि मात्र"],
+  callAcceptedWork: ["After work acceptance", "काम स्वीकार भएपछि मात्र"],
   callFriends: ["Friends", "साथीहरू"],
-  callNobody: ["Nobody", "कोही पनि होइन"],
+  callNobody: ["Friends only", "साथीहरू मात्र"],
   privacyContactTitle: ["Privacy & contact", "गोपनीयता र सम्पर्क"],
   callEveryoneHint: ["Any signed-in user can see your number and call you.", "साइन इन गरेको जो कोहीले तपाईंको नम्बर देखेर फोन गर्न सक्छ।"],
   callAcceptedWorkHint: [
@@ -361,7 +361,10 @@ const strings = {
     "तपाईंसँगको काम अनुरोध स्वीकार भएका व्यक्तिहरू मात्र।",
   ],
   callFriendsHint: ["Only people you have added as friends.", "तपाईंले साथी बनाएका व्यक्तिहरू मात्र।"],
-  callNobodyHint: ["Your number stays hidden. Others can only chat.", "तपाईंको नम्बर लुकेको रहन्छ। अरूले कुराकानी मात्र गर्न सक्छन्।"],
+  callNobodyHint: [
+    "Only your friends can see your number. Everyone else can still chat with you.",
+    "तपाईंका साथीहरूले मात्र नम्बर देख्न सक्छन्। अरूले कुराकानी भने गर्न सक्छन्।",
+  ],
   friendsAlwaysHint: [
     "Friends can always call and chat with you, whatever you pick.",
     "तपाईंले जे रोके पनि साथीहरूले सधैं फोन र कुराकानी गर्न सक्छन्।",

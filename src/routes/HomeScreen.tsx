@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Flame,
   LogIn,
   MapPin,
   Plus,
@@ -19,7 +20,12 @@ import { EmergencyContactsSection } from "@/components/duleko/EmergencyContacts"
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { FeeReminder } from "@/components/duleko/payments/FeeReminder";
 import { NoticeRow } from "@/components/duleko/NoticeParts";
-import { groupSkillsByCategory } from "@/components/duleko/SkillGrid";
+import {
+  SKILL_CATEGORY_ICON,
+  SKILL_CATEGORY_LABEL,
+  SKILL_CATEGORY_ORDER,
+  groupSkillsByCategory,
+} from "@/components/duleko/SkillGrid";
 import { SkillIcon } from "@/components/duleko/SkillIcon";
 import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { BrandWatermark } from "@/components/duleko/site/ui";
@@ -48,8 +54,9 @@ const NOTICE_FRESH_MS = 14 * 24 * 60 * 60_000;
 /** Popular's tie-break while few skills have anyone behind them yet. */
 const DEFAULT_SHORTCUTS = ["electrician", "plumber", "mechanic", "tutor", "carpenter", "cleaner", "painter", "driver"];
 
-/** Two rows of the skill grid on a tablet or desktop (one fewer row's worth on a phone). */
+/** How many skills Popular holds once opened; each section shows its first four. */
 const POPULAR_COUNT = 12;
+const SECTION_PREVIEW = 4;
 
 /**
  * From tablets up the map is a big, movable one; on phones a small
@@ -64,14 +71,7 @@ const TILE_WASH: Record<SkillCategory, string> = {
   personal: "bg-brand-50",
 };
 
-type SkillTab = "popular" | SkillCategory;
-
-const SKILL_TABS: { id: SkillTab; label: StringKey }[] = [
-  { id: "popular", label: "popularSkills" },
-  { id: "trades", label: "homeSkillTabTrades" },
-  { id: "professional", label: "homeSkillTabProfessional" },
-  { id: "personal", label: "homeSkillTabPersonal" },
-];
+type SkillSection = "popular" | SkillCategory;
 
 function timeGreetingKey(): StringKey {
   const hour = new Date().getHours();
@@ -215,7 +215,7 @@ export function HomeScreen() {
             column (notices, safety) sits beside the skills, and people, the
             map and work requests run the full width below them. */}
         <div className="grid gap-5 md:gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-x-7">
-          <HomeSkills area={area} />
+          <HomeSkills />
 
           <div className="min-w-0 lg:col-span-2">
             <NearbyPeople area={area} where={where} />
@@ -509,136 +509,149 @@ function ProfileProgress({ profile }: { profile: Profile }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Skills: Popular, then each category, one grid                       */
+/* Skills: Popular and the three categories, all four open at once     */
 /* ------------------------------------------------------------------ */
 
-function HomeSkills({ area }: { area: string | null }) {
-  const { t, lang } = useI18n();
-  const [tab, setTab] = useState<SkillTab>("popular");
-  const [expanded, setExpanded] = useState(false);
+function HomeSkills() {
+  const { t } = useI18n();
 
   const skills = useQuery({ queryKey: ["skills"], queryFn: listSkills, staleTime: 30 * 60_000 });
   // Total workers per skill across the whole database - available to
   // guests too, browsing the directory needs no account.
   const counts = useQuery({ queryKey: ["skill-counts"], queryFn: () => skillCounts(null) });
 
-  const all = skills.data ?? [];
-  // Popular: the skills with the most people behind them, the everyday
-  // ones first among equals. "Others" is a catch-all, not a suggestion.
-  const popular = all
+  // Most people first, the everyday ones first among equals - in every
+  // section, so its first row is its four most popular skills. "Others"
+  // is a catch-all, not a suggestion.
+  const byPopularity = (skills.data ?? [])
     .filter((skill) => skill.id !== "other")
     .sort((a, b) => {
       const byCount = (counts.data?.[b.id] ?? 0) - (counts.data?.[a.id] ?? 0);
       if (byCount !== 0) return byCount;
       const rank = (s: Skill) => (DEFAULT_SHORTCUTS.indexOf(s.id) + 1 || 99) * 1000 + (s.sort_order ?? 100);
       return rank(a) - rank(b);
-    })
-    .slice(0, POPULAR_COUNT);
-  const list = tab === "popular" ? popular : groupSkillsByCategory(all)[tab];
-
-  // Two rows show: 8 on a phone (4 across), 12 from sm (6 across). The
-  // toggle appears only where those two rows hide something.
-  const n = list.length;
-  const toggleClass = n > 12 ? "" : n > 8 ? "sm:hidden" : null;
-
-  function choose(next: SkillTab) {
-    setTab(next);
-    setExpanded(false);
-  }
+    });
+  const byCategory = groupSkillsByCategory(byPopularity);
+  const sections: { id: SkillSection; skills: Skill[] }[] = [
+    { id: "popular", skills: byPopularity.slice(0, POPULAR_COUNT) },
+    ...SKILL_CATEGORY_ORDER.map((id) => ({ id, skills: byCategory[id] })),
+  ];
 
   return (
     <HomeSection title={t("browseSkills")} action={<SeeAll to="/search" />} delay={30}>
-      <div
-        role="group"
-        aria-label={t("browseSkills")}
-        className="no-scrollbar -mx-4 mb-2.5 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:px-0"
-      >
-        {SKILL_TABS.map(({ id, label }) => {
-          const active = tab === id;
+      {/* One under the other on phones, two by two from tablets up. */}
+      <div className="grid gap-2.5 md:grid-cols-2 md:items-start">
+        {skills.isLoading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-slate-200 bg-surface p-3 shadow-sm">
+                <div className="skeleton h-4 w-40 rounded" />
+                <div className="mt-3 grid grid-cols-4 gap-1">
+                  {Array.from({ length: 4 }).map((_, j) => (
+                    <div key={j} className="flex flex-col items-center gap-2 py-1">
+                      <div className="skeleton h-10 w-10 rounded-xl" />
+                      <div className="skeleton h-3 w-14 rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          : sections
+              .filter((section) => section.skills.length > 0)
+              .map((section) => (
+                <SkillSectionCard key={section.id} section={section.id} skills={section.skills} counts={counts.data} />
+              ))}
+      </div>
+    </HomeSection>
+  );
+}
+
+/**
+ * One section of Home's skills: its four most popular skills, and a
+ * "See all" that opens the rest right here.
+ */
+function SkillSectionCard({
+  section,
+  skills,
+  counts,
+}: {
+  section: SkillSection;
+  skills: Skill[];
+  counts?: Record<string, number>;
+}) {
+  const { t, lang } = useI18n();
+  const [expanded, setExpanded] = useState(false);
+  const Icon = section === "popular" ? Flame : SKILL_CATEGORY_ICON[section];
+  const title = t(section === "popular" ? "popularSkills" : SKILL_CATEGORY_LABEL[section]);
+  const shown = expanded ? skills : skills.slice(0, SECTION_PREVIEW);
+
+  return (
+    <section
+      aria-labelledby={`home-skills-${section}`}
+      className="rounded-2xl border border-slate-200 bg-surface shadow-sm"
+    >
+      <div className="flex items-center gap-2.5 px-3 pt-3">
+        <span
+          className={cn(
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+            section === "popular" ? "bg-accent-50 text-accent-600" : "bg-brand-50 text-brand-700",
+          )}
+        >
+          <Icon className="h-4 w-4" aria-hidden />
+        </span>
+        <h3 id={`home-skills-${section}`} className="line-clamp-2 min-w-0 flex-1 text-sm font-semibold leading-tight text-slate-900">
+          {title}
+        </h3>
+        {skills.length > SECTION_PREVIEW && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            className="inline-flex shrink-0 items-center gap-0.5 rounded-lg py-1 pl-2 text-xs font-semibold text-accent-600 transition-colors hover:text-accent-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500"
+          >
+            {expanded ? t("showLess") : t("seeAll")}
+            <ChevronDown
+              className={cn("h-3.5 w-3.5 transition-transform duration-200", expanded && "rotate-180")}
+              aria-hidden
+            />
+          </button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-4 gap-1 p-2">
+        {shown.map((skill, i) => {
+          const count = counts?.[skill.id] ?? 0;
           return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => choose(id)}
-              aria-pressed={active}
+            <Link
+              key={skill.id}
+              to="/search"
+              // No area filter: everyone with the skill, nearest first (6500).
+              search={{ skill: skill.id }}
               className={cn(
-                "h-8 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-1",
-                active
-                  ? "border-brand-700 bg-brand-700 text-white"
-                  : "border-slate-200 bg-surface text-slate-600 hover:border-slate-300 hover:text-slate-900",
+                "group flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-center transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
+                i >= SECTION_PREVIEW && "animate-[fade-in-up_0.25s_ease-out]",
               )}
             >
-              {t(label)}
-            </button>
+              <span
+                className={cn(
+                  "mb-0.5 flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105 group-active:scale-95",
+                  TILE_WASH[skill.category] ?? "bg-navy-50",
+                )}
+              >
+                <SkillIcon skillId={skill.id} category={skill.category} className="h-5 w-5" />
+              </span>
+              <span className="line-clamp-2 w-full text-[11px] font-medium leading-tight text-slate-800">
+                {skillName(skill, lang)}
+              </span>
+              {count > 0 && (
+                <span className="-mt-0.5 text-[10px] font-medium tabular-nums leading-none text-slate-400">
+                  {formatNumber(count, lang)}
+                </span>
+              )}
+            </Link>
           );
         })}
       </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-surface shadow-sm">
-        {skills.isLoading ? (
-          <div className="grid grid-cols-4 gap-1 p-2 sm:grid-cols-6">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className={cn("flex flex-col items-center gap-2 py-2.5", i >= 4 && "max-sm:hidden")}>
-                <div className="skeleton h-10 w-10 rounded-xl" />
-                <div className="skeleton h-3 w-14 rounded" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div key={tab} className="grid animate-[fade-in-up_0.25s_ease-out] grid-cols-4 gap-1 p-2 sm:grid-cols-6">
-            {list.map((skill, i) => {
-              const count = counts.data?.[skill.id] ?? 0;
-              return (
-                <Link
-                  key={skill.id}
-                  to="/search"
-                  search={{ skill: skill.id, district: area ?? undefined }}
-                  className={cn(
-                    "group flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-center transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
-                    !expanded && i >= 8 && "max-sm:hidden",
-                    !expanded && i >= 12 && "hidden",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "mb-0.5 flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105 group-active:scale-95",
-                      TILE_WASH[skill.category] ?? "bg-navy-50",
-                    )}
-                  >
-                    <SkillIcon skillId={skill.id} category={skill.category} className="h-5 w-5" />
-                  </span>
-                  <span className="line-clamp-2 w-full text-[11px] font-medium leading-tight text-slate-800">
-                    {skillName(skill, lang)}
-                  </span>
-                  {count > 0 && (
-                    <span className="-mt-0.5 text-[10px] font-medium tabular-nums leading-none text-slate-400">
-                      {formatNumber(count, lang)}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        )}
-
-        {!skills.isLoading && toggleClass !== null && (
-          <div className={cn("flex justify-center border-t border-slate-100 py-1", toggleClass)}>
-            <button
-              type="button"
-              onClick={() => setExpanded((v) => !v)}
-              aria-expanded={expanded}
-              className="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-semibold text-brand-700 transition-colors duration-200 hover:bg-brand-50 hover:text-brand-800"
-            >
-              {expanded ? t("showLess") : t("seeMore")}
-              <ChevronDown
-                className={cn("h-3.5 w-3.5 transition-transform duration-200", expanded && "rotate-180")}
-                aria-hidden
-              />
-            </button>
-          </div>
-        )}
-      </div>
-    </HomeSection>
+    </section>
   );
 }
 

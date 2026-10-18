@@ -131,36 +131,38 @@ export function Brand({
   );
 }
 
+type SiteButtonVariant = "primary" | "outline" | "ghost" | "light" | "ghostLight";
+type SiteButtonSize = "sm" | "md" | "lg";
+
+/** SiteButton's look, for a link that should look like one. */
+export function siteButtonClass(variant: SiteButtonVariant = "primary", size: SiteButtonSize = "md", className?: string) {
+  return cn(
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold transition-all duration-200",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98]",
+    variant === "primary" &&
+      "bg-brand-700 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_10px_24px_-12px_rgb(21_128_61/0.7)] hover:bg-brand-800 hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_14px_28px_-12px_rgb(21_128_61/0.75)] focus-visible:ring-brand-700",
+    variant === "outline" &&
+      "border-2 border-brand-700 bg-surface text-brand-800 hover:bg-brand-50 focus-visible:ring-brand-700",
+    variant === "ghost" && "text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-slate-400",
+    variant === "light" &&
+      "bg-white text-[#166534] shadow-md hover:bg-[#f0fdf4] focus-visible:ring-white dark:bg-[#16a34a] dark:text-white dark:shadow-black/30 dark:hover:bg-[#15803d]",
+    variant === "ghostLight" &&
+      "border-2 border-white/70 text-white hover:bg-white/10 focus-visible:ring-white",
+    size === "sm" && "h-10 px-4 text-sm",
+    size === "md" && "h-11 px-5 text-sm sm:text-base",
+    size === "lg" && "h-12 px-6 text-[15px] sm:text-base",
+    className,
+  );
+}
+
 export function SiteButton({
   variant = "primary",
   size = "md",
   className,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "outline" | "ghost" | "light" | "ghostLight";
-  size?: "sm" | "md" | "lg";
+  variant?: SiteButtonVariant;
+  size?: SiteButtonSize;
 }) {
-  return (
-    <button
-      type="button"
-      className={cn(
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold transition-all duration-200",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98]",
-        variant === "primary" &&
-          "bg-brand-700 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_10px_24px_-12px_rgb(21_128_61/0.7)] hover:bg-brand-800 hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_14px_28px_-12px_rgb(21_128_61/0.75)] focus-visible:ring-brand-700",
-        variant === "outline" &&
-          "border-2 border-brand-700 bg-surface text-brand-800 hover:bg-brand-50 focus-visible:ring-brand-700",
-        variant === "ghost" && "text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-slate-400",
-        variant === "light" &&
-          "bg-white text-[#166534] shadow-md hover:bg-[#f0fdf4] focus-visible:ring-white dark:bg-[#16a34a] dark:text-white dark:shadow-black/30 dark:hover:bg-[#15803d]",
-        variant === "ghostLight" &&
-          "border-2 border-white/70 text-white hover:bg-white/10 focus-visible:ring-white",
-        size === "sm" && "h-10 px-4 text-sm",
-        size === "md" && "h-11 px-5 text-sm sm:text-base",
-        size === "lg" && "h-12 px-6 text-[15px] sm:text-base",
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <button type="button" className={siteButtonClass(variant, size, className)} {...props} />;
 }
