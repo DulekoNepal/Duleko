@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   Briefcase,
@@ -47,7 +48,9 @@ import { SkillIcon } from "@/components/duleko/SkillIcon";
 import { SITE_SKILLS, siteSkill, siteSkillName, type SiteSkill } from "@/components/duleko/site/skills";
 import { teamMember, TEAM } from "@/components/duleko/site/team";
 import { useI18n, type StringKey } from "@/lib/i18n";
-import { cn, formatDate, formatMoney } from "@/lib/utils";
+import { getPublicActivityStats } from "@/lib/queries";
+import { ACTIVITY_ROWS } from "@/lib/activity";
+import { cn, formatDate, formatMoney, formatNumber } from "@/lib/utils";
 import type { SkillCategory } from "@/lib/types";
 
 const STEPS: { icon: React.ComponentType<{ className?: string }>; titleKey: StringKey; bodyKey: StringKey }[] = [
@@ -139,6 +142,8 @@ export function LandingPage() {
       </section>
 
       <SkillsShowcase />
+
+      <ActivityNumbers />
 
       {/* The Problem */}
       <SiteSection>
@@ -505,5 +510,43 @@ function SkillRow({ skills, reverse, lang }: { skills: SiteSkill[]; reverse: boo
         ))}
       </ul>
     </div>
+  );
+}
+
+/**
+ * "Activities made in Duleko": the rounded numbers (6900), only once
+ * staff have switched them on - until then, and if they can't be loaded,
+ * the section isn't there at all.
+ */
+function ActivityNumbers() {
+  const { t, lang } = useI18n();
+  const stats = useQuery({
+    queryKey: ["public-activity"],
+    queryFn: getPublicActivityStats,
+    staleTime: 10 * 60_000,
+    retry: false,
+  });
+  const numbers = stats.data;
+  if (!numbers) return null;
+
+  return (
+    <SiteSection>
+      <Eyebrow>{t("siteStatsEyebrow")}</Eyebrow>
+      <SectionHeading>{t("siteStatsTitle")}</SectionHeading>
+      <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {ACTIVITY_ROWS.map(({ key, label, icon: Icon, money }) => {
+          const value = numbers[key] ?? 0;
+          // Rounded down by the database, so anything past 10 reads "120+".
+          const shown = `${money ? formatMoney(value, lang) : formatNumber(value, lang)}${value >= 10 ? "+" : ""}`;
+          return (
+            <div key={key} className={cn(siteCard, "flex flex-col gap-2 p-4", money && "col-span-2 sm:col-span-1")}>
+              <Icon className="h-5 w-5 text-brand-600" aria-hidden />
+              <dd className="font-display text-2xl font-semibold tabular-nums text-teal-800 sm:text-3xl">{shown}</dd>
+              <dt className="text-sm text-slate-600">{t(label)}</dt>
+            </div>
+          );
+        })}
+      </dl>
+    </SiteSection>
   );
 }

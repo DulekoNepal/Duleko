@@ -20,6 +20,7 @@ import {
 import { EmergencyContactsSection } from "@/components/duleko/EmergencyContacts";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { FeeReminder } from "@/components/duleko/payments/FeeReminder";
+import { CallDealsToConfirm } from "@/components/duleko/calls/CallDealParts";
 import { NoticeRow } from "@/components/duleko/NoticeParts";
 import {
   SKILL_CATEGORY_ICON,
@@ -209,6 +210,7 @@ export function HomeScreen() {
               badge={formatNumber(pendingCount > 9 ? "9+" : pendingCount, lang)}
             />
           )}
+          {profile && <CallDealsToConfirm className="animate-in-up" />}
           {profile && <FeeReminder className="animate-in-up" />}
           {profile && <ProfileProgress profile={profile} />}
         </div>

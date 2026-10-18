@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Camera, Download, Eye, IdCard, Link2 as LinkIcon, MoreHorizontal, Pencil, Share2, ShieldCheck, Wallet } from "lucide-react";
+import { Activity, Camera, Download, Eye, IdCard, Link2 as LinkIcon, MoreHorizontal, Pencil, Share2, ShieldCheck, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MenuDivider, MenuItem, MenuLabel, MenuPanel } from "@/components/ui/menu";
 import { Switch } from "@/components/ui/switch";
@@ -274,6 +274,7 @@ export function ProfileHero({
                       <MenuItem icon={ShieldCheck} label={t("moderation")} onClick={menuAction(() => navigate({ to: "/moderation" }))} />
                       <MenuItem icon={IdCard} label={t("kycQueueTitle")} onClick={menuAction(() => navigate({ to: "/staff/verify" }))} />
                       <MenuItem icon={Wallet} label={t("staffFeesShortcut")} onClick={menuAction(() => navigate({ to: "/staff/fees" }))} />
+                      <MenuItem icon={Activity} label={t("activityShortcut")} onClick={menuAction(() => navigate({ to: "/staff/activity" }))} />
                     </>
                   )}
                 </MenuPanel>

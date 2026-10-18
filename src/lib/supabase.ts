@@ -59,6 +59,13 @@ const KYC_ERRORS: [string, StringKey][] = [
   ["KYC_NOT_FOUND", "errKycAlreadyReviewed"],
   ["KYC_REASON_REQUIRED", "errKycReasonRequired"],
   ["NAME_LOCKED_VERIFIED", "errNameLockedVerified"],
+  // Work agreed over a call (6800_call_deals.sql)
+  ["CALL_NOT_ALLOWED", "errCallNotAllowed"],
+  ["CALL_NOT_FOUND", "errCallNotFound"],
+  ["CALL_ALREADY_ANSWERED", "errCallAnswered"],
+  ["CALL_BAD_AMOUNT", "errCallBadAmount"],
+  ["CALL_DEAL_NOT_FOUND", "errCallNotFound"],
+  ["CALL_DEAL_ANSWERED", "errCallDealAnswered"],
   ["AGE_LOCKED_VERIFIED", "errAgeLockedVerified"],
 ];
 

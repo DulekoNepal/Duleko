@@ -13,6 +13,7 @@ const FOCUSABLE =
 export function Dialog({
   open,
   onClose,
+  dismissible = true,
   title,
   children,
   footer,
@@ -20,6 +21,11 @@ export function Dialog({
 }: {
   open: boolean;
   onClose: () => void;
+  /**
+   * false: a question that must be answered - no close button, and
+   * Escape or a tap outside do nothing. onClose is then never called.
+   */
+  dismissible?: boolean;
   title: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
@@ -34,8 +40,10 @@ export function Dialog({
   // below would yank the caret out of the field and onto the ✕ button
   // after a single character.
   const onCloseRef = useRef(onClose);
+  const dismissibleRef = useRef(dismissible);
   useEffect(() => {
     onCloseRef.current = onClose;
+    dismissibleRef.current = dismissible;
   });
 
   useEffect(() => {
@@ -51,7 +59,7 @@ export function Dialog({
     (field ?? panel?.querySelector<HTMLElement>(FOCUSABLE))?.focus();
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && dismissibleRef.current) {
         onCloseRef.current();
         return;
       }
@@ -102,7 +110,7 @@ export function Dialog({
           dims it, and the card behind reads as part of the dialog. */}
       <div
         className="absolute inset-0 bg-scrim/40 dark:bg-black/60"
-        onClick={onClose}
+        onClick={dismissible ? onClose : undefined}
         aria-hidden
       />
       <div
@@ -118,14 +126,16 @@ export function Dialog({
       >
         <div className="sticky top-0 flex items-center justify-between gap-3 border-b border-slate-200 bg-surface px-4 py-2.5">
           <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
-            aria-label="Close"
-          >
-            <X className="h-4.5 w-4.5" />
-          </button>
+          {dismissible && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+              aria-label="Close"
+            >
+              <X className="h-4.5 w-4.5" />
+            </button>
+          )}
         </div>
         <div className={cn("px-4 pt-3.5", footer ? "pb-3.5" : "pb-[calc(0.875rem+var(--sab))]")}>
           {children}

@@ -193,6 +193,13 @@ const staffFeesRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/StaffFeesScreen"), "StaffFeesScreen"),
 });
 
+// Staff: how Duleko is being used, and the website's numbers switch (6900).
+const staffActivityRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/staff/activity",
+  component: lazyRouteComponent(() => import("@/routes/ActivityScreen"), "ActivityScreen"),
+});
+
 // Get verified: send your ID for the verified badge.
 const verifyRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -319,6 +326,7 @@ const routeTree = rootRoute.addChildren([
   chatsRoute,
   feesRoute,
   staffFeesRoute,
+  staffActivityRoute,
   verifyRoute,
   staffVerifyRoute,
   moderationRoute,

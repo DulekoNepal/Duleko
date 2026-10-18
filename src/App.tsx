@@ -18,6 +18,7 @@ import {
 } from "@/components/duleko/Layout";
 import { WelcomeWalkthrough, hasSeenWalkthrough } from "@/components/duleko/WelcomeWalkthrough";
 import { WorkAreaPrompt } from "@/components/duleko/WorkAreaPrompt";
+import { CallDealPrompt } from "@/components/duleko/calls/CallDealParts";
 import { FullPageLoader } from "@/components/ui/states";
 
 // Sign-in and onboarding pull in the form libraries (react-hook-form, zod).
@@ -263,6 +264,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <BottomNav />
       {showWalkthrough && <WelcomeWalkthrough onDone={() => setShowWalkthrough(false)} />}
       <WorkAreaPrompt />
+      <CallDealPrompt />
     </div>
   );
 }

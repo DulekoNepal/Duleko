@@ -14,7 +14,9 @@ import type {
   Engagement,
   EngagementStatus,
   EngagementWithParties,
+  CallDealToConfirm,
   CallPermission,
+  CallToAsk,
   FeeAccount,
   FeeCharge,
   FeeOverview,
@@ -792,6 +794,125 @@ export async function submitReview(input: {
   comment?: string | null;
 }): Promise<void> {
   const { error } = await supabase.from("reviews").insert(input);
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------
+// Work agreed over a phone call (6800)
+// ---------------------------------------------------------------------
+
+/** A tap on someone's Call button. Returns the call's id. */
+export async function logCall(targetProfileId: string): Promise<string> {
+  const { data, error } = await supabase.rpc("log_call", { p_target: targetProfileId });
+  if (error) throw error;
+  return data as string;
+}
+
+/** My newest call, if it's waiting for "did you have a deal?". */
+export async function getCallToAsk(): Promise<CallToAsk | null> {
+  const { data, error } = await supabase.rpc("call_to_ask_about");
+  if (error) throw error;
+  return ((data ?? []) as CallToAsk[])[0] ?? null;
+}
+
+export type CallOutcome = "deal" | "discussing" | "no" | "short";
+
+/** The answer about a call; for a deal, its details. Returns the deal's id. */
+export async function answerCall(
+  callId: string,
+  outcome: CallOutcome,
+  deal?: { skill: string | null; amount: number | null; rating: number | null; comment: string | null },
+): Promise<string | null> {
+  const { data, error } = await supabase.rpc("answer_call", {
+    p_call: callId,
+    p_outcome: outcome,
+    p_skill: deal?.skill ?? null,
+    p_amount: deal?.amount ?? null,
+    p_rating: deal?.rating ?? null,
+    p_comment: deal?.comment?.trim() || null,
+  });
+  if (error) throw error;
+  return (data as string | null) ?? null;
+}
+
+/** Deals people reported after calling me, waiting on my answer. */
+export async function listCallDealsToConfirm(): Promise<CallDealToConfirm[]> {
+  const { data, error } = await supabase.rpc("my_call_deals_to_confirm");
+  if (error) throw error;
+  return ((data ?? []) as CallDealToConfirm[]).map((d) => ({
+    ...d,
+    amount: d.amount == null ? null : Number(d.amount),
+  }));
+}
+
+/** Duleko's activity numbers (6900). */
+export interface ActivityNumbers {
+  calls: number;
+  accepted: number;
+  completed: number;
+  reviews: number;
+  repeat: number;
+  active: number;
+  deals_npr: number;
+}
+
+export interface ActivityStats {
+  all_time: ActivityNumbers;
+  last_30_days: ActivityNumbers;
+  public_visible: boolean;
+  disputed_deals: number;
+  waiting_deals: number;
+}
+
+/** Staff: the exact numbers. */
+export async function getActivityStats(): Promise<ActivityStats> {
+  const { data, error } = await supabase.rpc("activity_stats");
+  if (error) throw error;
+  return data as ActivityStats;
+}
+
+/** Anyone: the rounded numbers, or null while staff keep them off the website. */
+export async function getPublicActivityStats(): Promise<ActivityNumbers | null> {
+  const { data, error } = await supabase.rpc("public_activity_stats");
+  if (error) throw error;
+  return (data as ActivityNumbers | null) ?? null;
+}
+
+/** Admins: show or hide the numbers on the website. */
+export async function setPublicStats(visible: boolean): Promise<void> {
+  const { error } = await supabase.rpc("set_public_stats", { p_visible: visible });
+  if (error) throw error;
+}
+
+export interface StaffCallDeal {
+  deal_id: string;
+  status: "reported" | "confirmed" | "disputed" | "removed";
+  amount: number | null;
+  deal_date: string;
+  created_at: string;
+  skill_id: string | null;
+  hirer_id: string;
+  hirer_name: string;
+  worker_id: string;
+  worker_name: string;
+}
+
+/** Staff: the latest deals agreed over a call. */
+export async function listRecentCallDeals(): Promise<StaffCallDeal[]> {
+  const { data, error } = await supabase.rpc("recent_call_deals", { p_limit: 30 });
+  if (error) throw error;
+  return ((data ?? []) as StaffCallDeal[]).map((d) => ({ ...d, amount: d.amount == null ? null : Number(d.amount) }));
+}
+
+/** Staff: take a made-up deal out of every count, with its review. */
+export async function removeCallDeal(dealId: string): Promise<void> {
+  const { error } = await supabase.rpc("remove_call_deal", { p_deal: dealId });
+  if (error) throw error;
+}
+
+/** The worker's yes (it counts, and the rating posts) or no (it never counts). */
+export async function respondCallDeal(dealId: string, agree: boolean): Promise<void> {
+  const { error } = await supabase.rpc("respond_call_deal", { p_deal: dealId, p_agree: agree });
   if (error) throw error;
 }
 

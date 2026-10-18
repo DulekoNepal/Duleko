@@ -159,9 +159,32 @@ export interface Bid {
   created_at: string;
 }
 
+/** The call to ask "did you have a deal?" about (call_to_ask_about, 6800). */
+export interface CallToAsk {
+  call_id: string;
+  called_at: string;
+  person_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  skills: (Pick<Skill, "id" | "name_en" | "name_ne" | "emoji" | "category"> & { custom_label: string | null })[];
+}
+
+/** A deal someone reported after calling me, waiting on my yes or no (6800). */
+export interface CallDealToConfirm {
+  deal_id: string;
+  person_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  skill: Pick<Skill, "id" | "name_en" | "name_ne" | "emoji" | "category"> | null;
+  amount: number | null;
+  deal_date: string;
+  confirm_by: string;
+}
+
 export interface Review {
   id: string;
-  engagement_id: string;
+  /** The job it's about - or null for a deal agreed over a call (call_deal_id, 6800). */
+  engagement_id: string | null;
   reviewer_profile_id: string;
   reviewee_profile_id: string;
   rating: number;
@@ -202,7 +225,9 @@ export interface AppNotification {
     /** To staff: a member sent their ID for the verified badge. */
     | "kyc_review"
     /** To a member: staff couldn't accept the ID they sent. */
-    | "kyc_result";
+    | "kyc_result"
+    /** To a worker: someone who called them says they made a deal (6800). */
+    | "call_deal";
   title_en: string;
   title_ne: string;
   body_en: string | null;

@@ -50,6 +50,12 @@ export async function openNotification(
     return;
   }
 
+  // Someone who called you says you made a deal: Home asks you to confirm it.
+  if (n.kind === "call_deal") {
+    void navigate({ to: "/home" });
+    return;
+  }
+
   // Duleko's fees: the verdict on your payment, or (staff) one to check.
   if (n.kind === "fee_payment") {
     void navigate({ to: "/fees" });
@@ -73,7 +79,13 @@ export async function openNotification(
 
   if (n.kind === "friend_request" || n.kind === "friend_accepted") {
     void navigate({ to: "/friends" });
-  } else if (n.kind === "welcome" || n.kind === "verified" || n.kind === "announcement") {
+  } else if (
+    n.kind === "welcome" ||
+    n.kind === "verified" ||
+    n.kind === "announcement" ||
+    // A review from a deal agreed over a call has no job to open (6800).
+    (n.kind === "review" && !n.engagement_id)
+  ) {
     void navigate({ to: "/profile" });
   } else if (n.engagement_id) {
     // Job updates and reviews land on the job itself, not just the list.

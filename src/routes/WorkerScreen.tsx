@@ -62,6 +62,7 @@ import { RequestWorkDialog } from "@/components/duleko/RequestWorkDialog";
 import { ReportDialog } from "@/components/duleko/ReportDialog";
 import { SuspendUserDialog } from "@/components/duleko/SuspendUserDialog";
 import { StaffIdDialog } from "@/components/duleko/kyc/KycStaffParts";
+import { trackCallTap } from "@/lib/call-tracking";
 import { MenuDivider, MenuItem, MenuLabel, MenuPanel } from "@/components/ui/menu";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -381,7 +382,8 @@ export function WorkerScreen() {
   );
 
   const callButton = canCall ? (
-    <a href={`tel:${contact.data!.phone}`} className={secondary}>
+    // Each tap is counted, and coming back asks how the call went (6800).
+    <a href={`tel:${contact.data!.phone}`} onClick={() => trackCallTap(w.id)} className={secondary}>
       <Phone className="h-4 w-4 shrink-0" aria-hidden />
       <span className="max-w-full truncate">{t("callNow")}</span>
     </a>

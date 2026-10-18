@@ -7,6 +7,7 @@ import { profileStrings } from "./i18n-profile";
 import { workStrings } from "./i18n-work";
 import { authStrings } from "./i18n-auth";
 import { kycStrings } from "./i18n-kyc";
+import { callStrings } from "./i18n-calls";
 import { setActiveCalendar, storeCalendar, storedCalendar, type CalendarChoice } from "./bs-calendar";
 
 /**
@@ -1380,6 +1381,9 @@ const strings = {
 
   // ---- ID checks for the verified badge (see i18n-kyc.ts) --------------
   ...kycStrings,
+
+  // ---- work agreed over a phone call (see i18n-calls.ts) ---------------
+  ...callStrings,
 } as const;
 
 export type StringKey = keyof typeof strings;
