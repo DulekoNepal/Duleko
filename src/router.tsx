@@ -105,8 +105,9 @@ const jobsRoute = createRoute({
   path: "/jobs",
   validateSearch: (
     search: Record<string, unknown>,
-  ): { tab?: "mine" | "offers"; district?: string; skill?: string } => ({
+  ): { tab?: "mine" | "offers"; kind?: "offer"; district?: string; skill?: string } => ({
     tab: search.tab === "mine" || search.tab === "offers" ? search.tab : undefined,
+    kind: search.kind === "offer" ? "offer" : undefined,
     district: typeof search.district === "string" && search.district ? search.district : undefined,
     skill: typeof search.skill === "string" && search.skill ? search.skill : undefined,
   }),

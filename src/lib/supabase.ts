@@ -40,6 +40,8 @@ const JOB_ERRORS: [string, StringKey][] = [
   ["JOB_OFFER_NOT_PENDING", "errJobOfferNotPending"],
   ["JOB_BAD_AMOUNT", "errJobBadAmount"],
   ["JOB_SKILL_REQUIRED", "errJobSkillRequired"],
+  ["JOB_OFFER_NEEDS_SKILL", "errJobOfferNeedsSkill"],
+  ["JOB_NOT_HIRING", "errJobNotHiring"],
   ["ACCOUNT_SUSPENDED", "errAccountSuspended"],
 ];
 

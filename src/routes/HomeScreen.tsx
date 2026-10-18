@@ -10,6 +10,7 @@ import {
   Flame,
   LogIn,
   MapPin,
+  Megaphone,
   Plus,
   Search,
   Star,
@@ -40,7 +41,7 @@ import { useMyLocation } from "@/hooks/use-my-location";
 import { countPendingForMe, listJobPosts, listNotices, listSkills, searchWorkers, skillCounts } from "@/lib/queries";
 import { districtLabel, municipalityLabel } from "@/lib/nepal";
 import { cn, formatNumber, initials, skillName, todayKey } from "@/lib/utils";
-import type { Profile, Skill, SkillCategory, WorkerCardData } from "@/lib/types";
+import type { JobPostKind, Profile, Skill, SkillCategory, WorkerCardData } from "@/lib/types";
 
 // Leaflet and its tiles load after the rest of Home, not with it.
 const HomeMapCard = lazy(() =>
@@ -142,7 +143,8 @@ export function HomeScreen() {
   const { isGuest, requestSignIn } = useGuestMode();
   const [area, setArea] = useHomeArea();
   const [pickingArea, setPickingArea] = useState(false);
-  const [posting, setPosting] = useState(false);
+  // Which kind of post the form is open on, or null while it's closed.
+  const [posting, setPosting] = useState<JobPostKind | null>(null);
   const bigMap = useMediaQuery(BIG_MAP_QUERY);
 
   const pending = useQuery({
@@ -163,8 +165,8 @@ export function HomeScreen() {
     (n) => Date.now() - new Date(n.created_at).getTime() < NOTICE_FRESH_MS,
   );
 
-  function postJob() {
-    if (profile) setPosting(true);
+  function postJob(kind: JobPostKind = "hire") {
+    if (profile) setPosting(kind);
     else requestSignIn();
   }
 
@@ -181,7 +183,7 @@ export function HomeScreen() {
           profile={profile}
           place={place}
           onPickArea={() => setPickingArea(true)}
-          onPost={postJob}
+          onPost={() => postJob("hire")}
           area={area}
         />
 
@@ -234,7 +236,11 @@ export function HomeScreen() {
           </div>
 
           <div className="min-w-0 lg:col-span-2">
-            <RecentRequests area={area} where={where} onPost={postJob} />
+            <RecentPosts kind="hire" area={area} where={where} onPost={() => postJob("hire")} delay={90} />
+          </div>
+
+          <div className="min-w-0 lg:col-span-2">
+            <RecentPosts kind="offer" area={area} where={where} onPost={() => postJob("offer")} delay={105} />
           </div>
 
           <aside className="min-w-0 space-y-5 md:space-y-6 lg:col-start-2 lg:row-start-1">
@@ -261,7 +267,13 @@ export function HomeScreen() {
       />
 
       {profile && posting && (
-        <PostJobDialog open onClose={() => setPosting(false)} profile={profile} defaultDistrict={area} />
+        <PostJobDialog
+          open
+          onClose={() => setPosting(null)}
+          profile={profile}
+          defaultDistrict={area}
+          defaultKind={posting}
+        />
       )}
     </>
   );
@@ -879,41 +891,82 @@ function PersonCard({ worker }: { worker: WorkerCardData }) {
 /* Recent work requests                                                */
 /* ------------------------------------------------------------------ */
 
-function RecentRequests({ area, where, onPost }: { area: string | null; where: string; onPost: () => void }) {
+/** Home's two lists of board posts (6700): people hiring, and services offered. */
+const POST_LIST_COPY: Record<
+  JobPostKind,
+  { title: StringKey; empty: StringKey; emptyHint: StringKey; elsewhere: StringKey; cta: StringKey; icon: LucideIcon }
+> = {
+  hire: {
+    title: "homeRequestsTitle",
+    empty: "homeRequestsEmpty",
+    emptyHint: "homeRequestsEmptyHint",
+    elsewhere: "homeRequestsElsewhere",
+    cta: "postJob",
+    icon: Briefcase,
+  },
+  offer: {
+    title: "homeOffersTitle",
+    empty: "homeOffersEmpty",
+    emptyHint: "homeOffersEmptyHint",
+    elsewhere: "homeOffersElsewhere",
+    cta: "offerYourService",
+    icon: Megaphone,
+  },
+};
+
+function RecentPosts({
+  kind,
+  area,
+  where,
+  onPost,
+  delay,
+}: {
+  kind: JobPostKind;
+  area: string | null;
+  where: string;
+  onPost: () => void;
+  delay: number;
+}) {
   const { t, lang } = useI18n();
+  const copy = POST_LIST_COPY[kind];
+  const Icon = copy.icon;
 
   // The newest in this area; with nothing here yet, the newest anywhere,
-  // so Home never shows an empty board while work exists elsewhere.
-  const requests = useQuery({
-    queryKey: ["jobs", "home", area],
+  // so Home never shows an empty board while posts exist elsewhere.
+  const posts = useQuery({
+    queryKey: ["jobs", "home", kind, area],
     queryFn: async () => {
-      const here = await listJobPosts({ district: area, pageSize: 3 });
+      const here = await listJobPosts({ kind, district: area, pageSize: 3 });
       if (here.length > 0 || !area) return { items: here, elsewhere: false };
-      const anywhere = await listJobPosts({ pageSize: 3 });
+      const anywhere = await listJobPosts({ kind, pageSize: 3 });
       return { items: anywhere, elsewhere: anywhere.length > 0 };
     },
   });
-  const items = requests.data?.items ?? [];
-  const elsewhere = Boolean(requests.data?.elsewhere && area);
+  const items = posts.data?.items ?? [];
+  const elsewhere = Boolean(posts.data?.elsewhere && area);
+  const boardSearch = {
+    ...(kind === "offer" ? { kind } : {}),
+    ...(posts.data?.elsewhere ? { district: "all" } : {}),
+  };
 
   return (
     <HomeSection
-      title={t("homeRequestsTitle")}
-      subtitle={elsewhere && area ? t("homeRequestsElsewhere", { place: districtLabel(area, lang) }) : where}
-      action={<SeeAll to="/jobs" search={requests.data?.elsewhere ? { district: "all" } : {}} />}
-      delay={90}
+      title={t(copy.title)}
+      subtitle={elsewhere && area ? t(copy.elsewhere, { place: districtLabel(area, lang) }) : where}
+      action={<SeeAll to="/jobs" search={boardSearch} />}
+      delay={delay}
     >
-      {requests.isLoading ? (
+      {posts.isLoading ? (
         <JobCardSkeleton count={2} />
       ) : items.length === 0 ? (
         <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-slate-300 bg-surface p-3.5 sm:flex-row sm:items-center">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-              <Briefcase className="h-5 w-5" aria-hidden />
+              <Icon className="h-5 w-5" aria-hidden />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold text-slate-800">{t("homeRequestsEmpty")}</span>
-              <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">{t("homeRequestsEmptyHint")}</span>
+              <span className="block text-sm font-semibold text-slate-800">{t(copy.empty)}</span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">{t(copy.emptyHint)}</span>
             </span>
           </div>
           <button
@@ -922,7 +975,7 @@ function RecentRequests({ area, where, onPost }: { area: string | null; where: s
             className="inline-flex h-9 shrink-0 items-center justify-center gap-1 rounded-lg bg-brand-700 px-3.5 text-xs font-semibold text-white transition-colors hover:bg-brand-800"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
-            {t("postJob")}
+            {t(copy.cta)}
           </button>
         </div>
       ) : (

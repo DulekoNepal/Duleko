@@ -13,14 +13,26 @@ import {
   HandCoins,
   LogIn,
   MapPin,
+  Megaphone,
   MessageCircle,
   Plus,
   Send,
   UserRound,
+  UserSearch,
   Users,
 } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
-import { AreaPickerDialog, JobCard, JobCardSkeleton, JobStateBadge, OFFER_STATUS, jobBudgetText, jobState, offerCountText } from "@/components/duleko/jobs/JobParts";
+import {
+  AreaPickerDialog,
+  JobCard,
+  JobCardSkeleton,
+  JobKindTag,
+  JobStateBadge,
+  OFFER_STATUS,
+  jobBudgetText,
+  jobState,
+  offerCountText,
+} from "@/components/duleko/jobs/JobParts";
 import { LoadMore } from "@/components/duleko/jobs/MyBoardLists";
 import { PostJobDialog } from "@/components/duleko/jobs/PostJobDialog";
 import { SkillIcon } from "@/components/duleko/SkillIcon";
@@ -56,7 +68,7 @@ import {
 import { districtLabel, municipalityLabel } from "@/lib/nepal";
 import { errorMessage } from "@/lib/supabase";
 import { cn, formatDate, formatMoney, formatNumber, locationShort, relativeTime, skillName } from "@/lib/utils";
-import type { JobOffer, JobPerson, JobPost, Profile } from "@/lib/types";
+import type { JobOffer, JobPerson, JobPost, JobPostKind, Profile } from "@/lib/types";
 
 /** Back that never strands you: a request opened from an email has no page behind it. */
 function BackButton({ fallback }: { fallback: "/home" | "/jobs" }) {
@@ -86,6 +98,7 @@ export function JobsScreen() {
   const search = useSearch({ from: "/jobs" });
   const [posting, setPosting] = useState(false);
   const [homeArea] = useHomeArea();
+  const kind: JobPostKind = search.kind ?? "hire";
 
   function postJob() {
     if (profile) setPosting(true);
@@ -98,15 +111,16 @@ export function JobsScreen() {
         title={t("jobsTitle")}
         back={<BackButton fallback="/home" />}
         right={
-          <Button size="sm" aria-label={t("postJob")} onClick={postJob}>
+          <Button size="sm" aria-label={t("postNew")} onClick={postJob}>
             <Plus className="h-4 w-4" aria-hidden />
-            <span className="hidden min-[400px]:inline">{t("postJob")}</span>
+            <span className="hidden min-[400px]:inline">{t("postNew")}</span>
           </Button>
         }
       />
       <PageContainer className="space-y-3">
         {profile && <MyBoardShortcuts profileId={profile.id} />}
-        <OpenJobs onPost={postJob} />
+        <BoardKindTabs kind={kind} />
+        <OpenJobs kind={kind} onPost={postJob} />
       </PageContainer>
 
       {profile && posting && (
@@ -115,7 +129,8 @@ export function JobsScreen() {
           onClose={() => setPosting(false)}
           profile={profile}
           defaultDistrict={homeArea}
-          defaultSkill={search.skill}
+          defaultSkill={kind === "hire" ? search.skill : undefined}
+          defaultKind={kind}
         />
       )}
     </>
@@ -182,7 +197,41 @@ function MyBoardShortcuts({ profileId }: { profileId: string }) {
   );
 }
 
-function OpenJobs({ onPost }: { onPost: () => void }) {
+/** People hiring, or services offered: the board shows one kind at a time (6700). */
+function BoardKindTabs({ kind }: { kind: JobPostKind }) {
+  const { t } = useI18n();
+  const search = useSearch({ from: "/jobs" });
+  const tabs: { id: JobPostKind; label: StringKey; icon: typeof Briefcase }[] = [
+    { id: "hire", label: "jobsTabHiring", icon: UserSearch },
+    { id: "offer", label: "jobsTabOffering", icon: Megaphone },
+  ];
+  return (
+    <div role="tablist" aria-label={t("jobsTitle")} className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 md:max-w-md">
+      {tabs.map(({ id, label, icon: Icon }) => {
+        const active = kind === id;
+        return (
+          <Link
+            key={id}
+            to="/jobs"
+            search={{ ...search, kind: id === "hire" ? undefined : id }}
+            replace
+            role="tab"
+            aria-selected={active}
+            className={cn(
+              "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold transition-colors",
+              active ? "bg-surface text-brand-800 shadow-sm" : "text-slate-600 hover:text-slate-900",
+            )}
+          >
+            <Icon className="h-4 w-4" aria-hidden />
+            {t(label)}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function OpenJobs({ kind, onPost }: { kind: JobPostKind; onPost: () => void }) {
   const { t, lang } = useI18n();
   const { profile } = useSession();
   const search = useSearch({ from: "/jobs" });
@@ -197,8 +246,8 @@ function OpenJobs({ onPost }: { onPost: () => void }) {
   const skills = useQuery({ queryKey: ["skills"], queryFn: listSkills, staleTime: 30 * 60_000 });
 
   const jobs = useInfiniteQuery({
-    queryKey: ["jobs", "open", district, skill],
-    queryFn: ({ pageParam }) => listJobPosts({ district, skill, page: pageParam }),
+    queryKey: ["jobs", "open", kind, district, skill],
+    queryFn: ({ pageParam }) => listJobPosts({ kind, district, skill, page: pageParam }),
     initialPageParam: 0,
     getNextPageParam: (last, all) => (last.length < JOBS_PAGE ? undefined : all.length),
   });
@@ -237,13 +286,13 @@ function OpenJobs({ onPost }: { onPost: () => void }) {
         <ErrorState message={errorMessage(jobs.error)} onRetry={() => jobs.refetch()} retryLabel={t("retry")} />
       ) : items.length === 0 ? (
         <EmptyState
-          icon={<Briefcase />}
-          title={t("jobsEmpty")}
-          hint={t("jobsEmptyHint")}
+          icon={kind === "offer" ? <Megaphone /> : <Briefcase />}
+          title={t(kind === "offer" ? "jobsOfferingEmpty" : "jobsEmpty")}
+          hint={t(kind === "offer" ? "jobsOfferingEmptyHint" : "jobsEmptyHint")}
           action={
             <Button size="sm" onClick={onPost}>
               <Plus className="h-4 w-4" aria-hidden />
-              {t("postJob")}
+              {t(kind === "offer" ? "offerYourService" : "postJob")}
             </Button>
           }
         />
@@ -282,10 +331,11 @@ export function JobScreen() {
   const post = useQuery({ queryKey: ["jobs", "post", jobId], queryFn: () => getJobPost(jobId) });
   const job = post.data ?? null;
   const mine = Boolean(job && profile && job.employer_profile_id === profile.id);
+  const offering = job?.kind === "offer";
 
   return (
     <>
-      <AppHeader title={t("jobDetailsTitle")} back={<BackButton fallback="/jobs" />} />
+      <AppHeader title={t(offering ? "serviceDetailsTitle" : "jobDetailsTitle")} back={<BackButton fallback="/jobs" />} />
       <PageContainer className="space-y-3 md:space-y-4">
         {post.isLoading ? (
           <JobCardSkeleton count={2} />
@@ -306,10 +356,11 @@ export function JobScreen() {
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] md:items-start md:gap-4">
             <div className="space-y-3 md:space-y-4">
               <JobSummary job={job} mine={mine} />
-              {mine && profile ? <OwnerOffers job={job} /> : null}
+              {mine && profile && !offering ? <OwnerOffers job={job} /> : null}
             </div>
             <div className="space-y-3 md:sticky md:top-20 md:space-y-4">
-              {!mine && <OfferPanel job={job} profile={profile} />}
+              {/* An offer post takes no price offers: people contact the poster (6700). */}
+              {!mine && (offering ? <ServiceContactPanel job={job} /> : <OfferPanel job={job} profile={profile} />)}
               <PosterCard job={job} mine={mine} />
               {mine && <OwnerActions job={job} />}
             </div>
@@ -352,11 +403,13 @@ function JobSummary({ job, mine }: { job: JobPost; mine: boolean }) {
     staleTime: 5 * 60_000,
   });
   const exact = mine ? place.data?.location_text : null;
+  const offering = job.kind === "offer";
 
   return (
     <Card>
       <CardBody className="p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-2">
+          <JobKindTag kind={job.kind} className="py-1" />
           {job.skill && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">
               <SkillIcon skillId={job.skill.id} inherit className="h-3.5 w-3.5" />
@@ -370,13 +423,15 @@ function JobSummary({ job, mine }: { job: JobPost; mine: boolean }) {
         <p className="mt-1 text-xs text-slate-500">{t("jobPostedAgo", { time: relativeTime(job.created_at, lang) })}</p>
 
         <div className="mt-3 rounded-xl bg-brand-50/70 px-3.5 py-2.5">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-brand-700">{t("jobBudget")}</p>
+          <p className="text-[11px] font-medium uppercase tracking-wide text-brand-700">
+            {t(offering ? "serviceRate" : "jobBudget")}
+          </p>
           <p className={cn("text-lg font-bold", budget ? "text-brand-900" : "text-slate-600")}>
-            {budget ?? t("jobBudgetOpen")}
+            {budget ?? t(offering ? "serviceRateOpen" : "jobBudgetOpen")}
           </p>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className={cn("mt-4 grid gap-3", offering ? "sm:grid-cols-2" : "sm:grid-cols-3")}>
           <Fact icon={MapPin} label={t("jobWhere")}>
             {exact ? (
               <>
@@ -387,7 +442,7 @@ function JobSummary({ job, mine }: { job: JobPost; mine: boolean }) {
             ) : (
               <>
                 {area}
-                {!mine && (
+                {!mine && !offering && (
                   <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-400">
                     {t("jobPlaceHidden")}
                   </span>
@@ -395,12 +450,14 @@ function JobSummary({ job, mine }: { job: JobPost; mine: boolean }) {
               </>
             )}
           </Fact>
-          <Fact icon={CalendarDays} label={t("jobWhen")}>
+          <Fact icon={CalendarDays} label={t(offering ? "serviceUntil" : "jobWhen")}>
             {formatDate(job.work_date, lang)}
           </Fact>
-          <Fact icon={Users} label={t("jobOffersTitle")}>
-            {offerCountText(job.offer_count, t, lang)}
-          </Fact>
+          {!offering && (
+            <Fact icon={Users} label={t("jobOffersTitle")}>
+              {offerCountText(job.offer_count, t, lang)}
+            </Fact>
+          )}
         </div>
 
         {job.details && (
@@ -445,7 +502,9 @@ function PosterCard({ job, mine }: { job: JobPost; mine: boolean }) {
     <Card>
       <CardBody>
         <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-slate-400">
-          {mine ? t("jobYouPosted") : t("jobPostedBy")}
+          {job.kind === "offer"
+            ? t(mine ? "serviceYouOffer" : "serviceOfferedBy")
+            : t(mine ? "jobYouPosted" : "jobPostedBy")}
         </p>
         <div className="flex items-center gap-2">
           <PersonLine person={job.poster} />
@@ -460,6 +519,60 @@ function PosterCard({ job, mine }: { job: JobPost; mine: boolean }) {
             </Link>
           )}
         </div>
+        {mine && job.kind === "offer" && job.status === "open" && (
+          <p className="mt-2.5 text-xs leading-relaxed text-slate-500">{t("serviceYoursHint")}</p>
+        )}
+      </CardBody>
+    </Card>
+  );
+}
+
+/**
+ * Someone else's service on offer: no price offers here - message them
+ * (anyone signed in can), or open their profile, where their phone shows
+ * if their call setting allows it.
+ */
+function ServiceContactPanel({ job }: { job: JobPost }) {
+  const { t } = useI18n();
+  const { profile } = useSession();
+  const { requestSignIn } = useGuestMode();
+  const poster = job.poster;
+  if (!poster || jobState(job) !== "open") return null;
+  const name = poster.full_name.split(/\s+/)[0] ?? poster.full_name;
+
+  return (
+    <Card tone="primary" className="overflow-hidden">
+      <CardBody className="p-4">
+        <h3 className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-slate-900">
+          <Megaphone className="h-4 w-4 text-brand-700" aria-hidden />
+          {t("serviceNeedThis")}
+        </h3>
+        <p className="mb-3 text-xs leading-relaxed text-slate-600">{t("serviceContactHint", { name })}</p>
+        {profile ? (
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              to="/chat/$otherId"
+              params={{ otherId: poster.id }}
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-brand-700 text-sm font-semibold text-white hover:bg-brand-800"
+            >
+              <MessageCircle className="h-4 w-4" aria-hidden />
+              {t("jobMessage")}
+            </Link>
+            <Link
+              to="/worker/$workerId"
+              params={{ workerId: poster.id }}
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-surface text-sm font-semibold text-slate-800 hover:bg-slate-50"
+            >
+              <UserRound className="h-4 w-4" aria-hidden />
+              {t("serviceViewProfile")}
+            </Link>
+          </div>
+        ) : (
+          <Button className="w-full" onClick={requestSignIn}>
+            <LogIn className="h-4 w-4" aria-hidden />
+            {t("serviceSignIn", { name })}
+          </Button>
+        )}
       </CardBody>
     </Card>
   );
@@ -863,7 +976,9 @@ function OwnerActions({ job }: { job: JobPost }) {
           </>
         }
       >
-        <p className="text-sm leading-relaxed text-slate-700">{t("jobCloseBody")}</p>
+        <p className="text-sm leading-relaxed text-slate-700">
+          {t(job.kind === "offer" ? "jobCloseOfferBody" : "jobCloseBody")}
+        </p>
       </Dialog>
     </>
   );

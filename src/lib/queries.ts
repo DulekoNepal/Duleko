@@ -23,6 +23,7 @@ import type {
   JobOffer,
   JobPerson,
   JobPost,
+  JobPostKind,
   KycDocType,
   KycQueueItem,
   KycRejectionCode,
@@ -1982,7 +1983,7 @@ const JOB_PERSON_COLUMNS =
   ",staff_roles!staff_roles_profile_id_fkey(role)";
 
 const JOB_POST_COLUMNS =
-  "id,employer_profile_id,skill_id,title,details,district,municipality,location_text,work_date," +
+  "id,employer_profile_id,kind,skill_id,title,details,district,municipality,location_text,work_date," +
   "budget_min,budget_max,status,engagement_id,offer_count,lat,lng,created_at,updated_at," +
   "skill:skills(id,name_en,name_ne,emoji,category)," +
   `poster:profiles!job_posts_employer_profile_id_fkey(${JOB_PERSON_COLUMNS})`;
@@ -2022,6 +2023,7 @@ export const JOBS_PAGE = 12;
 
 /** Open posts whose day hasn't passed, newest first - in one district, or anywhere. */
 export async function listJobPosts(params: {
+  kind?: JobPostKind;
   district?: string | null;
   skill?: string | null;
   page?: number;
@@ -2033,6 +2035,7 @@ export async function listJobPosts(params: {
     .from("job_posts")
     .select(JOB_POST_COLUMNS)
     .eq("status", "open")
+    .eq("kind", params.kind ?? "hire")
     .gte("work_date", todayKey());
   if (params.district) query = query.eq("district", params.district);
   if (params.skill) query = query.eq("skill_id", params.skill);
@@ -2062,13 +2065,15 @@ export async function listMyJobPosts(myProfileId: string, page = 0, pageSize = J
 }
 
 export interface JobPostInput {
+  kind: JobPostKind;
   skill_id: string;
   title: string;
   details: string | null;
   district: string;
   municipality: string | null;
-  location_text: string;
-  work_date: string;
+  /** Hiring only; an offer post has no exact place and sets its own last day (6700). */
+  location_text: string | null;
+  work_date: string | null;
   budget_min: number | null;
   budget_max: number | null;
   /**
@@ -2097,12 +2102,13 @@ export async function getJobPostPlace(postId: string): Promise<JobPostPlace | nu
   return (data as JobPostPlace | null) ?? null;
 }
 
-/** Open posts with a pin inside the map's view. */
+/** Open hiring posts with a pin inside the map's view (offer posts have no pin). */
 export async function listJobPostsInBounds(bounds: MapBounds, skill?: string | null): Promise<JobPost[]> {
   let query = supabase
     .from("job_posts")
     .select(JOB_POST_COLUMNS)
     .eq("status", "open")
+    .eq("kind", "hire")
     .gte("work_date", todayKey())
     .gte("lat", bounds.south)
     .lte("lat", bounds.north)
@@ -2168,6 +2174,7 @@ export async function listMyPostsWithOffers(myProfileId: string): Promise<JobPos
     .select(JOB_POST_COLUMNS)
     .eq("employer_profile_id", myProfileId)
     .eq("status", "open")
+    .eq("kind", "hire")
     .gte("work_date", todayKey())
     .gt("offer_count", 0)
     .order("work_date", { ascending: true })

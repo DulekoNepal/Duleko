@@ -9,8 +9,8 @@ export const jobStrings = {
   homeLocationAll: ["All Nepal", "सम्पूर्ण नेपाल"],
   homeLocationTitle: ["Choose your area", "आफ्नो क्षेत्र छान्नुहोस्"],
   homeLocationHint: [
-    "Nearby people and work requests on Home follow this.",
-    "गृहपृष्ठका नजिकैका मानिस र कामका अनुरोध यसैअनुसार देखिन्छन्।",
+    "Nearby people, jobs and services on Home follow this.",
+    "गृहपृष्ठका नजिकैका मानिस, काम र सेवा यसैअनुसार देखिन्छन्।",
   ],
   homeLocationSearch: ["Search districts", "जिल्ला खोज्नुहोस्"],
   homeLocationMine: ["My district", "मेरो जिल्ला"],
@@ -20,7 +20,18 @@ export const jobStrings = {
   homeNearbyTitle: ["Nearby Skilled People", "नजिकैका सीपालु मानिस"],
   homeNearbyVerified: ["Verified profiles", "प्रमाणित प्रोफाइल"],
   homeNearbyEmptyVerified: ["No verified people here yet.", "यहाँ अहिलेसम्म प्रमाणित मानिस छैनन्।"],
-  homeRequestsTitle: ["Recent Work Requests", "पछिल्ला कामका अनुरोध"],
+  homeRequestsTitle: ["People Hiring", "कामदार खोज्नेहरू"],
+  homeOffersTitle: ["Services Offered", "उपलब्ध सेवाहरू"],
+  homeOffersEmpty: ["No services posted here yet", "यहाँ अहिलेसम्म सेवा पोस्ट गरिएको छैन"],
+  homeOffersEmptyHint: [
+    "Post what you do, so people nearby who need it can find you.",
+    "आफू के गर्नुहुन्छ पोस्ट गर्नुहोस्, ताकि चाहिनेहरूले नजिकैबाट भेट्टाऊन्।",
+  ],
+  homeOffersElsewhere: [
+    "Nothing in {place} yet - the newest across Nepal:",
+    "{place} मा अहिलेसम्म छैन - नेपालभरका नयाँ:",
+  ],
+  offerYourService: ["Offer your service", "आफ्नो सेवा पोस्ट गर्नुहोस्"],
   homeRequestsEmpty: ["No work requests here yet", "यहाँ अहिलेसम्म कामको अनुरोध छैन"],
   homeRequestsEmptyHint: [
     "Post what you need done - workers nearby with that skill will send offers.",
@@ -45,7 +56,16 @@ export const jobStrings = {
   alertsButtonCount: ["Alerts, {count} unread", "सूचनाहरू, {count} नपढिएका"],
 
   // ---- The board -------------------------------------------------------
-  jobsTitle: ["Work requests", "कामका अनुरोध"],
+  jobsTitle: ["Jobs & services", "काम र सेवा"],
+  jobsTabHiring: ["People hiring", "कामदार खोज्दै"],
+  jobsTabOffering: ["Services offered", "उपलब्ध सेवा"],
+  jobsOfferingEmpty: ["No services offered here yet", "यहाँ अहिलेसम्म सेवा पोस्ट गरिएको छैन"],
+  jobsOfferingEmptyHint: [
+    "Try another area or skill, or post a service you offer.",
+    "अर्को क्षेत्र वा सीप हेर्नुहोस्, वा आफूले दिने सेवा पोस्ट गर्नुहोस्।",
+  ],
+  jobKindHire: ["Hiring", "कामदार चाहियो"],
+  jobKindOffer: ["Offering", "सेवा उपलब्ध"],
   jobsTabOpen: ["Open", "खुला"],
   jobsTabMine: ["My posts", "मेरा पोस्ट"],
   jobsTabOffers: ["My offers", "मेरा प्रस्ताव"],
@@ -91,6 +111,8 @@ export const jobStrings = {
   jobStatusAssigned: ["Worker chosen", "कामदार छानियो"],
   jobStatusClosed: ["Closed", "बन्द"],
   jobStatusExpired: ["Date passed", "मिति नाघ्यो"],
+  jobStatusListed: ["On the board", "सूचीमा छ"],
+  jobStatusEnded: ["Ended", "सकियो"],
   jobYouPosted: ["You posted this", "तपाईंले पोस्ट गर्नुभएको"],
 
   // Sending an offer
@@ -142,6 +164,7 @@ export const jobStrings = {
   jobViewRequest: ["View the request", "अनुरोध हेर्नुहोस्"],
   jobClosePost: ["Close post", "पोस्ट बन्द गर्नुहोस्"],
   jobCloseTitle: ["Close this post?", "यो पोस्ट बन्द गर्ने?"],
+  jobCloseOfferBody: ["It leaves the board. You can post it again anytime.", "यो सूचीबाट हट्छ। जुनसुकै बेला फेरि पोस्ट गर्न सक्नुहुन्छ।"],
   jobCloseBody: [
     "It stops taking offers and leaves the board. Everyone who offered is told.",
     "यसले प्रस्ताव लिन बन्द गर्छ र सूचीबाट हट्छ। प्रस्ताव पठाउने सबैलाई जानकारी दिइन्छ।",
@@ -153,8 +176,54 @@ export const jobStrings = {
   jobOfferWaitingShort: ["Waiting", "प्रतीक्षामा"],
   jobOfferChosenShort: ["Chosen", "छानियो"],
 
+  // ---- One service on offer (6700) --------------------------------------
+  serviceDetailsTitle: ["Service", "सेवा"],
+  serviceRate: ["Rate", "दर"],
+  serviceRateOpen: ["Ask for a price", "मूल्य सोध्नुहोस्"],
+  serviceOfferedBy: ["Offered by", "सेवा दिने"],
+  serviceYouOffer: ["You offer this", "तपाईंले दिने सेवा"],
+  serviceUntil: ["On the board until", "सूचीमा रहने मिति"],
+  serviceNeedThis: ["Need this?", "यो चाहिन्छ?"],
+  serviceContactHint: [
+    "Message {name} to agree the work and the price. Their phone number shows on their profile if their call setting allows it.",
+    "काम र मूल्य मिलाउन {name}लाई सन्देश पठाउनुहोस्। उहाँको फोन सेटिङले दिए फोन नम्बर प्रोफाइलमा देखिन्छ।",
+  ],
+  serviceSignIn: ["Sign in to contact {name}", "{name}लाई सम्पर्क गर्न लगइन गर्नुहोस्"],
+  serviceViewProfile: ["View profile", "प्रोफाइल हेर्नुहोस्"],
+  serviceYoursHint: [
+    "People who need this can message you, or call you if your call setting allows it.",
+    "यो चाहिनेहरूले तपाईंलाई सन्देश पठाउन, वा फोन सेटिङले दिए फोन गर्न सक्छन्।",
+  ],
+
   // ---- Posting ---------------------------------------------------------
   postJob: ["Post a job", "काम पोस्ट गर्नुहोस्"],
+  postNew: ["Post", "पोस्ट"],
+  postKindQuestion: ["What do you want to post?", "के पोस्ट गर्न चाहनुहुन्छ?"],
+  postKindHire: ["I need someone", "मलाई काम गराउनु छ"],
+  postKindHireHint: ["Workers nearby send you their price.", "नजिकैका कामदारले आफ्नो मूल्य पठाउँछन्।"],
+  postKindOffer: ["I offer a service", "म सेवा दिन्छु"],
+  postKindOfferHint: ["People who need it message or call you.", "चाहिनेहरूले सन्देश वा फोन गर्छन्।"],
+  postOfferSkill: ["Which of your skills?", "तपाईंको कुन सीप?"],
+  postOfferNoSkills: [
+    "You can offer only skills on your profile. Add yours first.",
+    "प्रोफाइलमा भएका सीप मात्र पोस्ट गर्न सकिन्छ। पहिले आफ्नो सीप थप्नुहोस्।",
+  ],
+  postOfferTitlePlaceholder: ["e.g. Video editing for weddings and events", "जस्तै: विवाह र कार्यक्रमको भिडियो सम्पादन"],
+  postOfferDetailsPlaceholder: [
+    "What you do, your experience, when you're free…",
+    "तपाईं के गर्नुहुन्छ, अनुभव, कहिले फुर्सद हुन्छ…",
+  ],
+  postOfferRate: ["Your rate", "तपाईंको दर"],
+  postOfferRateHint: [
+    "Leave it empty to agree a price with each customer.",
+    "हरेक ग्राहकसँग मूल्य मिलाउने हो भने खाली छोड्नुहोस्।",
+  ],
+  postOfferPublicNote: [
+    "Anyone can see this post for 30 days. People who need it message you, or call you if your call setting allows it.",
+    "यो पोस्ट ३० दिनसम्म जसले पनि देख्न सक्छ। चाहिनेहरूले सन्देश पठाउँछन्, वा फोन सेटिङले दिए फोन गर्छन्।",
+  ],
+  postOfferSubmit: ["Post service", "सेवा पोस्ट गर्नुहोस्"],
+  postOfferPosted: ["Your service is on the board.", "तपाईंको सेवा सूचीमा राखियो।"],
   postJobSkill: ["What kind of work?", "कस्तो काम?"],
   postJobSkillPick: ["Choose a skill", "सीप छान्नुहोस्"],
   postJobTitle: ["Title", "शीर्षक"],
@@ -208,6 +277,11 @@ export const jobStrings = {
   errJobOfferNotPending: ["That offer is no longer waiting.", "त्यो प्रस्ताव अब प्रतीक्षामा छैन।"],
   errJobBadAmount: ["Enter a price above zero.", "शून्यभन्दा माथिको मूल्य लेख्नुहोस्।"],
   errJobSkillRequired: ["Choose what kind of work it is.", "कस्तो काम हो छान्नुहोस्।"],
+  errJobOfferNeedsSkill: ["Add this skill to your profile first.", "पहिले यो सीप आफ्नो प्रोफाइलमा थप्नुहोस्।"],
+  errJobNotHiring: [
+    "This is a service on offer - message the person instead.",
+    "यो उपलब्ध सेवा हो - बरु ती व्यक्तिलाई सन्देश पठाउनुहोस्।",
+  ],
   errAccountSuspended: ["Your account is suspended.", "तपाईंको खाता निलम्बित छ।"],
   // ---- The map -----------------------------------------------------------
   mapTitle: ["Map", "नक्सा"],

@@ -7,7 +7,7 @@ import { SkillIcon } from "@/components/duleko/SkillIcon";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { ALL_DISTRICTS, districtLabel } from "@/lib/nepal";
 import { cn, formatMoney, formatNumber, todayKey } from "@/lib/utils";
-import type { JobOfferStatus, JobPost, Lang } from "@/lib/types";
+import type { JobOfferStatus, JobPost, JobPostKind, Lang } from "@/lib/types";
 
 /* ------------------------------------------------------------------ */
 /* Labels                                                              */
@@ -38,14 +38,45 @@ const STATE_LABEL: Record<JobState, StringKey> = {
   expired: "jobStatusExpired",
 };
 
-export function JobStateBadge({ post, className }: { post: Pick<JobPost, "status" | "work_date">; className?: string }) {
+/** An offer post (6700) takes no offers: it is simply up, or not any more. */
+const OFFER_STATE_LABEL: Record<JobState, StringKey> = {
+  open: "jobStatusListed",
+  assigned: "jobStatusClosed",
+  closed: "jobStatusClosed",
+  expired: "jobStatusEnded",
+};
+
+export function JobStateBadge({
+  post,
+  className,
+}: {
+  post: Pick<JobPost, "status" | "work_date" | "kind">;
+  className?: string;
+}) {
   const { t } = useI18n();
   const state = jobState(post);
+  const label = post.kind === "offer" ? OFFER_STATE_LABEL[state] : STATE_LABEL[state];
   return (
     <Badge tone={state === "open" ? "brand" : state === "assigned" ? "success" : "muted"} className={className}>
       {state === "open" && <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden />}
-      {t(STATE_LABEL[state])}
+      {t(label)}
     </Badge>
+  );
+}
+
+/** "Hiring" or "Offering": which way round a post is, at a glance. */
+export function JobKindTag({ kind, className }: { kind: JobPostKind; className?: string }) {
+  const { t } = useI18n();
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+        kind === "offer" ? "bg-accent-50 text-accent-600" : "bg-navy-50 text-navy-700",
+        className,
+      )}
+    >
+      {t(kind === "offer" ? "jobKindOffer" : "jobKindHire")}
+    </span>
   );
 }
 
@@ -68,13 +99,14 @@ export function offerCountText(count: number, t: ReturnType<typeof useI18n>["t"]
 /* ------------------------------------------------------------------ */
 
 /**
- * One work request in a list (Home's "Recent work requests", the board):
- * what it is, where, and the budget, with View. The whole card opens the
- * request; "View" is the visible cue for that, not a second control.
+ * One post in a list (Home, the board, My posts): Hiring or Offering,
+ * what it is, where, and the budget or rate, with View. The whole card
+ * opens the post; "View" is the visible cue for that, not a second control.
  */
 export function JobCard({ post, showStatus = false }: { post: JobPost; showStatus?: boolean }) {
   const { t, lang } = useI18n();
   const budget = jobBudgetText(post, lang);
+  const offering = post.kind === "offer";
   const place = districtLabel(post.district, lang);
   // The exact place is private (6100); the card shows the district and what's needed.
   const summary = post.details;
@@ -83,14 +115,17 @@ export function JobCard({ post, showStatus = false }: { post: JobPost; showStatu
     <Link
       to="/jobs/$jobId"
       params={{ jobId: post.id }}
-      className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-surface p-3 shadow-sm transition-all duration-200 hover:border-brand-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 sm:p-3.5"
+      className="group flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-surface p-3 shadow-sm transition-all duration-200 hover:border-brand-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 sm:p-3.5"
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
         <SkillIcon skillId={post.skill_id ?? "other"} inherit className="h-5 w-5" />
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-semibold text-slate-900">{post.title}</span>
+        <span className="flex min-w-0 items-center gap-1.5">
+          <JobKindTag kind={post.kind} />
+          <span className="min-w-0 truncate text-sm font-semibold text-slate-900">{post.title}</span>
+        </span>
         <span className="mt-0.5 line-clamp-2 text-xs leading-snug text-slate-500">
           {place}
           {summary && (
@@ -104,10 +139,10 @@ export function JobCard({ post, showStatus = false }: { post: JobPost; showStatu
         </span>
         <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className={cn("text-sm font-semibold", budget ? "text-slate-900" : "text-slate-500")}>
-            {budget ?? t("jobBudgetOpen")}
+            {budget ?? t(offering ? "serviceRateOpen" : "jobBudgetOpen")}
           </span>
           {showStatus && <JobStateBadge post={post} />}
-          {showStatus && (
+          {showStatus && !offering && (
             <span className="text-xs text-slate-500">{offerCountText(post.offer_count, t, lang)}</span>
           )}
         </span>

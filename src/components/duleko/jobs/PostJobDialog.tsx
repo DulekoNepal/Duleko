@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, ChevronDown, Globe2, MapPin, X } from "lucide-react";
+import { CalendarDays, ChevronDown, Globe2, MapPin, Megaphone, UserSearch, X, type LucideIcon } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -9,12 +9,12 @@ import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
 import { SKILL_CATEGORY_ORDER, groupSkillsByCategory } from "@/components/duleko/SkillGrid";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
-import { createJobPost, listSkills } from "@/lib/queries";
+import { createJobPost, getUserSkills, listSkills } from "@/lib/queries";
 import { ALL_DISTRICTS, municipalitiesOf } from "@/lib/nepal";
 import { errorMessage } from "@/lib/supabase";
 import { cn, formatDate, skillName, todayKey } from "@/lib/utils";
 import { getCurrentPosition } from "@/lib/geolocation";
-import type { Profile, SkillCategory } from "@/lib/types";
+import type { JobPostKind, Profile, SkillCategory } from "@/lib/types";
 
 const CATEGORY_LABEL: Record<SkillCategory, StringKey> = {
   trades: "skillCategoryTrades",
@@ -22,9 +22,16 @@ const CATEGORY_LABEL: Record<SkillCategory, StringKey> = {
   personal: "skillCategoryPersonal",
 };
 
+const KINDS: { kind: JobPostKind; icon: LucideIcon; label: StringKey; hint: StringKey }[] = [
+  { kind: "hire", icon: UserSearch, label: "postKindHire", hint: "postKindHireHint" },
+  { kind: "offer", icon: Megaphone, label: "postKindOffer", hint: "postKindOfferHint" },
+];
+
 /**
- * "Post a job": what kind of work, where, which day and (optionally) the
- * budget. Opens with the poster's own place filled in - or the area Home
+ * Posting on the board, either way round (6700). "I need someone": what
+ * kind of work, where, which day and (optionally) the budget. "I offer a
+ * service": which of your skills, where you work, and (optionally) your
+ * rate. Opens with the poster's own place filled in - or the area Home
  * is showing - so most people only type the title.
  */
 export function PostJobDialog({
@@ -33,12 +40,14 @@ export function PostJobDialog({
   profile,
   defaultDistrict,
   defaultSkill,
+  defaultKind = "hire",
 }: {
   open: boolean;
   onClose: () => void;
   profile: Profile;
   defaultDistrict?: string | null;
   defaultSkill?: string | null;
+  defaultKind?: JobPostKind;
 }) {
   const { t, lang } = useI18n();
   const { toast } = useToast();
@@ -48,6 +57,8 @@ export function PostJobDialog({
   const startDistrict = defaultDistrict ?? profile.district ?? "";
   const ownPlace = startDistrict === profile.district;
 
+  const [kind, setKind] = useState<JobPostKind>(defaultKind);
+  const offering = kind === "offer";
   const [skillId, setSkillId] = useState(defaultSkill ?? "");
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
@@ -84,26 +95,34 @@ export function PostJobDialog({
   }
 
   const skills = useQuery({ queryKey: ["skills"], queryFn: listSkills, staleTime: 30 * 60_000, enabled: open });
+  // You can only offer what's on your profile (6700).
+  const mySkills = useQuery({
+    queryKey: ["user-skills", profile.id],
+    queryFn: () => getUserSkills(profile.id),
+    enabled: open && offering,
+  });
   const groups = groupSkillsByCategory(skills.data ?? []);
   const knownMunicipalities = municipalitiesOf(district);
 
   const mutation = useMutation({
     mutationFn: () =>
       createJobPost(profile.id, {
+        kind,
         skill_id: skillId,
         title: title.trim(),
         details: details.trim() || null,
         district,
         municipality: municipality.trim() || null,
-        location_text: place.trim(),
-        work_date: workDate,
+        // An offer post has no exact place, pin or day; the database sets its last day.
+        location_text: offering ? null : place.trim(),
+        work_date: offering ? null : workDate,
         budget_min: budgetMin ? Number(budgetMin) : null,
         budget_max: budgetMax ? Number(budgetMax) : null,
-        lat: pin?.lat ?? null,
-        lng: pin?.lng ?? null,
+        lat: offering ? null : (pin?.lat ?? null),
+        lng: offering ? null : (pin?.lng ?? null),
       }),
     onSuccess: (post) => {
-      toast(t("postJobPosted"));
+      toast(t(offering ? "postOfferPosted" : "postJobPosted"));
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
       onClose();
       navigate({ to: "/jobs/$jobId", params: { jobId: post.id } });
@@ -116,8 +135,8 @@ export function PostJobDialog({
     if (!skillId) next.skill = t("errJobSkillRequired");
     if (title.trim().length < 3) next.title = t("required");
     if (!district) next.district = t("required");
-    if (place.trim().length < 2) next.place = t("required");
-    if (workDate < todayKey()) next.workDate = t("errJobDatePast");
+    if (!offering && place.trim().length < 2) next.place = t("required");
+    if (!offering && workDate < todayKey()) next.workDate = t("errJobDatePast");
     const lo = budgetMin ? Number(budgetMin) : null;
     const hi = budgetMax ? Number(budgetMax) : null;
     if ((lo != null && !(lo > 0)) || (hi != null && !(hi > 0))) next.budget = t("errJobBadAmount");
@@ -132,7 +151,7 @@ export function PostJobDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title={t("postJob")}
+      title={t(offering ? "offerYourService" : "postJob")}
       footer={
         <>
           <Button variant="outline" onClick={onClose} type="button">
@@ -144,33 +163,92 @@ export function PostJobDialog({
               if (validate()) mutation.mutate();
             }}
           >
-            {t("postJobSubmit")}
+            {t(offering ? "postOfferSubmit" : "postJobSubmit")}
           </Button>
         </>
       }
     >
-      <Field label={t("postJobSkill")} error={errors.skill}>
-        <Select
-          value={skillId}
-          onChange={(e) => {
-            setSkillId(e.target.value);
-            clear("skill");
-          }}
-        >
-          <option value="">{t("postJobSkillPick")}</option>
-          {SKILL_CATEGORY_ORDER.map((category) =>
-            groups[category].length > 0 ? (
-              <optgroup key={category} label={t(CATEGORY_LABEL[category])}>
-                {groups[category].map((skill) => (
-                  <option key={skill.id} value={skill.id}>
-                    {skillName(skill, lang)}
-                  </option>
-                ))}
-              </optgroup>
-            ) : null,
+      <p className="mb-1.5 text-[13px] font-medium text-slate-700">{t("postKindQuestion")}</p>
+      <div role="radiogroup" aria-label={t("postKindQuestion")} className="mb-4 grid grid-cols-2 gap-2">
+        {KINDS.map(({ kind: option, icon: Icon, label, hint }) => {
+          const selected = kind === option;
+          return (
+            <button
+              key={option}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => {
+                setKind(option);
+                setSkillId("");
+                setErrors({});
+              }}
+              className={cn(
+                "flex flex-col items-start gap-1 rounded-xl border-2 p-2.5 text-left transition-colors",
+                selected ? "border-brand-600 bg-brand-50" : "border-slate-200 bg-surface hover:border-slate-300",
+              )}
+            >
+              <Icon className={cn("h-5 w-5", selected ? "text-brand-700" : "text-slate-400")} aria-hidden />
+              <span className={cn("text-sm font-semibold", selected ? "text-brand-800" : "text-slate-800")}>
+                {t(label)}
+              </span>
+              <span className="text-xs leading-snug text-slate-500">{t(hint)}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {offering ? (
+        <Field label={t("postOfferSkill")} error={errors.skill}>
+          {mySkills.data && mySkills.data.length === 0 ? (
+            <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+              {t("postOfferNoSkills")}{" "}
+              <Link to="/profile" onClick={onClose} className="font-semibold underline underline-offset-2">
+                {t("jobAddSkills")}
+              </Link>
+            </p>
+          ) : (
+            <Select
+              value={skillId}
+              onChange={(e) => {
+                setSkillId(e.target.value);
+                clear("skill");
+              }}
+              disabled={mySkills.isLoading}
+            >
+              <option value="">{t("postJobSkillPick")}</option>
+              {(mySkills.data ?? []).map((skill) => (
+                <option key={skill.id} value={skill.id}>
+                  {skill.id === "other" && skill.custom_label ? skill.custom_label : skillName(skill, lang)}
+                </option>
+              ))}
+            </Select>
           )}
-        </Select>
-      </Field>
+        </Field>
+      ) : (
+        <Field label={t("postJobSkill")} error={errors.skill}>
+          <Select
+            value={skillId}
+            onChange={(e) => {
+              setSkillId(e.target.value);
+              clear("skill");
+            }}
+          >
+            <option value="">{t("postJobSkillPick")}</option>
+            {SKILL_CATEGORY_ORDER.map((category) =>
+              groups[category].length > 0 ? (
+                <optgroup key={category} label={t(CATEGORY_LABEL[category])}>
+                  {groups[category].map((skill) => (
+                    <option key={skill.id} value={skill.id}>
+                      {skillName(skill, lang)}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null,
+            )}
+          </Select>
+        </Field>
+      )}
 
       <Field label={t("postJobTitle")} error={errors.title}>
         <Input
@@ -179,7 +257,7 @@ export function PostJobDialog({
             setTitle(e.target.value);
             clear("title");
           }}
-          placeholder={t("postJobTitlePlaceholder")}
+          placeholder={t(offering ? "postOfferTitlePlaceholder" : "postJobTitlePlaceholder")}
           maxLength={120}
         />
       </Field>
@@ -188,7 +266,7 @@ export function PostJobDialog({
         <Textarea
           value={details}
           onChange={(e) => setDetails(e.target.value)}
-          placeholder={t("postJobDetailsPlaceholder")}
+          placeholder={t(offering ? "postOfferDetailsPlaceholder" : "postJobDetailsPlaceholder")}
           maxLength={800}
           rows={3}
           className="min-h-20"
@@ -229,53 +307,61 @@ export function PostJobDialog({
         </Field>
       </div>
 
-      <Field label={t("postJobPlace")} error={errors.place} hint={t("postJobPlaceHint")}>
-        <Input
-          value={place}
-          onChange={(e) => {
-            setPlace(e.target.value);
-            clear("place");
-          }}
-          placeholder={t("postJobPlacePlaceholder")}
-          maxLength={120}
-        />
-      </Field>
-
-      <Field label={t("postJobDate")} error={errors.workDate}>
-        <div>
-          <button
-            type="button"
-            onClick={() => setCalendarOpen((v) => !v)}
-            aria-expanded={calendarOpen}
-            className="flex h-10 w-full items-center justify-between rounded-xl border border-slate-300 bg-surface px-3 text-sm font-medium text-slate-900 transition-colors duration-200 hover:border-slate-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/25"
-          >
-            <span className="inline-flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-slate-400" aria-hidden />
-              {formatDate(workDate, lang)}
-            </span>
-            <ChevronDown
-              className={cn("h-4 w-4 text-slate-400 transition-transform duration-200", calendarOpen && "rotate-180")}
-              aria-hidden
+      {!offering && (
+        <>
+          <Field label={t("postJobPlace")} error={errors.place} hint={t("postJobPlaceHint")}>
+            <Input
+              value={place}
+              onChange={(e) => {
+                setPlace(e.target.value);
+                clear("place");
+              }}
+              placeholder={t("postJobPlacePlaceholder")}
+              maxLength={120}
             />
-          </button>
-          {calendarOpen && (
-            <div className="mt-3">
-              <AvailabilityCalendar
-                days={[]}
-                weeks={6}
-                selectedDay={workDate}
-                onSelectDay={(day) => {
-                  setWorkDate(day);
-                  clear("workDate");
-                  setCalendarOpen(false);
-                }}
-              />
-            </div>
-          )}
-        </div>
-      </Field>
+          </Field>
 
-      <Field label={`${t("postJobBudget")} (${t("optional")})`} error={errors.budget} hint={t("postJobBudgetHint")}>
+          <Field label={t("postJobDate")} error={errors.workDate}>
+            <div>
+              <button
+                type="button"
+                onClick={() => setCalendarOpen((v) => !v)}
+                aria-expanded={calendarOpen}
+                className="flex h-10 w-full items-center justify-between rounded-xl border border-slate-300 bg-surface px-3 text-sm font-medium text-slate-900 transition-colors duration-200 hover:border-slate-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/25"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-slate-400" aria-hidden />
+                  {formatDate(workDate, lang)}
+                </span>
+                <ChevronDown
+                  className={cn("h-4 w-4 text-slate-400 transition-transform duration-200", calendarOpen && "rotate-180")}
+                  aria-hidden
+                />
+              </button>
+              {calendarOpen && (
+                <div className="mt-3">
+                  <AvailabilityCalendar
+                    days={[]}
+                    weeks={6}
+                    selectedDay={workDate}
+                    onSelectDay={(day) => {
+                      setWorkDate(day);
+                      clear("workDate");
+                      setCalendarOpen(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </Field>
+        </>
+      )}
+
+      <Field
+        label={`${t(offering ? "postOfferRate" : "postJobBudget")} (${t("optional")})`}
+        error={errors.budget}
+        hint={t(offering ? "postOfferRateHint" : "postJobBudgetHint")}
+      >
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-500">{lang === "ne" ? "रु" : "Rs"}</span>
           <Input
@@ -288,7 +374,7 @@ export function PostJobDialog({
               clear("budget");
             }}
             placeholder={t("postJobBudgetMin")}
-            aria-label={`${t("postJobBudget")}: ${t("postJobBudgetMin")}`}
+            aria-label={`${t(offering ? "postOfferRate" : "postJobBudget")}: ${t("postJobBudgetMin")}`}
           />
           <span className="text-slate-400" aria-hidden>
             –
@@ -303,36 +389,38 @@ export function PostJobDialog({
               clear("budget");
             }}
             placeholder={t("postJobBudgetMax")}
-            aria-label={`${t("postJobBudget")}: ${t("postJobBudgetMax")}`}
+            aria-label={`${t(offering ? "postOfferRate" : "postJobBudget")}: ${t("postJobBudgetMax")}`}
           />
         </div>
       </Field>
 
-      <Field label={`${t("postJobPin")} (${t("optional")})`} hint={pin ? undefined : t("postJobPinHint")}>
-        {pin ? (
-          <div className="flex items-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-3 py-2">
-            <MapPin className="h-4 w-4 shrink-0 fill-brand-600 text-brand-600 [&>circle]:fill-brand-50" aria-hidden />
-            <span className="min-w-0 flex-1 text-xs text-brand-900">{t("postJobPinSet")}</span>
-            <button
-              type="button"
-              onClick={() => setPin(null)}
-              aria-label={t("postJobPinRemove")}
-              className="rounded-md p-1 text-slate-500 hover:bg-white hover:text-slate-800"
-            >
-              <X className="h-4 w-4" aria-hidden />
-            </button>
-          </div>
-        ) : (
-          <Button type="button" variant="outline" size="sm" className="w-full" loading={locating} onClick={pinHere}>
-            <MapPin className="h-4 w-4" aria-hidden />
-            {t("postJobPinAdd")}
-          </Button>
-        )}
-      </Field>
+      {!offering && (
+        <Field label={`${t("postJobPin")} (${t("optional")})`} hint={pin ? undefined : t("postJobPinHint")}>
+          {pin ? (
+            <div className="flex items-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-3 py-2">
+              <MapPin className="h-4 w-4 shrink-0 fill-brand-600 text-brand-600 [&>circle]:fill-brand-50" aria-hidden />
+              <span className="min-w-0 flex-1 text-xs text-brand-900">{t("postJobPinSet")}</span>
+              <button
+                type="button"
+                onClick={() => setPin(null)}
+                aria-label={t("postJobPinRemove")}
+                className="rounded-md p-1 text-slate-500 hover:bg-white hover:text-slate-800"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+          ) : (
+            <Button type="button" variant="outline" size="sm" className="w-full" loading={locating} onClick={pinHere}>
+              <MapPin className="h-4 w-4" aria-hidden />
+              {t("postJobPinAdd")}
+            </Button>
+          )}
+        </Field>
+      )}
 
       <p className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
         <Globe2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
-        {t("postJobPublicNote")}
+        {t(offering ? "postOfferPublicNote" : "postJobPublicNote")}
       </p>
     </Dialog>
   );

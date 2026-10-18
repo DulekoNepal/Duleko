@@ -507,6 +507,9 @@ export interface FeeOverview {
 
 export type JobPostStatus = "open" | "assigned" | "closed";
 
+/** "I need someone" (workers send offers) or "I offer a service" (an advert, 6700). */
+export type JobPostKind = "hire" | "offer";
+
 export type JobOfferStatus = "pending" | "accepted" | "declined" | "withdrawn";
 
 /** Someone on the job board - the poster, or a worker who offered. */
@@ -521,7 +524,9 @@ export type JobPerson = Pick<
  */
 export interface JobPost {
   id: string;
+  /** For an offer post, this is the person offering the service. */
   employer_profile_id: string;
+  kind: JobPostKind;
   skill_id: string | null;
   title: string;
   details: string | null;
@@ -532,7 +537,9 @@ export interface JobPost {
    * for the poster; the chosen worker gets it on their work request).
    */
   location_text: string | null;
+  /** The day the work is needed; an offer post's last day on the board. */
   work_date: string;
+  /** The budget - or, on an offer post, the poster's rate. */
   budget_min: number | null;
   budget_max: number | null;
   status: JobPostStatus;
