@@ -1,11 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { Capacitor } from "@capacitor/core";
 import { ArrowUp, ArrowUpRight, Globe, Mail, MapPin } from "lucide-react";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { CONTACT_EMAIL, NEPALI_TAGLINE, PLAY_STORE_URL, mailto, useSiteActions } from "./actions";
+import { CONTACT_EMAIL, NEPALI_TAGLINE, mailto, useSiteActions } from "./actions";
 import type { SitePath } from "./nav";
-import { Brand, Container, GooglePlayBadge } from "./ui";
+import { Brand, Container } from "./ui";
 
 type FooterLink =
   | { labelKey: StringKey; to: SitePath; hash?: string }
@@ -52,8 +51,6 @@ const COLUMNS: { id: string; titleKey: StringKey; links: FooterLink[] }[] = [
     ],
   },
 ];
-
-const IS_NATIVE_APP = Capacitor.isNativePlatform();
 
 const linkClass =
   "group inline-flex min-h-9 items-center gap-1 text-left text-[15px] text-teal-50/70 transition-colors hover:text-white sm:min-h-0 sm:py-0.5 sm:text-sm";
@@ -128,7 +125,7 @@ function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) 
 }
 
 export function SiteFooter() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   return (
     <footer className="band relative overflow-hidden bg-teal-800 text-white">
       <div
@@ -147,6 +144,7 @@ export function SiteFooter() {
         {/*
           Phones: brand, contact, then the links two to a row.
           Tablets (md): brand left, contact right; the four groups in one row below.
+          (The Google Play badge is in the "Start today" band just above, on every page.)
           Laptops (lg): brand column beside the four link columns.
         */}
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
@@ -163,8 +161,8 @@ export function SiteFooter() {
               </p>
             </div>
 
-            <div className="mt-6 space-y-4 md:mt-0 lg:mt-6">
-              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap md:ml-auto md:grid md:max-w-sm lg:ml-0 lg:flex lg:max-w-none">
+            <div className="mt-6 md:mt-0 lg:mt-6">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap md:ml-auto md:grid md:max-w-sm lg:ml-0">
                 <a
                   href={`mailto:${CONTACT_EMAIL}`}
                   className={cn(pillClass, "col-span-2 transition-colors hover:bg-white/15")}
@@ -181,11 +179,6 @@ export function SiteFooter() {
                   duleko.com
                 </a>
               </div>
-              {!IS_NATIVE_APP && (
-                <div className="flex justify-center sm:justify-start md:justify-end lg:justify-start">
-                  <GooglePlayBadge href={PLAY_STORE_URL} lang={lang} label={t("playStoreTitle")} height={40} />
-                </div>
-              )}
             </div>
           </div>
 
