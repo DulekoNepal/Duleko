@@ -10,13 +10,17 @@ import {
   ChevronDown,
   ChevronRight,
   Clock,
+  EyeOff,
   HandCoins,
   LogIn,
   MapPin,
   Megaphone,
   MessageCircle,
+  Pencil,
   Plus,
   Send,
+  ShieldCheck,
+  Trash2,
   UserRound,
   UserSearch,
   Users,
@@ -63,7 +67,11 @@ import {
   listOffersForPost,
   listSkills,
   makeJobOffer,
+  staffCloseJobPost,
+  staffDeleteJobPost,
+  staffEditJobPost,
   withdrawJobOffer,
+  type StaffPostEdit,
 } from "@/lib/queries";
 import { districtLabel, municipalityLabel } from "@/lib/nepal";
 import { errorMessage } from "@/lib/supabase";
@@ -327,6 +335,7 @@ export function JobScreen() {
   const { t } = useI18n();
   const { jobId } = useParams({ from: "/jobs/$jobId" });
   const { profile } = useSession();
+  const isStaff = Boolean(profile?.staff_role);
 
   const post = useQuery({ queryKey: ["jobs", "post", jobId], queryFn: () => getJobPost(jobId) });
   const job = post.data ?? null;
@@ -363,6 +372,7 @@ export function JobScreen() {
               {!mine && (offering ? <ServiceContactPanel job={job} /> : <OfferPanel job={job} profile={profile} />)}
               <PosterCard job={job} mine={mine} />
               {mine && <OwnerActions job={job} />}
+              {isStaff && !mine && offering && <StaffPostActions job={job} />}
             </div>
           </div>
         )}
@@ -981,5 +991,245 @@ function OwnerActions({ job }: { job: JobPost }) {
         </p>
       </Dialog>
     </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Staff: edit, take down or delete a service post, with a reason     */
+/* ------------------------------------------------------------------ */
+
+type StaffAction = "edit" | "close" | "delete";
+
+/**
+ * Any of the three staff, on someone's service post (7200). Every action
+ * asks why, and the poster gets an alert with that reason.
+ */
+function StaffPostActions({ job }: { job: JobPost }) {
+  const { t } = useI18n();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [action, setAction] = useState<StaffAction | null>(null);
+  const open = job.status === "open";
+
+  const done = useMutation({
+    mutationFn: async ({ kind, reason, edit }: { kind: StaffAction; reason: string; edit?: StaffPostEdit }) => {
+      if (kind === "edit") await staffEditJobPost(job.id, edit!, reason);
+      else if (kind === "close") await staffCloseJobPost(job.id, reason);
+      else await staffDeleteJobPost(job.id, reason);
+      return kind;
+    },
+    onSuccess: (kind) => {
+      setAction(null);
+      toast(t(kind === "edit" ? "staffPostEdited" : kind === "close" ? "staffPostClosed" : "staffPostDeleted"));
+      if (kind === "delete") {
+        // The post is gone: drop it rather than refetch a missing one.
+        queryClient.removeQueries({ queryKey: ["jobs", "post", job.id] });
+        void navigate({ to: "/jobs", search: { kind: "offer" }, replace: true });
+      }
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  return (
+    <Card>
+      <CardBody>
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+          <ShieldCheck className="h-4 w-4 text-brand-700" aria-hidden />
+          {t("moderatorActions")}
+        </h3>
+        <p className="mb-3 mt-1 text-xs leading-relaxed text-slate-500">{t("staffPostHint")}</p>
+        <div className="grid gap-2">
+          {open && (
+            <>
+              <Button variant="outline" className="w-full justify-start" onClick={() => setAction("edit")}>
+                <Pencil className="h-4 w-4" aria-hidden />
+                {t("staffPostEdit")}
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => setAction("close")}>
+                <EyeOff className="h-4 w-4" aria-hidden />
+                {t("staffPostClose")}
+              </Button>
+            </>
+          )}
+          <Button
+            variant="outline"
+            className="w-full justify-start text-red-600 hover:bg-red-50"
+            onClick={() => setAction("delete")}
+          >
+            <Trash2 className="h-4 w-4" aria-hidden />
+            {t("staffPostDelete")}
+          </Button>
+        </div>
+      </CardBody>
+
+      {action === "edit" && (
+        <StaffEditDialog
+          job={job}
+          pending={done.isPending}
+          onClose={() => setAction(null)}
+          onSave={(edit, reason) => done.mutate({ kind: "edit", edit, reason })}
+        />
+      )}
+      {(action === "close" || action === "delete") && (
+        <StaffReasonDialog
+          kind={action}
+          pending={done.isPending}
+          onClose={() => setAction(null)}
+          onConfirm={(reason) => done.mutate({ kind: action, reason })}
+        />
+      )}
+    </Card>
+  );
+}
+
+/** The reason box every staff action shares. */
+function ReasonField({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: string }) {
+  const { t } = useI18n();
+  return (
+    <Field label={t("staffPostReason")} error={error} hint={error ? undefined : t("staffPostReasonHint")}>
+      <Textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={t("staffPostReasonPlaceholder")}
+        maxLength={500}
+        rows={3}
+        className="min-h-20"
+      />
+    </Field>
+  );
+}
+
+function StaffEditDialog({
+  job,
+  pending,
+  onClose,
+  onSave,
+}: {
+  job: JobPost;
+  pending: boolean;
+  onClose: () => void;
+  onSave: (edit: StaffPostEdit, reason: string) => void;
+}) {
+  const { t, lang } = useI18n();
+  const [title, setTitle] = useState(job.title);
+  const [details, setDetails] = useState(job.details ?? "");
+  const [budgetMin, setBudgetMin] = useState(job.budget_min == null ? "" : String(job.budget_min));
+  const [budgetMax, setBudgetMax] = useState(job.budget_max == null ? "" : String(job.budget_max));
+  const [reason, setReason] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  function save() {
+    const next: Record<string, string> = {};
+    if (title.trim().length < 3) next.title = t("required");
+    const lo = budgetMin ? Number(budgetMin) : null;
+    const hi = budgetMax ? Number(budgetMax) : null;
+    if ((lo != null && !(lo > 0)) || (hi != null && !(hi > 0))) next.budget = t("errJobBadAmount");
+    else if (lo != null && hi != null && hi < lo) next.budget = t("postJobBudgetOrder");
+    if (reason.trim().length < 5) next.reason = t("errModReasonRequired");
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+    onSave({ title: title.trim(), details: details.trim() || null, budget_min: lo, budget_max: hi }, reason.trim());
+  }
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={t("staffPostEditTitle")}
+      footer={
+        <>
+          <Button variant="outline" onClick={onClose}>
+            {t("cancel")}
+          </Button>
+          <Button loading={pending} onClick={save}>
+            {t("staffPostSave")}
+          </Button>
+        </>
+      }
+    >
+      <Field label={t("postJobTitle")} error={errors.title}>
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
+      </Field>
+      <Field label={`${t("postJobDetails")} (${t("optional")})`}>
+        <Textarea value={details} onChange={(e) => setDetails(e.target.value)} maxLength={800} rows={4} className="min-h-24" />
+      </Field>
+      <Field label={`${t("serviceRate")} (${t("optional")})`} error={errors.budget}>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-slate-500">{lang === "ne" ? "रु" : "Rs"}</span>
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={budgetMin}
+            onChange={(e) => setBudgetMin(e.target.value)}
+            placeholder={t("postJobBudgetMin")}
+            aria-label={`${t("serviceRate")}: ${t("postJobBudgetMin")}`}
+          />
+          <span className="text-slate-400" aria-hidden>
+            –
+          </span>
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={budgetMax}
+            onChange={(e) => setBudgetMax(e.target.value)}
+            placeholder={t("postJobBudgetMax")}
+            aria-label={`${t("serviceRate")}: ${t("postJobBudgetMax")}`}
+          />
+        </div>
+      </Field>
+      <ReasonField value={reason} onChange={setReason} error={errors.reason} />
+    </Dialog>
+  );
+}
+
+function StaffReasonDialog({
+  kind,
+  pending,
+  onClose,
+  onConfirm,
+}: {
+  kind: "close" | "delete";
+  pending: boolean;
+  onClose: () => void;
+  onConfirm: (reason: string) => void;
+}) {
+  const { t } = useI18n();
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | undefined>();
+  const deleting = kind === "delete";
+
+  function confirm() {
+    if (reason.trim().length < 5) {
+      setError(t("errModReasonRequired"));
+      return;
+    }
+    onConfirm(reason.trim());
+  }
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={t(deleting ? "staffPostDeleteTitle" : "staffPostCloseTitle")}
+      footer={
+        <>
+          <Button variant="outline" onClick={onClose}>
+            {t("cancel")}
+          </Button>
+          <Button variant="danger" loading={pending} onClick={confirm}>
+            {t(deleting ? "staffPostDelete" : "staffPostClose")}
+          </Button>
+        </>
+      }
+    >
+      <p className="mb-3 text-sm leading-relaxed text-slate-700">
+        {t(deleting ? "staffPostDeleteBody" : "staffPostCloseBody")}
+      </p>
+      <ReasonField value={reason} onChange={setReason} error={error} />
+    </Dialog>
   );
 }

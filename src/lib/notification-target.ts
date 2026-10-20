@@ -50,6 +50,13 @@ export async function openNotification(
     return;
   }
 
+  // Staff changed your service post: open it - or My posts, once it's deleted.
+  if (n.kind === "post_moderated") {
+    if (n.job_post_id) void navigate({ to: "/jobs/$jobId", params: { jobId: n.job_post_id } });
+    else void navigate({ to: "/work", search: { role: "employer", view: "posts" } });
+    return;
+  }
+
   // Someone who called you says you made a deal: Home asks you to confirm it.
   if (n.kind === "call_deal") {
     void navigate({ to: "/home" });

@@ -367,4 +367,31 @@ export const jobStrings = {
     "Optional. Puts the job on the map so workers nearby find it.",
     "वैकल्पिक। कामलाई नक्सामा राख्छ, जसले गर्दा नजिकैका कामदारले भेट्टाउन सक्छन्।",
   ],
+
+  // ---- staff managing a service post (7200) ---------------------------
+  staffPostHint: ["The poster gets an alert with your reason.", "पोस्ट गर्नेलाई तपाईंको कारणसहित सूचना जान्छ।"],
+  staffPostEdit: ["Edit post", "पोस्ट सम्पादन गर्नुहोस्"],
+  staffPostClose: ["Take off the board", "सूचीबाट हटाउनुहोस्"],
+  staffPostDelete: ["Delete post", "पोस्ट मेटाउनुहोस्"],
+  staffPostEditTitle: ["Edit this service post", "यो सेवा पोस्ट सम्पादन गर्नुहोस्"],
+  staffPostSave: ["Save and tell the poster", "सेभ गरेर पोस्ट गर्नेलाई जानकारी दिनुहोस्"],
+  staffPostCloseTitle: ["Take this post off the board?", "यो पोस्ट सूचीबाट हटाउने?"],
+  staffPostCloseBody: [
+    "It leaves the board for everyone. The poster still sees it, closed, under My posts.",
+    "यो सबैका लागि सूचीबाट हट्छ। पोस्ट गर्नेले भने मेरा पोस्टमा बन्द भएको देख्नुहुन्छ।",
+  ],
+  staffPostDeleteTitle: ["Delete this post for good?", "यो पोस्ट सधैँका लागि मेटाउने?"],
+  staffPostDeleteBody: [
+    "It's removed for everyone, the poster too. This can't be undone.",
+    "यो पोस्ट गर्नेसहित सबैबाट हट्छ। यसलाई फिर्ता ल्याउन सकिँदैन।",
+  ],
+  staffPostReason: ["Reason", "कारण"],
+  staffPostReasonHint: ["The poster sees this in their alert.", "पोस्ट गर्नेले यो आफ्नो सूचनामा देख्नुहुन्छ।"],
+  staffPostReasonPlaceholder: ["e.g. The phone number in the details isn't allowed", "जस्तै: विवरणमा फोन नम्बर राख्न पाइँदैन"],
+  staffPostEdited: ["Post updated. The poster has been told.", "पोस्ट अद्यावधिक भयो। पोस्ट गर्नेलाई जानकारी दिइयो।"],
+  staffPostClosed: ["Post taken off the board. The poster has been told.", "पोस्ट सूचीबाट हटाइयो। पोस्ट गर्नेलाई जानकारी दिइयो।"],
+  staffPostDeleted: ["Post deleted. The poster has been told.", "पोस्ट मेटाइयो। पोस्ट गर्नेलाई जानकारी दिइयो।"],
+  errJobNotService: ["Only service posts can be changed this way.", "यसरी सेवा पोस्ट मात्र परिवर्तन गर्न सकिन्छ।"],
+  errModReasonRequired: ["Write a reason of at least 5 characters.", "कम्तीमा ५ अक्षरको कारण लेख्नुहोस्।"],
+  errModNoChange: ["Nothing was changed.", "केही पनि परिवर्तन गरिएको छैन।"],
 } as const;

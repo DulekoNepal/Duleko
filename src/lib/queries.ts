@@ -2356,3 +2356,39 @@ export async function closeJobPost(postId: string): Promise<void> {
   const { error } = await supabase.rpc("close_job_post", { p_job_post_id: postId });
   if (error) throw error;
 }
+
+/** What staff can change on a service post (7200). */
+export interface StaffPostEdit {
+  title: string;
+  details: string | null;
+  budget_min: number | null;
+  budget_max: number | null;
+}
+
+/**
+ * Staff only, service posts only (7200). Each takes the reason the poster
+ * is told in their alert, and is kept in job_post_moderation.
+ */
+export async function staffEditJobPost(postId: string, edit: StaffPostEdit, reason: string): Promise<void> {
+  const { error } = await supabase.rpc("staff_edit_job_post", {
+    p_job_post_id: postId,
+    p_title: edit.title,
+    p_details: edit.details,
+    p_budget_min: edit.budget_min,
+    p_budget_max: edit.budget_max,
+    p_reason: reason,
+  });
+  if (error) throw error;
+}
+
+/** Takes the post off the board; the poster still sees it, closed. */
+export async function staffCloseJobPost(postId: string, reason: string): Promise<void> {
+  const { error } = await supabase.rpc("staff_close_job_post", { p_job_post_id: postId, p_reason: reason });
+  if (error) throw error;
+}
+
+/** Deletes the post for good. */
+export async function staffDeleteJobPost(postId: string, reason: string): Promise<void> {
+  const { error } = await supabase.rpc("staff_delete_job_post", { p_job_post_id: postId, p_reason: reason });
+  if (error) throw error;
+}

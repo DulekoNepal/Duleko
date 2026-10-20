@@ -139,6 +139,7 @@ public class PhoneAlertsWorker extends Worker {
             case "job_post":
             case "job_offer":
             case "job_closed":
+            case "post_moderated":
                 return "work";
             default:
                 return "updates";

@@ -14,6 +14,7 @@ import {
   Megaphone,
   MessageCircle,
   Pin,
+  ShieldAlert,
   ShieldCheck,
   Sparkles,
   Star,
@@ -75,6 +76,7 @@ const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
   job_closed: { icon: XCircle, tone: "slate" },
   kyc_review: { icon: IdCard, tone: "amber" },
   kyc_result: { icon: IdCard, tone: "slate" },
+  post_moderated: { icon: ShieldAlert, tone: "amber" },
 };
 
 export function NotificationsScreen() {

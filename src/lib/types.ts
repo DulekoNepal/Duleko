@@ -227,7 +227,9 @@ export interface AppNotification {
     /** To a member: staff couldn't accept the ID they sent. */
     | "kyc_result"
     /** To a worker: someone who called them says they made a deal (6800). */
-    | "call_deal";
+    | "call_deal"
+    /** To a poster: staff edited, took down or deleted their service post, and why (7200). */
+    | "post_moderated";
   title_en: string;
   title_ne: string;
   body_en: string | null;

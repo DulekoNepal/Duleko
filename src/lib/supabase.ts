@@ -42,6 +42,10 @@ const JOB_ERRORS: [string, StringKey][] = [
   ["JOB_SKILL_REQUIRED", "errJobSkillRequired"],
   ["JOB_OFFER_NEEDS_SKILL", "errJobOfferNeedsSkill"],
   ["JOB_NOT_HIRING", "errJobNotHiring"],
+  // Staff managing service posts (7200_staff_manage_service_posts.sql)
+  ["JOB_NOT_SERVICE", "errJobNotService"],
+  ["MOD_REASON_REQUIRED", "errModReasonRequired"],
+  ["MOD_NO_CHANGE", "errModNoChange"],
   ["ACCOUNT_SUSPENDED", "errAccountSuspended"],
 ];
 
