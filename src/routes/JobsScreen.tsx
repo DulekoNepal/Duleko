@@ -372,7 +372,7 @@ export function JobScreen() {
               {!mine && (offering ? <ServiceContactPanel job={job} /> : <OfferPanel job={job} profile={profile} />)}
               <PosterCard job={job} mine={mine} />
               {mine && <OwnerActions job={job} />}
-              {isStaff && !mine && offering && <StaffPostActions job={job} />}
+              {isStaff && !mine && <StaffPostActions job={job} />}
             </div>
           </div>
         )}
@@ -1001,8 +1001,9 @@ function OwnerActions({ job }: { job: JobPost }) {
 type StaffAction = "edit" | "close" | "delete";
 
 /**
- * Any of the three staff, on someone's service post (7200). Every action
- * asks why, and the poster gets an alert with that reason.
+ * Any of the three staff, on anyone else's post - service (7200) or
+ * hiring (7300). Every action asks why, and the poster gets an alert with
+ * that reason.
  */
 function StaffPostActions({ job }: { job: JobPost }) {
   const { t } = useI18n();
@@ -1075,6 +1076,7 @@ function StaffPostActions({ job }: { job: JobPost }) {
       {(action === "close" || action === "delete") && (
         <StaffReasonDialog
           kind={action}
+          hiring={job.kind === "hire"}
           pending={done.isPending}
           onClose={() => setAction(null)}
           onConfirm={(reason) => done.mutate({ kind: action, reason })}
@@ -1113,6 +1115,7 @@ function StaffEditDialog({
   onSave: (edit: StaffPostEdit, reason: string) => void;
 }) {
   const { t, lang } = useI18n();
+  const money = t(job.kind === "offer" ? "serviceRate" : "jobBudget");
   const [title, setTitle] = useState(job.title);
   const [details, setDetails] = useState(job.details ?? "");
   const [budgetMin, setBudgetMin] = useState(job.budget_min == null ? "" : String(job.budget_min));
@@ -1155,7 +1158,7 @@ function StaffEditDialog({
       <Field label={`${t("postJobDetails")} (${t("optional")})`}>
         <Textarea value={details} onChange={(e) => setDetails(e.target.value)} maxLength={800} rows={4} className="min-h-24" />
       </Field>
-      <Field label={`${t("serviceRate")} (${t("optional")})`} error={errors.budget}>
+      <Field label={`${money} (${t("optional")})`} error={errors.budget}>
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-500">{lang === "ne" ? "रु" : "Rs"}</span>
           <Input
@@ -1165,7 +1168,7 @@ function StaffEditDialog({
             value={budgetMin}
             onChange={(e) => setBudgetMin(e.target.value)}
             placeholder={t("postJobBudgetMin")}
-            aria-label={`${t("serviceRate")}: ${t("postJobBudgetMin")}`}
+            aria-label={`${money}: ${t("postJobBudgetMin")}`}
           />
           <span className="text-slate-400" aria-hidden>
             –
@@ -1177,7 +1180,7 @@ function StaffEditDialog({
             value={budgetMax}
             onChange={(e) => setBudgetMax(e.target.value)}
             placeholder={t("postJobBudgetMax")}
-            aria-label={`${t("serviceRate")}: ${t("postJobBudgetMax")}`}
+            aria-label={`${money}: ${t("postJobBudgetMax")}`}
           />
         </div>
       </Field>
@@ -1188,11 +1191,14 @@ function StaffEditDialog({
 
 function StaffReasonDialog({
   kind,
+  hiring,
   pending,
   onClose,
   onConfirm,
 }: {
   kind: "close" | "delete";
+  /** A hiring post: workers waiting on an offer hear it closed. */
+  hiring: boolean;
   pending: boolean;
   onClose: () => void;
   onConfirm: (reason: string) => void;
@@ -1228,6 +1234,7 @@ function StaffReasonDialog({
     >
       <p className="mb-3 text-sm leading-relaxed text-slate-700">
         {t(deleting ? "staffPostDeleteBody" : "staffPostCloseBody")}
+        {hiring && ` ${t("staffPostHireNote")}`}
       </p>
       <ReasonField value={reason} onChange={setReason} error={error} />
     </Dialog>

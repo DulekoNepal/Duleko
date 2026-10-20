@@ -368,12 +368,12 @@ export const jobStrings = {
     "वैकल्पिक। कामलाई नक्सामा राख्छ, जसले गर्दा नजिकैका कामदारले भेट्टाउन सक्छन्।",
   ],
 
-  // ---- staff managing a service post (7200) ---------------------------
+  // ---- staff managing a post (7200 service, 7300 hiring) -------------
   staffPostHint: ["The poster gets an alert with your reason.", "पोस्ट गर्नेलाई तपाईंको कारणसहित सूचना जान्छ।"],
   staffPostEdit: ["Edit post", "पोस्ट सम्पादन गर्नुहोस्"],
   staffPostClose: ["Take off the board", "सूचीबाट हटाउनुहोस्"],
   staffPostDelete: ["Delete post", "पोस्ट मेटाउनुहोस्"],
-  staffPostEditTitle: ["Edit this service post", "यो सेवा पोस्ट सम्पादन गर्नुहोस्"],
+  staffPostEditTitle: ["Edit this post", "यो पोस्ट सम्पादन गर्नुहोस्"],
   staffPostSave: ["Save and tell the poster", "सेभ गरेर पोस्ट गर्नेलाई जानकारी दिनुहोस्"],
   staffPostCloseTitle: ["Take this post off the board?", "यो पोस्ट सूचीबाट हटाउने?"],
   staffPostCloseBody: [
@@ -384,6 +384,10 @@ export const jobStrings = {
   staffPostDeleteBody: [
     "It's removed for everyone, the poster too. This can't be undone.",
     "यो पोस्ट गर्नेसहित सबैबाट हट्छ। यसलाई फिर्ता ल्याउन सकिँदैन।",
+  ],
+  staffPostHireNote: [
+    "Workers waiting on their offer are told it closed.",
+    "प्रस्ताव पठाएर पर्खिरहेका कामदारलाई काम बन्द भएको जानकारी जान्छ।",
   ],
   staffPostReason: ["Reason", "कारण"],
   staffPostReasonHint: ["The poster sees this in their alert.", "पोस्ट गर्नेले यो आफ्नो सूचनामा देख्नुहुन्छ।"],
