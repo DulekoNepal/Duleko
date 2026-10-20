@@ -910,6 +910,86 @@ export async function removeCallDeal(dealId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** A person on the staff activity pages (7500) - no phone number. */
+export interface ActivityPerson {
+  id: string;
+  name: string;
+  photo: string | null;
+  member_no: string | null;
+}
+
+/** One row behind an activity number (7500). */
+export interface ActivityRow {
+  type: "call" | "request" | "deal" | "review" | "person";
+  id: string;
+  at: string;
+  from: ActivityPerson | null;
+  to?: ActivityPerson | null;
+  skill_id?: string | null;
+  amount?: number | null;
+  status?: string | null;
+  title?: string | null;
+  rating?: number | null;
+  comment?: string | null;
+  times?: number | null;
+}
+
+/** Staff: the records behind one activity number, newest first (at most 300). */
+export async function listActivity(kind: keyof ActivityNumbers, since: string | null): Promise<ActivityRow[]> {
+  const { data, error } = await supabase.rpc("activity_list", { p_kind: kind, p_since: since });
+  if (error) throw error;
+  return ((data ?? []) as ActivityRow[]).map((r) => ({ ...r, amount: r.amount == null ? null : Number(r.amount) }));
+}
+
+export type ActivityItemType = "call" | "request" | "deal" | "review";
+
+/** One call, work request, call deal or review, in full (7500). */
+export interface ActivityItem {
+  type: ActivityItemType;
+  id: string;
+  created_at: string;
+  updated_at?: string;
+  from: ActivityPerson | null;
+  to: ActivityPerson | null;
+  // call
+  outcome?: "deal" | "discussing" | "no" | "short" | null;
+  answered_at?: string | null;
+  ask_again_at?: string | null;
+  // request / deal
+  skill_id?: string | null;
+  amount?: number | null;
+  status?: string;
+  // request
+  title?: string;
+  details?: string | null;
+  work_date?: string;
+  location_text?: string;
+  payment_note?: string | null;
+  completed_at?: string | null;
+  cancelled_by?: ActivityPerson | null;
+  reviews?: { id: string; at: string; rating: number; comment: string | null; from: ActivityPerson | null }[];
+  // deal
+  deal_date?: string;
+  confirm_by?: string;
+  worker_answered_at?: string | null;
+  removed_by?: ActivityPerson | null;
+  call_id?: string | null;
+  review_id?: string | null;
+  // review (and call -> deal)
+  rating?: number | null;
+  comment?: string | null;
+  request_id?: string | null;
+  deal_id?: string | null;
+}
+
+/** Staff: one activity record, or null when it no longer exists. */
+export async function getActivityItem(type: ActivityItemType, id: string): Promise<ActivityItem | null> {
+  const { data, error } = await supabase.rpc("activity_item", { p_type: type, p_id: id });
+  if (error) throw error;
+  const item = (data as ActivityItem | null) ?? null;
+  return item && { ...item, amount: item.amount == null ? null : Number(item.amount) };
+}
+
 /** The worker's yes (it counts, and the rating posts) or no (it never counts). */
 export async function respondCallDeal(dealId: string, agree: boolean): Promise<void> {
   const { error } = await supabase.rpc("respond_call_deal", { p_deal: dealId, p_agree: agree });

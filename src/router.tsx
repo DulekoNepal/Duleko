@@ -200,6 +200,23 @@ const staffActivityRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/ActivityScreen"), "ActivityScreen"),
 });
 
+// Staff: the records behind one activity number (7500).
+const staffActivityListRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/staff/activity/$kind",
+  validateSearch: (search: Record<string, unknown>): { range?: "all_time" | "last_30_days" } => ({
+    range: search.range === "last_30_days" ? "last_30_days" : undefined,
+  }),
+  component: lazyRouteComponent(() => import("@/routes/ActivityDetailScreens"), "ActivityListScreen"),
+});
+
+// Staff: one call, work request, call deal or review, in full (7500).
+const staffActivityItemRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/staff/activity/$type/$itemId",
+  component: lazyRouteComponent(() => import("@/routes/ActivityDetailScreens"), "ActivityItemScreen"),
+});
+
 // Get verified: send your ID for the verified badge.
 const verifyRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -327,6 +344,8 @@ const routeTree = rootRoute.addChildren([
   feesRoute,
   staffFeesRoute,
   staffActivityRoute,
+  staffActivityListRoute,
+  staffActivityItemRoute,
   verifyRoute,
   staffVerifyRoute,
   moderationRoute,

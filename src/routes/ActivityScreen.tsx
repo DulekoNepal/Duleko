@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { Globe2, Handshake, ShieldCheck } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { ChevronRight, Globe2, Handshake, ShieldCheck } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { SectionCard, StatTile } from "@/components/duleko/ProfileParts";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
@@ -44,6 +44,7 @@ export function ActivityScreen() {
   const { profile } = useSession();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [range, setRange] = useState<"all_time" | "last_30_days">("all_time");
   const [removing, setRemoving] = useState<StaffCallDeal | null>(null);
 
@@ -70,6 +71,8 @@ export function ActivityScreen() {
       setRemoving(null);
       void queryClient.invalidateQueries({ queryKey: ["activity-stats"] });
       void queryClient.invalidateQueries({ queryKey: ["call-deals"] });
+      void queryClient.invalidateQueries({ queryKey: ["activity-list"] });
+      void queryClient.invalidateQueries({ queryKey: ["activity-item"] });
     },
     onError: (error) => toast(errorMessage(error), "error"),
   });
@@ -105,6 +108,13 @@ export function ActivityScreen() {
                     key={key}
                     icon={icon}
                     label={t(label)}
+                    onClick={() =>
+                      navigate({
+                        to: "/staff/activity/$kind",
+                        params: { kind: key },
+                        search: range === "last_30_days" ? { range } : {},
+                      })
+                    }
                     value={
                       stats.isPending
                         ? "…"
@@ -157,35 +167,36 @@ export function ActivityScreen() {
                   {deals.data.map((deal) => {
                     const status = DEAL_STATUS[deal.status];
                     return (
-                      <li key={deal.deal_id} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm text-slate-800">
-                            <Link to="/worker/$workerId" params={{ workerId: deal.hirer_id }} className="font-semibold hover:underline">
-                              {deal.hirer_name}
-                            </Link>
-                            {" → "}
-                            <Link to="/worker/$workerId" params={{ workerId: deal.worker_id }} className="font-semibold hover:underline">
-                              {deal.worker_name}
-                            </Link>
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {[deal.amount != null ? formatMoney(deal.amount, lang) : null, formatDate(deal.deal_date, lang)]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </p>
-                        </div>
-                        <div className="flex shrink-0 flex-col items-end gap-1">
+                      <li key={deal.deal_id} className="flex items-start gap-2 py-2.5 first:pt-0 last:pb-0">
+                        <Link
+                          to="/staff/activity/$type/$itemId"
+                          params={{ type: "deal", itemId: deal.deal_id }}
+                          className="-m-1 flex min-w-0 flex-1 items-start gap-3 rounded-lg p-1 transition-colors hover:bg-slate-50"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm text-slate-800">
+                              <span className="font-semibold">{deal.hirer_name}</span>
+                              {" → "}
+                              <span className="font-semibold">{deal.worker_name}</span>
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {[deal.amount != null ? formatMoney(deal.amount, lang) : null, formatDate(deal.deal_date, lang)]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </p>
+                          </div>
                           <Badge tone={status.tone}>{t(status.label)}</Badge>
-                          {deal.status !== "removed" && (
-                            <button
-                              type="button"
-                              onClick={() => setRemoving(deal)}
-                              className="rounded-md px-1 text-xs font-semibold text-red-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-                            >
-                              {t("activityRemoveDeal")}
-                            </button>
-                          )}
-                        </div>
+                          <ChevronRight className="h-4 w-4 shrink-0 self-center text-slate-300" aria-hidden />
+                        </Link>
+                        {deal.status !== "removed" && (
+                          <button
+                            type="button"
+                            onClick={() => setRemoving(deal)}
+                            className="shrink-0 rounded-md px-1 py-1 text-xs font-semibold text-red-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                          >
+                            {t("activityRemoveDeal")}
+                          </button>
+                        )}
                       </li>
                     );
                   })}
