@@ -108,7 +108,7 @@ export function LandingPage() {
           className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-accent-500/10 blur-3xl"
           aria-hidden
         />
-        <Container className="relative grid items-center gap-14 pb-16 pt-10 sm:pb-20 sm:pt-14 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-12 lg:pb-24 lg:pt-16">
+        <Container className="relative grid items-center gap-14 pb-16 pt-10 sm:pb-20 sm:pt-14 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-12 lg:pb-24 lg:pt-16">
           <div className="animate-in-up">
             <p className="inline-flex items-center gap-2.5 rounded-full bg-surface/80 py-1.5 pl-2.5 pr-3.5 text-[13px] font-medium text-slate-700 shadow-sm ring-1 ring-slate-200/80 backdrop-blur sm:text-sm">
               <span className="relative flex h-2 w-2" aria-hidden>

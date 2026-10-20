@@ -160,10 +160,14 @@ export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: bool
     );
   }
 
+  // In the hero, a touch less padding lets Explore, the badge and Create
+  // profile share one row on laptops (from 1152px, in both languages).
+  const heroPad = closing ? undefined : "lg:px-5";
+
   return (
     <div>
       <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-        <SiteButton size="lg" variant={onDark ? "light" : "primary"} onClick={() => explore("/home")}>
+        <SiteButton size="lg" variant={onDark ? "light" : "primary"} className={heroPad} onClick={() => explore("/home")}>
           <Compass className="h-5 w-5" aria-hidden />
           {t("exploreDuleko")}
         </SiteButton>
@@ -174,7 +178,7 @@ export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: bool
             {t("siteLogIn")}
           </SiteButton>
         ) : (
-          <SiteButton size="lg" variant={onDark ? "ghostLight" : "outline"} onClick={createProfile}>
+          <SiteButton size="lg" variant={onDark ? "ghostLight" : "outline"} className={heroPad} onClick={createProfile}>
             <UserPlus className="h-5 w-5" aria-hidden />
             {t("createYourProfile")}
           </SiteButton>
