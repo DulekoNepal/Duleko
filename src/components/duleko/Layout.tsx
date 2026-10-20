@@ -323,7 +323,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-surface pb-[var(--sab)] md:hidden"
+      className="hide-with-keyboard fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-surface pb-[var(--sab)] md:hidden"
       aria-label={t("mainNavLabel")}
     >
       <div className="mx-auto flex max-w-3xl">

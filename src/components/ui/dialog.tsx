@@ -119,7 +119,9 @@ export function Dialog({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-surface shadow-xl",
+          // The visible height (lib/keyboard.ts), so a sheet with a text box
+          // stays above the keyboard rather than running under it.
+          "relative z-10 max-h-[calc(var(--app-height,100dvh)*0.92)] w-full overflow-y-auto rounded-t-3xl bg-surface shadow-xl",
           "sm:max-w-lg sm:rounded-2xl",
           className,
         )}

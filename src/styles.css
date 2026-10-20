@@ -324,6 +324,12 @@ html.dark .skeleton::after {
   }
 }
 
+/* The tab bar steps aside while the keyboard is up (lib/keyboard.ts), so
+   it never sits on top of the keyboard over the field being typed in. */
+html[data-keyboard="open"] .hide-with-keyboard {
+  display: none;
+}
+
 .typing-dot {
   animation: typing-wave 1.2s ease-in-out infinite;
 }

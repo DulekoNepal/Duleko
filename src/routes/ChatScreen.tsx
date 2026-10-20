@@ -83,6 +83,10 @@ export function ChatScreen() {
   const newestId = useRef<string | null>(null);
   // Distance from the bottom, stashed while an older page loads in.
   const anchorFromBottom = useRef<number | null>(null);
+  // How far above the newest message the reader is, kept up to date while
+  // scrolling - so when the keyboard opens and the thread gets shorter, the
+  // same messages stay just above the box instead of sliding under it.
+  const fromBottom = useRef(0);
 
   const other = useQuery({ queryKey: ["profile", otherId], queryFn: () => getProfile(otherId) });
   // The Chats list already has their name and photo, so the thread opens
@@ -227,6 +231,22 @@ export function ChatScreen() {
     if (atBottom || newest.sender_profile_id === me?.id) scrollToEnd("smooth");
     else setUnreadBelow(true);
   }, [messages.data, pairKey, atBottom, me?.id]);
+
+  // The thread's own height changes when the keyboard opens or closes (or
+  // the reply bar appears): keep it anchored to the bottom, the way every
+  // messenger does, rather than to the top.
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    let lastHeight = el.clientHeight;
+    const observer = new ResizeObserver(() => {
+      if (el.clientHeight === lastHeight) return;
+      lastHeight = el.clientHeight;
+      el.scrollTop = el.scrollHeight - el.clientHeight - fromBottom.current;
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Keep the typing bubble in view too, when it appears at the end.
   useEffect(() => {
@@ -543,7 +563,9 @@ export function ChatScreen() {
     // From md up the chat sits in a card with the same width and gutters as
     // every other screen (PAGE_WIDTH/PAGE_GUTTER), 1.5rem under the top bar.
     // Phones stay edge to edge.
-    <div className="h-dvh md:h-[calc(100dvh-4rem-1px-var(--sat))] lg:h-[calc(100dvh-72px-1px-var(--sat))] md:py-4">
+    // On phones, the height actually visible (lib/keyboard.ts): with the
+    // keyboard up the whole thread - header, messages, box - fits above it.
+    <div className="h-[var(--app-height,100dvh)] md:h-[calc(100dvh-4rem-1px-var(--sat))] lg:h-[calc(100dvh-72px-1px-var(--sat))] md:py-4">
       <div className={cn("mx-auto h-full w-full max-md:px-0", PAGE_WIDTH, PAGE_GUTTER)}>
       <div className="flex h-full overflow-hidden bg-surface md:rounded-2xl md:border md:border-slate-200 md:shadow-sm">
       {split && <ChatsPane typingFrom={typingFrom} activeId={otherId} showDivisions={false} />}
@@ -618,7 +640,8 @@ export function ChatScreen() {
             ref={listRef}
             onScroll={(e) => {
               const el = e.currentTarget;
-              const near = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX;
+              fromBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight;
+              const near = fromBottom.current < NEAR_BOTTOM_PX;
               setAtBottom(near);
               if (near) setUnreadBelow(false);
             }}
@@ -761,6 +784,7 @@ export function ChatScreen() {
 
         {/* ---- Composer ------------------------------------------------- */}
         <form
+          data-keep-scroll
           className="border-t border-slate-200 bg-surface px-2.5 pb-[calc(0.5rem+var(--sab))] pt-2 sm:px-4"
           onSubmit={(e) => {
             e.preventDefault();
