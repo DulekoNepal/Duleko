@@ -115,10 +115,37 @@ export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: bool
   const { t, lang } = useI18n();
 
   // The Android app already is the app - no point offering it there.
-  const download =
-    !closing && !IS_NATIVE_APP ? (
-      <GooglePlayBadge href={PLAY_STORE_URL} lang={lang} label={t("playStoreTitle")} height={48} />
-    ) : null;
+  const offerApp = !closing && !IS_NATIVE_APP;
+  // From 640px the badge sits in the button row, beside Explore.
+  const download = offerApp ? (
+    <GooglePlayBadge
+      href={PLAY_STORE_URL}
+      lang={lang}
+      label={t("playStoreTitle")}
+      height={48}
+      className="hidden sm:inline-block"
+    />
+  ) : null;
+  // Phones stack the buttons full width, where a narrow badge between them
+  // looked out of place - so there it gets its own small card below.
+  const appCard = offerApp ? (
+    <div
+      className={cn(
+        "mt-5 flex items-center justify-between gap-3 rounded-2xl p-3 pl-4 ring-1 sm:hidden",
+        onDark ? "bg-white/10 ring-white/15" : "bg-surface/80 shadow-sm ring-slate-200/80",
+      )}
+    >
+      <div className="min-w-0">
+        <p className={cn("text-sm font-semibold leading-tight", onDark ? "text-white" : "text-slate-900")}>
+          {t("heroAppTitle")}
+        </p>
+        <p className={cn("mt-0.5 text-xs leading-snug", onDark ? "text-brand-50/75" : "text-slate-500")}>
+          {t("heroAppBody")}
+        </p>
+      </div>
+      <GooglePlayBadge href={PLAY_STORE_URL} lang={lang} label={t("playStoreTitle")} height={40} />
+    </div>
+  ) : null;
 
   if (signedIn) {
     return (
@@ -128,6 +155,7 @@ export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: bool
           {t("headerOpenDuleko")}
         </SiteButton>
         {download}
+        {appCard}
       </div>
     );
   }
@@ -167,6 +195,7 @@ export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: bool
           </button>
         </p>
       )}
+      {appCard}
     </div>
   );
 }

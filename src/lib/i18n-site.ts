@@ -342,6 +342,8 @@ export const siteStrings = {
   heroTrustFree: ["Free to join", "सदस्य बन्न निःशुल्क"],
   heroTrustLangs: ["English & नेपाली", "English र नेपाली"],
   heroTrustApp: ["Web & Android", "वेब र एन्ड्रोइड"],
+  heroAppTitle: ["Duleko for Android", "एन्ड्रोइडका लागि डुलेको"],
+  heroAppBody: ["One account on the web and your phone.", "वेब र फोनमा एउटै खाता।"],
   demoCaption: ["How a job comes together on Duleko", "डुलेकोमा काम यसरी मिल्छ"],
   demoSearchSkill: ["Electrician", "बिजुली मिस्त्री"],
   demoPlace: ["Kapilvastu", "कपिलवस्तु"],
