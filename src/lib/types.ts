@@ -1,3 +1,4 @@
+import type { PriceUnit } from "./price-units";
 export type Lang = "en" | "ne";
 
 /**
@@ -585,6 +586,8 @@ export interface JobPost {
   /** The budget - or, on an offer post, the poster's rate. */
   budget_min: number | null;
   budget_max: number | null;
+  /** What the price is for: per hour, day, km... null = the whole job (8000). */
+  price_unit: PriceUnit | null;
   status: JobPostStatus;
   /** The work request made from the chosen offer. */
   engagement_id: string | null;

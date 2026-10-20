@@ -186,7 +186,7 @@ export function MyPostsList({ profileId, onPost }: { profileId: string; onPost: 
  */
 export function PostChoiceRow({ post }: { post: JobPost }) {
   const { t, lang } = useI18n();
-  const budget = jobBudgetText(post, lang);
+  const budget = jobBudgetText(post, lang, t);
   return (
     <Link
       to="/jobs/$jobId"

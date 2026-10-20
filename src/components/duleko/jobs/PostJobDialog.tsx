@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, ChevronDown, Globe2, MapPin, Megaphone, UserSearch, X, type LucideIcon } from "lucide-react";
+import { CalendarDays, ChevronDown, Globe2, MapPin, X } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { createJobPost, getUserSkills, listSkills } from "@/lib/queries";
 import { ALL_DISTRICTS, municipalitiesOf } from "@/lib/nepal";
 import { errorMessage } from "@/lib/supabase";
+import { PRICE_UNITS, PRICE_UNIT_LABEL, type PriceUnit } from "@/lib/price-units";
+import { JOB_KIND_LOOK, jobBudgetText } from "./JobParts";
 import { cn, formatDate, skillName, todayKey } from "@/lib/utils";
 import { getCurrentPosition } from "@/lib/geolocation";
 import type { JobPostKind, Profile, SkillCategory } from "@/lib/types";
@@ -22,9 +24,36 @@ const CATEGORY_LABEL: Record<SkillCategory, StringKey> = {
   personal: "skillCategoryPersonal",
 };
 
-const KINDS: { kind: JobPostKind; icon: LucideIcon; label: StringKey; hint: StringKey }[] = [
-  { kind: "hire", icon: UserSearch, label: "postKindHire", hint: "postKindHireHint" },
-  { kind: "offer", icon: Megaphone, label: "postKindOffer", hint: "postKindOfferHint" },
+/**
+ * The two kinds of post, told apart by more than a word: hiring is blue
+ * with a searching person, offering is orange with a megaphone - the same
+ * colours and icons as the tags on every post card.
+ */
+const KINDS: {
+  kind: JobPostKind;
+  label: StringKey;
+  hint: StringKey;
+  selected: string;
+  icon: string;
+  title: string;
+}[] = [
+  {
+    kind: "hire",
+    label: "postKindHire",
+    hint: "postKindHireHint",
+    // The navy is made for light pages; dark mode gets a brighter blue.
+    selected: "border-navy-600 bg-navy-50 dark:border-sky-400",
+    icon: "bg-navy-600 text-white dark:bg-sky-500",
+    title: "text-navy-700",
+  },
+  {
+    kind: "offer",
+    label: "postKindOffer",
+    hint: "postKindOfferHint",
+    selected: "border-accent-500 bg-accent-50",
+    icon: "bg-accent-500 text-white",
+    title: "text-accent-600",
+  },
 ];
 
 /**
@@ -75,6 +104,8 @@ export function PostJobDialog({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [budgetMin, setBudgetMin] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
+  // What the price is for; null is the whole job.
+  const [priceUnit, setPriceUnit] = useState<PriceUnit | null>(null);
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -118,6 +149,8 @@ export function PostJobDialog({
         work_date: offering ? null : workDate,
         budget_min: budgetMin ? Number(budgetMin) : null,
         budget_max: budgetMax ? Number(budgetMax) : null,
+        // A unit means nothing without an amount.
+        price_unit: budgetMin || budgetMax ? priceUnit : null,
         lat: offering ? null : (pin?.lat ?? null),
         lng: offering ? null : (pin?.lng ?? null),
       }),
@@ -170,8 +203,9 @@ export function PostJobDialog({
     >
       <p className="mb-1.5 text-[13px] font-medium text-slate-700">{t("postKindQuestion")}</p>
       <div role="radiogroup" aria-label={t("postKindQuestion")} className="mb-4 grid grid-cols-2 gap-2">
-        {KINDS.map(({ kind: option, icon: Icon, label, hint }) => {
+        {KINDS.map(({ kind: option, label, hint, selected: selectedLook, icon: iconLook, title: titleLook }) => {
           const selected = kind === option;
+          const Icon = JOB_KIND_LOOK[option].icon;
           return (
             <button
               key={option}
@@ -184,14 +218,19 @@ export function PostJobDialog({
                 setErrors({});
               }}
               className={cn(
-                "flex flex-col items-start gap-1 rounded-xl border-2 p-2.5 text-left transition-colors",
-                selected ? "border-brand-600 bg-brand-50" : "border-slate-200 bg-surface hover:border-slate-300",
+                "flex flex-col items-start gap-1.5 rounded-xl border-2 p-2.5 text-left transition-colors",
+                selected ? selectedLook : "border-slate-200 bg-surface hover:border-slate-300",
               )}
             >
-              <Icon className={cn("h-5 w-5", selected ? "text-brand-700" : "text-slate-400")} aria-hidden />
-              <span className={cn("text-sm font-semibold", selected ? "text-brand-800" : "text-slate-800")}>
-                {t(label)}
+              <span
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+                  selected ? iconLook : "bg-slate-100 text-slate-500",
+                )}
+              >
+                <Icon className="h-4.5 w-4.5" aria-hidden />
               </span>
+              <span className={cn("text-sm font-bold", selected ? titleLook : "text-slate-800")}>{t(label)}</span>
               <span className="text-xs leading-snug text-slate-500">{t(hint)}</span>
             </button>
           );
@@ -362,35 +401,82 @@ export function PostJobDialog({
         error={errors.budget}
         hint={t(offering ? "postOfferRateHint" : "postJobBudgetHint")}
       >
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-500">{lang === "ne" ? "रु" : "Rs"}</span>
-          <Input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            value={budgetMin}
-            onChange={(e) => {
-              setBudgetMin(e.target.value);
-              clear("budget");
-            }}
-            placeholder={t("postJobBudgetMin")}
-            aria-label={`${t(offering ? "postOfferRate" : "postJobBudget")}: ${t("postJobBudgetMin")}`}
-          />
-          <span className="text-slate-400" aria-hidden>
-            –
-          </span>
-          <Input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            value={budgetMax}
-            onChange={(e) => {
-              setBudgetMax(e.target.value);
-              clear("budget");
-            }}
-            placeholder={t("postJobBudgetMax")}
-            aria-label={`${t(offering ? "postOfferRate" : "postJobBudget")}: ${t("postJobBudgetMax")}`}
-          />
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-500">{lang === "ne" ? "रु" : "Rs"}</span>
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={budgetMin}
+              onChange={(e) => {
+                setBudgetMin(e.target.value);
+                clear("budget");
+              }}
+              placeholder={t("postJobBudgetMin")}
+              aria-label={`${t(offering ? "postOfferRate" : "postJobBudget")}: ${t("postJobBudgetMin")}`}
+            />
+            <span className="text-slate-400" aria-hidden>
+              –
+            </span>
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={budgetMax}
+              onChange={(e) => {
+                setBudgetMax(e.target.value);
+                clear("budget");
+              }}
+              placeholder={t("postJobBudgetMax")}
+              aria-label={`${t(offering ? "postOfferRate" : "postJobBudget")}: ${t("postJobBudgetMax")}`}
+            />
+          </div>
+          {/* Only once there's an amount: one tap says what it's for. Most
+              jobs stay on "Whole job" and never think about it. */}
+          {(budgetMin || budgetMax) && (
+            <div className="mt-2.5">
+              <p className="mb-1.5 text-xs font-medium text-slate-600">{t("postPricePer")}</p>
+              <div role="radiogroup" aria-label={t("postPricePer")} className="flex flex-wrap gap-1.5">
+                {[null, ...PRICE_UNITS].map((unit) => {
+                  const selected = priceUnit === unit;
+                  return (
+                    <button
+                      key={unit ?? "whole"}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setPriceUnit(unit)}
+                      className={cn(
+                        "h-8 rounded-full border px-3 text-[13px] font-medium transition-colors",
+                        selected
+                          ? "border-brand-600 bg-brand-600 text-white"
+                          : "border-slate-300 bg-surface text-slate-700 hover:border-brand-300",
+                      )}
+                    >
+                      {t(unit ? PRICE_UNIT_LABEL[unit] : "priceUnitWhole")}
+                    </button>
+                  );
+                })}
+              </div>
+              {!errors.budget && (
+                <p className="mt-2 text-xs text-slate-500">
+                  {t("postPricePreview", {
+                    price:
+                      jobBudgetText(
+                        {
+                          budget_min: budgetMin ? Number(budgetMin) : null,
+                          budget_max: budgetMax ? Number(budgetMax) : null,
+                          price_unit: priceUnit,
+                        },
+                        lang,
+                        t,
+                      ) ?? "",
+                  })}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </Field>
 

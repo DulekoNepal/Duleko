@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Globe, MapPin, Search } from "lucide-react";
+import { Check, Globe, MapPin, Megaphone, Search, UserSearch } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { SkillIcon } from "@/components/duleko/SkillIcon";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { ALL_DISTRICTS, districtLabel } from "@/lib/nepal";
+import { PRICE_UNIT_SUFFIX } from "@/lib/price-units";
 import { cn, formatMoney, formatNumber, todayKey } from "@/lib/utils";
 import type { JobOfferStatus, JobPost, JobPostKind, Lang } from "@/lib/types";
 
@@ -13,15 +14,42 @@ import type { JobOfferStatus, JobPost, JobPostKind, Lang } from "@/lib/types";
 /* Labels                                                              */
 /* ------------------------------------------------------------------ */
 
-/** "Rs 1,000 – 1,500", "Rs 1,000", or null when the poster left it open. */
-export function jobBudgetText(post: Pick<JobPost, "budget_min" | "budget_max">, lang: Lang): string | null {
+/**
+ * "Rs 1,000 – 1,500", "Rs 500 / hr", or null when the poster left it open.
+ * Pass `t` to add what the price is for (8000); without it, just the amount.
+ */
+export function jobBudgetText(
+  post: Pick<JobPost, "budget_min" | "budget_max"> & { price_unit?: JobPost["price_unit"] },
+  lang: Lang,
+  t?: (key: StringKey) => string,
+): string | null {
   const { budget_min: lo, budget_max: hi } = post;
   if (lo == null && hi == null) return null;
-  if (lo != null && hi != null && lo !== hi) {
-    return `${formatMoney(lo, lang)} – ${formatNumber(Math.round(hi).toLocaleString("en-IN"), lang)}`;
-  }
-  return formatMoney(lo ?? hi, lang);
+  const amount =
+    lo != null && hi != null && lo !== hi
+      ? `${formatMoney(lo, lang)} – ${formatNumber(Math.round(hi).toLocaleString("en-IN"), lang)}`
+      : formatMoney(lo ?? hi, lang);
+  const unit = post.price_unit ? (t ?? defaultUnitText(lang))(PRICE_UNIT_SUFFIX[post.price_unit]) : "";
+  return `${amount}${unit}`;
 }
+
+/** The unit's words when a caller didn't hand its own `t` in. */
+function defaultUnitText(lang: Lang) {
+  return (key: StringKey) => {
+    const pair = UNIT_FALLBACK[key];
+    return pair ? pair[lang === "ne" ? 1 : 0] : "";
+  };
+}
+const UNIT_FALLBACK: Partial<Record<StringKey, [string, string]>> = {
+  priceUnitPerHour: [" / hr", " / घण्टा"],
+  priceUnitPerDay: [" / day", " / दिन"],
+  priceUnitPerMonth: [" / month", " / महिना"],
+  priceUnitPerKm: [" / km", " / कि.मि."],
+  priceUnitPerLitre: [" / litre", " / लिटर"],
+  priceUnitPerKg: [" / kg", " / के.जी."],
+  priceUnitPerPiece: [" / piece", " / थान"],
+  priceUnitPerSqft: [" / sq ft", " / वर्ग फिट"],
+};
 
 export type JobState = "open" | "assigned" | "closed" | "expired";
 
@@ -64,17 +92,28 @@ export function JobStateBadge({
   );
 }
 
-/** "Hiring" or "Offering": which way round a post is, at a glance. */
+/**
+ * Which way round a post is, at a glance - and the same everywhere: blue
+ * with a searching person for someone hiring, orange with a megaphone for
+ * someone offering their service. The post form's two choices match.
+ */
+export const JOB_KIND_LOOK: Record<JobPostKind, { icon: typeof UserSearch; tag: string }> = {
+  hire: { icon: UserSearch, tag: "bg-navy-50 text-navy-700" },
+  offer: { icon: Megaphone, tag: "bg-accent-50 text-accent-600" },
+};
+
 export function JobKindTag({ kind, className }: { kind: JobPostKind; className?: string }) {
   const { t } = useI18n();
+  const { icon: Icon, tag } = JOB_KIND_LOOK[kind];
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-        kind === "offer" ? "bg-accent-50 text-accent-600" : "bg-navy-50 text-navy-700",
+        "inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+        tag,
         className,
       )}
     >
+      <Icon className="h-3 w-3" strokeWidth={2.5} aria-hidden />
       {t(kind === "offer" ? "jobKindOffer" : "jobKindHire")}
     </span>
   );
@@ -105,7 +144,7 @@ export function offerCountText(count: number, t: ReturnType<typeof useI18n>["t"]
  */
 export function JobCard({ post, showStatus = false }: { post: JobPost; showStatus?: boolean }) {
   const { t, lang } = useI18n();
-  const budget = jobBudgetText(post, lang);
+  const budget = jobBudgetText(post, lang, t);
   const offering = post.kind === "offer";
   const place = districtLabel(post.district, lang);
   // The exact place is private (6100); the card shows the district and what's needed.

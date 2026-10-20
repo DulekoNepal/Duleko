@@ -1,3 +1,4 @@
+import type { PriceUnit } from "./price-units";
 import { supabase } from "./supabase";
 import { translateStatic } from "./i18n";
 import { authPhone, pinToPassword } from "./phone-auth";
@@ -2246,7 +2247,7 @@ const JOB_PERSON_COLUMNS =
 
 const JOB_POST_COLUMNS =
   "id,employer_profile_id,kind,skill_id,title,details,district,municipality,location_text,work_date," +
-  "budget_min,budget_max,status,engagement_id,offer_count,lat,lng,created_at,updated_at," +
+  "budget_min,budget_max,price_unit,status,engagement_id,offer_count,lat,lng,created_at,updated_at," +
   "skill:skills(id,name_en,name_ne,emoji,category)," +
   `poster:profiles!job_posts_employer_profile_id_fkey(${JOB_PERSON_COLUMNS})`;
 
@@ -2338,6 +2339,8 @@ export interface JobPostInput {
   work_date: string | null;
   budget_min: number | null;
   budget_max: number | null;
+  /** Per hour, day, km... null for the whole job (8000). */
+  price_unit: PriceUnit | null;
   /**
    * The exact place and pin. The database keeps both for the poster and
    * the chosen worker only (job_post_places, 6100); the post itself shows
