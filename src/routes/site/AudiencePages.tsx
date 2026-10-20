@@ -390,7 +390,6 @@ export function ForBusinessesPage() {
       >
         <Lead>
           <p>{t("bizP1")}</p>
-          <p>{t("bizP2")}</p>
         </Lead>
         <div className="mt-8">
           <SiteButton size="lg" onClick={() => explore("/search")}>
@@ -568,7 +567,7 @@ export function PartnersPage() {
             <ExampleReport />
             <p className="flex gap-3 rounded-2xl bg-surface p-4 text-sm leading-relaxed text-slate-600 ring-1 ring-slate-200/80">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />
-              <span className="min-w-0 flex-1">{t("privacyMunicipality")}</span>
+              <span className="min-w-0 flex-1">{t("partnersPrivacyNote")}</span>
             </p>
           </div>
         </div>

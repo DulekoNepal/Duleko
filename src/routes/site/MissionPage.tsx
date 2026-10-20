@@ -4,7 +4,6 @@ import {
   Eyebrow,
   FinalCta,
   IconCard,
-  Journey,
   Lead,
   PageHero,
   Prose,
@@ -161,7 +160,6 @@ export function MissionPage() {
             <Prose className="mt-5">
               <p>{t("missionTrainingP1")}</p>
               <p className="font-semibold text-slate-900">{t("missionTrainingP2")}</p>
-              <p>{t("missionTrainingP3")}</p>
             </Prose>
             <StoryLink to="/partners" className="mt-5">
               {t("partnersTitle")}
@@ -170,14 +168,6 @@ export function MissionPage() {
           <div className="lg:pt-4">
             <PullQuote quote={t("missionQuote")} name={t("teamAttribution")} size="md" />
           </div>
-        </div>
-
-        <div className="mt-14 rounded-3xl bg-paper p-6 ring-1 ring-slate-200/70 sm:p-8 lg:p-10" {...reveal()}>
-          <Journey
-            steps={(
-              ["stageTraining", "stageProfile", "stageDiscovery", "stageWork", "stageReputation", "stageOpportunity"] as const
-            ).map((key) => ({ title: t(key) }))}
-          />
         </div>
       </SiteSection>
 
@@ -206,9 +196,6 @@ export function MissionPage() {
             </div>
           </li>
         </ul>
-        <Prose className="mt-10 max-w-3xl">
-          <p>{t("missionStatementDesc")}</p>
-        </Prose>
       </SiteSection>
 
       {/* Vision */}

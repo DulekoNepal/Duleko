@@ -4,7 +4,6 @@ import {
   BadgeCheck,
   CalendarDays,
   Code2,
-  Globe,
   Layers,
   MapPin,
   Map as MapIcon,
@@ -45,7 +44,7 @@ const WHAT_IT_DOES: { icon: React.ComponentType<{ className?: string }>; titleKe
  * How Duleko got here, from the project's own history (git log, migrations):
  * first commit 4 Sep 2026; chat, friends and bidding 6 Sep; Android 11 Sep;
  * the website 26-27 Sep; dark mode, notice board, Membership IDs and phone
- * alerts 2-3 Oct; categories, 18+ and bank details by 10 Oct. "Now" is the
+ * alerts 2-3 Oct; job board and map 11 Oct, ID checks 13 Oct. "Now" is the
  * work in progress.
  */
 const TIMELINE: {
@@ -58,10 +57,9 @@ const TIMELINE: {
   { icon: Sprout, dateKey: "timelineSep", titleKey: "timeline1Title", bodyKey: "timeline1Body" },
   { icon: MessagesSquare, dateKey: "timelineSep", titleKey: "timeline2Title", bodyKey: "timeline2Body" },
   { icon: Smartphone, dateKey: "timelineSep", titleKey: "timeline3Title", bodyKey: "timeline3Body" },
-  { icon: Globe, dateKey: "timelineSep", titleKey: "timeline4Title", bodyKey: "timeline4Body" },
-  { icon: BadgeCheck, dateKey: "timelineOct", titleKey: "timeline5Title", bodyKey: "timeline5Body" },
-  { icon: Layers, dateKey: "timelineOct", titleKey: "timeline6Title", bodyKey: "timeline6Body" },
-  { icon: MapIcon, dateKey: "timelineNow", titleKey: "timeline7Title", bodyKey: "timeline7Body", upcoming: true },
+  { icon: BadgeCheck, dateKey: "timelineOct", titleKey: "timeline4Title", bodyKey: "timeline4Body" },
+  { icon: MapIcon, dateKey: "timelineOct", titleKey: "timeline5Title", bodyKey: "timeline5Body" },
+  { icon: Layers, dateKey: "timelineNow", titleKey: "timeline6Title", bodyKey: "timeline6Body", upcoming: true },
 ];
 
 /** A team member as a portrait card - the whole card opens their page. */
@@ -139,7 +137,6 @@ export function AboutPage() {
         <Lead>
           <p>{t("aboutHeroP1")}</p>
           <p className="font-semibold text-slate-900">{t("aboutHeroP2")}</p>
-          <p>{t("aboutHeroP3")}</p>
         </Lead>
         <p className="font-display mt-6 text-xl font-semibold text-brand-700 sm:text-2xl">{t("siteTagline")}</p>
       </PageHero>

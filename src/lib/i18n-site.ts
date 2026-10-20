@@ -39,10 +39,7 @@ export const siteStrings = {
   stageOpportunity: ["Opportunity", "अवसर"],
   stageIncome: ["Income", "आम्दानी"],
   stageTraining: ["Training", "तालिम"],
-  stageProfile: ["Profile", "प्रोफाइल"],
-  stageDiscovery: ["Discovery", "खोज"],
   stageWork: ["Work", "काम"],
-  stageReputation: ["Reputation", "प्रतिष्ठा"],
   stageDuleko: ["Duleko", "डुलेको"],
 
   // ---- navigation (header, drawer, story) --------------------------------
@@ -194,10 +191,6 @@ export const siteStrings = {
     "हरेक वर्ष मानिसहरूले सरकारी कार्यक्रम, शैक्षिक संस्था, निजी तालिम, प्रशिक्षुता र व्यक्तिगत अनुभवबाट सीप विकास गर्छन्।",
   ],
   missionTrainingP2: ["But training alone does not guarantee work.", "तर तालिमले मात्र कामको ग्यारेन्टी गर्दैन।"],
-  missionTrainingP3: [
-    "A certificate can show that someone completed training. Duleko aims to help connect that skill with the people who may need it.",
-    "प्रमाणपत्रले कसैले तालिम पूरा गरेको देखाउन सक्छ। डुलेकोले त्यो सीपलाई त्यसको आवश्यकता भएका मानिसहरूसँग जोड्न मद्दत गर्ने लक्ष्य राख्छ।",
-  ],
   missionQuote: [
     "We don't want skills to end with certificates. We want them to reach the people who need them.",
     "हामी सीपलाई प्रमाणपत्रमै सीमित हुन दिन चाहँदैनौं। हामी चाहन्छौं, ती सीप आवश्यक मानिसहरूसम्म पुगून्।",
@@ -223,15 +216,15 @@ export const siteStrings = {
     "Businesses don't always need permanent employees. Sometimes they need someone with a specific skill for a specific job.",
     "व्यवसायहरूलाई सधैं स्थायी कर्मचारी चाहिँदैन। कहिलेकाहीँ कुनै खास कामका लागि खास सीप भएको व्यक्ति चाहिन्छ।",
   ],
-  bizP2: [
-    "Duleko helps businesses discover skilled people and connect with them directly.",
-    "डुलेकोले व्यवसायहरूलाई सिपालु मानिसहरू खोज्न र उनीहरूसँग सिधै जोडिन मद्दत गर्छ।",
-  ],
   bizCta: ["Find Skilled People", "सिपालु मानिसहरू खोज्नुहोस्"],
   partnersHeroTitle: ["From Skill Training to Skill Utilization", "सीप तालिमदेखि सीपको उपयोगसम्म"],
   partnersBody: [
     "Duleko provides a digital platform where people who receive skill training can showcase what they have learned and become discoverable for relevant opportunities.",
-    "डुलेकोले एउटा डिजिटल प्लेटफर्म दिन्छ, जहाँ सीप तालिम पाएका मानिसहरूले आफूले सिकेको कुरा देखाउन र सम्बन्धित अवसरका लागि खोजमा आउन सक्छन्।",
+    "डुलेकोले सीप तालिम पाएका मानिसहरूलाई आफूले सिकेको सीप देखाउने र सम्बन्धित अवसरका लागि खोजमा आउने डिजिटल प्लेटफर्म दिन्छ।",
+  ],
+  partnersPrivacyNote: [
+    "Partnering doesn't give you anyone's private details, even for the people you verify.",
+    "साझेदारी गर्दैमा तपाईंले कसैको निजी विवरण पाउनुहुन्न, आफूले प्रमाणित गरेका मानिसहरूको पनि।",
   ],
   partnersCertTitle: ["Training should not end when a certificate is issued.", "प्रमाणपत्र दिइएपछि तालिम सकिनु हुँदैन।"],
   partnersNextQuestion: ["The next question should be", "अर्को प्रश्न यो हुनुपर्छ"],
@@ -263,10 +256,6 @@ export const siteStrings = {
     "बहुमूल्य सीप भएका मानिसहरू र ती सीप चाहिने मानिसहरू प्रायः एउटै समुदायमा बस्छन्, तैपनि एकअर्कालाई भेट्टाउन गाह्रो हुन सक्छ।",
   ],
   aboutHeroP2: ["We built Duleko to bridge that gap.", "त्यही दूरी मेटाउन हामीले डुलेको बनायौं।"],
-  aboutHeroP3: [
-    "Our goal is to make skills more visible, opportunities more accessible, and local connections more useful.",
-    "हाम्रो लक्ष्य सीपलाई अझ देखिने, अवसरलाई अझ पहुँचयोग्य र स्थानीय सम्बन्धलाई अझ उपयोगी बनाउनु हो।",
-  ],
   aboutTeamTitle: ["The People Behind Duleko", "डुलेको पछाडिका मानिसहरू"],
   aboutFoundedBy: [
     "Duleko was founded by Sunil K. Chaudhary. The platform - the web app, the Android app and everything behind them - was designed and built by Sanjay Gupta.",
@@ -593,30 +582,25 @@ export const siteStrings = {
     "Chat, friends, and work requests where both sides can offer and counter-offer a price.",
     "कुराकानी, साथी र दुवै पक्षले मूल्य प्रस्ताव र जवाफी प्रस्ताव गर्न सक्ने कामको अनुरोध।",
   ],
-  timeline3Title: ["On Android", "एन्ड्रोइडमा"],
+  timeline3Title: ["On Android and the web", "एन्ड्रोइड र वेबमा"],
   timeline3Body: [
-    "A native Android app on Google Play, with the unread count right on the app icon.",
-    "Google Play मा नेटिभ एन्ड्रोइड एप, नपढिएका सन्देशको संख्या एपकै आइकनमा।",
+    "An Android app on Google Play, and duleko.com in both languages.",
+    "Google Play मा एन्ड्रोइड एप र दुवै भाषामा duleko.com।",
   ],
-  timeline4Title: ["A home on the web", "वेबमा आफ्नो घर"],
+  timeline4Title: ["A community, not just an app", "एप मात्र होइन, समुदाय"],
   timeline4Body: [
-    "duleko.com went live in both languages, with a page for each of the team.",
-    "duleko.com दुवै भाषामा सुरु भयो, टोलीका हरेक सदस्यको आफ्नै पृष्ठसहित।",
-  ],
-  timeline5Title: ["A community, not just an app", "एप मात्र होइन, समुदाय"],
-  timeline5Body: [
     "A notice board, a Duleko Membership ID for every member, phone alerts and a dark mode.",
     "सूचना पाटी, हरेक सदस्यलाई डुलेको सदस्यता नम्बर, फोन सूचना र अँध्यारो मोड।",
   ],
-  timeline6Title: ["Growing up", "अघि बढ्दै"],
-  timeline6Body: [
-    "Over 30 skills in three groups, an 18+ rule for every member, and payment details for Nepal's banks.",
-    "तीन समूहमा ३०भन्दा बढी सीप, हरेक सदस्यका लागि १८+ नियम र नेपालका बैंकहरूसहितको भुक्तानी विवरण।",
+  timeline5Title: ["Work near you", "नजिकैको काम"],
+  timeline5Body: [
+    "A job board for open work, a map of skilled people nearby, and ID checks for the verified badge.",
+    "खुला कामका लागि काम पाटी, नजिकैका सिपालु मानिसहरूको नक्सा र प्रमाणित ब्याजका लागि परिचयपत्र जाँच।",
   ],
-  timeline7Title: ["Next up", "अब आउँदै"],
-  timeline7Body: [
-    "A job board for open work requests, and a map of skilled people nearby.",
-    "खुला कामका अनुरोधहरूका लागि काम पाटी र नजिकैका सिपालु मानिसहरूको नक्सा।",
+  timeline6Title: ["Shaped by our members", "सदस्यहरूको सुझावअनुसार"],
+  timeline6Body: [
+    "We're working through feedback from our first members, one release at a time.",
+    "पहिलो सदस्यहरूका सुझावअनुसार हामी एकपछि अर्को संस्करणमा सुधार गर्दैछौं।",
   ],
   timelineInProgress: ["In progress", "काम भइरहेको छ"],
   teamRole: ["Role", "भूमिका"],

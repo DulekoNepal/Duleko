@@ -908,8 +908,8 @@ const strings = {
   aboutTitle: ["About Duleko", "डुलेकोको बारेमा"],
   aboutSubtitle: ["Who we are and what we're building", "हामी को हौं र के बनाउँदैछौं"],
   aboutDescription: [
-    "Duleko is a simple local skills marketplace built for Nepal, connecting people who need work done with skilled workers nearby, tutors, electricians, IT help, drivers, and anyone else with a skill to offer.",
-    "डुलेको नेपालका लागि बनाइएको सरल स्थानीय सीप बजार हो। यसले काम गराउन चाहने मानिसहरूलाई नजिकैका सिपालु कामदार, ट्युटर, बिजुली मिस्त्री, आईटी सहयोगी, चालक र सीप भएका जो कोहीसँग जोड्छ।",
+    "It connects people who need work done with skilled people nearby: tutors, electricians, IT help, drivers and anyone else with a skill to offer.",
+    "यसले काम गराउन चाहने मानिसहरूलाई नजिकैका सिपालु मानिससँग जोड्छ: ट्युटर, बिजुली मिस्त्री, आईटी सहयोगी, चालक र सीप भएका जो कोही।",
   ],
   howItWorks: ["How it works", "यो कसरी काम गर्छ"],
   meetTheTeam: ["Meet the team", "टोली भेट्नुहोस्"],
@@ -934,8 +934,8 @@ const strings = {
     "सदस्य बन्न निःशुल्क, हेर्न निःशुल्क। काम वा कामदार खोज्न कुनै खर्च लाग्दैन।",
   ],
   missionPrinciple4: [
-    "Built bilingual from day one: English and Nepali, equally.",
-    "पहिलो दिनदेखि नै द्विभाषिक: अंग्रेजी र नेपाली, दुवै समान रूपमा।",
+    "Every screen works in both languages, from day one.",
+    "पहिलो दिनदेखि नै हरेक स्क्रिन दुवै भाषामा।",
   ],
   missionPrinciple5: [
     "Works well even on slower connections, since that is the reality for many people it is meant to serve.",
@@ -950,23 +950,19 @@ const strings = {
     "If someone who isn't technical can't use and understand Duleko, it doesn't matter how well we build.",
     "प्राविधिक ज्ञान नभएको व्यक्तिले डुलेको बुझेर प्रयोग गर्न सकेन भने हामीले जतिसुकै राम्रो बनाए पनि त्यसको कुनै अर्थ रहँदैन।",
   ],
-  missionStatementDesc: [
-    "That is the bar for every screen we ship. Duleko is for people who need work done and people who do the work, not for people who build software. In most communities in Nepal, finding local work, or finding someone to do it, still happens by word of mouth. Duleko exists to make that connection direct, and clear enough that anyone can use it.",
-    "हामीले सार्वजनिक गर्ने हरेक स्क्रिनको कसी यही हो। डुलेको काम गराउने र काम गर्ने मानिसहरूका लागि हो, सफ्टवेयर बनाउनेहरूका लागि होइन। नेपालका धेरैजसो समुदायमा स्थानीय काम खोज्ने वा काम गरिदिने मान्छे खोज्ने काम अझै पनि मुखामुख र चिनजानको भरमा हुन्छ। डुलेकोको उद्देश्य त्यो सम्पर्कलाई सिधा बनाउनु हो र यति सरल बनाउनु हो कि जो कोहीले प्रयोग गर्न सकोस्।",
-  ],
 
   // Motivation page
   motivationTitle: ["Why we built Duleko", "हामीले डुलेको किन बनायौं"],
   motivationSubtitle: ["In our own words", "हाम्रै शब्दमा"],
   motivationIntro: [
-    "Duleko started from a plain observation: skilled people and the people who need them are usually close by, but there is no easy way for them to find each other beyond asking around. In Nepal's local communities, that gap costs both sides time, whether it is a worker who could use the job or an employer who could use the help.",
-    "डुलेको एउटा सामान्य अवलोकनबाट सुरु भयो: सिपालु मानिस र उनीहरूलाई खोज्ने मानिस प्रायः नजिकै हुन्छन्, तर वरिपरि सोधपुछ गर्नुबाहेक एकअर्कालाई भेट्टाउने सजिलो उपाय छैन। नेपालका स्थानीय समुदायमा यो खाडलले दुवै पक्षको समय खेर फाल्छ - चाहे काम खोजिरहेका कामदार हुन् वा सहयोग खोजिरहेका काम दिने।",
+    "Duleko started from a plain observation: skilled people and the people who need them usually live close by, but beyond asking around, there is no easy way for them to find each other.",
+    "डुलेको एउटा सामान्य अवलोकनबाट सुरु भयो: सिपालु मानिस र उनीहरूलाई खोज्ने मानिस प्रायः नजिकै बस्छन्, तर वरिपरि सोधपुछ गर्नुबाहेक एकअर्कालाई भेट्टाउने सजिलो उपाय छैन।",
   ],
   straightFromTheTeam: ["Straight from the team", "टोलीबाट सिधै"],
   whatKeepsUsBuilding: ["What keeps us building", "हामीलाई निरन्तर काम गर्न के ले प्रेरित गर्छ"],
   whatKeepsUsBuildingDesc: [
-    "Every real profile on Duleko (a tutor listing their rate, a worker marking which days they are free, an employer sending a work request instead of making a dozen phone calls) is the actual reason this exists. Not to be another app, but to make one specific thing easier for people who should not need to be technical to use it.",
-    "डुलेकोमा भएको हरेक वास्तविक प्रोफाइल - आफ्नो दर राख्ने ट्युटर, कुन दिन खाली छु भनी चिन्ह लगाउने कामदार, दर्जनौं फोन गर्नुको सट्टा एउटा कामको अनुरोध पठाउने काम दिने - नै यसको अस्तित्वको खास कारण हो। अर्को एउटा एप बन्नु हाम्रो उद्देश्य होइन; प्राविधिक ज्ञान नभएकाहरूका लागि एउटा खास काम सजिलो बनाउनु हो।",
+    "Every real profile on Duleko is the reason it exists. We don't want to be just another app. We want to make one thing easier for people who shouldn't need to be technical to use it.",
+    "डुलेकोमा भएको हरेक वास्तविक प्रोफाइल नै यसको अस्तित्वको कारण हो। अर्को एउटा एप बन्नु हाम्रो उद्देश्य होइन; प्राविधिक ज्ञान नभएकाहरूका लागि एउटा खास काम सजिलो बनाउनु हो।",
   ],
 
   // Privacy policy page
