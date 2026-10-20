@@ -218,41 +218,31 @@ export function ProfileHero({
             </PhotoPicker>
           }
           actions={
-            <div className="relative mt-3 flex min-w-0 items-center gap-1.5 @sm:gap-2" data-profile-menu>
+            // Everything about your own profile sits behind one ⋯ button:
+            // editing first, then sharing, then the staff tools.
+            <div className="relative mt-3 flex min-w-0 items-center" data-profile-menu>
               <Button
                 variant="outline"
                 size="icon"
                 className="rounded-full"
-                loading={downloadCard.isPending}
+                loading={downloadCard.isPending || share.isPending}
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
                 aria-label={t("profileOptions")}
                 title={t("profileOptions")}
               >
-                {!downloadCard.isPending && <MoreHorizontal className="h-4 w-4" aria-hidden />}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-9 rounded-full px-0 @md:w-auto @md:px-3.5"
-                onClick={() => share.mutate()}
-                aria-label={t("shareProfile")}
-              >
-                <Share2 className="h-4 w-4" aria-hidden />
-                <span className="hidden @md:inline">{t("shareShort")}</span>
-              </Button>
-              {/* One line in either language; the pencil goes on the narrowest phones. */}
-              <Button size="sm" className="whitespace-nowrap rounded-full px-3.5 @sm:px-4" onClick={onEdit}>
-                <Pencil className="hidden h-3.5 w-3.5 @sm:block" aria-hidden />
-                {t("editProfile")}
+                {!(downloadCard.isPending || share.isPending) && <MoreHorizontal className="h-4 w-4" aria-hidden />}
               </Button>
 
               {menuOpen && (
-                <MenuPanel className="w-64">
-                  <MenuItem icon={Eye} label={t("viewPublicProfile")} onClick={menuAction(() => navigate({ to: "/worker/$workerId", params: { workerId: profile.id } }))} />
+                <MenuPanel className="w-60">
+                  <MenuItem icon={Pencil} label={t("editProfile")} onClick={menuAction(onEdit)} />
+                  <MenuDivider />
+                  <MenuItem icon={Share2} label={t("shareProfile")} onClick={menuAction(() => share.mutate())} />
                   <MenuItem icon={LinkIcon} label={t("copyLink")} onClick={menuAction(() => copy.mutate())} />
-                  <MenuItem icon={Download} label={t("downloadCard")} onClick={menuAction(() => downloadCard.mutate(profile))} />
+                  <MenuItem icon={Eye} label={t("viewPublicProfile")} onClick={menuAction(() => navigate({ to: "/worker/$workerId", params: { workerId: profile.id } }))} />
+                  <MenuItem icon={Download} label={t("downloadCardShort")} onClick={menuAction(() => downloadCard.mutate(profile))} />
                   {profile.staff_role && (
                     <>
                       <MenuDivider />

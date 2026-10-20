@@ -699,6 +699,7 @@ const strings = {
   // ---- sharing a profile ---------------------------------------------
   shareProfile: ["Share profile", "प्रोफाइल सेयर गर्नुहोस्"],
   downloadCard: ["Download Professional ID card", "व्यावसायिक परिचयपत्र डाउनलोड गर्नुहोस्"],
+  downloadCardShort: ["Download ID card", "परिचयपत्र डाउनलोड"],
   generatingCard: ["Preparing your card…", "तपाईंको कार्ड तयार हुँदैछ…"],
   cardDownloaded: ["Professional ID card downloaded.", "व्यावसायिक परिचयपत्र डाउनलोड भयो।"],
   cardSavedToGallery: ["Professional ID card saved to your gallery.", "व्यावसायिक परिचयपत्र तपाईंको ग्यालेरीमा सुरक्षित भयो।"],
