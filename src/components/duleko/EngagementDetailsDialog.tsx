@@ -241,7 +241,7 @@ export function EngagementDetailsDialog({
   let feeLine: { text: string; free: boolean } | null = null;
   if (iAmWorker && engagement.status === "completed" && charge.data) {
     feeLine = charge.data.welcome
-      ? { text: t("feeOnJobWelcome", { total: formatNumber(rules?.welcome_jobs ?? 0, lang) }), free: true }
+      ? { text: t("feeOnJobWelcome", { total: formatNumber(feeAccount.data?.free_jobs ?? rules?.welcome_jobs ?? 0, lang) }), free: true }
       : charge.data.amount > 0
         ? { text: t("feeOnJob", { amount: formatMoney(charge.data.amount, lang) }), free: false }
         : null;
@@ -254,7 +254,7 @@ export function EngagementDetailsDialog({
   ) {
     feeLine =
       (feeAccount.data?.welcome_left ?? 0) > 0
-        ? { text: t("feeOnJobWelcome", { total: formatNumber(rules.welcome_jobs, lang) }), free: true }
+        ? { text: t("feeOnJobWelcome", { total: formatNumber(feeAccount.data?.free_jobs ?? rules.welcome_jobs, lang) }), free: true }
         : { text: t("feeOnJob", { amount: formatMoney(feeFor(price, rules.tiers), lang) }), free: false };
   }
   // Fees past due pause accepting new work until they're paid.

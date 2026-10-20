@@ -2084,6 +2084,28 @@ export async function deletePaymentMethod(method: PaymentMethod): Promise<Paymen
 }
 
 /** Where a worker stands with Duleko's fees: their own (no id), or anyone's for staff. */
+/** My referral code, how many joined with it, and who invited me (7900). */
+export interface MyReferral {
+  code: string | null;
+  joined: number;
+  referred_by: string | null;
+  /** Still inside the first 7 days, with no code added yet. */
+  can_enter: boolean;
+}
+
+export async function getMyReferral(): Promise<MyReferral> {
+  const { data, error } = await supabase.rpc("my_referral");
+  if (error) throw error;
+  return data as MyReferral;
+}
+
+/** "I joined with this code": a free job for me and for them. Returns their name. */
+export async function applyReferral(code: string): Promise<{ referrer_name: string }> {
+  const { data, error } = await supabase.rpc("apply_referral", { p_code: code });
+  if (error) throw error;
+  return data as { referrer_name: string };
+}
+
 export async function getFeeAccount(workerId?: string): Promise<FeeAccount> {
   const { data, error } = await supabase.rpc("fee_account", workerId ? { p_worker: workerId } : {});
   if (error) throw error;

@@ -188,8 +188,8 @@ export const paymentStrings = {
     "{date}देखि अनुरोध गरिएका कामलाई शुल्क लाग्छ। त्यसअघिका काम निःशुल्क।",
   ],
   feesWelcomeLeft: [
-    "Your next {count} of {total} first jobs are free.",
-    "पहिलो {total} काममध्ये बाँकी {count} काम निःशुल्क छन्।",
+    "{count} of your {total} free jobs are left.",
+    "तपाईंका {total} निःशुल्क काममध्ये {count} बाँकी छन्।",
   ],
   feesWelcomeAll: ["Your first {total} jobs are free.", "तपाईंका पहिलो {total} काम निःशुल्क छन्।"],
   feesWelcomeUsed: ["Your {total} free jobs are used.", "तपाईंका {total} निःशुल्क काम प्रयोग भइसके।"],
@@ -227,7 +227,7 @@ export const paymentStrings = {
 
   // ---- fees: on a job --------------------------------------------------
   feeOnJob: ["Duleko fee on this job: {amount}", "यो कामको डुलेको शुल्क: {amount}"],
-  feeOnJobWelcome: ["No Duleko fee - one of your first {total} jobs", "डुलेको शुल्क छैन - तपाईंका पहिलो {total} काममध्ये एक"],
+  feeOnJobWelcome: ["No Duleko fee - one of your {total} free jobs", "डुलेको शुल्क छैन - तपाईंका {total} निःशुल्क काममध्ये एक"],
   feeOnJobFree: ["No Duleko fee on this job", "यो काममा डुलेको शुल्क छैन"],
   feeBlockedTitle: ["Pay your Duleko fees to accept new work", "नयाँ काम स्वीकार गर्न डुलेको शुल्क तिर्नुहोस्"],
   feeBlockedText: ["{amount} is past due.", "{amount} म्याद नाघेर बाँकी छ।"],

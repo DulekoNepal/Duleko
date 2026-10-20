@@ -238,7 +238,9 @@ export interface AppNotification {
     /** To a hirer: the worker says the job is done - is it? (7700) */
     | "done_check"
     /** To a worker: the hirer says the job isn't finished yet (7700). */
-    | "done_not_yet";
+    | "done_not_yet"
+    /** To both sides: someone joined with a referral code - a free job each (7900). */
+    | "referral";
   title_en: string;
   title_ne: string;
   body_en: string | null;
@@ -480,6 +482,9 @@ export interface FeeAccount {
   max_payment: number;
   blocked: boolean;
   welcome_left: number;
+  /** This worker's own free jobs: the welcome jobs plus referral bonuses (7900). */
+  free_jobs?: number;
+  referral_jobs?: number;
   rules: FeeRules;
 }
 

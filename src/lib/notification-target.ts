@@ -64,6 +64,11 @@ export async function openNotification(
   }
 
   // Duleko's fees: the verdict on your payment, or (staff) one to check.
+  // A free job from a referral: where free jobs are counted.
+  if (n.kind === "referral") {
+    void navigate({ to: "/fees" });
+    return;
+  }
   if (n.kind === "fee_payment") {
     void navigate({ to: "/fees" });
     return;

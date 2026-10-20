@@ -10,6 +10,7 @@ import {
   CheckCheck,
   ClipboardCheck,
   ExternalLink,
+  Gift,
   HandCoins,
   IdCard,
   Megaphone,
@@ -80,6 +81,7 @@ const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
   post_moderated: { icon: ShieldAlert, tone: "amber" },
   done_check: { icon: ClipboardCheck, tone: "amber" },
   done_not_yet: { icon: AlertTriangle, tone: "amber" },
+  referral: { icon: Gift, tone: "green" },
 };
 
 export function NotificationsScreen() {

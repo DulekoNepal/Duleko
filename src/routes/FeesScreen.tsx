@@ -172,7 +172,7 @@ export function FeesScreen() {
                     )}
                   </SectionCard>
 
-                  <HowItWorks rules={a.rules} welcomeLeft={a.welcome_left} />
+                  <HowItWorks rules={a.rules} welcomeLeft={a.welcome_left} freeJobs={a.free_jobs ?? a.rules.welcome_jobs} />
                 </div>
 
                 <div className="min-w-0 space-y-3 md:space-y-4">
@@ -300,7 +300,7 @@ export function FeesScreen() {
 }
 
 /** The rule, plainly: the bands, three worked examples, when it's due, and the free first jobs. */
-function HowItWorks({ rules, welcomeLeft }: { rules: FeeRules; welcomeLeft: number }) {
+function HowItWorks({ rules, welcomeLeft, freeJobs }: { rules: FeeRules; welcomeLeft: number; freeJobs: number }) {
   const { t, lang } = useI18n();
   const money = (n: number) => formatMoney(n, lang);
   const pct = (n: number) => formatNumber(n, lang);
@@ -338,14 +338,14 @@ function HowItWorks({ rules, welcomeLeft }: { rules: FeeRules; welcomeLeft: numb
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
           {t("feesStarts", { date: formatDate(rules.starts_on, lang) })}
         </li>
-        {rules.welcome_jobs > 0 && (
+        {freeJobs > 0 && (
           <li className="flex gap-2 font-medium text-green-800">
             <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600" aria-hidden />
-            {welcomeLeft === rules.welcome_jobs
-              ? t("feesWelcomeAll", { total: pct(rules.welcome_jobs) })
+            {welcomeLeft === freeJobs
+              ? t("feesWelcomeAll", { total: pct(freeJobs) })
               : welcomeLeft > 0
-                ? t("feesWelcomeLeft", { count: pct(welcomeLeft), total: pct(rules.welcome_jobs) })
-                : t("feesWelcomeUsed", { total: pct(rules.welcome_jobs) })}
+                ? t("feesWelcomeLeft", { count: pct(welcomeLeft), total: pct(freeJobs) })
+                : t("feesWelcomeUsed", { total: pct(freeJobs) })}
           </li>
         )}
       </ul>

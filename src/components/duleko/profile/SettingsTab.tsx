@@ -1,7 +1,8 @@
 import { lazy, Suspense, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Eye, Info, KeyRound, Languages, LogOut, Mail, MapPin, MessageSquare, Store, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Eye, Gift, Info, KeyRound, Languages, LogOut, Mail, MapPin, MessageSquare, Store, Trash2, Users } from "lucide-react";
 import { AppearancePicker } from "@/components/duleko/AppearancePicker";
+import { InviteFriendsDialog } from "@/components/duleko/profile/InviteFriendsDialog";
 import { CalendarPicker } from "@/components/duleko/CalendarPicker";
 import { ContactPrivacyRows } from "@/components/duleko/ContactPrivacyRows";
 import { DulekoPagesHub } from "@/components/duleko/DulekoPagesHub";
@@ -48,6 +49,7 @@ export function SettingsTab({ onOpenAbout }: { onOpenAbout: () => void }) {
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [changePinOpen, setChangePinOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const accountMobile = signInMobile(user);
 
   const alertPrefs = useQuery({
@@ -134,6 +136,7 @@ export function SettingsTab({ onOpenAbout }: { onOpenAbout: () => void }) {
                 onClick={() => setChangePinOpen(true)}
               />
             )}
+            <ListRow icon={Gift} title={t("referralInvite")} hint={t("referralInviteHint")} onClick={() => setInviteOpen(true)} />
             <ListRow icon={Users} title={t("myFriends")} to="/friends" />
             <ListRow
               icon={Eye}
@@ -168,6 +171,7 @@ export function SettingsTab({ onOpenAbout }: { onOpenAbout: () => void }) {
       </div>
 
       <SignOutDialog open={signOutOpen} onClose={() => setSignOutOpen(false)} />
+      <InviteFriendsDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />
       <DeleteAccountDialog open={deleteOpen} onClose={() => setDeleteOpen(false)} />
       {accountMobile && (
         <ChangePinDialog mobile={accountMobile} open={changePinOpen} onClose={() => setChangePinOpen(false)} />

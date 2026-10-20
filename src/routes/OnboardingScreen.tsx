@@ -17,6 +17,7 @@ import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import {
+  applyReferral,
   createProfile,
   getMyProfile,
   listSkills,
@@ -28,6 +29,13 @@ import {
 } from "@/lib/queries";
 import { MAX_PHOTO_INPUT_BYTES } from "@/lib/image";
 import { signInMobile } from "@/lib/phone-auth";
+import {
+  cleanReferralCode,
+  clearPendingReferral,
+  looksLikeReferralCode,
+  readPendingReferral,
+  referralErrorKey,
+} from "@/lib/referral";
 import { errorMessage } from "@/lib/supabase";
 import { cn, isValidNepaliPhone, normalisePhone } from "@/lib/utils";
 import type { CallPermission, PaymentKind } from "@/lib/types";
@@ -54,6 +62,8 @@ export function OnboardingScreen() {
   const [phone, setPhone] = useState(accountMobile ?? "");
   const [callPermission, setCallPermission] = useState<CallPermission>("accepted_work");
   const [about, setAbout] = useState("");
+  // From an invite link (?ref=), or typed here. Optional.
+  const [referralCode, setReferralCode] = useState(readPendingReferral);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [location, setLocation] = useState<LocationValue>({
@@ -132,12 +142,29 @@ export function OnboardingScreen() {
         }
       }
       if (paymentsFailed) toast(t("onboardPayFailed"), "error");
-      return profile;
+      // Also optional: a code that doesn't go through never stops someone
+      // joining - they can add it from Settings in their first week.
+      let referral: { ok: true; name: string } | { ok: false; reason: string } | null = null;
+      const code = cleanReferralCode(referralCode);
+      if (code) {
+        try {
+          const { referrer_name } = await applyReferral(code);
+          referral = { ok: true, name: referrer_name };
+        } catch (err) {
+          const key = referralErrorKey(err);
+          // Already added by an earlier attempt at this same form.
+          if (key !== "referralErrUsed") referral = { ok: false, reason: key ? t(key) : errorMessage(err) };
+        }
+        clearPendingReferral();
+      }
+      return { profile, referral };
     },
-    onSuccess: async () => {
+    onSuccess: async ({ referral }) => {
       queryClient.invalidateQueries({ queryKey: ["my-profile"] });
       await refreshProfile();
-      toast(t("profileSaved"));
+      if (referral?.ok) toast(t("referralApplied", { name: referral.name }));
+      else if (referral) toast(t("referralErrLater", { reason: referral.reason }), "error");
+      else toast(t("profileSaved"));
     },
     onError: (error) => toast(errorMessage(error), "error"),
   });
@@ -147,6 +174,8 @@ export function OnboardingScreen() {
     if (step === 1) {
       if (fullName.trim().length < 2) next.fullName = t("required");
       if (!isValidNepaliPhone(phone)) next.phone = t("phoneInvalid");
+      const code = cleanReferralCode(referralCode);
+      if (code && !looksLikeReferralCode(code)) next.referral = t("referralErrFormat");
     }
     if (step === 2) {
       if (!location.district) next.district = t("required");
@@ -270,6 +299,22 @@ export function OnboardingScreen() {
                 </Field>
 
                 <CallPermissionChoice value={callPermission} onChange={setCallPermission} />
+
+                <Field
+                  label={`${t("referralFieldLabel")} (${t("optional")})`}
+                  hint={t("referralFieldHint")}
+                  error={errors.referral}
+                >
+                  <Input
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    placeholder="SANJ42"
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    maxLength={16}
+                    className="font-mono tracking-widest"
+                  />
+                </Field>
 
                 <Field label={`${t("aboutYou")} (${t("optional")})`} className="mb-0">
                   <Textarea

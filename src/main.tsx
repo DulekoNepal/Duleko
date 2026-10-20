@@ -9,11 +9,13 @@ import { router } from "@/router";
 import { setupGoogleReturn } from "@/lib/google-sign-in";
 import { setupNativeAndroid } from "@/lib/native-android";
 import { setupTheme } from "@/lib/theme";
+import { captureReferralFromUrl } from "@/lib/referral";
 import "./styles.css";
 
 setupNativeAndroid();
 setupGoogleReturn();
 setupTheme();
+captureReferralFromUrl();
 
 const queryClient = new QueryClient({
   defaultOptions: {

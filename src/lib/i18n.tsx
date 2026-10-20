@@ -8,6 +8,7 @@ import { workStrings } from "./i18n-work";
 import { authStrings } from "./i18n-auth";
 import { kycStrings } from "./i18n-kyc";
 import { callStrings } from "./i18n-calls";
+import { referralStrings } from "./i18n-referral";
 import { setActiveCalendar, storeCalendar, storedCalendar, type CalendarChoice } from "./bs-calendar";
 
 /**
@@ -1392,6 +1393,9 @@ const strings = {
 
   // ---- work agreed over a phone call (see i18n-calls.ts) ---------------
   ...callStrings,
+
+  // ---- referral codes (see i18n-referral.ts) ---------------------------
+  ...referralStrings,
 } as const;
 
 export type StringKey = keyof typeof strings;
