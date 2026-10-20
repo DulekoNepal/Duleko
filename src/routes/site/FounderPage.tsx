@@ -18,6 +18,9 @@ import { TEAM, bioParagraphs, telHref } from "@/components/duleko/site/team";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
+/** The small-caps label above each fact in the side card. */
+const factLabel = "eyebrow-track text-[11px] font-bold uppercase text-slate-400";
+
 /**
  * One team member's own page (/about/<slug>): their portrait and words up
  * top, the full story beside the facts and ways to reach them, then the
@@ -30,6 +33,7 @@ export function FounderPage() {
   if (!member) return <Navigate to="/about" hash="team" replace />;
 
   const name = t(member.nameKey);
+  const firstName = name.split(" ")[0];
   const others = TEAM.filter((m) => m.id !== member.id);
   const [opening, ...rest] = bioParagraphs(t(member.bioKey));
   const AffiliationIcon = member.affiliationIcon;
@@ -57,15 +61,15 @@ export function FounderPage() {
         eyebrow={t(member.roleKey)}
         title={name}
         aside={
-          <div className="relative mx-auto w-full max-w-sm">
+          <div className="relative mx-auto w-full max-w-[15rem] sm:max-w-[17rem]">
             <div
               className="pointer-events-none absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-brand-300/40 to-accent-500/15 blur-2xl"
               aria-hidden
             />
-            <div className="band relative overflow-hidden rounded-[2rem] bg-teal-800 shadow-[0_40px_80px_-40px_rgb(12_60_72/0.6)]">
+            <div className="band relative overflow-hidden rounded-[1.75rem] bg-teal-800 shadow-[0_30px_60px_-30px_rgb(12_60_72/0.6)]">
               <img src={member.image} alt={name} className="aspect-[4/5] w-full object-cover" />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-5 pt-20 text-white">
-                <p className="inline-flex items-start gap-1.5 text-sm text-white/85">
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4 pt-14 text-white">
+                <p className="inline-flex items-start gap-1.5 text-[13px] font-medium leading-snug text-white/90">
                   <AffiliationIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" aria-hidden />
                   {t(member.affiliationKey)}
                 </p>
@@ -84,8 +88,11 @@ export function FounderPage() {
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-16">
           <article>
             <Eyebrow>{t("motivationSubtitle")}</Eyebrow>
+            <h2 className="font-display mt-2 text-2xl font-semibold text-teal-800 sm:text-3xl">
+              {t("founderStoryTitle", { name: firstName })}
+            </h2>
             {opening && (
-              <Lead className="text-slate-700">
+              <Lead className="mt-5 font-medium text-slate-800 sm:text-lg sm:leading-8">
                 <p>{opening}</p>
               </Lead>
             )}
@@ -102,20 +109,20 @@ export function FounderPage() {
             <div className={cn(siteCard, "p-5 sm:p-6")}>
               <dl className="space-y-4">
                 <div>
-                  <dt className="text-sm text-slate-500">{t("teamRole")}</dt>
-                  <dd className="font-display mt-0.5 text-lg font-semibold text-slate-900">{t(member.roleKey)}</dd>
+                  <dt className={factLabel}>{t("teamRole")}</dt>
+                  <dd className="font-display mt-1 text-lg font-semibold text-slate-900">{t(member.roleKey)}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-slate-500">{t("teamAffiliation")}</dt>
-                  <dd className="mt-0.5 font-medium text-slate-800">{t(member.affiliationKey)}</dd>
+                  <dt className={factLabel}>{t("teamAffiliation")}</dt>
+                  <dd className="mt-1 font-semibold leading-snug text-slate-900">{t(member.affiliationKey)}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-slate-500">{t("aboutFocusAreas")}</dt>
+                  <dt className={factLabel}>{t("aboutFocusAreas")}</dt>
                   <dd className="mt-2 flex flex-wrap gap-1.5">
                     {member.skillKeys.map((key) => (
                       <span
                         key={key}
-                        className="rounded-full bg-brand-50 px-3 py-1 text-sm font-medium text-brand-800 ring-1 ring-brand-200"
+                        className="rounded-full bg-brand-50 px-3 py-1 text-[13px] font-semibold text-brand-800 ring-1 ring-brand-200"
                       >
                         {t(key)}
                       </span>
@@ -139,8 +146,8 @@ export function FounderPage() {
                         <Icon className="h-4 w-4" aria-hidden />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-xs text-white/60">{label}</span>
-                        <span className="block truncate font-medium">{value}</span>
+                        <span className="eyebrow-track block text-[11px] font-bold uppercase text-white/55">{label}</span>
+                        <span className="mt-0.5 block truncate font-semibold">{value}</span>
                       </span>
                       <ArrowUpRight className="h-4 w-4 shrink-0 text-white/40 transition-colors group-hover:text-white" aria-hidden />
                     </a>
@@ -168,11 +175,11 @@ export function FounderPage() {
                   src={other.image}
                   alt={t(other.nameKey)}
                   loading="lazy"
-                  className="h-20 w-20 shrink-0 rounded-2xl object-cover sm:h-24 sm:w-24"
+                  className="h-16 w-16 shrink-0 rounded-2xl object-cover sm:h-20 sm:w-20"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="font-display text-lg font-semibold text-slate-900 sm:text-xl">{t(other.nameKey)}</p>
-                  <p className="text-sm text-slate-500">{t(other.roleKey)}</p>
+                  <p className="text-sm font-medium text-slate-500">{t(other.roleKey)}</p>
                   <p className="font-quote mt-2 line-clamp-2 text-[15px] italic leading-snug text-teal-800">
                     “{t(other.quoteKey)}”
                   </p>

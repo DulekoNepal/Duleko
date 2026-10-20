@@ -263,6 +263,7 @@ export const siteStrings = {
   ],
   founderFullProfile: ["Read {name}'s full profile", "{name}को पूरा प्रोफाइल पढ्नुहोस्"],
   founderOtherFounders: ["The rest of the team", "टोलीका अन्य सदस्यहरू"],
+  founderStoryTitle: ["{name}'s story", "{name}को कथा"],
   aboutJumpToMember: ["Jump to a team member", "टोली सदस्यमा जानुहोस्"],
   aboutDulekoProfile: ["Duleko profile", "डुलेको प्रोफाइल"],
   aboutReadFullStory: ["Read full story", "पूरा कथा पढ्नुहोस्"],
