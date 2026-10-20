@@ -166,3 +166,56 @@ export function SiteButton({
 }) {
   return <button type="button" className={siteButtonClass(variant, size, className)} {...props} />;
 }
+
+/**
+ * Google's official "Get it on Google Play" badge, in the page's language
+ * (Google hosts an English and a Nepali one). Their brand rules ask for the
+ * badge as supplied - no recolouring or redrawing - so it's the real image.
+ * The PNG carries a 41px transparent margin around the 564x168 badge inside
+ * its 646x250 canvas; that margin is cropped here so `height` is the
+ * visible badge, and it lines up with buttons beside it.
+ */
+const PLAY_BADGE_SRC = {
+  en: "https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png",
+  ne: "https://play.google.com/intl/en_us/badges/static/images/badges/ne_badge_web_generic.png",
+} as const;
+
+export function GooglePlayBadge({
+  href,
+  lang,
+  label,
+  height = 48,
+  className,
+}: {
+  href: string;
+  lang: "en" | "ne";
+  /** The accessible name, e.g. "Get it on Google Play". */
+  label: string;
+  /** Visible badge height in px (Google's minimum is 28). */
+  height?: number;
+  className?: string;
+}) {
+  const scale = height / 168;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener"
+      className={cn(
+        "inline-block shrink-0 overflow-hidden rounded-[0.6rem] transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500",
+        className,
+      )}
+      style={{ width: Math.round(564 * scale), height }}
+    >
+      <img
+        src={PLAY_BADGE_SRC[lang]}
+        alt={label}
+        width={Math.round(646 * scale)}
+        height={Math.round(250 * scale)}
+        loading="lazy"
+        className="block max-w-none"
+        style={{ margin: `${-41 * scale}px 0 0 ${-41 * scale}px` }}
+      />
+    </a>
+  );
+}

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Capacitor } from "@capacitor/core";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronRight, Compass, Download, LogIn, Play, UserPlus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Compass, LogIn, UserPlus } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import seo from "@/lib/seo-pages.json";
 import { cn, formatNumber } from "@/lib/utils";
@@ -9,7 +9,7 @@ import { NEPALI_TAGLINE, PLAY_STORE_URL, useSiteActions } from "./site/actions";
 import { STORY, type SitePath, type StoryKey } from "./site/nav";
 import { SiteFooter } from "./site/SiteFooter";
 import { SiteHeader } from "./site/SiteHeader";
-import { BrandWatermark, Container, RidgeLines, SiteButton, siteButtonClass } from "./site/ui";
+import { BrandWatermark, Container, GooglePlayBadge, RidgeLines, SiteButton } from "./site/ui";
 
 /**
  * The public website (Home for signed-out visitors, Mission, About, the
@@ -30,7 +30,7 @@ export {
   useSiteActions,
   type SiteActions,
 } from "./site/actions";
-export { BrandWatermark, Container, RidgeLines, SiteButton } from "./site/ui";
+export { BrandWatermark, Container, GooglePlayBadge, RidgeLines, SiteButton } from "./site/ui";
 export type { StoryKey } from "./site/nav";
 
 const IS_NATIVE_APP = Capacitor.isNativePlatform();
@@ -107,25 +107,17 @@ export function SiteLayout({ title, children }: { title?: string; children: Reac
  * quiet "Log in" link for returning people; the closing band at the foot of
  * every page offers Explore + Log in, so Create profile isn't repeated down
  * the page (the header keeps it one tap away throughout). Members just get
- * "Open Duleko". The hero also offers the Android app beside Explore (the
- * closing band has its own Google Play badge).
+ * "Open Duleko". The hero also offers the Google Play badge beside Explore (the
+ * closing band has its own, larger one).
  */
 export function PrimaryCtas({ onDark = false, closing = false }: { onDark?: boolean; closing?: boolean }) {
   const { explore, createProfile, signIn, signedIn } = useSiteActions();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   // The Android app already is the app - no point offering it there.
   const download =
     !closing && !IS_NATIVE_APP ? (
-      <a
-        href={PLAY_STORE_URL}
-        target="_blank"
-        rel="noopener"
-        className={siteButtonClass(onDark ? "ghostLight" : "outline", "lg")}
-      >
-        <Download className="h-5 w-5" aria-hidden />
-        {t("downloadApp")}
-      </a>
+      <GooglePlayBadge href={PLAY_STORE_URL} lang={lang} label={t("playStoreTitle")} height={48} />
     ) : null;
 
   if (signedIn) {
@@ -962,7 +954,7 @@ export function ReadNext({ links }: { links: { to: SitePath; hash?: string; titl
 
 /** Closes Home and every inner page: the big invitation, and the Android app. */
 export function FinalCta() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   return (
     <section className="bg-paper pb-12 pt-2 sm:pb-16">
       <Container>
@@ -992,21 +984,13 @@ export function FinalCta() {
               </p>
               {/* The Android app already is the app - no point offering it there. */}
               {!IS_NATIVE_APP && (
-                <a
+                <GooglePlayBadge
                   href={PLAY_STORE_URL}
-                  target="_blank"
-                  rel="noopener"
-                  className="group inline-flex items-center gap-3 self-start rounded-2xl bg-black/25 px-4 py-3 ring-1 ring-white/15 backdrop-blur transition-colors hover:bg-black/35 lg:self-end"
-                >
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#0c3c48]">
-                    <Play className="h-5 w-5 fill-current" aria-hidden />
-                  </span>
-                  <span className="text-left">
-                    <span className="block text-xs text-white/70">{t("playStoreSub")}</span>
-                    <span className="block font-semibold">{t("playStoreTitle")}</span>
-                  </span>
-                  <ArrowUpRight className="h-4 w-4 text-white/60 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
-                </a>
+                  lang={lang}
+                  label={t("playStoreTitle")}
+                  height={52}
+                  className="self-start lg:self-end"
+                />
               )}
             </div>
           </div>

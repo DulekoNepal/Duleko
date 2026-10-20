@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { Capacitor } from "@capacitor/core";
-import { ArrowUp, ArrowUpRight, Globe, Mail, MapPin, Play } from "lucide-react";
+import { ArrowUp, ArrowUpRight, Globe, Mail, MapPin } from "lucide-react";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { CONTACT_EMAIL, NEPALI_TAGLINE, PLAY_STORE_URL, mailto, useSiteActions } from "./actions";
 import type { SitePath } from "./nav";
-import { Brand, Container } from "./ui";
+import { Brand, Container, GooglePlayBadge } from "./ui";
 
 type FooterLink =
   | { labelKey: StringKey; to: SitePath; hash?: string }
@@ -143,7 +143,7 @@ function FooterColumn({ title, links, wide = false }: { title: string; links: Fo
 }
 
 export function SiteFooter() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   return (
     <footer className="band relative overflow-hidden bg-teal-800 text-white">
       <div
@@ -189,15 +189,13 @@ export function SiteFooter() {
                 duleko.com
               </a>
               {!IS_NATIVE_APP && (
-                <a
+                <GooglePlayBadge
                   href={PLAY_STORE_URL}
-                  target="_blank"
-                  rel="noopener"
-                  className={cn(pillClass, "col-span-2 transition-colors hover:bg-white/15")}
-                >
-                  <Play className="h-4 w-4 shrink-0 fill-current text-brand-300" aria-hidden />
-                  {t("playStoreTitle")}
-                </a>
+                  lang={lang}
+                  label={t("playStoreTitle")}
+                  height={40}
+                  className="col-span-2 mt-1"
+                />
               )}
             </div>
           </div>
