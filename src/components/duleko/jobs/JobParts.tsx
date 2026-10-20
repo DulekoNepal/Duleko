@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Globe, MapPin, Megaphone, Search, UserSearch } from "lucide-react";
+import { Check, ChevronRight, Globe, MapPin, Megaphone, Search, UserSearch } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { SkillIcon } from "@/components/duleko/SkillIcon";
@@ -138,9 +138,9 @@ export function offerCountText(count: number, t: ReturnType<typeof useI18n>["t"]
 /* ------------------------------------------------------------------ */
 
 /**
- * One post in a list (Home, the board, My posts): Hiring or Offering,
- * what it is, where, and the budget or rate, with View. The whole card
- * opens the post; "View" is the visible cue for that, not a second control.
+ * One post in a list (Home, the board, My posts), in rows: Hiring or
+ * Offering and where, the title in full, what's needed, then the budget or
+ * rate beside View. The whole card opens the post; "View" is only the cue.
  */
 export function JobCard({ post, showStatus = false }: { post: JobPost; showStatus?: boolean }) {
   const { t, lang } = useI18n();
@@ -154,30 +154,31 @@ export function JobCard({ post, showStatus = false }: { post: JobPost; showStatu
     <Link
       to="/jobs/$jobId"
       params={{ jobId: post.id }}
-      className="group flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-surface p-3 shadow-sm transition-all duration-200 hover:border-brand-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 sm:p-3.5"
+      className="group flex h-full min-w-0 flex-col rounded-2xl border border-slate-200 bg-surface p-3.5 shadow-sm transition-all duration-200 hover:border-brand-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-        <SkillIcon skillId={post.skill_id ?? "other"} inherit className="h-5 w-5" />
+      <span className="flex min-w-0 items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+          <SkillIcon skillId={post.skill_id ?? "other"} inherit className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex min-w-0 items-center justify-between gap-2">
+            <JobKindTag kind={post.kind} />
+            <span className="inline-flex min-w-0 items-center gap-1 text-xs text-slate-500">
+              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              <span className="truncate">{place}</span>
+            </span>
+          </span>
+          <span className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug text-slate-900">{post.title}</span>
+        </span>
       </span>
 
-      <span className="min-w-0 flex-1">
-        <span className="flex min-w-0 items-center gap-1.5">
-          <JobKindTag kind={post.kind} />
-          <span className="min-w-0 truncate text-sm font-semibold text-slate-900">{post.title}</span>
-        </span>
-        <span className="mt-0.5 line-clamp-2 text-xs leading-snug text-slate-500">
-          {place}
-          {summary && (
-            <>
-              <span className="text-slate-300" aria-hidden>
-                {" · "}
-              </span>
-              {summary}
-            </>
-          )}
-        </span>
-        <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className={cn("text-sm font-semibold", budget ? "text-slate-900" : "text-slate-500")}>
+      {summary && <span className="mt-2 line-clamp-2 text-[13px] leading-snug text-slate-500">{summary}</span>}
+
+      {/* Pinned to the bottom, so cards side by side on the board line up. */}
+      <span className="mt-auto pt-3" />
+      <span className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
+        <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <span className={cn("text-sm font-bold", budget ? "text-slate-900" : "font-semibold text-slate-500")}>
             {budget ?? t(offering ? "serviceRateOpen" : "jobBudgetOpen")}
           </span>
           {showStatus && <JobStateBadge post={post} />}
@@ -185,10 +186,10 @@ export function JobCard({ post, showStatus = false }: { post: JobPost; showStatu
             <span className="text-xs text-slate-500">{offerCountText(post.offer_count, t, lang)}</span>
           )}
         </span>
-      </span>
-
-      <span className="inline-flex h-8 shrink-0 items-center rounded-lg bg-brand-700 px-3 text-xs font-semibold text-white transition-colors group-hover:bg-brand-800">
-        {t("view")}
+        <span className="inline-flex shrink-0 items-center gap-0.5 text-sm font-semibold text-brand-700">
+          {t("view")}
+          <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+        </span>
       </span>
     </Link>
   );
@@ -198,14 +199,22 @@ export function JobCardSkeleton({ count = 2 }: { count?: number }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-surface p-3.5">
-          <div className="skeleton h-10 w-10 shrink-0 rounded-xl" />
-          <div className="min-w-0 flex-1">
-            <div className="skeleton h-4 w-40" />
-            <div className="skeleton mt-2 h-3 w-52 max-w-full" />
-            <div className="skeleton mt-2 h-4 w-28" />
+        <div key={i} className="rounded-2xl border border-slate-200 bg-surface p-3.5">
+          <div className="flex items-start gap-3">
+            <div className="skeleton h-10 w-10 shrink-0 rounded-xl" />
+            <div className="min-w-0 flex-1">
+              <div className="flex justify-between">
+                <div className="skeleton h-4 w-24" />
+                <div className="skeleton h-3 w-16" />
+              </div>
+              <div className="skeleton mt-2 h-4 w-44 max-w-full" />
+            </div>
           </div>
-          <div className="skeleton h-8 w-14 shrink-0 rounded-lg" />
+          <div className="skeleton mt-3 h-3 w-full" />
+          <div className="mt-3 flex justify-between border-t border-slate-100 pt-2.5">
+            <div className="skeleton h-4 w-28" />
+            <div className="skeleton h-4 w-12" />
+          </div>
         </div>
       ))}
     </div>

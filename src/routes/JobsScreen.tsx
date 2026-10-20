@@ -24,6 +24,7 @@ import {
   UserRound,
   UserSearch,
   Users,
+  Wrench,
 } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import {
@@ -47,7 +48,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
-import { Field, Input, Select, Textarea } from "@/components/ui/field";
+import { Field, Input, Textarea } from "@/components/ui/field";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
@@ -118,16 +119,9 @@ export function JobsScreen() {
       <AppHeader
         title={t("jobsTitle")}
         back={<BackButton fallback="/home" />}
-        right={
-          <Button size="sm" aria-label={t("postNew")} onClick={postJob}>
-            <Plus className="h-4 w-4" aria-hidden />
-            <span className="hidden min-[400px]:inline">{t("postNew")}</span>
-          </Button>
-        }
       />
       <PageContainer className="space-y-3">
         {profile && <MyBoardShortcuts profileId={profile.id} />}
-        <BoardKindTabs kind={kind} />
         <OpenJobs kind={kind} onPost={postJob} />
       </PageContainer>
 
@@ -177,14 +171,15 @@ function MyBoardShortcuts({ profileId }: { profileId: string }) {
     },
   ];
 
+  // One strip, two halves: it reads as "your side of the board", apart from browsing.
   return (
-    <div className="grid grid-cols-2 gap-2 md:max-w-xl">
+    <nav aria-label={t("navMyWork")} className="grid grid-cols-2 divide-x divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-surface shadow-sm">
       {items.map(({ key, search, icon: Icon, label, hint, live }) => (
         <Link
           key={key}
           to="/work"
           search={search}
-          className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 bg-surface px-3 py-2 shadow-sm transition-colors hover:border-brand-300"
+          className="group flex min-w-0 items-center gap-2.5 px-3 py-2.5 transition-colors hover:bg-slate-50"
         >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
             <Icon className="h-4 w-4" aria-hidden />
@@ -201,7 +196,7 @@ function MyBoardShortcuts({ profileId }: { profileId: string }) {
           />
         </Link>
       ))}
-    </div>
+    </nav>
   );
 }
 
@@ -214,7 +209,7 @@ function BoardKindTabs({ kind }: { kind: JobPostKind }) {
     { id: "offer", label: "jobsTabOffering", icon: Megaphone },
   ];
   return (
-    <div role="tablist" aria-label={t("jobsTitle")} className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 md:max-w-md">
+    <div role="tablist" aria-label={t("jobsTitle")} className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1">
       {tabs.map(({ id, label, icon: Icon }) => {
         const active = kind === id;
         return (
@@ -226,18 +221,22 @@ function BoardKindTabs({ kind }: { kind: JobPostKind }) {
             role="tab"
             aria-selected={active}
             className={cn(
-              "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold transition-colors",
+              "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-md px-2 text-sm font-semibold transition-colors",
               active ? "bg-surface text-brand-800 shadow-sm" : "text-slate-600 hover:text-slate-900",
             )}
           >
-            <Icon className="h-4 w-4" aria-hidden />
-            {t(label)}
+            <Icon className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="truncate">{t(label)}</span>
           </Link>
         );
       })}
     </div>
   );
 }
+
+const FILTER_CHIP =
+  "inline-flex h-10 min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-surface px-3 text-sm font-semibold " +
+  "text-slate-800 transition-colors hover:border-slate-300";
 
 function OpenJobs({ kind, onPost }: { kind: JobPostKind; onPost: () => void }) {
   const { t, lang } = useI18n();
@@ -260,33 +259,49 @@ function OpenJobs({ kind, onPost }: { kind: JobPostKind; onPost: () => void }) {
     getNextPageParam: (last, all) => (last.length < JOBS_PAGE ? undefined : all.length),
   });
   const items = jobs.data?.pages.flat() ?? [];
+  const chosenSkill = skills.data?.find((s) => s.id === skill);
+  const skillLabel = chosenSkill ? skillName(chosenSkill, lang) : null;
 
   return (
     <>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setPicking(true)}
-          className="inline-flex h-10 min-w-0 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-surface px-3 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:border-slate-300"
-        >
-          <MapPin className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
-          <span className="truncate">{district ? districtLabel(district, lang) : t("homeLocationAll")}</span>
-          <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
-        </button>
-        <Select
-          value={skill ?? ""}
-          onChange={(e) => navigate({ search: (prev) => ({ ...prev, skill: e.target.value || undefined }), replace: true })}
-          aria-label={t("jobsAllSkills")}
-          className="h-10 min-w-0 flex-1 border-slate-200 shadow-sm"
-        >
-          <option value="">{t("jobsAllSkills")}</option>
-          {(skills.data ?? []).map((s) => (
-            <option key={s.id} value={s.id}>
-              {skillName(s, lang)}
-            </option>
-          ))}
-        </Select>
-      </div>
+      {/* What you're browsing: the kind on top, then where and which skill. */}
+      <section aria-label={t("jobsTitle")} className="space-y-2.5 rounded-xl border border-slate-200 bg-surface p-2.5 shadow-sm">
+        <BoardKindTabs kind={kind} />
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setPicking(true)}
+            className={FILTER_CHIP}
+          >
+            <MapPin className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+            <span className="min-w-0 flex-1 truncate text-left">
+              {district ? districtLabel(district, lang) : t("homeLocationAll")}
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+          </button>
+          <label className={cn(FILTER_CHIP, "relative focus-within:border-brand-600")}>
+            <Wrench className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+            <span className="min-w-0 flex-1 truncate">
+              {skill ? (skillLabel ?? t("jobsAllSkills")) : t("jobsAllSkills")}
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+            {/* The native list stays (best on phones); it sits invisibly over the chip. */}
+            <select
+              value={skill ?? ""}
+              onChange={(e) => navigate({ search: (prev) => ({ ...prev, skill: e.target.value || undefined }), replace: true })}
+              aria-label={t("jobsAllSkills")}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            >
+              <option value="">{t("jobsAllSkills")}</option>
+              {(skills.data ?? []).map((s) => (
+                <option key={s.id} value={s.id}>
+                  {skillName(s, lang)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </section>
 
       {jobs.isLoading ? (
         <JobCardSkeleton count={3} />
@@ -312,6 +327,17 @@ function OpenJobs({ kind, onPost }: { kind: JobPostKind; onPost: () => void }) {
         </div>
       )}
       <LoadMore query={jobs} />
+      {/* Posting lives with the list, not the header: the empty state has it, and so does the list's end. */}
+      {items.length > 0 && (
+        <button
+          type="button"
+          onClick={onPost}
+          className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 text-sm font-semibold text-brand-700 transition-colors hover:border-brand-400 hover:bg-brand-50"
+        >
+          <Plus className="h-4 w-4" aria-hidden />
+          {t(kind === "offer" ? "offerYourService" : "postJob")}
+        </button>
+      )}
 
       <AreaPickerDialog
         open={picking}

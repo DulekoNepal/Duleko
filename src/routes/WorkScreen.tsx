@@ -188,44 +188,46 @@ export function WorkScreen() {
           are offered inside the lists, where they apply. */}
       <AppHeader title={t("myWork")} />
       <PageContainer className="space-y-3">
-        <RoleSwitch role={role} onChange={setRole} needs={needs} />
+        {/* Whose side, then which list: one panel, like the job board's. */}
+        <section aria-label={t("myWork")} className="rounded-xl border border-slate-200 bg-surface p-2.5 shadow-sm">
+          <RoleSwitch role={role} onChange={setRole} needs={needs} />
+          <div role="tablist" aria-label={t("myWork")} className="mt-2 grid grid-cols-3 border-b border-slate-200">
+            {tabs.map((tab) => {
+              const selected = view === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => setView(tab.id)}
+                  className={cn(
+                    "-mb-px inline-flex min-w-0 items-center justify-center gap-1.5 border-b-2 px-2 pb-2 pt-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600",
+                    selected
+                      ? "border-brand-600 font-semibold text-slate-900"
+                      : "border-transparent font-medium text-slate-500 hover:text-slate-800",
+                  )}
+                >
+                  <span className="truncate">{t(tab.label)}</span>
+                  {tab.count > 0 && (
+                    <span
+                      className={cn(
+                        "min-w-5 shrink-0 rounded-full px-1.5 py-px text-center text-[11px] font-bold tabular-nums",
+                        tab.urgent ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-600",
+                      )}
+                    >
+                      {formatNumber(tab.count, lang)}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         {role === "worker" && <FeeReminder />}
 
-        <div role="tablist" aria-label={t("myWork")} className="flex gap-1 border-b border-slate-200">
-          {tabs.map((tab) => {
-            const selected = view === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => setView(tab.id)}
-                className={cn(
-                  "-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 pb-2 pt-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600",
-                  selected
-                    ? "border-brand-600 font-semibold text-slate-900"
-                    : "border-transparent font-medium text-slate-500 hover:text-slate-800",
-                )}
-              >
-                {t(tab.label)}
-                {tab.count > 0 && (
-                  <span
-                    className={cn(
-                      "min-w-5 rounded-full px-1.5 py-px text-center text-[11px] font-bold tabular-nums",
-                      tab.urgent ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-600",
-                    )}
-                  >
-                    {formatNumber(tab.count, lang)}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        <div role="tabpanel" className="space-y-4 pt-1">
+        <div role="tabpanel" className="space-y-4">
           {view === "active" && (
             <ActiveView
               role={role}
@@ -268,7 +270,7 @@ function RoleSwitch({
 }) {
   const { t, lang } = useI18n();
   return (
-    <div className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1 md:max-w-md" role="tablist" aria-label={t("myWork")}>
+    <div className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1" role="tablist" aria-label={t("myWork")}>
       {(["worker", "employer"] as const).map((r) => {
         const Icon = r === "worker" ? Wrench : Briefcase;
         const selected = role === r;
@@ -281,7 +283,7 @@ function RoleSwitch({
             aria-selected={selected}
             onClick={() => onChange(r)}
             className={cn(
-              "flex min-w-0 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
+              "flex h-9 min-w-0 items-center justify-center gap-2 rounded-md px-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
               selected ? "bg-surface font-semibold text-slate-900 shadow-sm" : "font-medium text-slate-500 hover:text-slate-800",
             )}
           >

@@ -116,8 +116,11 @@ export function ConversationList({
   typingFrom,
   activeId,
   dense = false,
+  top,
 }: {
   typingFrom: Set<string>;
+  /** Shown first inside the search panel (the Chats/Friends switch), so the controls read as one group. */
+  top?: React.ReactNode;
   /** The thread open beside the list, on desktop. */
   activeId?: string;
   /** Tighter padding for the desktop sidebar. */
@@ -146,57 +149,58 @@ export function ConversationList({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* ---- Search + filter ------------------------------------------ */}
-      <div className={cn("space-y-2 pb-2.5", pad)}>
-        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition-all focus-within:border-brand-400 focus-within:bg-surface focus-within:ring-4 focus-within:ring-brand-100">
-          <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t("searchChats")}
-            aria-label={t("searchChats")}
-            className="h-9 min-w-0 flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              className="rounded-md p-1 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
-              aria-label={t("clearSearch")}
-            >
-              <X className="h-3.5 w-3.5" aria-hidden />
-            </button>
-          )}
-        </div>
-        <div className="flex gap-1.5" role="group" aria-label={t("filters")}>
-          {(["all", "unread"] as const).map((f) => {
-            const selected = filter === f;
-            return (
-              <button
-                key={f}
-                type="button"
-                onClick={() => setFilter(f)}
-                aria-pressed={selected}
-                className={cn(
-                  "inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors",
-                  selected ? "bg-brand-700 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200/70",
-                )}
-              >
-                {f === "all" ? t("filterAll") : t("filterUnread")}
-                {f === "unread" && unreadCount > 0 && (
-                  <span
+      {/* ---- Search + filter: one panel, like the job board's ---------- */}
+      <div className={cn("pb-2.5", pad)}>
+        <div className="@container space-y-2.5 rounded-xl border border-slate-200 bg-surface p-2.5 shadow-sm">
+          {top}
+          {/* Side by side when there's room; stacked in the narrow desktop sidebar. */}
+          <div className="flex flex-col gap-2 @xs:flex-row">
+            <div className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-surface px-3 transition-colors focus-within:border-brand-600">
+              <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t("searchChats")}
+                aria-label={t("searchChats")}
+                className="h-full min-w-0 flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="rounded-md p-1 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
+                  aria-label={t("clearSearch")}
+                >
+                  <X className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              )}
+            </div>
+            <div className="grid shrink-0 grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1" role="group" aria-label={t("filters")}>
+              {(["all", "unread"] as const).map((f) => {
+                const selected = filter === f;
+                return (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setFilter(f)}
+                    aria-pressed={selected}
                     className={cn(
-                      "min-w-4 rounded-full px-1 text-center text-[10px] font-bold leading-4",
-                      selected ? "bg-white/25 text-white" : "bg-brand-600 text-white",
+                      "inline-flex h-8 items-center justify-center gap-1 rounded-md px-2.5 text-xs font-semibold transition-colors",
+                      selected ? "bg-surface text-brand-800 shadow-sm" : "text-slate-600 hover:text-slate-900",
                     )}
                   >
-                    {formatNumber(unreadCount, lang)}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+                    {f === "all" ? t("filterAll") : t("filterUnread")}
+                    {f === "unread" && unreadCount > 0 && (
+                      <span className="min-w-4 rounded-full bg-brand-600 px-1 text-center text-[10px] font-bold leading-4 text-white">
+                        {formatNumber(unreadCount, lang)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -397,46 +401,50 @@ export function ChatSidebar({
       });
   }, [profile?.id, conversations.data, queryClient]);
 
+  // Same segmented switch as the job board's People hiring / Services offered.
+  const divisionTabs = showDivisions ? (
+    <div className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1" role="tablist" aria-label={t("chatsTitle")}>
+      {(["chats", "friends"] as const).map((d) => {
+        const selected = division === d;
+        const Icon = d === "chats" ? MessageCircle : Users;
+        return (
+          <button
+            key={d}
+            type="button"
+            role="tab"
+            aria-selected={selected}
+            onClick={() => setDivision(d)}
+            className={cn(
+              "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-md px-2 text-sm font-semibold transition-colors",
+              selected ? "bg-surface text-brand-800 shadow-sm" : "text-slate-600 hover:text-slate-900",
+            )}
+          >
+            <Icon className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="truncate">{d === "chats" ? t("navChats") : t("myFriends")}</span>
+            {d === "chats" && unread > 0 && (
+              <span className="min-w-4.5 shrink-0 rounded-full bg-brand-600 px-1.5 text-center text-[10px] font-bold leading-[18px] text-white">
+                {formatNumber(unread, lang)}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  ) : null;
+
   return (
     <div className={cn("flex min-h-0 flex-col", className)}>
-      {showDivisions && (
-        <div className="px-4 pb-2.5">
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1" role="tablist" aria-label={t("chatsTitle")}>
-            {(["chats", "friends"] as const).map((d) => {
-              const selected = division === d;
-              const Icon = d === "chats" ? MessageCircle : Users;
-              return (
-                <button
-                  key={d}
-                  type="button"
-                  role="tab"
-                  aria-selected={selected}
-                  onClick={() => setDivision(d)}
-                  className={cn(
-                    "inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[13px] font-semibold transition-all duration-200",
-                    selected ? "bg-surface text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800",
-                  )}
-                >
-                  <Icon className={cn("h-3.5 w-3.5", selected ? "text-brand-700" : "")} aria-hidden />
-                  {d === "chats" ? t("navChats") : t("myFriends")}
-                  {d === "chats" && unread > 0 && (
-                    <span className="min-w-4.5 rounded-full bg-brand-600 px-1.5 text-center text-[10px] font-bold leading-[18px] text-white">
-                      {formatNumber(unread, lang)}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {showDivisions && division === "friends" ? (
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-          <FriendsPanel />
-        </div>
+        <>
+          <div className="px-4 pb-2.5">
+            <div className="rounded-xl border border-slate-200 bg-surface p-2.5 shadow-sm">{divisionTabs}</div>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+            <FriendsPanel />
+          </div>
+        </>
       ) : (
-        <ConversationList typingFrom={typingFrom} activeId={activeId} dense={!showDivisions} />
+        <ConversationList typingFrom={typingFrom} activeId={activeId} dense={!showDivisions} top={divisionTabs} />
       )}
     </div>
   );
