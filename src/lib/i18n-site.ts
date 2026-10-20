@@ -91,8 +91,6 @@ export const siteStrings = {
   footerSafety: ["Safety", "सुरक्षा"],
   footerReportIssue: ["Report an Issue", "समस्याबारे जानकारी दिनुहोस्"],
   footerContactUs: ["Contact Us", "हामीलाई सम्पर्क गर्नुहोस्"],
-  footerSupport: ["Support", "सहयोग"],
-  footerDomain: ["duleko.com", "duleko.com"],
   footerNepal: ["Nepal", "नेपाल"],
   footerRights: ["© {year} Duleko. All rights reserved.", "© {year} डुलेको। सर्वाधिकार सुरक्षित।"],
   footerBuiltBy: ["Built by", "निर्माण:"],

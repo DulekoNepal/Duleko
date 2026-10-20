@@ -12,7 +12,6 @@ type FooterLink =
   | { labelKey: StringKey; href: string; external?: boolean }
   | { labelKey: StringKey; action: "explore" | "create" | "signin" };
 
-// Links shown as a literal (the domain) use a key whose text is the same in both languages.
 const COLUMNS: { id: string; titleKey: StringKey; links: FooterLink[] }[] = [
   {
     id: "platform",
@@ -48,19 +47,8 @@ const COLUMNS: { id: string; titleKey: StringKey; links: FooterLink[] }[] = [
     titleKey: "siteTrust",
     links: [
       { labelKey: "footerSafety", to: "/safety" },
-      { labelKey: "privacyPolicy", to: "/privacy" },
-      { labelKey: "termsOfService", to: "/terms" },
       { labelKey: "registrationPolicyShort", to: "/registration-policy" },
       { labelKey: "footerReportIssue", href: mailto("Report an issue") },
-    ],
-  },
-  {
-    id: "contact",
-    titleKey: "contactUs",
-    links: [
-      { labelKey: "footerContactUs", href: mailto("Hello Duleko") },
-      { labelKey: "footerSupport", href: mailto("Support request") },
-      { labelKey: "footerDomain", href: "https://www.duleko.com", external: true },
     ],
   },
 ];
@@ -68,10 +56,10 @@ const COLUMNS: { id: string; titleKey: StringKey; links: FooterLink[] }[] = [
 const IS_NATIVE_APP = Capacitor.isNativePlatform();
 
 const linkClass =
-  "group inline-flex items-center gap-1 py-0.5 text-left text-sm text-teal-50/70 transition-colors hover:text-white sm:py-0";
+  "group inline-flex min-h-9 items-center gap-1 text-left text-[15px] text-teal-50/70 transition-colors hover:text-white sm:min-h-0 sm:py-0.5 sm:text-sm";
 
 const pillClass =
-  "inline-flex min-w-0 items-center justify-center gap-2 rounded-full bg-white/10 px-3.5 py-2 text-sm text-white/90 ring-1 ring-white/15 sm:justify-start";
+  "inline-flex h-10 min-w-0 items-center justify-center gap-2 rounded-full bg-white/10 px-4 text-sm text-white/90 ring-1 ring-white/15 sm:justify-start";
 
 function FooterLinkItem({ link }: { link: FooterLink }) {
   const { explore, createProfile, signIn } = useSiteActions();
@@ -125,15 +113,12 @@ function FooterLinkRow({ link }: { link: FooterLink }) {
   );
 }
 
-/**
- * A titled column of links. Phones show every column open, two to a row;
- * the `wide` one (Contact) spans the row and lays its links out side by side.
- */
-function FooterColumn({ title, links, wide = false }: { title: string; links: FooterLink[]; wide?: boolean }) {
+/** A titled column of links: two to a row on phones, four across from 640px. */
+function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) {
   return (
-    <div className={cn("min-w-0", wide && "col-span-2 sm:col-span-1")}>
-      <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-white sm:mb-4">{title}</h3>
-      <ul className={cn(wide ? "flex flex-wrap gap-x-5 gap-y-2 sm:block sm:space-y-2.5" : "space-y-2 sm:space-y-2.5")}>
+    <div className="min-w-0">
+      <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-white sm:mb-4">{title}</h3>
+      <ul className="sm:space-y-2.5">
         {links.map((link) => (
           <FooterLinkRow key={link.labelKey} link={link} />
         ))}
@@ -158,71 +143,70 @@ export function SiteFooter() {
         डुलेको
       </span>
 
-      <Container className="relative pt-10 sm:pt-14">
-        <div className="grid gap-6 sm:gap-10 lg:grid-cols-12 lg:gap-12">
-          <div className="lg:col-span-4">
-            <Link to="/" aria-label={t("siteHomeAria")} className="inline-block">
-              <Brand inverted />
-            </Link>
-            <p className="font-display mt-5 max-w-xs text-2xl font-semibold leading-tight text-white">
-              {t("siteTagline")}
-            </p>
-            <p lang="ne" className="mt-2 text-base font-semibold text-brand-300">
-              {NEPALI_TAGLINE}
-            </p>
+      <Container className="relative pt-12 sm:pt-16">
+        {/*
+          Phones: brand, contact, then the links two to a row.
+          Tablets (md): brand left, contact right; the four groups in one row below.
+          Laptops (lg): brand column beside the four link columns.
+        */}
+        <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
+          <div className="md:grid md:grid-cols-2 md:items-end md:gap-10 lg:col-span-4 lg:block">
+            <div>
+              <Link to="/" aria-label={t("siteHomeAria")} className="inline-block">
+                <Brand inverted />
+              </Link>
+              <p className="font-display mt-5 max-w-xs text-2xl font-semibold leading-tight text-white">
+                {t("siteTagline")}
+              </p>
+              <p lang="ne" className="mt-2 text-base font-semibold text-brand-300">
+                {NEPALI_TAGLINE}
+              </p>
+            </div>
 
-            {/* Phones: email across the top, Nepal and the site side by side. */}
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-              <a
-                href={`mailto:${CONTACT_EMAIL}`}
-                className={cn(pillClass, "col-span-2 transition-colors hover:bg-white/15")}
-              >
-                <Mail className="h-4 w-4 shrink-0 text-brand-300" aria-hidden />
-                <span className="truncate">{CONTACT_EMAIL}</span>
-              </a>
-              <span className={pillClass}>
-                <MapPin className="h-4 w-4 shrink-0 text-brand-300" aria-hidden />
-                {t("footerNepal")}
-              </span>
-              <a href="https://www.duleko.com" className={cn(pillClass, "transition-colors hover:bg-white/15")}>
-                <Globe className="h-4 w-4 shrink-0 text-brand-300" aria-hidden />
-                duleko.com
-              </a>
+            <div className="mt-6 space-y-4 md:mt-0 lg:mt-6">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap md:ml-auto md:grid md:max-w-sm lg:ml-0 lg:flex lg:max-w-none">
+                <a
+                  href={`mailto:${CONTACT_EMAIL}`}
+                  className={cn(pillClass, "col-span-2 transition-colors hover:bg-white/15")}
+                >
+                  <Mail className="h-4 w-4 shrink-0 text-brand-300" aria-hidden />
+                  <span className="truncate">{CONTACT_EMAIL}</span>
+                </a>
+                <span className={pillClass}>
+                  <MapPin className="h-4 w-4 shrink-0 text-brand-300" aria-hidden />
+                  {t("footerNepal")}
+                </span>
+                <a href="https://www.duleko.com" className={cn(pillClass, "transition-colors hover:bg-white/15")}>
+                  <Globe className="h-4 w-4 shrink-0 text-brand-300" aria-hidden />
+                  duleko.com
+                </a>
+              </div>
               {!IS_NATIVE_APP && (
-                <GooglePlayBadge
-                  href={PLAY_STORE_URL}
-                  lang={lang}
-                  label={t("playStoreTitle")}
-                  height={40}
-                  className="col-span-2 mt-1"
-                />
+                <div className="flex justify-center sm:justify-start md:justify-end lg:justify-start">
+                  <GooglePlayBadge href={PLAY_STORE_URL} lang={lang} label={t("playStoreTitle")} height={40} />
+                </div>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-4 gap-y-7 border-t border-white/10 pt-7 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-8 sm:border-0 sm:pt-0 lg:col-span-8 lg:grid-cols-5 lg:gap-x-6">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-7 border-t border-white/10 pt-8 sm:grid-cols-4 sm:gap-x-8 lg:col-span-8 lg:border-0 lg:pt-1">
             {COLUMNS.map((column) => (
-              <FooterColumn
-                key={column.id}
-                title={t(column.titleKey)}
-                links={column.links}
-                wide={column.id === "contact"}
-              />
+              <FooterColumn key={column.id} title={t(column.titleKey)} links={column.links} />
             ))}
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col items-center gap-3 border-t border-white/10 pb-[calc(var(--sab)+1.25rem)] pt-5 sm:mt-12 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <p className="text-center text-[13px] leading-relaxed text-teal-50/60 sm:text-left sm:text-sm">
-            <span className="block sm:inline">{t("footerRights", { year: new Date().getFullYear() })}</span>
-            <span className="mx-2 hidden text-white/20 sm:inline" aria-hidden>
+        <div className="mt-10 flex flex-col items-center gap-4 border-t border-white/10 pb-[calc(var(--sab)+1.25rem)] pt-6 sm:mt-14 lg:flex-row lg:justify-between">
+          <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[13px] leading-relaxed text-teal-50/60 sm:text-sm lg:justify-start lg:text-left">
+            <span className="basis-full sm:basis-auto">{t("footerRights", { year: new Date().getFullYear() })}</span>
+            <span className="hidden text-white/20 sm:inline" aria-hidden>
               ·
             </span>
-            <span className="inline-block">{t("footerMadeIn")}</span>
-            <span className="mx-2 text-white/20" aria-hidden>
+            <span>{t("footerMadeIn")}</span>
+            <span className="text-white/20" aria-hidden>
               ·
             </span>
-            <span className="inline-block">
+            <span>
               {t("footerBuiltBy")}{" "}
               <a
                 href="https://guptasanjay.com.np"
@@ -234,7 +218,7 @@ export function SiteFooter() {
               </a>
             </span>
           </p>
-          <div className="flex items-center gap-5 text-sm">
+          <div className="flex shrink-0 items-center gap-5 text-sm">
             <Link to="/privacy" className="text-teal-50/60 transition-colors hover:text-white">
               {t("footerPrivacy")}
             </Link>
@@ -244,7 +228,7 @@ export function SiteFooter() {
             <button
               type="button"
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/15 transition-all hover:-translate-y-0.5 hover:bg-white/20 sm:ml-2"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/15 transition-all hover:-translate-y-0.5 hover:bg-white/20 sm:ml-1"
               aria-label={t("footerBackToTop")}
             >
               <ArrowUp className="h-4 w-4" aria-hidden />
