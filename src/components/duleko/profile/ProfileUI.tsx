@@ -5,6 +5,7 @@ import { SkillTile } from "@/components/duleko/SkillIcon";
 import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { PhotoLightbox } from "@/components/ui/photo-lightbox";
 import { useI18n } from "@/lib/i18n";
 import type { AvailabilityDay, Certificate, Profile, UserSkillDetail } from "@/lib/types";
 import { cn, formatDate, formatMoney, formatNumber, locationShort, skillName } from "@/lib/utils";
@@ -36,10 +37,23 @@ export function HeroCard({ lifted = false, children }: { lifted?: boolean; child
   );
 }
 
+/** The cover photo. Tap it to see it whole - anyone can (the default cover has nothing to open). */
 export function HeroCover({ src, children }: { src?: string | null; children?: React.ReactNode }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
   return (
     <ProfileCover src={src} className="h-28 overflow-hidden sm:rounded-t-3xl @md:h-36 @2xl:h-44 @4xl:h-52">
+      {src && (
+        // Under the camera button (it comes later in the page), over the picture.
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={t("viewCoverPhoto")}
+          className="absolute inset-0 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
+        />
+      )}
       {children}
+      <PhotoLightbox src={open ? (src ?? null) : null} alt={t("viewCoverPhoto")} onClose={() => setOpen(false)} />
     </ProfileCover>
   );
 }
@@ -65,13 +79,29 @@ export function HeroTopRow({
   badge?: React.ReactNode;
   actions?: React.ReactNode;
 }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const avatar = <Avatar name={name} src={src} size={112} className="h-22! w-22! @2xl:h-30! @2xl:w-30!" />;
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="relative -mt-12 shrink-0 rounded-full bg-surface p-1 shadow-md @2xl:-mt-16">
-        <Avatar name={name} src={src} size={112} className="h-22! w-22! @2xl:h-30! @2xl:w-30!" />
+        {/* A real photo opens full screen, for anyone; initials have nothing to show. */}
+        {src ? (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label={t("viewProfilePhoto", { name })}
+            className="block cursor-zoom-in rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+          >
+            {avatar}
+          </button>
+        ) : (
+          avatar
+        )}
         {badge}
       </div>
       {actions}
+      <PhotoLightbox src={open ? (src ?? null) : null} alt={t("viewProfilePhoto", { name })} onClose={() => setOpen(false)} />
     </div>
   );
 }

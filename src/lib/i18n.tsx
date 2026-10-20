@@ -25,6 +25,8 @@ const strings = {
   next: ["Next", "अर्को"],
   done: ["Done", "भयो"],
   close: ["Close", "बन्द गर्नुहोस्"],
+  viewProfilePhoto: ["{name}'s profile photo", "{name}को प्रोफाइल फोटो"],
+  viewCoverPhoto: ["Cover photo", "कभर फोटो"],
   loading: ["Loading…", "लोड हुँदै…"],
   saving: ["Saving…", "सुरक्षित हुँदै…"],
   retry: ["Try again", "फेरि प्रयास गर्नुहोस्"],
