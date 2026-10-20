@@ -95,7 +95,7 @@ export function FounderPage() {
               <img src={dulekoMark} alt="Duleko" className="h-10 w-10 rounded-xl object-cover" />
             </span>
             <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-700 px-4 py-1.5 text-xs font-bold text-white shadow-lg ring-4 ring-paper">
-              {t("teamAttribution")}
+              {t(member.roleKey)}
             </span>
           </div>
         }
