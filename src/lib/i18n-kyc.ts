@@ -21,8 +21,8 @@ export const kycStrings = {
     "प्रमाणित प्रोफाइललाई मानिसहरू बढी विश्वास गर्छन् र छिटो काममा लगाउँछन्। आफ्नो परिचयपत्रको फोटो पठाउनुहोस्, डुलेकोको टोलीले जाँच्नेछ।",
   ],
   kycPrivacy: [
-    "Only Duleko staff can see these photos. They are never shown on your profile.",
-    "यी फोटो डुलेकोको टोलीले मात्र हेर्न सक्छ। तपाईंको प्रोफाइलमा कहिल्यै देखाइँदैन।",
+    "Only you and Duleko staff can see these photos. They are never shown on your profile.",
+    "यी फोटो तपाईं र डुलेकोको टोलीले मात्र हेर्न सक्छ। तपाईंको प्रोफाइलमा कहिल्यै देखाइँदैन।",
   ],
   kycYourId: ["Your ID", "तपाईंको परिचयपत्र"],
   kycNeedOne: ["Add at least one of these", "यीमध्ये कम्तीमा एउटा थप्नुहोस्"],
@@ -108,7 +108,12 @@ export const kycStrings = {
   ],
   kycViewId: ["View ID", "परिचयपत्र हेर्नुहोस्"],
   kycViewIdTitle: ["{name}'s ID", "{name}को परिचयपत्र"],
-  kycViewIdNone: ["No approved ID on file for this profile.", "यो प्रोफाइलको स्वीकृत परिचयपत्र छैन।"],
+  kycViewIdNone: ["This member hasn't sent an ID yet.", "यो सदस्यले अहिलेसम्म परिचयपत्र पठाउनुभएको छैन।"],
+  kycSentWhen: ["Sent {when}", "{when} पठाइएको"],
+  kycStatusPending: ["Waiting", "जाँच हुन बाँकी"],
+  kycTheIdYouSent: ["The ID you sent", "तपाईंले पठाउनुभएको परिचयपत्र"],
+  kycYouSentLastTime: ["What you sent last time", "तपाईंले अघिल्लो पटक पठाउनुभएको"],
+  kycOnlyYouAndStaff: ["Only you and Duleko staff can see these.", "यी तपाईं र डुलेको स्टाफले मात्र देख्न सक्नुहुन्छ।"],
 
   // ---- staff: ID checks (/staff/verify) -------------------------------------
   kycQueueTitle: ["ID checks", "परिचयपत्र जाँच"],

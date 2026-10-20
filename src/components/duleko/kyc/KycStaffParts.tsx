@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { CardSkeleton, ErrorState } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
-import { getApprovedKyc, kycHasBack, kycPhotoUrls } from "@/lib/queries";
+import { Badge } from "@/components/ui/badge";
+import { getLatestKyc, kycHasBack, kycPhotoUrls } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
-import type { KycDocument } from "@/lib/types";
+import type { KycDocument, KycStatus } from "@/lib/types";
 import { cn, relativeTime } from "@/lib/utils";
 
 /**
- * Staff-only pieces for looking at ID photos: the queue (/staff/verify)
- * and, for anyone already verified, the "View ID" window (6600).
+ * Looking at ID photos: staff in the queue (/staff/verify) and in any
+ * member's "View ID" window, and members at the ID they sent themselves.
+ * The photos stay private - only their owner and staff can open them,
+ * through short-lived links (6300).
  */
 
 export type Photo = { src: string; title: string };
@@ -67,8 +70,46 @@ export function KycDocumentList({
 }
 
 /**
- * Staff: the ID that got a verified member their badge - who checked it
- * and when, and the photos (still private, through short-lived links).
+ * The photos of one ID submission, tap to look closely - for the member
+ * who sent it, or for staff. Fetches its own short-lived links.
+ */
+export function KycPhotos({ documents, className }: { documents: KycDocument[]; className?: string }) {
+  const [viewing, setViewing] = useState<Photo | null>(null);
+  const paths = useMemo(
+    () => documents.flatMap((d) => (d.back_path ? [d.front_path, d.back_path] : [d.front_path])),
+    [documents],
+  );
+  const urls = useQuery({
+    queryKey: ["kyc-photo-urls", paths],
+    queryFn: () => kycPhotoUrls(paths),
+    enabled: paths.length > 0,
+    staleTime: 5 * 60_000,
+    // The links last ten minutes; renew them before they run out.
+    refetchInterval: 8 * 60_000,
+  });
+  return (
+    <>
+      <KycDocumentList
+        documents={documents}
+        urls={urls.data}
+        loading={urls.isPending}
+        onOpen={setViewing}
+        className={className}
+      />
+      <PhotoViewer photo={viewing} onClose={() => setViewing(null)} />
+    </>
+  );
+}
+
+const STATUS_LOOK: Record<KycStatus, { label: "kycStatusPending" | "kycStatusApproved" | "kycStatusRejected"; tone: "warning" | "success" | "danger" }> = {
+  pending: { label: "kycStatusPending", tone: "warning" },
+  approved: { label: "kycStatusApproved", tone: "success" },
+  rejected: { label: "kycStatusRejected", tone: "danger" },
+};
+
+/**
+ * Staff: the latest ID a member sent, whatever came of it - waiting,
+ * approved or not accepted - with who checked it and when.
  */
 export function StaffIdDialog({
   profileId,
@@ -83,8 +124,8 @@ export function StaffIdDialog({
   const [viewing, setViewing] = useState<Photo | null>(null);
 
   const kyc = useQuery({
-    queryKey: ["kyc-approved", profileId],
-    queryFn: () => getApprovedKyc(profileId!),
+    queryKey: ["kyc-latest", profileId],
+    queryFn: () => getLatestKyc(profileId!),
     enabled: Boolean(profileId),
   });
   const paths = useMemo(
@@ -110,12 +151,17 @@ export function StaffIdDialog({
           <p className="rounded-xl bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">{t("kycViewIdNone")}</p>
         ) : (
           <>
-            <p className="mb-3 text-xs text-slate-500">
-              {t("kycCheckedBy", {
-                name: kyc.data.reviewer?.full_name ?? "-",
-                when: kyc.data.reviewed_at ? relativeTime(kyc.data.reviewed_at, lang) : "",
-              })}
-            </p>
+            <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <Badge tone={STATUS_LOOK[kyc.data.status].tone}>{t(STATUS_LOOK[kyc.data.status].label)}</Badge>
+              <span>
+                {kyc.data.reviewed_at
+                  ? t("kycCheckedBy", {
+                      name: kyc.data.reviewer?.full_name ?? "-",
+                      when: relativeTime(kyc.data.reviewed_at, lang),
+                    })
+                  : t("kycSentWhen", { when: relativeTime(kyc.data.created_at, lang) })}
+              </span>
+            </div>
             <KycDocumentList
               documents={kyc.data.documents}
               urls={urls.data}

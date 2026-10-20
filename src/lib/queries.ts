@@ -1498,6 +1498,19 @@ export async function getApprovedKyc(profileId: string): Promise<KycQueueItem | 
   return data ? mapKycRow(data) : null;
 }
 
+/** Staff: the latest ID a member sent - waiting, approved or not accepted - with who checked it. */
+export async function getLatestKyc(profileId: string): Promise<KycQueueItem | null> {
+  const { data, error } = await supabase
+    .from("kyc_submissions")
+    .select(KYC_QUEUE_COLUMNS)
+    .eq("profile_id", profileId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? mapKycRow(data) : null;
+}
+
 /** Staff: how many ID checks are waiting. */
 export async function countKycQueue(): Promise<number> {
   const { count, error } = await supabase

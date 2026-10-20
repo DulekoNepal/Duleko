@@ -6,6 +6,7 @@ import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { KYC_DOC_ICON, KYC_DOC_LABEL, useMyKyc, useRejectionText } from "@/components/duleko/kyc/KycParts";
+import { KycPhotos } from "@/components/duleko/kyc/KycStaffParts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton, ErrorState } from "@/components/ui/states";
@@ -86,13 +87,16 @@ export function VerifyScreen() {
               </Link>
             </StatusPanel>
           ) : profile.is_verified ? (
-            <StatusPanel
-              icon={<VerifiedBadge verified size={28} />}
-              title={t("kycVerifiedTitle")}
-              body={t("kycVerifiedBody")}
-            >
-              <BackToProfile />
-            </StatusPanel>
+            <>
+              <StatusPanel
+                icon={<VerifiedBadge verified size={28} />}
+                title={t("kycVerifiedTitle")}
+                body={t("kycVerifiedBody")}
+              >
+                <BackToProfile />
+              </StatusPanel>
+              {latest && latest.documents.length > 0 && <SentDocuments title={t("kycTheIdYouSent")} documents={latest.documents} />}
+            </>
           ) : kyc.isPending ? (
             <CardSkeleton count={2} />
           ) : kyc.isError ? (
@@ -103,30 +107,43 @@ export function VerifyScreen() {
               title={t("kycPendingTitle")}
               body={t("kycPendingBody", { when: relativeTime(latest.created_at, lang) })}
             >
-              <p className="mb-1.5 text-xs font-medium text-slate-500">{t("kycYouSent")}</p>
-              <ul className="flex flex-wrap justify-center gap-1.5">
-                {latest.documents.map((d) => {
-                  const Icon = KYC_DOC_ICON[d.doc_type];
-                  return (
-                    <li key={d.doc_type}>
-                      <Badge tone="brand" className="py-1 text-xs">
-                        <Icon className="h-3.5 w-3.5" aria-hidden />
-                        {t(KYC_DOC_LABEL[d.doc_type])}
-                      </Badge>
-                    </li>
-                  );
-                })}
-              </ul>
-              <div className="mt-4">
-                <BackToProfile />
-              </div>
+              <BackToProfile />
             </StatusPanel>
           ) : (
-            <KycForm rejected={latest?.status === "rejected" ? latest : null} />
+            <>
+              <KycForm
+                rejected={latest?.status === "rejected" ? latest : null}
+                // After a "no": what you sent, right under the reason, so you can see what to fix.
+                lastSent={
+                  latest?.status === "rejected" && latest.documents.length > 0 ? (
+                    <SentDocuments title={t("kycYouSentLastTime")} documents={latest.documents} />
+                  ) : null
+                }
+              />
+            </>
+          )}
+          {/* While it waits: the photos you sent. */}
+          {!profile.staff_role && !profile.is_verified && latest?.status === "pending" && latest.documents.length > 0 && (
+            <SentDocuments title={t("kycYouSent")} documents={latest.documents} />
           )}
         </div>
       </PageContainer>
     </>
+  );
+}
+
+/** The member's own ID photos - private to them and Duleko staff. */
+function SentDocuments({ title, documents }: { title: string; documents: KycSubmission["documents"] }) {
+  const { t } = useI18n();
+  return (
+    <section className="animate-in-up rounded-2xl border border-slate-200 bg-surface p-4 shadow-sm">
+      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+      <p className="mb-3 mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
+        <Lock className="h-3 w-3 shrink-0" aria-hidden />
+        {t("kycOnlyYouAndStaff")}
+      </p>
+      <KycPhotos documents={documents} />
+    </section>
   );
 }
 
@@ -162,7 +179,14 @@ function StatusPanel({
 
 // ---------------------------------------------------------------------
 
-function KycForm({ rejected }: { rejected: Pick<KycSubmission, "rejection_code" | "rejection_note"> | null }) {
+function KycForm({
+  rejected,
+  lastSent,
+}: {
+  rejected: Pick<KycSubmission, "rejection_code" | "rejection_note"> | null;
+  /** The photos sent last time, shown under the reason they weren't accepted. */
+  lastSent?: React.ReactNode;
+}) {
   const { t, lang } = useI18n();
   const { user, profile } = useSession();
   const { toast } = useToast();
@@ -216,6 +240,7 @@ function KycForm({ rejected }: { rejected: Pick<KycSubmission, "rejection_code" 
           </div>
         </section>
       )}
+      {lastSent}
 
       <section className="rounded-2xl border border-slate-200 bg-surface p-3.5 shadow-sm sm:p-4">
         <div className="flex gap-3">

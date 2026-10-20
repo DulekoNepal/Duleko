@@ -511,11 +511,10 @@ export function WorkerScreen() {
                       )}
                       {showModeration && (
                         <>
+                          {/* Staff can look at whatever ID a member sent, verified or not. */}
+                          <MenuItem icon={IdCard} label={t("kycViewId")} onClick={menuAction(() => setViewingId(true))} />
                           {w.is_verified ? (
-                            <>
-                              <MenuItem icon={IdCard} label={t("kycViewId")} onClick={menuAction(() => setViewingId(true))} />
-                              <MenuItem icon={ShieldOff} label={t("unverifyProfile")} onClick={menuAction(() => unverify.mutate())} />
-                            </>
+                            <MenuItem icon={ShieldOff} label={t("unverifyProfile")} onClick={menuAction(() => unverify.mutate())} />
                           ) : (
                             // The badge is only given by approving an ID check.
                             <MenuItem icon={IdCard} label={t("kycQueueTitle")} onClick={menuAction(() => navigate({ to: "/staff/verify" }))} />
@@ -851,7 +850,7 @@ export function WorkerScreen() {
             reporterProfileId={me.id}
             reportedProfileId={w.id}
           />
-          {showModeration && w.is_verified && (
+          {showModeration && (
             <StaffIdDialog profileId={viewingId ? w.id : null} name={w.full_name} onClose={() => setViewingId(false)} />
           )}
           {canSuspend && (
