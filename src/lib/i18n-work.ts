@@ -10,17 +10,17 @@ export const workStrings = {
   workNeedsYou: ["Needs you", "तपाईंले गर्नुपर्ने"],
   workInProgress: ["In progress", "चलिरहेको"],
   workAllCaughtUp: ["Nothing needs you right now.", "अहिले तपाईंले गर्नुपर्ने केही छैन।"],
-  workNeedsCount: ["{count} need you", "{count} वटा तपाईंलाई पर्खँदै"],
+  workNeedsCount: ["{count} need you", "{count} वटा तपाईंको पर्खाइमा"],
   workFindPeople: ["Find people", "मानिस खोज्नुहोस्"],
   workEmptyWorkerTitle: ["No active work right now", "अहिले कुनै सक्रिय काम छैन"],
   workEmptyWorkerHint: [
     "Requests from people who want to hire you show up here. Find work on the board and send your price.",
-    "तपाईंलाई काममा लगाउन चाहनेहरूका अनुरोध यहाँ देखिन्छन्। बोर्डमा काम खोजेर आफ्नो मूल्य पठाउनुहोस्।",
+    "तपाईंलाई काममा लगाउन चाहनेहरूका अनुरोध यहाँ देखिन्छन्। काम पाटीमा काम खोजेर आफ्नो मूल्य पठाउनुहोस्।",
   ],
   workEmptyEmployerTitle: ["Nobody is working for you right now", "अहिले तपाईंको लागि कसैले काम गरिरहेको छैन"],
   workEmptyEmployerHint: [
     "Post a job to get offers, or find a skilled person and send them a request.",
-    "प्रस्ताव पाउन काम पोस्ट गर्नुहोस्, वा सीपालु मानिस खोजेर अनुरोध पठाउनुहोस्।",
+    "प्रस्ताव पाउन काम पोस्ट गर्नुहोस् वा सिपालु मानिस खोजेर अनुरोध पठाउनुहोस्।",
   ],
   workHistoryEmpty: ["Nothing finished yet", "अहिलेसम्म कुनै काम सकिएको छैन"],
   workHistoryEmptyHint: [
@@ -29,7 +29,7 @@ export const workStrings = {
   ],
   workChooseOffersOne: ["1 offer to choose from", "छान्न १ प्रस्ताव"],
   workChooseOffers: ["{count} offers to choose from", "छान्न {count} प्रस्ताव"],
-  workYouRated: ["You rated {rating}", "तपाईंको रेटिङ {rating}"],
+  workYouRated: ["You rated {rating}", "तपाईंले {rating} रेटिङ दिनुभयो"],
   // Shortcuts between the board and My Work
   boardOffersWaiting: ["{count} waiting", "{count} प्रतीक्षामा"],
   boardPostsOpen: ["{count} open", "{count} खुला"],
@@ -43,15 +43,15 @@ export const workStrings = {
   stepLineReplyWorker: ["New request", "नयाँ अनुरोध"],
   stepLineReplyWorkerCounter: ["New price from {name}", "{name}को नयाँ मूल्य"],
   stepLineReplyEmployer: ["New price from {name}", "{name}को नयाँ मूल्य"],
-  stepLineWaitReply: ["Waiting for {name}", "{name}को जवाफ पर्खँदै"],
+  stepLineWaitReply: ["Waiting for {name}", "{name}को जवाफको पर्खाइमा"],
   stepLineConfirm: ["{name} accepted", "{name}ले स्वीकार गर्नुभयो"],
-  stepLineWaitConfirm: ["Waiting for {name} to confirm", "{name}ले पक्का गर्ने पर्खँदै"],
+  stepLineWaitConfirm: ["Waiting for {name} to confirm", "{name}ले पक्का गर्ने पर्खाइमा"],
   stepLineUpcoming: ["Booked", "बुक भयो"],
   stepLineMarkDone: ["Is the work finished?", "काम सकियो?"],
   stepLineReview: ["Completed · how did it go?", "सम्पन्न · काम कस्तो भयो?"],
   actReply: ["Reply", "जवाफ"],
   actConfirm: ["Confirm", "पक्का"],
-  actMarkDone: ["Mark done", "सकियो"],
+  actMarkDone: ["Mark done", "सम्पन्न"],
   actRate: ["Rate", "रेटिङ"],
 
   // ---- The job sheet: what's happening, in one banner -------------------
@@ -59,14 +59,14 @@ export const workStrings = {
   bannerReplyWorkerCounterTitle: ["{name} sent a new price", "{name}ले नयाँ मूल्य पठाउनुभयो"],
   bannerReplyWorkerHint: [
     "Accept the price, offer your own, or decline.",
-    "मूल्य स्वीकार गर्नुहोस्, आफ्नो मूल्य भन्नुहोस्, वा अस्वीकार गर्नुहोस्।",
+    "मूल्य स्वीकार गर्नुहोस्, आफ्नो मूल्य भन्नुहोस् वा अस्वीकार गर्नुहोस्।",
   ],
   bannerReplyEmployerTitle: ["{name} asked for another price", "{name}ले अर्को मूल्य माग्नुभयो"],
   bannerReplyEmployerHint: [
     "Agree to it, or offer another. Once you agree, they accept to go ahead.",
-    "त्यसमा सहमत हुनुहोस्, वा अर्को मूल्य भन्नुहोस्। तपाईं सहमत भएपछि अगाडि बढ्न उहाँले स्वीकार गर्नुहुन्छ।",
+    "त्यसमा सहमत हुनुहोस् वा अर्को मूल्य भन्नुहोस्। तपाईं सहमत भएपछि अगाडि बढ्न उहाँले स्वीकार गर्नुहुन्छ।",
   ],
-  bannerWaitReplyTitle: ["Waiting for {name}", "{name}को जवाफ पर्खँदै"],
+  bannerWaitReplyTitle: ["Waiting for {name}", "{name}को जवाफको पर्खाइमा"],
   bannerWaitReplyWorkerHint: [
     "You asked for {amount}. They can agree or offer another price.",
     "तपाईंले {amount} माग्नुभयो। उहाँ सहमत हुन वा अर्को मूल्य भन्न सक्नुहुन्छ।",
@@ -83,9 +83,9 @@ export const workStrings = {
   bannerWaitConfirmTitle: ["You accepted", "तपाईंले स्वीकार गर्नुभयो"],
   bannerWaitConfirmHint: [
     "Waiting for {name} to confirm the booking. You can call each other now.",
-    "{name}ले बुकिङ पक्का गर्ने पर्खँदै। अब एकअर्कालाई फोन गर्न सक्नुहुन्छ।",
+    "{name}ले बुकिङ पक्का गर्ने पर्खाइमा। अब एकअर्कालाई फोन गर्न सक्नुहुन्छ।",
   ],
-  bannerUpcomingTitle: ["Booked for {date}", "{date} को लागि बुक भयो"],
+  bannerUpcomingTitle: ["Booked for {date}", "{date}को लागि बुक भयो"],
   bannerUpcomingHint: [
     "Contact each other to arrange the day. Mark it done once it's finished.",
     "दिन मिलाउन एकअर्कालाई सम्पर्क गर्नुहोस्। काम सकिएपछि सम्पन्न चिन्ह लगाउनुहोस्।",
@@ -121,21 +121,21 @@ export const workStrings = {
   sheetTheyHire: ["Hiring you", "तपाईंलाई काममा लगाउँदै"],
   sheetTheyWork: ["Doing the work", "काम गर्ने व्यक्ति"],
   sheetWithdrawRequest: ["Withdraw request", "अनुरोध फिर्ता लिनुहोस्"],
-  actAgreeAt: ["Agree to {amount}", "{amount} मा सहमत"],
+  actAgreeAt: ["Agree to {amount}", "{amount}मा सहमत"],
   actAcceptAt: ["Accept {amount}", "{amount} स्वीकार"],
   actConfirmBooking: ["Confirm booking", "बुकिङ पक्का गर्नुहोस्"],
   actMarkDoneFull: ["Mark as done", "सम्पन्न भयो"],
   actRateName: ["Rate {name}", "{name}लाई रेटिङ दिनुहोस्"],
   offerAnotherPrice: ["Offer another price", "अर्को मूल्य भन्नुहोस्"],
-  priceTrail: ["How the price moved", "मूल्य कसरी सर्‍यो"],
+  priceTrail: ["How the price moved", "मूल्य कसरी तय हुँदै गयो"],
 
   // Confirmations
   declineTitle: ["Decline this request?", "यो अनुरोध अस्वीकार गर्ने?"],
   declineBody: [
     "{name} will be told you can't take it. This can't be undone.",
-    "तपाईं यो काम लिन सक्नुहुन्न भनेर {name}लाई जानकारी दिइनेछ। यो फिर्ता हुँदैन।",
+    "तपाईं यो काम लिन सक्नुहुन्न भनेर {name}लाई जानकारी दिइनेछ। यसलाई फिर्ता गर्न सकिँदैन।",
   ],
-  markDoneTitle: ["Mark this job as done?", "यो काम सम्पन्न भयो भन्ने?"],
+  markDoneTitle: ["Mark this job as done?", "यो काम सम्पन्न भयो भनी चिन्ह लगाउने?"],
   markDoneBody: [
     "Do this once the work is finished. The job closes, and you can both leave a review.",
     "काम सकिएपछि मात्र गर्नुहोस्। काम बन्द हुन्छ, अनि दुवैले समीक्षा दिन सक्नुहुन्छ।",
@@ -148,5 +148,5 @@ export const workStrings = {
   toastCompleted: ["Marked as done", "सम्पन्न भयो"],
   toastCancelled: ["Job cancelled", "काम रद्द भयो"],
   toastCounterSent: ["New price sent to {name}", "{name}लाई नयाँ मूल्य पठाइयो"],
-  toastAgreed: ["You agreed to {amount}. {name} can accept now.", "तपाईं {amount} मा सहमत हुनुभयो। अब {name}ले स्वीकार गर्न सक्नुहुन्छ।"],
+  toastAgreed: ["You agreed to {amount}. {name} can accept now.", "तपाईं {amount}मा सहमत हुनुभयो। अब {name}ले स्वीकार गर्न सक्नुहुन्छ।"],
 } as const;

@@ -161,7 +161,7 @@ export function relativeTime(iso: string, lang: Lang): string {
   const then = new Date(iso).getTime();
   const mins = Math.max(0, Math.round((Date.now() - then) / 60000));
   const pick = (en: string, ne: string) => (lang === "ne" ? ne : en);
-  if (mins < 1) return pick("just now", "अहिले");
+  if (mins < 1) return pick("just now", "भर्खरै");
   if (mins < 60) return `${formatNumber(mins, lang)} ${pick("min ago", "मिनेट अघि")}`;
   const hours = Math.round(mins / 60);
   if (hours < 24) return `${formatNumber(hours, lang)} ${pick("hr ago", "घण्टा अघि")}`;

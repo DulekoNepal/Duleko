@@ -6,10 +6,10 @@
  */
 export const profileStrings = {
   // ---- header ----------------------------------------------------------
-  profileJoined: ["Joined {date}", "{date} देखि सदस्य"],
+  profileJoined: ["Joined {date}", "{date}देखि सदस्य"],
   profileNoPlace: ["Location not set", "स्थान राखिएको छैन"],
   profileAvailOnTitle: ["Available for work", "काम गर्न उपलब्ध"],
-  profileAvailOffTitle: ["Not taking work", "अहिले काम लिँदैन"],
+  profileAvailOffTitle: ["Not taking work", "अहिले नयाँ काम लिइँदैन"],
   profileStaffMenu: ["Staff", "स्टाफ"],
 
   // ---- overview --------------------------------------------------------
@@ -39,7 +39,7 @@ export const profileStrings = {
   ],
   profileAboutPlaceholder: [
     "What work do you do, for how long, and what are you best at?",
-    "तपाईं के काम गर्नुहुन्छ, कति वर्षदेखि, र केमा सबैभन्दा राम्रो हुनुहुन्छ?",
+    "तपाईं के काम गर्नुहुन्छ, कति वर्षदेखि गर्दै हुनुहुन्छ र कुन काममा सबैभन्दा सिपालु हुनुहुन्छ?",
   ],
   profileNameRequired: ["Enter your name.", "आफ्नो नाम लेख्नुहोस्।"],
   profileAgeRule: ["Enter an age from 18 to 100.", "१८ देखि १०० सम्मको उमेर लेख्नुहोस्।"],
@@ -47,7 +47,7 @@ export const profileStrings = {
   profileSectionPersonal: ["About you", "तपाईंको बारेमा"],
   profileSkillsPickHint: [
     "Tap every kind of work you do.",
-    "तपाईंले गर्ने हरेक कामलाई थिच्नुहोस्।",
+    "तपाईंले गर्ने हरेक कामको प्रकारमा थिच्नुहोस्।",
   ],
   profileRatesTitle: ["Your rates", "तपाईंको दर"],
   profileSkillsSelected: ["{count} selected", "{count} छानिएको"],
@@ -69,6 +69,6 @@ export const profileStrings = {
   workerPreviewNote: ["This is how others see your profile.", "अरूले तपाईंको प्रोफाइल यसरी देख्छन्।"],
   workerRemoveFriendBody: [
     "You'll no longer be friends with {name}. You can still chat.",
-    "{name} सँग अब मित्रता रहने छैन। कुराकानी भने गर्न सक्नुहुन्छ।",
+    "{name}सँग अब तपाईं साथी रहनुहुने छैन। कुराकानी भने गर्न सक्नुहुन्छ।",
   ],
 } as const;

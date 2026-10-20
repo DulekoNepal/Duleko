@@ -69,7 +69,7 @@ export const authStrings = {
   currentPin: ["Current PIN", "हालको पिन"],
   newPin: ["New PIN", "नयाँ पिन"],
   newPinAgain: ["New PIN again", "नयाँ पिन फेरि"],
-  pinSameAsOld: ["Choose a PIN different from your current one.", "हालको भन्दा फरक पिन छान्नुहोस्।"],
+  pinSameAsOld: ["Choose a PIN different from your current one.", "हालकोभन्दा फरक पिन छान्नुहोस्।"],
   pinChanged: ["PIN changed.", "पिन बदलियो।"],
   wrongPin: ["That PIN is wrong.", "त्यो पिन गलत छ।"],
   deleteAccountPinLabel: ["Enter your PIN to confirm", "पुष्टि गर्न आफ्नो पिन हाल्नुहोस्"],

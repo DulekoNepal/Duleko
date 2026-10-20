@@ -17,7 +17,7 @@ export const jobStrings = {
   homeLocationAria: ["Area: {place}. Change", "क्षेत्र: {place}। बदल्नुहोस्"],
   homePostTitle: ["Need work done?", "काम गराउनु छ?"],
   homePostHint: ["Post a job and get offers nearby.", "काम पोस्ट गर्नुहोस् र नजिकैबाट प्रस्ताव पाउनुहोस्।"],
-  homeNearbyTitle: ["Nearby Skilled People", "नजिकैका सीपालु मानिस"],
+  homeNearbyTitle: ["Nearby Skilled People", "नजिकैका सिपालु मानिस"],
   homeNearbyVerified: ["Verified profiles", "प्रमाणित प्रोफाइल"],
   homeNearbyEmptyVerified: ["No verified people here yet.", "यहाँ अहिलेसम्म प्रमाणित मानिस छैनन्।"],
   homeRequestsTitle: ["People Hiring", "कामदार खोज्नेहरू"],
@@ -25,11 +25,11 @@ export const jobStrings = {
   homeOffersEmpty: ["No services posted here yet", "यहाँ अहिलेसम्म सेवा पोस्ट गरिएको छैन"],
   homeOffersEmptyHint: [
     "Post what you do, so people nearby who need it can find you.",
-    "आफू के गर्नुहुन्छ पोस्ट गर्नुहोस्, ताकि चाहिनेहरूले नजिकैबाट भेट्टाऊन्।",
+    "आफू के गर्नुहुन्छ पोस्ट गर्नुहोस्, जसले गर्दा नजिकका चाहिनेहरूले तपाईंलाई भेट्टाउन सकून्।",
   ],
   homeOffersElsewhere: [
     "Nothing in {place} yet - the newest across Nepal:",
-    "{place} मा अहिलेसम्म छैन - नेपालभरका नयाँ:",
+    "{place}मा अहिलेसम्म छैन - नेपालभरका नयाँ:",
   ],
   offerYourService: ["Offer your service", "आफ्नो सेवा पोस्ट गर्नुहोस्"],
   homeRequestsEmpty: ["No work requests here yet", "यहाँ अहिलेसम्म कामको अनुरोध छैन"],
@@ -39,11 +39,11 @@ export const jobStrings = {
   ],
   homeRequestsElsewhere: [
     "Nothing in {place} yet - the newest across Nepal:",
-    "{place} मा अहिलेसम्म छैन - नेपालभरका नयाँ:",
+    "{place}मा अहिलेसम्म छैन - नेपालभरका नयाँ:",
   ],
   homeMoreSkills: ["More", "थप"],
   homeFindWork: ["Find work", "काम खोज्नुहोस्"],
-  homeInPlace: ["In {place}", "{place} मा"],
+  homeInPlace: ["In {place}", "{place}मा"],
   homeAcrossNepal: ["Across Nepal", "नेपालभर"],
   homeScrollBack: ["Show previous", "अघिल्ला देखाउनुहोस्"],
   homeScrollForward: ["Show more", "थप देखाउनुहोस्"],
@@ -62,7 +62,7 @@ export const jobStrings = {
   jobsOfferingEmpty: ["No services offered here yet", "यहाँ अहिलेसम्म सेवा पोस्ट गरिएको छैन"],
   jobsOfferingEmptyHint: [
     "Try another area or skill, or post a service you offer.",
-    "अर्को क्षेत्र वा सीप हेर्नुहोस्, वा आफूले दिने सेवा पोस्ट गर्नुहोस्।",
+    "अर्को क्षेत्र वा सीप हेर्नुहोस् वा आफूले दिने सेवा पोस्ट गर्नुहोस्।",
   ],
   jobKindHire: ["Hiring", "कामदार चाहियो"],
   jobKindOffer: ["Offering", "सेवा उपलब्ध"],
@@ -73,12 +73,12 @@ export const jobStrings = {
   jobsEmpty: ["No open work requests", "खुला कामको अनुरोध छैन"],
   jobsEmptyHint: [
     "Try another area or skill, or post what you need done.",
-    "अर्को क्षेत्र वा सीप हेर्नुहोस्, वा आफ्नो काम पोस्ट गर्नुहोस्।",
+    "अर्को क्षेत्र वा सीप हेर्नुहोस् वा आफ्नो काम पोस्ट गर्नुहोस्।",
   ],
   jobsMineEmpty: ["You haven't posted any work yet", "तपाईंले अहिलेसम्म काम पोस्ट गर्नुभएको छैन"],
   jobsMineEmptyHint: [
     "Post a job and workers nearby with that skill will send you their price.",
-    "काम पोस्ट गर्नुहोस्, र त्यो सीप भएका नजिकैका कामदारले आफ्नो मूल्य पठाउनेछन्।",
+    "काम पोस्ट गर्नुहोस् र त्यो सीप भएका नजिकैका कामदारले आफ्नो मूल्य पठाउनेछन्।",
   ],
   jobsOffersEmpty: ["You haven't sent any offers yet", "तपाईंले अहिलेसम्म प्रस्ताव पठाउनुभएको छैन"],
   jobsOffersEmptyHint: [
@@ -96,7 +96,7 @@ export const jobStrings = {
   jobNotFound: ["This work request isn't available", "यो कामको अनुरोध उपलब्ध छैन"],
   jobNotFoundHint: [
     "It may have been closed, or the link is wrong.",
-    "यो बन्द भएको हुन सक्छ, वा लिङ्क गलत छ।",
+    "यो बन्द भएको हुन सक्छ वा लिङ्क गलत छ।",
   ],
   jobBudget: ["Budget", "बजेट"],
   jobBudgetOpen: ["Open to offers", "प्रस्ताव खुला"],
@@ -130,7 +130,7 @@ export const jobStrings = {
   jobOfferSent: ["Offer sent", "प्रस्ताव पठाइयो"],
   jobOfferUpdated: ["Offer updated", "प्रस्ताव बदलियो"],
   jobOfferWithdrawn: ["Offer withdrawn", "प्रस्ताव फिर्ता लिइयो"],
-  jobOfferPendingNote: ["Waiting for {name} to choose.", "{name}ले छान्ने प्रतीक्षामा।"],
+  jobOfferPendingNote: ["Waiting for {name} to choose.", "{name}ले छान्नुहुने पर्खाइमा।"],
   jobOfferAcceptedNote: [
     "{name} chose your offer. Accept the request in My Work to go ahead.",
     "{name}ले तपाईंको प्रस्ताव छान्नुभयो। अगाडि बढ्न मेरो काममा अनुरोध स्वीकार गर्नुहोस्।",
@@ -157,7 +157,7 @@ export const jobStrings = {
   jobChooseTitle: ["Choose {name}?", "{name}लाई छान्ने?"],
   jobChooseBody: [
     "{name} gets a work request from you for {amount}. Once they accept it, you confirm, and you can see each other's phone numbers. Everyone else who offered is told.",
-    "{name}लाई तपाईंबाट {amount} को कामको अनुरोध जान्छ। उहाँले स्वीकार गरेपछि तपाईं पक्का गर्नुहुन्छ, अनि एकअर्काको फोन नम्बर देख्न सकिन्छ। प्रस्ताव पठाउने अरू सबैलाई जानकारी दिइन्छ।",
+    "{name}लाई तपाईंबाट {amount}को कामको अनुरोध जान्छ। उहाँले स्वीकार गरेपछि तपाईं पक्का गर्नुहुन्छ, अनि एकअर्काको फोन नम्बर देख्न सकिन्छ। प्रस्ताव पठाउने अरू सबैलाई जानकारी दिइन्छ।",
   ],
   jobChosen: ["Request sent to {name}", "{name}लाई अनुरोध पठाइयो"],
   jobChosenWorker: ["You chose {name}", "तपाईंले {name}लाई छान्नुभयो"],
@@ -171,7 +171,7 @@ export const jobStrings = {
   ],
   jobPostClosed: ["Post closed", "पोस्ट बन्द भयो"],
   jobMessage: ["Message", "सन्देश"],
-  jobOfferWithdrawnShort: ["Withdrew", "फिर्ता लिए"],
+  jobOfferWithdrawnShort: ["Withdrew", "फिर्ता लिइयो"],
   jobOfferNotChosenShort: ["Not chosen", "छानिएन"],
   jobOfferWaitingShort: ["Waiting", "प्रतीक्षामा"],
   jobOfferChosenShort: ["Chosen", "छानियो"],
@@ -192,7 +192,7 @@ export const jobStrings = {
   serviceViewProfile: ["View profile", "प्रोफाइल हेर्नुहोस्"],
   serviceYoursHint: [
     "People who need this can message you, or call you if your call setting allows it.",
-    "यो चाहिनेहरूले तपाईंलाई सन्देश पठाउन, वा फोन सेटिङले दिए फोन गर्न सक्छन्।",
+    "यो चाहिनेहरूले तपाईंलाई सन्देश पठाउन वा फोन सेटिङले दिए फोन गर्न सक्छन्।",
   ],
 
   // ---- Posting ---------------------------------------------------------
@@ -220,7 +220,7 @@ export const jobStrings = {
   ],
   postOfferPublicNote: [
     "Anyone can see this post for 30 days. People who need it message you, or call you if your call setting allows it.",
-    "यो पोस्ट ३० दिनसम्म जसले पनि देख्न सक्छ। चाहिनेहरूले सन्देश पठाउँछन्, वा फोन सेटिङले दिए फोन गर्छन्।",
+    "यो पोस्ट ३० दिनसम्म जसले पनि देख्न सक्छ। चाहिनेहरूले सन्देश पठाउँछन् वा फोन सेटिङले दिए फोन गर्छन्।",
   ],
   postOfferSubmit: ["Post service", "सेवा पोस्ट गर्नुहोस्"],
   postOfferPosted: ["Your service is on the board.", "तपाईंको सेवा सूचीमा राखियो।"],
@@ -240,10 +240,10 @@ export const jobStrings = {
   ],
   jobPlaceMine: [
     "Exact place - only you and the worker you choose see this",
-    "ठ्याक्कै ठाउँ - तपाईं र तपाईंले छानेको कामदारले मात्र देख्नुहुन्छ",
+    "ठ्याक्कै ठाउँ - यो तपाईं र तपाईंले छानेको कामदारलाई मात्र देखिन्छ",
   ],
   jobPlaceHidden: ["The exact place goes to the chosen worker.", "ठ्याक्कै ठाउँ छानिएको कामदारलाई दिइन्छ।"],
-  postJobPlacePlaceholder: ["Tole, ward or landmark", "टोल, वडा वा चिनारी"],
+  postJobPlacePlaceholder: ["Tole, ward or landmark", "टोल, वडा वा चिनिने ठाउँ"],
   postJobDate: ["When do you need it?", "कहिले चाहिन्छ?"],
   postJobBudget: ["Budget", "बजेट"],
   postJobBudgetMin: ["From", "देखि"],
@@ -252,7 +252,7 @@ export const jobStrings = {
     "Leave it empty to let workers name their price.",
     "कामदारले आफ्नो मूल्य भनून् भन्ने हो भने खाली छोड्नुहोस्।",
   ],
-  postJobBudgetOrder: ["\"To\" can't be less than \"From\".", "\"सम्म\" \"देखि\" भन्दा कम हुन सक्दैन।"],
+  postJobBudgetOrder: ["\"To\" can't be less than \"From\".", "\"सम्म\" \"देखि\"भन्दा कम हुन सक्दैन।"],
   postJobPublicNote: [
     "Anyone can see this post and its area. The exact place and your phone number go only to the worker you choose.",
     "यो पोस्ट र यसको क्षेत्र जसले पनि देख्न सक्छ। ठ्याक्कै ठाउँ र तपाईंको फोन नम्बर तपाईंले छानेको कामदारलाई मात्र जान्छ।",
@@ -293,9 +293,9 @@ export const jobStrings = {
   mapPeopleCountOne: ["1 person", "१ जना"],
   mapPeople: ["People", "मानिस"],
   mapJobs: ["Work requests", "कामका अनुरोध"],
-  mapLocateMe: ["Show where I am", "म कहाँ छु देखाउनुहोस्"],
-  mapZoomIn: ["Zoom in", "नजिक"],
-  mapZoomOut: ["Zoom out", "टाढा"],
+  mapLocateMe: ["Show where I am", "मेरो स्थान देखाउनुहोस्"],
+  mapZoomIn: ["Zoom in", "ठूलो पार्नुहोस्"],
+  mapZoomOut: ["Zoom out", "सानो पार्नुहोस्"],
   mapTwoFingers: ["Use two fingers to move the map", "नक्सा सार्न दुई औंला प्रयोग गर्नुहोस्"],
   mapClickToZoom: ["Click the map to zoom with the mouse wheel", "माउस ह्विलले जुम गर्न नक्सामा क्लिक गर्नुहोस्"],
   mapAreaNote: [
@@ -316,7 +316,7 @@ export const jobStrings = {
   ],
   mapAreaSignIn: ["Sign in to see who", "को-को हुन् हेर्न लगइन गर्नुहोस्"],
   mapAreaList: ["See the list", "सूची हेर्नुहोस्"],
-  mapNothingHere: ["Nothing here yet. Zoom out or move the map.", "यहाँ अहिलेसम्म केही छैन। टाढा जुम गर्नुहोस् वा नक्सा सार्नुहोस्।"],
+  mapNothingHere: ["Nothing here yet. Zoom out or move the map.", "यहाँ अहिलेसम्म केही छैन। जुम आउट गर्नुहोस् वा नक्सा सार्नुहोस्।"],
   mapLocationDenied: [
     "Location is off for Duleko. Turn it on in your phone's settings to see where you are.",
     "डुलेकोका लागि स्थान बन्द छ। आफू कहाँ हुनुहुन्छ हेर्न फोनको सेटिङमा खोल्नुहोस्।",
@@ -332,7 +332,7 @@ export const jobStrings = {
   ],
   workAreaPromptPick: ["Choose on the map", "नक्सामा छान्नुहोस्"],
   workAreaPickerHint: ["Move the map until the pin is on your area.", "पिन तपाईंको क्षेत्रमा नपरेसम्म नक्सा सार्नुहोस्।"],
-  workAreaUseGps: ["Go to where I am now", "म अहिले भएको ठाउँमा जानुहोस्"],
+  workAreaUseGps: ["Go to where I am now", "मेरो हालको स्थानमा जानुहोस्"],
   workAreaAreaNote: [
     "Others see the ~1 km square around this pin, not the pin itself.",
     "अरूले यो पिन होइन, यसको वरिपरिको करिब १ किलोमिटरको क्षेत्र देख्छन्।",
@@ -357,7 +357,7 @@ export const jobStrings = {
   placeShop: ["Open {name}'s shop in Maps", "{name}को पसल नक्सामा खोल्नुहोस्"],
   placePrivateNote: ["Shared only with the two of you while this job is active.", "यो काम चलिरहँदा तपाईं दुईसँग मात्र साझा गरिएको।"],
   postJobPin: ["Map pin", "नक्सामा पिन"],
-  postJobPinAdd: ["Pin this job where I am now", "म अहिले जहाँ छु त्यहाँ पिन गर्नुहोस्"],
+  postJobPinAdd: ["Pin this job where I am now", "मेरो हालको स्थानमा पिन गर्नुहोस्"],
   postJobPinSet: [
     "Pinned where you are. Others see only its area, about 1 km; the exact pin goes to the worker you choose.",
     "तपाईं भएको ठाउँमा पिन गरियो। अरूले करिब १ किलोमिटरको क्षेत्र मात्र देख्छन्; ठ्याक्कै पिन तपाईंले छानेको कामदारलाई जान्छ।",
@@ -365,6 +365,6 @@ export const jobStrings = {
   postJobPinRemove: ["Remove pin", "पिन हटाउनुहोस्"],
   postJobPinHint: [
     "Optional. Puts the job on the map so workers nearby find it.",
-    "वैकल्पिक। कामलाई नक्सामा राख्छ, ताकि नजिकैका कामदारले भेटून्।",
+    "वैकल्पिक। कामलाई नक्सामा राख्छ, जसले गर्दा नजिकैका कामदारले भेट्टाउन सक्छन्।",
   ],
 } as const;

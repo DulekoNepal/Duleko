@@ -21,7 +21,7 @@ export const siteStrings = {
   finalCtaTitle: ["Your Skill Could Be Someone's Opportunity.", "तपाईंको सीप कसैको लागि अवसर बन्न सक्छ।"],
   finalCtaBody: [
     "Whether you have a skill to offer or a job that needs to be done, Duleko helps you connect.",
-    "तपाईंसँग दिनको लागि सीप होस् वा गर्नुपर्ने काम, डुलेकोले तपाईंलाई जोडिन मद्दत गर्छ।",
+    "तपाईंसँग दिन सक्ने सीप होस् वा गराउनुपर्ने काम, डुलेकोले तपाईंलाई जोडिन मद्दत गर्छ।",
   ],
   readOurMission: ["Read our mission", "हाम्रो उद्देश्य पढ्नुहोस्"],
   howWeKeepItSafe: ["How we keep it safe", "हामी यसलाई कसरी सुरक्षित राख्छौं"],
@@ -29,7 +29,7 @@ export const siteStrings = {
   siteTagline: ["Connecting local skills with local opportunities.", "स्थानीय सीपलाई स्थानीय अवसरसँग जोड्दै।"],
   serviceEitherWay: [
     "You can need a service, provide a service, or do both.",
-    "तपाईंलाई सेवा चाहिन सक्छ, तपाईं सेवा दिन सक्नुहुन्छ, वा दुवै।",
+    "तपाईंलाई सेवा चाहिएको हुन सक्छ, तपाईं सेवा दिन सक्नुहुन्छ वा दुवै।",
   ],
 
   // Stages used in the Skill → … → Income chains.
@@ -57,7 +57,7 @@ export const siteStrings = {
   navAboutDulekoDesc: ["Why we built Duleko.", "हामीले डुलेको किन बनायौं।"],
   navOurTeam: ["Our Team", "हाम्रो टोली"],
   navOurTeamDesc: ["The people behind Duleko.", "डुलेको पछाडिका मानिसहरू।"],
-  navOurMotivationDesc: ["What keeps us building.", "हामीलाई निरन्तर बनाइरहन प्रेरित गर्ने कुरा।"],
+  navOurMotivationDesc: ["What keeps us building.", "हामीलाई निरन्तर काम गर्न प्रेरित गर्ने कुरा।"],
   headerOpenDuleko: ["Open Duleko", "डुलेको खोल्नुहोस्"],
   headerExplore: ["Explore", "हेर्नुहोस्"],
   headerOpenMenu: ["Open menu", "मेनु खोल्नुहोस्"],
@@ -70,7 +70,7 @@ export const siteStrings = {
   trustAndSafety: ["Trust & Safety", "विश्वास र सुरक्षा"],
   safetyTeaser: ["Built for connection. Designed with safety in mind.", "जोडिनका लागि बनाइएको। सुरक्षालाई ध्यानमा राखेर डिजाइन गरिएको।"],
   partnersTitle: ["For Municipalities & Training Providers", "नगरपालिका र तालिम प्रदायकहरूका लागि"],
-  aboutTeaser: ["Why we built Duleko, and the people behind it.", "हामीले डुलेको किन बनायौं, र यसका पछाडिका मानिसहरू।"],
+  aboutTeaser: ["Why we built Duleko, and the people behind it.", "हामीले डुलेको किन बनायौं र यसका पछाडिका मानिसहरू।"],
   privacyTeaser: ["How Duleko collects, uses and protects your information.", "डुलेकोले तपाईंको जानकारी कसरी संकलन, प्रयोग र सुरक्षा गर्छ।"],
   termsTeaser: ["The rules for using Duleko.", "डुलेको प्रयोग गर्ने नियमहरू।"],
 
@@ -92,7 +92,7 @@ export const siteStrings = {
   footerForMunicipalities: ["For Municipalities", "नगरपालिकाहरूका लागि"],
   footerTrainingProviders: ["Training Providers", "तालिम प्रदायकहरू"],
   footerSafety: ["Safety", "सुरक्षा"],
-  footerReportIssue: ["Report an Issue", "समस्या रिपोर्ट गर्नुहोस्"],
+  footerReportIssue: ["Report an Issue", "समस्याबारे जानकारी दिनुहोस्"],
   footerContactUs: ["Contact Us", "हामीलाई सम्पर्क गर्नुहोस्"],
   footerSupport: ["Support", "सहयोग"],
   footerDomain: ["duleko.com", "duleko.com"],
@@ -111,7 +111,7 @@ export const siteStrings = {
     "डुलेकोले सीप भएका मानिसहरूलाई ती सीप चाहिने मानिसहरूसँग जोड्छ, जसले गर्दा सीपलाई काम, आम्दानी र अवसरमा बदल्न सजिलो हुन्छ।",
   ],
   homeCardSkill: ["Your skill", "तपाईंको सीप"],
-  homeCardVisible: ["Visible to people nearby", "नजिकैका मानिसहरूले देख्न सक्ने"],
+  homeCardVisible: ["Visible to people nearby", "नजिकैका मानिसहरूले देख्न सक्छन्"],
   homeProblemEyebrow: ["The Problem", "समस्या"],
   homeProblemTitle: ["Skills are everywhere. Opportunities aren't.", "सीप जताततै छ। अवसर छैन।"],
   homeProblemP1: [
@@ -120,7 +120,7 @@ export const siteStrings = {
   ],
   homeProblemP2: [
     "Starting a traditional business can require rent, a good location, equipment, bills, and marketing. For many skilled people, these costs become a barrier before they even find their first customer.",
-    "परम्परागत व्यवसाय सुरु गर्न भाडा, राम्रो स्थान, उपकरण, बिलहरू र प्रचारप्रसार चाहिन सक्छ। धेरै सीपालु मानिसहरूका लागि पहिलो ग्राहक भेट्नुअघि नै यी खर्चहरू बाधा बन्छन्।",
+    "परम्परागत व्यवसाय सुरु गर्न भाडा, राम्रो स्थान, उपकरण, बिलहरू र प्रचारप्रसार चाहिन सक्छ। धेरै सिपालु मानिसहरूका लागि पहिलो ग्राहक भेट्नुअघि नै यी खर्चहरू बाधा बन्छन्।",
   ],
   homeSkillExists: ["The skill exists.", "सीप छ।"],
   homeOpportunityExists: ["The opportunity exists.", "अवसर पनि छ।"],
@@ -129,7 +129,7 @@ export const siteStrings = {
   homeSolutionTitle: ["What if your skill itself could become your business?", "यदि तपाईंको सीप नै तपाईंको व्यवसाय बन्न सक्थ्यो भने?"],
   homeSolutionBody: [
     "Duleko gives skilled people a virtual space to showcase what they can do and connect with people who need their services, without requiring a traditional shop or office.",
-    "डुलेकोले सीपालु मानिसहरूलाई आफूले गर्न सक्ने काम देखाउन र आफ्नो सेवा चाहिने मानिसहरूसँग जोडिन भर्चुअल ठाउँ दिन्छ, परम्परागत पसल वा अफिस बिना नै।",
+    "डुलेकोले सिपालु मानिसहरूलाई आफूले गर्न सक्ने काम देखाउन र आफ्नो सेवा चाहिने मानिसहरूसँग जोडिन भर्चुअल ठाउँ दिन्छ, परम्परागत पसल वा अफिस बिना नै।",
   ],
   homeYouBring: ["You bring the skill.", "सीप तपाईंको।"],
   homeDulekoFinds: ["Duleko helps people find it.", "त्यसलाई भेट्टाउन डुलेकोले मद्दत गर्छ।"],
@@ -145,8 +145,8 @@ export const siteStrings = {
   homeStartProfile: ["Start with your profile", "आफ्नो प्रोफाइलबाट सुरु गर्नुहोस्"],
   homeWhoEyebrow: ["Who Is Duleko For?", "डुलेको कसका लागि हो?"],
   homeWhoTitle: ["Duleko is for everyone.", "डुलेको सबैका लागि हो।"],
-  audSkilled: ["Skilled People", "सीपालु मानिसहरू"],
-  audSkilledBody: ["Showcase your skills and become discoverable.", "आफ्नो सीप देखाउनुहोस् र खोजमा आउनुहोस्।"],
+  audSkilled: ["Skilled People", "सिपालु मानिसहरू"],
+  audSkilledBody: ["Showcase your skills and become discoverable.", "आफ्नो सीप देखाउनुहोस् र खोजमा देखिनुहोस्।"],
   audJobSeekers: ["People Looking for Work", "काम खोजिरहेका मानिसहरू"],
   audJobSeekersBody: ["Find opportunities based on what you can do.", "आफूले गर्न सक्ने कामका आधारमा अवसर खोज्नुहोस्।"],
   audStudents: ["Students", "विद्यार्थीहरू"],
@@ -175,7 +175,7 @@ export const siteStrings = {
   ],
   missionVirtualSpace: [
     "Duleko provides a virtual space where people can showcase their skills, become discoverable, and connect with people who need their services.",
-    "डुलेकोले एउटा भर्चुअल ठाउँ दिन्छ जहाँ मानिसहरूले आफ्नो सीप देखाउन, खोजमा आउन, र आफ्नो सेवा चाहिने मानिसहरूसँग जोडिन सक्छन्।",
+    "डुलेकोले एउटा भर्चुअल ठाउँ दिन्छ जहाँ मानिसहरूले आफ्नो सीप देखाउन, खोजमा आउन र आफ्नो सेवा चाहिने मानिसहरूसँग जोडिन सक्छन्।",
   ],
   missionWhatWeDo: ["What We Do", "हामी के गर्छौं"],
   missionDiscoverableTitle: ["Making Skills Economically Discoverable", "सीपलाई आर्थिक अवसरसम्म पुर्‍याउँदै"],
@@ -191,7 +191,7 @@ export const siteStrings = {
   missionTrainingTitle: ["Training Should Lead Somewhere", "तालिमले कतै पुर्‍याउनुपर्छ"],
   missionTrainingP1: [
     "Every year, people develop skills through government programs, educational institutions, private training, apprenticeships, and personal experience.",
-    "हरेक वर्ष मानिसहरूले सरकारी कार्यक्रम, शैक्षिक संस्था, निजी तालिम, प्रशिक्षार्थी काम र व्यक्तिगत अनुभवबाट सीप विकास गर्छन्।",
+    "हरेक वर्ष मानिसहरूले सरकारी कार्यक्रम, शैक्षिक संस्था, निजी तालिम, प्रशिक्षुता र व्यक्तिगत अनुभवबाट सीप विकास गर्छन्।",
   ],
   missionTrainingP2: ["But training alone does not guarantee work.", "तर तालिमले मात्र कामको ग्यारेन्टी गर्दैन।"],
   missionTrainingP3: [
@@ -205,14 +205,14 @@ export const siteStrings = {
   missionVisionEyebrow: ["Our Vision", "हाम्रो दृष्टि"],
   missionVision: [
     "A Nepal where skills don't remain hidden, training doesn't end with certificates, and starting a service-based business doesn't always require a physical shop or large investment.",
-    "यस्तो नेपाल, जहाँ सीप लुकेर बस्दैन, तालिम प्रमाणपत्रमै सकिँदैन, र सेवामा आधारित व्यवसाय सुरु गर्न सधैं भौतिक पसल वा ठूलो लगानी चाहिँदैन।",
+    "यस्तो नेपाल, जहाँ सीप लुकेर बस्दैन, तालिम प्रमाणपत्रमै सकिँदैन र सेवामा आधारित व्यवसाय सुरु गर्न सधैं भौतिक पसल वा ठूलो लगानी चाहिँदैन।",
   ],
 
   // ---- For Individuals / Businesses / Partners ---------------------------
   indTitle: ["Turn Your Skills Into Opportunities", "आफ्नो सीपलाई अवसरमा बदल्नुहोस्"],
   indBody: [
     "Whether you are a student, professional, trained worker, farmer, tradesperson, or someone with skills learned through experience, Duleko gives you a place to showcase what you can do.",
-    "तपाईं विद्यार्थी, पेशाविद्, तालिमप्राप्त कामदार, किसान, कालिगड, वा अनुभवबाट सीप सिकेको व्यक्ति जो भए पनि, डुलेकोले तपाईंलाई आफूले गर्न सक्ने काम देखाउने ठाउँ दिन्छ।",
+    "तपाईं विद्यार्थी, पेशाविद्, तालिमप्राप्त कामदार, किसान, कालिगड वा अनुभवबाट सीप सिकेको व्यक्ति जो भए पनि, डुलेकोले तपाईंलाई आफूले गर्न सक्ने काम देखाउने ठाउँ दिन्छ।",
   ],
   indStepAvailability: ["Set your availability", "आफ्नो उपलब्धता तोक्नुहोस्"],
   indStepDiscovered: ["Be discovered by people nearby", "नजिकैका मानिसहरूको खोजमा आउनुहोस्"],
@@ -225,9 +225,9 @@ export const siteStrings = {
   ],
   bizP2: [
     "Duleko helps businesses discover skilled people and connect with them directly.",
-    "डुलेकोले व्यवसायहरूलाई सीपालु मानिसहरू खोज्न र उनीहरूसँग सिधै जोडिन मद्दत गर्छ।",
+    "डुलेकोले व्यवसायहरूलाई सिपालु मानिसहरू खोज्न र उनीहरूसँग सिधै जोडिन मद्दत गर्छ।",
   ],
-  bizCta: ["Find Skilled People", "सीपालु मानिसहरू खोज्नुहोस्"],
+  bizCta: ["Find Skilled People", "सिपालु मानिसहरू खोज्नुहोस्"],
   partnersHeroTitle: ["From Skill Training to Skill Utilization", "सीप तालिमदेखि सीपको उपयोगसम्म"],
   partnersBody: [
     "Duleko provides a digital platform where people who receive skill training can showcase what they have learned and become discoverable for relevant opportunities.",
@@ -240,7 +240,7 @@ export const siteStrings = {
   // ---- Trust & Safety -----------------------------------------------------
   safetyBody: [
     "Duleko is designed with tools and policies that help make interactions safer, more transparent, and more accountable.",
-    "डुलेकोलाई अन्तरक्रियालाई अझ सुरक्षित, पारदर्शी र जवाफदेही बनाउन मद्दत गर्ने उपकरण र नीतिहरूसहित डिजाइन गरिएको छ।",
+    "डुलेकोलाई अन्तरक्रिया अझ सुरक्षित, पारदर्शी र जवाफदेही बनाउन मद्दत गर्ने उपकरण र नीतिसहित डिजाइन गरिएको छ।",
   ],
   safetyPhone: ["Phone Verification", "फोन प्रमाणीकरण"],
   safetyPhoneBody: ["Help establish authentic user accounts.", "वास्तविक प्रयोगकर्ता खाता सुनिश्चित गर्न मद्दत गर्छ।"],
@@ -248,8 +248,8 @@ export const siteStrings = {
   safetyRequestsBody: ["Create context before people connect for work.", "कामका लागि जोडिनुअघि नै सन्दर्भ स्पष्ट बनाउँछ।"],
   safetyReviews: ["Reviews & Reputation", "समीक्षा र प्रतिष्ठा"],
   safetyReviewsBody: ["Build trust through completed work and feedback.", "पूरा भएको काम र प्रतिक्रियामार्फत विश्वास बनाउँछ।"],
-  safetyReport: ["Report & Block", "रिपोर्ट र ब्लक"],
-  safetyReportBody: ["Give users tools to respond to inappropriate behavior.", "अनुचित व्यवहारको जवाफ दिन प्रयोगकर्तालाई उपकरण दिन्छ।"],
+  safetyReport: ["Report & Block", "उजुरी र ब्लक"],
+  safetyReportBody: ["Give users tools to respond to inappropriate behavior.", "अनुचित व्यवहारविरुद्ध कदम चाल्न प्रयोगकर्तालाई उपकरण दिन्छ।"],
   safetyPrivacy: ["Privacy Controls", "गोपनीयता नियन्त्रण"],
   safetyPrivacyBody: [
     "Protect personal information and control how people connect with you.",
@@ -265,12 +265,12 @@ export const siteStrings = {
   aboutHeroP2: ["We built Duleko to bridge that gap.", "त्यही दूरी मेटाउन हामीले डुलेको बनायौं।"],
   aboutHeroP3: [
     "Our goal is to make skills more visible, opportunities more accessible, and local connections more useful.",
-    "हाम्रो लक्ष्य सीपलाई अझ देखिने, अवसरलाई अझ पहुँचयोग्य, र स्थानीय सम्बन्धलाई अझ उपयोगी बनाउनु हो।",
+    "हाम्रो लक्ष्य सीपलाई अझ देखिने, अवसरलाई अझ पहुँचयोग्य र स्थानीय सम्बन्धलाई अझ उपयोगी बनाउनु हो।",
   ],
   aboutTeamTitle: ["The People Behind Duleko", "डुलेको पछाडिका मानिसहरू"],
   aboutFoundedBy: [
     "Duleko was founded by Sunil K. Chaudhary. The platform - the web app, the Android app and everything behind them - was designed and built by Sanjay Gupta.",
-    "डुलेको सुनिल के. चौधरीले स्थापना गरेका हुन्। वेब एप, एन्ड्रोइड एप र तिनका पछाडिका सबै प्रणालीसहित यो प्लेटफर्म संजय गुप्ताले डिजाइन र निर्माण गरेका हुन्।",
+    "डुलेकोको स्थापना सुनिल के. चौधरीले गरेका हुन्। वेब एप, एन्ड्रोइड एप र तिनका पछाडिका सबै प्रणालीसहित यो प्लेटफर्म संजय गुप्ताले डिजाइन र निर्माण गरेका हुन्।",
   ],
   founderFullProfile: ["Read {name}'s full profile", "{name}को पूरा प्रोफाइल पढ्नुहोस्"],
   founderOtherFounders: ["The rest of the team", "टोलीका अन्य सदस्यहरू"],
@@ -282,29 +282,29 @@ export const siteStrings = {
   // ---- Motivation ---------------------------------------------------------
   motivationEyebrow: ["Our Motivation", "हाम्रो प्रेरणा"],
   motivationWhyItMatters: ["Why it matters", "किन महत्त्वपूर्ण छ"],
-  motivationWhatDrivesUs: ["What drives us", "हामीलाई के ले प्रेरित गर्छ"],
-  readMemberStory: ["Read {name}'s story", "{name} को कथा पढ्नुहोस्"],
+  motivationWhatDrivesUs: ["What drives us", "हामीलाई के कुराले प्रेरित गर्छ"],
+  readMemberStory: ["Read {name}'s story", "{name}को कथा पढ्नुहोस्"],
   meetTheTeamTeaser: ["The people behind Duleko, in full.", "डुलेको पछाडिका मानिसहरू, विस्तारमा।"],
 
   // ---- Privacy ------------------------------------------------------------
-  privacyGlanceTitle: ["Your information, handled with care", "तपाईंको जानकारी, सावधानीपूर्वक सम्हालिएको"],
+  privacyGlanceTitle: ["Your information, handled with care", "तपाईंको जानकारी, सावधानीपूर्वक सुरक्षित"],
   privacyGlanceNeverSold: ["Never sold", "कहिल्यै बेचिँदैन"],
   privacyGlancePhone: ["Your number stays private", "तपाईंको नम्बर निजी रहन्छ"],
-  privacyGlanceLocation: ["Location on your terms", "स्थान तपाईंकै शर्तमा"],
+  privacyGlanceLocation: ["Location on your terms", "स्थान तपाईंकै सर्तमा"],
 
   // ---- Terms --------------------------------------------------------------
   termsHeroTitle: ["Terms of Use & User Policy", "प्रयोगका सर्तहरू र प्रयोगकर्ता नीति"],
   termsIntro: [
     "Please read these terms before using Duleko. They explain what Duleko is, and what is expected of everyone who uses it.",
-    "डुलेको प्रयोग गर्नु अघि कृपया यी सर्तहरू पढ्नुहोस्। यिनले डुलेको के हो, र यसलाई प्रयोग गर्ने सबैबाट के अपेक्षा गरिन्छ भनेर बताउँछन्।",
+    "डुलेको प्रयोग गर्नुअघि कृपया यी सर्तहरू पढ्नुहोस्। डुलेको के हो र यसलाई प्रयोग गर्ने सबैबाट के अपेक्षा गरिन्छ भन्ने कुरा यिनले बताउँछन्।",
   ],
-  termsGlanceTitle: ["What to know before you start", "सुरु गर्नु अघि जान्नुपर्ने कुरा"],
+  termsGlanceTitle: ["What to know before you start", "सुरु गर्नुअघि जान्नुपर्ने कुरा"],
   termsGlanceEmployer: ["Duleko connects, it does not employ", "डुलेकोले जोड्छ, रोजगारी दिँदैन"],
   termsGlancePayments: ["Payments are between users", "भुक्तानी प्रयोगकर्ताहरूबीच हुन्छ"],
   termsGlanceHonesty: ["Honesty is required", "इमानदारी अनिवार्य छ"],
   termsContactQuestion: [
     "Questions about these terms, or something to report? Reach us at",
-    "यी सर्तहरूबारे प्रश्न छ, वा केही रिपोर्ट गर्नु छ? हामीलाई सम्पर्क गर्नुहोस्",
+    "यी सर्तहरूबारे प्रश्न छ वा कुनै उजुरी गर्नु छ? हामीलाई सम्पर्क गर्नुहोस्",
   ],
 
   // ---- Registration policy -------------------------------------------------
@@ -314,14 +314,14 @@ export const siteStrings = {
   // ---- Profile: every website page, one tap away ---------------------------
   hubHint: [
     "Everything about Duleko: who we are, who it's for, and how we keep you safe.",
-    "डुलेकोबारे सबै कुरा: हामी को हौं, यो कसका लागि हो, र हामी तपाईंलाई कसरी सुरक्षित राख्छौं।",
+    "डुलेकोबारे सबै कुरा: हामी को हौं, यो कसका लागि हो र हामी तपाईंलाई कसरी सुरक्षित राख्छौं।",
   ],
   hubKnowDuleko: ["Get to know Duleko", "डुलेकोलाई चिन्नुहोस्"],
   hubTrustLegal: ["Trust & legal", "विश्वास र कानुनी"],
   hubWelcome: ["Welcome to Duleko", "डुलेकोमा स्वागत छ"],
   profileIntro: ["Intro", "परिचय"],
-  livesIn: ["Lives in {place}", "{place} मा बस्नुहुन्छ"],
-  joinedOn: ["Joined {date}", "{date} मा सामेल"],
+  livesIn: ["Lives in {place}", "{place}मा बस्नुहुन्छ"],
+  joinedOn: ["Joined {date}", "{date}मा सामेल हुनुभएको"],
   shareShort: ["Share", "सेयर"],
   skillsCount: ["{count} skills", "{count} सीप"],
   settingsPreferences: ["Preferences", "प्राथमिकताहरू"],
@@ -337,9 +337,9 @@ export const siteStrings = {
   downloadApp: ["Download app", "एप डाउनलोड गर्नुहोस्"],
   playStoreSub: ["Duleko for Android", "एन्ड्रोइडका लागि डुलेको"],
   teamAttribution: ["The Duleko team", "डुलेको टोली"],
-  catTrades: ["Trades & Local Services", "कालिगडी र स्थानीय सेवा"],
-  catProfessional: ["Professional & Skilled Services", "पेशागत र दक्ष सेवा"],
-  catPersonal: ["Personal & Everyday Services", "व्यक्तिगत र दैनिक सेवा"],
+  catTrades: ["Trades & Local Services", "कालिगडी तथा स्थानीय सेवा"],
+  catProfessional: ["Professional & Skilled Services", "पेशागत तथा दक्ष सेवा"],
+  catPersonal: ["Personal & Everyday Services", "व्यक्तिगत तथा दैनिक सेवा"],
   skillAddYours: ["Your skill", "तपाईंको सीप"],
 
   // People Duleko is for - from the Mission and For Individuals copy.
@@ -353,7 +353,7 @@ export const siteStrings = {
 
   // ---- Home: hero ----------------------------------------------------------
   heroKicker: ["Nepal's local skills marketplace", "नेपालको स्थानीय सीप बजार"],
-  heroTrustFree: ["Free to join", "जोडिन निःशुल्क"],
+  heroTrustFree: ["Free to join", "सदस्य बन्न निःशुल्क"],
   heroTrustLangs: ["English & नेपाली", "English र नेपाली"],
   heroTrustApp: ["Web & Android", "वेब र एन्ड्रोइड"],
   demoCaption: ["How a job comes together on Duleko", "डुलेकोमा काम यसरी मिल्छ"],
@@ -372,7 +372,7 @@ export const siteStrings = {
   skillsTitle: ["From wiring to tuition to a haircut.", "वायरिङदेखि ट्युसन र कपाल काट्नेसम्म।"],
   skillsBody: [
     "Over 30 skills in three groups. Don't see yours? Write it in your own words - it's just as easy to find.",
-    "तीन समूहमा ३० भन्दा बढी सीप। आफ्नो सीप सूचीमा छैन? आफ्नै शब्दमा लेख्नुहोस् - त्यो पनि उत्तिकै सजिलै भेटिन्छ।",
+    "तीन समूहमा ३०भन्दा बढी सीप। आफ्नो सीप सूचीमा छैन? आफ्नै शब्दमा लेख्नुहोस् - त्यो पनि उत्तिकै सजिलै भेटिन्छ।",
   ],
   shopNeedsTitle: ["Opening a shop needs", "पसल खोल्न चाहिन्छ"],
   shopRent: ["Rent", "भाडा"],
@@ -383,31 +383,31 @@ export const siteStrings = {
   profileNeedsTitle: ["A Duleko profile needs", "डुलेको प्रोफाइललाई चाहिन्छ"],
   profileNeedSkill: ["Your skill", "तपाईंको सीप"],
   profileNeedPhone: ["A phone", "एउटा फोन"],
-  profileNeedFree: ["Nothing to join", "जोडिन केही लाग्दैन"],
+  profileNeedFree: ["Nothing to join", "सदस्य बन्न केही लाग्दैन"],
   profileNeedNearby: ["People nearby who need it", "त्यो सीप चाहिने नजिकैका मानिस"],
   stepCreateProfileBody: [
     "Sign up with Google or email, then add your photo, your area and how people can reach you.",
-    "Google वा इमेलबाट साइन अप गर्नुहोस्, अनि फोटो, आफ्नो क्षेत्र र सम्पर्कको तरिका थप्नुहोस्।",
+    "Google वा इमेलबाट खाता खोल्नुहोस्, अनि आफ्नो फोटो, क्षेत्र र सम्पर्क गर्ने तरिका थप्नुहोस्।",
   ],
   stepShowcaseBody: [
     "List what you can do, with a rate if you like, and certificates if you have them.",
-    "आफूले गर्न सक्ने काम, चाहे भने दर, र प्रमाणपत्र भए त्यो पनि राख्नुहोस्।",
+    "आफूले गर्न सक्ने काम राख्नुहोस्, चाहनुहुन्छ भने दर पनि र प्रमाणपत्र छ भने त्यो पनि।",
   ],
   stepDiscoveredBody: [
     "People nearby find you by skill and district - the nearest first.",
-    "नजिकैका मानिसले सीप र जिल्लाअनुसार तपाईंलाई भेट्छन् - सबैभन्दा नजिकको पहिले।",
+    "नजिकैका मानिसले सीप र जिल्लाअनुसार तपाईंलाई भेट्टाउँछन् - सबैभन्दा नजिकको पहिले।",
   ],
   stepConnectBody: [
     "They send a work request with the job and a date, and you agree on a price together.",
-    "उनीहरूले काम र मितिसहित अनुरोध पठाउँछन्, र मूल्य तपाईंहरू मिलेर तय गर्नुहुन्छ।",
+    "उहाँहरूले काम र मितिसहित अनुरोध पठाउनुहुन्छ, अनि तपाईंहरू मिलेर मूल्य तय गर्नुहुन्छ।",
   ],
   stepWorkEarnBody: [
     "Chat or call, do the job, and get paid directly. Duleko never holds your money.",
-    "कुराकानी वा फोन गर्नुहोस्, काम गर्नुहोस्, र सिधै भुक्तानी लिनुहोस्। डुलेकोले तपाईंको पैसा राख्दैन।",
+    "कुराकानी वा फोन गर्नुहोस्, काम गर्नुहोस् र भुक्तानी सिधै लिनुहोस्। डुलेकोले तपाईंको पैसा कहिल्यै राख्दैन।",
   ],
   stepReputationBody: [
     "Every finished job can earn a review - and the next person who finds you will see it.",
-    "हरेक सम्पन्न कामले समीक्षा पाउन सक्छ - र तपाईंलाई भेट्ने अर्को व्यक्तिले त्यो देख्छ।",
+    "हरेक सम्पन्न कामबापत समीक्षा पाउन सकिन्छ - र तपाईंलाई भेट्टाउने अर्को व्यक्तिले त्यो देख्छ।",
   ],
   indStepAvailabilityBody: [
     "Mark the days you're busy on a full-year calendar, in Nepali or English dates.",
@@ -417,7 +417,7 @@ export const siteStrings = {
   originTitle: ["A question from Kapilvastu.", "कपिलवस्तुबाट उठेको एउटा प्रश्न।"],
   originBody: [
     "Growing up in Kapilvastu, Sunil saw people searching for work while, in the same communities, others couldn't find the right person for the work they needed done. Duleko is his answer - built with Sanjay and Dipendra, and shaped by the people who use it.",
-    "कपिलवस्तुमा हुर्कँदा सुनिलले मानिसहरू काम खोजिरहेको देखे, र उही समुदायमा अरूले आफूलाई चाहिने कामका लागि सही मानिस भेट्न सकिरहेका थिएनन्। डुलेको उनको जवाफ हो - संजय र दिपेन्द्रसँग मिलेर बनाइएको, र प्रयोग गर्ने मानिसहरूले आकार दिएको।",
+    "कपिलवस्तुमा हुर्कँदा सुनिलले एकातिर मानिसहरू काम खोजिरहेको देखे, अर्कातिर उही समुदायमा अरूले आफूलाई चाहिने कामका लागि सही मानिस भेट्न सकिरहेका थिएनन्। डुलेको उनको जवाफ हो - संजय र दिपेन्द्रसँग मिलेर बनाइएको र प्रयोग गर्ने मानिसहरूले आकार दिएको।",
   ],
   factsEyebrow: ["Duleko today", "आजको डुलेको"],
   factSkillsValue: ["30+", "३०+"],
@@ -425,7 +425,7 @@ export const siteStrings = {
   factLangValue: ["2", "२"],
   factLangLabel: ["languages, equally: English & नेपाली", "भाषा, समान रूपमा: English र नेपाली"],
   factFreeValue: ["Rs 0", "रु ०"],
-  factFreeLabel: ["to join, browse or hire", "जोडिन, हेर्न वा काम लगाउन"],
+  factFreeLabel: ["to join, browse or hire", "सदस्य बन्न, हेर्न वा काम लगाउन"],
   factAppValue: ["Web + Android", "वेब + एन्ड्रोइड"],
   factAppLabel: ["one account on both", "दुवैमा एउटै खाता"],
 
@@ -434,12 +434,12 @@ export const siteStrings = {
   missionBarrierTitle: ["It isn't ability. It's being seen.", "क्षमता होइन। देखिनु हो।"],
   principlesEyebrow: ["How we build", "हामी कसरी बनाउँछौं"],
   principlesTitle: ["Five rules we build by.", "हामीले पालना गर्ने पाँच नियम।"],
-  principleAnySkill: ["Any skill counts", "हरेक सीपको गन्ती हुन्छ"],
+  principleAnySkill: ["Any skill counts", "हरेक सीपको मूल्य छ"],
   principleNearest: ["Nearest first", "नजिकको पहिले"],
-  principleFree: ["Free to join and hire", "जोडिन र काम लगाउन निःशुल्क"],
+  principleFree: ["Free to join and hire", "सदस्य बन्न र काम लगाउन निःशुल्क"],
   principleFreeBody: [
     "Joining, browsing and hiring cost nothing. Workers pay a small share only when a job is completed.",
-    "जोडिन, हेर्न र काम लगाउन केही लाग्दैन। कामदारले काम सम्पन्न भएपछि मात्र सानो हिस्सा तिर्छन्।",
+    "सदस्य बन्न, हेर्न र काम लगाउन केही लाग्दैन। काम सम्पन्न भएपछि मात्र कामदारले सानो हिस्सा तिर्छन्।",
   ],
   principleBilingual: ["Nepali and English, equally", "नेपाली र अंग्रेजी, समान रूपमा"],
   principleRealPhones: ["Made for real phones", "वास्तविक फोनका लागि बनाइएको"],
@@ -450,26 +450,26 @@ export const siteStrings = {
   previewAvailable: ["Available this week", "यो हप्ता उपलब्ध"],
   previewMemberId: ["Member ID", "सदस्यता नं."],
   // Sunday first, as Nepal's week runs.
-  previewWeekdays: ["Sun,Mon,Tue,Wed,Thu,Fri,Sat", "आइत,सोम,मंगल,बुध,बिहि,शुक्र,शनि"],
+  previewWeekdays: ["Sun,Mon,Tue,Wed,Thu,Fri,Sat", "आइत,सोम,मंगल,बुध,बिही,शुक्र,शनि"],
   previewFree: ["Free", "खाली"],
   previewBusy: ["Busy", "व्यस्त"],
-  indWhoTitle: ["If you can do it, you can list it.", "तपाईं गर्न सक्नुहुन्छ भने, सूचीमा राख्न सक्नुहुन्छ।"],
+  indWhoTitle: ["If you can do it, you can list it.", "तपाईं गर्न सक्नुहुन्छ भने सूचीमा राख्न सक्नुहुन्छ।"],
   indStepsTitle: ["Six steps from skill to income.", "सीपदेखि आम्दानीसम्म छ चरण।"],
   pricingEyebrow: ["What it costs", "कति लाग्छ"],
-  pricingTitle: ["Free to join. A small share only when you earn.", "जोडिन निःशुल्क। कमाउँदा मात्र सानो हिस्सा।"],
+  pricingTitle: ["Free to join. A small share only when you earn.", "सदस्य बन्न निःशुल्क। कमाउँदा मात्र सानो हिस्सा।"],
   pricingBody: [
     "Creating a profile, being found and talking to people costs nothing. When a job is completed, the worker pays Duleko a small, sliding share of the agreed price - and employers pay nothing.",
-    "प्रोफाइल बनाउन, भेटिन र मानिससँग कुरा गर्न केही लाग्दैन। काम सम्पन्न भएपछि कामदारले सहमत मूल्यको सानो, घट्दो हिस्सा डुलेकोलाई तिर्छन् - काम दिनेले केही तिर्दैनन्।",
+    "प्रोफाइल बनाउन, खोजमा देखिन र मानिसहरूसँग कुरा गर्न केही लाग्दैन। काम सम्पन्न भएपछि कामदारले सहमत मूल्यको सानो, घट्दो दरको हिस्सा डुलेकोलाई तिर्छन् - काम दिनेले केही तिर्नुपर्दैन।",
   ],
   pricingFreeLabel: ["Profile, search, chat & requests", "प्रोफाइल, खोज, कुराकानी र अनुरोध"],
   pricingFreeValue: ["Free", "निःशुल्क"],
   pricingTier1: ["First Rs 5,000 of a job", "कामको पहिलो रु ५,०००"],
   pricingTier2: ["Rs 5,000 to Rs 20,000", "रु ५,००० देखि रु २०,०००"],
-  pricingTier3: ["Above Rs 20,000", "रु २०,००० भन्दा माथि"],
+  pricingTier3: ["Above Rs 20,000", "रु २०,०००भन्दा माथि"],
   pricingExample: ["Example: a Rs 2,000 job means a Rs 100 fee.", "उदाहरण: रु २,००० को कामको शुल्क रु १००।"],
   pricingNote: [
     "Applies only to jobs requested from 1 Mangsir 2083 (17 November 2026), and your first 5 such jobs are free. Fees add up by Nepali month and are due by the 15th of the next.",
-    "२०८३ मंसिर १ (१७ नोभेम्बर २०२६) देखि अनुरोध गरिएका काममा मात्र लागू हुन्छ, र त्यस्ता पहिला ५ काम निःशुल्क हुन्छन्। शुल्क नेपाली महिनाअनुसार जोडिन्छ र अर्को महिनाको १५ गतेसम्म तिर्नुपर्छ।",
+    "२०८३ मंसिर १ (१७ नोभेम्बर २०२६) देखि अनुरोध गरिएका काममा मात्र लागू हुन्छ र त्यस्ता पहिला ५ काम निःशुल्क हुन्छन्। शुल्क नेपाली महिनाअनुसार जोडिन्छ र अर्को महिनाको १५ गतेसम्म तिर्नुपर्छ।",
   ],
   pricingEmployers: ["Employers pay Duleko nothing.", "काम दिनेले डुलेकोलाई केही तिर्दैनन्।"],
 
@@ -492,7 +492,7 @@ export const siteStrings = {
   hireEyebrow: ["How hiring works", "काम कसरी लगाउने"],
   hireTitle: ["Five steps, no middleman.", "पाँच चरण, कुनै बिचौलिया छैन।"],
   hire1: ["Search by skill and place", "सीप र ठाउँअनुसार खोज्नुहोस्"],
-  hire1Body: ["Narrow it to your district, and to who's free on the day you need.", "आफ्नो जिल्ला, र तपाईंलाई चाहिएको दिन को खाली छ भनेर छान्नुहोस्।"],
+  hire1Body: ["Narrow it to your district, and to who's free on the day you need.", "आफ्नो जिल्ला र तपाईंलाई चाहिएको दिन खाली भएका मानिसमा खोज सीमित गर्नुहोस्।"],
   hire2: ["Check the profile", "प्रोफाइल हेर्नुहोस्"],
   hire2Body: ["Skills, rates, reviews from past jobs and a calendar of busy days.", "सीप, दर, अघिल्ला कामका समीक्षा र व्यस्त दिनको पात्रो।"],
   hire3: ["Send a work request", "कामको अनुरोध पठाउनुहोस्"],
@@ -500,7 +500,7 @@ export const siteStrings = {
   hire4: ["Agree on a price", "मूल्य तय गर्नुहोस्"],
   hire4Body: ["Offer, counter-offer and accept - all in one place.", "प्रस्ताव, जवाफी प्रस्ताव र स्वीकृति - सबै एकै ठाउँमा।"],
   hire5: ["Get it done, then review", "काम गराउनुहोस्, अनि समीक्षा दिनुहोस्"],
-  hire5Body: ["Chat or call, pay the worker directly, and leave a review.", "कुराकानी वा फोन गर्नुहोस्, कामदारलाई सिधै तिर्नुहोस्, र समीक्षा दिनुहोस्।"],
+  hire5Body: ["Chat or call, pay the worker directly, and leave a review.", "कुराकानी वा फोन गर्नुहोस्, कामदारलाई सिधै तिर्नुहोस् र समीक्षा दिनुहोस्।"],
   bizCostTitle: ["Hiring through Duleko is free.", "डुलेकोबाट काम लगाउन निःशुल्क छ।"],
   bizCostBody: [
     "Employers never pay Duleko. You pay the worker directly, the way you agreed - Duleko doesn't hold or move the money.",
@@ -543,7 +543,7 @@ export const siteStrings = {
   safetyAge: ["18+ only", "१८+ मात्र"],
   safetyAgeBody: [
     "Every member must be at least 18, and sign up with an account of their own.",
-    "हरेक सदस्य कम्तीमा १८ वर्षको हुनुपर्छ, र आफ्नै खाताबाट साइन अप गर्नुपर्छ।",
+    "हरेक सदस्य कम्तीमा १८ वर्षको हुनुपर्छ र आफ्नै खाता प्रयोग गरेर दर्ता हुनुपर्छ।",
   ],
   safetyFeaturesTitle: ["Safety is built into every step.", "सुरक्षा हरेक चरणमा समेटिएको छ।"],
   guideEyebrow: ["Staying safe", "सुरक्षित रहन"],
@@ -553,17 +553,17 @@ export const siteStrings = {
   guideBefore2: ["Agree on the work, the date and the price in the request.", "काम, मिति र मूल्य अनुरोधमै तय गर्नुहोस्।"],
   guideBefore3: ["Tell someone you trust where you're going.", "कहाँ जाँदै हुनुहुन्छ, भरोसाका कसैलाई भन्नुहोस्।"],
   guideDuring: ["During", "कामको बेला"],
-  guideDuring1: ["Keep talking in Duleko's chat, so there's a record.", "डुलेकोकै च्याटमा कुरा गर्नुहोस्, ताकि रेकर्ड रहोस्।"],
-  guideDuring2: ["Stop if anything feels wrong. Your safety comes first.", "केही ठीक नलागे रोकिनुहोस्। तपाईंको सुरक्षा पहिलो हो।"],
+  guideDuring1: ["Keep talking in Duleko's chat, so there's a record.", "डुलेकोकै कुराकानीमा कुरा गर्नुहोस्, जसले गर्दा रेकर्ड रहन्छ।"],
+  guideDuring2: ["Stop if anything feels wrong. Your safety comes first.", "केही ठीक नलागे तुरुन्तै रोकिनुहोस्। तपाईंको सुरक्षा पहिलो हो।"],
   guideDuring3: ["Pay the amount you agreed, directly to the person.", "सहमति भएको रकम सिधै सम्बन्धित व्यक्तिलाई तिर्नुहोस्।"],
   guideAfter: ["After", "कामपछि"],
-  guideAfter1: ["Mark the job complete and leave an honest review.", "काम सम्पन्न भएको जनाउनुहोस् र इमानदार समीक्षा दिनुहोस्।"],
-  guideAfter2: ["Report anyone who was abusive, unsafe or didn't show up.", "दुर्व्यवहार गर्ने, असुरक्षित वा नआउने जो कोहीलाई रिपोर्ट गर्नुहोस्।"],
-  guideAfter3: ["Block anyone you don't want to hear from again.", "फेरि सम्पर्क नचाहेका जो कोहीलाई ब्लक गर्नुहोस्।"],
+  guideAfter1: ["Mark the job complete and leave an honest review.", "काम सम्पन्न भएको चिन्ह लगाउनुहोस् र इमानदार समीक्षा दिनुहोस्।"],
+  guideAfter2: ["Report anyone who was abusive, unsafe or didn't show up.", "दुर्व्यवहार गर्ने, असुरक्षित लाग्ने वा भनेको बेला नआउने जो कोहीबारे उजुरी गर्नुहोस्।"],
+  guideAfter3: ["Block anyone you don't want to hear from again.", "फेरि सम्पर्क गर्न नचाहेका जो कोहीलाई ब्लक गर्नुहोस्।"],
   safetyReportTitle: ["Something wrong?", "केही गलत भयो?"],
   safetyReportText: [
     "Report a profile from the app, or email us. We look into reports and can suspend accounts that put others at risk.",
-    "एपबाटै प्रोफाइल रिपोर्ट गर्नुहोस्, वा हामीलाई इमेल गर्नुहोस्। हामी रिपोर्टहरू हेर्छौं र अरूलाई जोखिममा पार्ने खाता निलम्बन गर्न सक्छौं।",
+    "एपबाटै प्रोफाइलबारे उजुरी गर्नुहोस् वा हामीलाई इमेल गर्नुहोस्। हामी हरेक उजुरी हेर्छौं र अरूलाई जोखिममा पार्ने खाता निलम्बन गर्न सक्छौं।",
   ],
 
   // ---- About -----------------------------------------------------------------
@@ -578,7 +578,7 @@ export const siteStrings = {
   timelineTitle: ["From an idea to an app on Google Play.", "एउटा विचारदेखि Google Play को एपसम्म।"],
   timelineIntro: [
     "Duleko is young, and we build it in the open with the people who use it. These are the steps that got us here.",
-    "डुलेको नयाँ छ, र हामी यसलाई प्रयोग गर्ने मानिसहरूसँगै खुला रूपमा बनाउँछौं। यहाँसम्म ल्याउने चरणहरू यी हुन्।",
+    "डुलेको नयाँ छ र हामी यसलाई प्रयोग गर्ने मानिसहरूसँगै खुला रूपमा बनाउँछौं। यहाँसम्म ल्याउने चरणहरू यी हुन्।",
   ],
   timelineSep: ["Sep 2026", "सेप्टेम्बर २०२६"],
   timelineOct: ["Oct 2026", "अक्टोबर २०२६"],
@@ -591,7 +591,7 @@ export const siteStrings = {
   timeline2Title: ["Talking, not just listing", "सूची मात्र होइन, कुराकानी पनि"],
   timeline2Body: [
     "Chat, friends, and work requests where both sides can offer and counter-offer a price.",
-    "कुराकानी, साथी, र दुवै पक्षले मूल्य प्रस्ताव र जवाफी प्रस्ताव गर्न सक्ने कामको अनुरोध।",
+    "कुराकानी, साथी र दुवै पक्षले मूल्य प्रस्ताव र जवाफी प्रस्ताव गर्न सक्ने कामको अनुरोध।",
   ],
   timeline3Title: ["On Android", "एन्ड्रोइडमा"],
   timeline3Body: [
@@ -606,26 +606,26 @@ export const siteStrings = {
   timeline5Title: ["A community, not just an app", "एप मात्र होइन, समुदाय"],
   timeline5Body: [
     "A notice board, a Duleko Membership ID for every member, phone alerts and a dark mode.",
-    "सूचना पाटी, हरेक सदस्यलाई डुलेको सदस्यता नम्बर, फोन सूचना र डार्क मोड।",
+    "सूचना पाटी, हरेक सदस्यलाई डुलेको सदस्यता नम्बर, फोन सूचना र अँध्यारो मोड।",
   ],
-  timeline6Title: ["Growing up", "बढ्दै"],
+  timeline6Title: ["Growing up", "अघि बढ्दै"],
   timeline6Body: [
     "Over 30 skills in three groups, an 18+ rule for every member, and payment details for Nepal's banks.",
-    "तीन समूहमा ३० भन्दा बढी सीप, हरेक सदस्यका लागि १८+ नियम, र नेपालका बैंकहरूसहित भुक्तानी विवरण।",
+    "तीन समूहमा ३०भन्दा बढी सीप, हरेक सदस्यका लागि १८+ नियम र नेपालका बैंकहरूसहितको भुक्तानी विवरण।",
   ],
   timeline7Title: ["Next up", "अब आउँदै"],
   timeline7Body: [
     "A job board for open work requests, and a map of skilled people nearby.",
-    "खुला कामका अनुरोधहरूका लागि काम पाटी, र नजिकैका सीपालु मानिसहरूको नक्सा।",
+    "खुला कामका अनुरोधहरूका लागि काम पाटी र नजिकैका सिपालु मानिसहरूको नक्सा।",
   ],
-  timelineInProgress: ["In progress", "काम भइरहेको"],
+  timelineInProgress: ["In progress", "काम भइरहेको छ"],
   teamRole: ["Role", "भूमिका"],
   teamAffiliation: ["Affiliation", "सम्बद्धता"],
   teamPortfolio: ["Portfolio", "पोर्टफोलियो"],
 
   // ---- Motivation ------------------------------------------------------------
   buildingExample1: ["A tutor listing their rate", "आफ्नो दर राख्ने ट्युटर"],
-  buildingExample2: ["A worker marking which days they're free", "कुन दिन खाली छ चिन्ह लगाउने कामदार"],
+  buildingExample2: ["A worker marking which days they're free", "कुन दिन खाली छु भनी चिन्ह लगाउने कामदार"],
   buildingExample3: [
     "An employer sending one request instead of a dozen phone calls",
     "दर्जनौं फोनको सट्टा एउटा अनुरोध पठाउने काम दिने",
