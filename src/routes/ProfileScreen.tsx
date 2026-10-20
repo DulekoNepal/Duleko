@@ -12,15 +12,18 @@ import { ProfileHero, usePhotoUpload, type StatTarget } from "@/components/dulek
 import { ReviewsDialog } from "@/components/duleko/profile/ReviewsDialog";
 import { StickyTabBar, useStickyTabs } from "@/components/duleko/profile/ProfileUI";
 import { AboutDulekoView, SettingsTab } from "@/components/duleko/profile/SettingsTab";
+import { StaffTab } from "@/components/duleko/profile/StaffTab";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 
 /** The tabs in the bar. About Duleko opens from Settings, so it has none. */
-const TABS: { id: Exclude<ProfileTab, "about">; label: StringKey }[] = [
+const TABS: { id: Exclude<ProfileTab, "about">; label: StringKey; staffOnly?: boolean }[] = [
   { id: "overview", label: "profileTabOverview" },
   { id: "calendar", label: "profileTabCalendar" },
   { id: "payments", label: "profileTabPayments" },
   { id: "settings", label: "profileTabSettings" },
+  // Duleko staff only: what's waiting, the numbers, and every staff tool.
+  { id: "staff", label: "profileTabStaff", staffOnly: true },
 ];
 
 /**
@@ -33,7 +36,9 @@ export function ProfileScreen() {
   const { profile } = useSession();
   const navigate = useNavigate();
   // Lives in the URL (?tab=) so Back from a page opened here returns to the same tab.
-  const tab: ProfileTab = (useSearch({ strict: false }) as { tab?: ProfileTab }).tab ?? "overview";
+  const asked: ProfileTab = (useSearch({ strict: false }) as { tab?: ProfileTab }).tab ?? "overview";
+  // A link to the Staff tab opened by someone who isn't staff lands on Overview.
+  const tab: ProfileTab = asked === "staff" && !profile?.staff_role ? "overview" : asked;
   const activeTab = tab === "about" ? "settings" : tab;
 
   const [editor, setEditor] = useState<EditorKind | null>(null);
@@ -94,7 +99,7 @@ export function ProfileScreen() {
         <ProfileHero avatar={avatar} cover={cover} onEdit={() => setEditor("intro")} onJump={jump} />
 
         <StickyTabBar
-          tabs={TABS.map(({ id, label }) => ({ id, label: t(label) }))}
+          tabs={TABS.filter((x) => !x.staffOnly || profile.staff_role).map(({ id, label }) => ({ id, label: t(label) }))}
           active={activeTab}
           onSelect={selectTab}
           label={t("profileSectionsNav")}
@@ -113,6 +118,7 @@ export function ProfileScreen() {
           {tab === "calendar" && <CalendarTab />}
           {tab === "payments" && <PaymentsTab />}
           {tab === "settings" && <SettingsTab onOpenAbout={() => selectTab("about")} />}
+          {tab === "staff" && <StaffTab />}
           {tab === "about" && <AboutDulekoView onBack={() => selectTab("settings")} />}
         </div>
       </PageContainer>

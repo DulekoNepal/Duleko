@@ -271,7 +271,10 @@ export function StickyTabBar<T extends string>({
                 onClick={() => onSelect(id)}
                 onKeyDown={(e) => onKeyDown(e, index)}
                 className={cn(
-                  "min-w-0 flex-1 truncate rounded-xl px-2 py-2 text-[13px] font-semibold transition-all duration-200",
+                  "min-w-0 truncate rounded-xl py-2 font-semibold transition-all duration-200",
+                  // Five tabs on a phone: each as wide as its word, so a long
+                  // one isn't cut short to keep them all equal.
+                  tabs.length > 4 ? "flex-auto px-1.5 text-[12px] sm:flex-1 sm:px-2 sm:text-[13px]" : "flex-1 px-2 text-[13px]",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
                   selected
                     ? "bg-surface text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-200"

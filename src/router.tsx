@@ -143,9 +143,9 @@ const notificationsRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/NotificationsScreen"), "NotificationsScreen"),
 });
 
-export type ProfileTab = "overview" | "calendar" | "payments" | "settings" | "about";
+export type ProfileTab = "overview" | "calendar" | "payments" | "settings" | "staff" | "about";
 
-const PROFILE_TABS: ProfileTab[] = ["overview", "calendar", "payments", "settings", "about"];
+const PROFILE_TABS: ProfileTab[] = ["overview", "calendar", "payments", "settings", "staff", "about"];
 
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Activity, Camera, Download, Eye, IdCard, Link2 as LinkIcon, MoreHorizontal, Pencil, Share2, ShieldCheck, Wallet } from "lucide-react";
+import { Camera, Download, Eye, Link2 as LinkIcon, MoreHorizontal, Pencil, Share2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MenuDivider, MenuItem, MenuLabel, MenuPanel } from "@/components/ui/menu";
+import { MenuDivider, MenuItem, MenuPanel } from "@/components/ui/menu";
 import { Switch } from "@/components/ui/switch";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
@@ -246,11 +246,13 @@ export function ProfileHero({
                   {profile.staff_role && (
                     <>
                       <MenuDivider />
-                      <MenuLabel>{t("profileStaffMenu")}</MenuLabel>
-                      <MenuItem icon={ShieldCheck} label={t("moderation")} onClick={menuAction(() => navigate({ to: "/moderation" }))} />
-                      <MenuItem icon={IdCard} label={t("kycQueueTitle")} onClick={menuAction(() => navigate({ to: "/staff/verify" }))} />
-                      <MenuItem icon={Wallet} label={t("staffFeesShortcut")} onClick={menuAction(() => navigate({ to: "/staff/fees" }))} />
-                      <MenuItem icon={Activity} label={t("activityShortcut")} onClick={menuAction(() => navigate({ to: "/staff/activity" }))} />
+                      <MenuItem
+                        icon={ShieldCheck}
+                        label={t("staffDashboard")}
+                        onClick={menuAction(() =>
+                          navigate({ to: "/profile", search: { tab: "staff" }, replace: true, resetScroll: false }),
+                        )}
+                      />
                     </>
                   )}
                 </MenuPanel>
