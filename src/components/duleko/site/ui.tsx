@@ -171,9 +171,11 @@ export function SiteButton({
  * Google's official "Get it on Google Play" badge, in the page's language
  * (Google hosts an English and a Nepali one). Their brand rules ask for the
  * badge as supplied - no recolouring or redrawing - so it's the real image.
- * The PNG carries a 41px transparent margin around the 564x168 badge inside
- * its 646x250 canvas; that margin is cropped here so `height` is the
- * visible badge, and it lines up with buttons beside it.
+ * The PNG is a 646x250 canvas: a 41px transparent margin, then a 4px grey
+ * border (pixels 41-44) round the black badge. The margin is always cropped,
+ * so `height` is the visible badge and it lines up with buttons beside it.
+ * In dark mode the grey border reads as a white ring, so there the crop
+ * goes 5px further in (--crop 46) and the badge sits flush on the dark page.
  */
 const PLAY_BADGE_SRC = {
   en: "https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png",
@@ -195,26 +197,35 @@ export function GooglePlayBadge({
   height?: number;
   className?: string;
 }) {
-  const scale = height / 168;
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener"
       className={cn(
-        "inline-block shrink-0 overflow-hidden rounded-[0.6rem] transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500",
+        // --s: screen px per image px, so the visible part is always `height` tall.
+        "inline-block shrink-0 overflow-hidden transition-transform [--crop:41] [--s:calc(var(--h)/(250_-_2*var(--crop)))] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:[--crop:46]",
         className,
       )}
-      style={{ width: Math.round(564 * scale), height }}
+      style={
+        {
+          "--h": `${height}px`,
+          width: "calc((646 - 2 * var(--crop)) * var(--s))",
+          height,
+          borderRadius: "calc(var(--h) * 0.17)",
+        } as React.CSSProperties
+      }
     >
       <img
         src={PLAY_BADGE_SRC[lang]}
         alt={label}
-        width={Math.round(646 * scale)}
-        height={Math.round(250 * scale)}
         loading="lazy"
         className="block max-w-none"
-        style={{ margin: `${-41 * scale}px 0 0 ${-41 * scale}px` }}
+        style={{
+          width: "calc(646 * var(--s))",
+          height: "calc(250 * var(--s))",
+          margin: "calc(var(--crop) * var(--s) * -1) 0 0 calc(var(--crop) * var(--s) * -1)",
+        }}
       />
     </a>
   );
