@@ -38,11 +38,13 @@ import { feeFor, nepalDayOf } from "@/lib/fees";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import {
+  answerJobDone,
   cancelEngagement,
   engagementPlaces,
   getContact,
   getFeeForJob,
   listBids,
+  reportJobDone,
   setEngagementStatus,
   submitBid,
 } from "@/lib/queries";
@@ -190,18 +192,34 @@ export function EngagementDetailsDialog({
   });
 
   const change = useMutation({
-    mutationFn: (status: EngagementStatus) => setEngagementStatus(engagement.id, status, myProfileId),
+    mutationFn: (status: EngagementStatus) =>
+      status === "completed" && iAmWorker
+        ? reportJobDone(engagement.id)
+        : setEngagementStatus(engagement.id, status, myProfileId),
     onSuccess: (_void, status) => {
       setConfirming(null);
       invalidateJob();
       if (status === "accepted") toast(t("toastAccepted", { name: otherFirst }));
       if (status === "declined") toast(t("toastDeclined"));
       if (status === "confirmed") toast(t("toastConfirmed"));
-      if (status === "completed") {
+      if (status === "completed" && iAmWorker) {
+        // A worker's "done" is a report: the hirer confirms it (7700).
+        toast(t("toastDoneReported", { name: otherFirst }));
+      } else if (status === "completed") {
         toast(t("toastCompleted"));
         // Finishing a job flows straight into rating it.
         if (!engagement.my_review) setReviewOpen(true);
       }
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  // The hirer's "Not yet" to the worker's report.
+  const notYet = useMutation({
+    mutationFn: () => answerJobDone(engagement.id, false),
+    onSuccess: () => {
+      invalidateJob();
+      toast(t("toastNotYetSent", { name: otherFirst }));
     },
     onError: (error) => toast(errorMessage(error), "error"),
   });
@@ -290,6 +308,20 @@ export function EngagementDetailsDialog({
         return { tone: "good", icon: CalendarCheck, title: t("bannerUpcomingTitle", { date }), hint: t("bannerUpcomingHint") };
       case "markDone":
         return { tone: "action", icon: ClipboardCheck, title: t("bannerMarkDoneTitle"), hint: t("bannerMarkDoneHint") };
+      case "checkDone":
+        return {
+          tone: "action",
+          icon: ClipboardCheck,
+          title: t("bannerCheckDoneTitle", { name: otherFirst }),
+          hint: t("bannerCheckDoneHint"),
+        };
+      case "waitDoneCheck":
+        return {
+          tone: "good",
+          icon: Clock,
+          title: t("bannerWaitDoneCheckTitle"),
+          hint: t("bannerWaitDoneCheckHint", { name: otherFirst }),
+        };
       case "review":
         return { tone: "action", icon: Star, title: t("bannerReviewTitle"), hint: t("bannerReviewHint", { name: otherFirst }) };
       case "done":
@@ -366,6 +398,18 @@ export function EngagementDetailsDialog({
           <ClipboardCheck className="h-4 w-4" aria-hidden />
           {t("actMarkDoneFull")}
         </Button>
+      );
+    } else if (step === "checkDone") {
+      footer = (
+        <>
+          <Button variant="outline" loading={notYet.isPending} disabled={change.isPending} onClick={() => notYet.mutate()}>
+            {t("actNotYet")}
+          </Button>
+          <Button loading={change.isPending} disabled={notYet.isPending} onClick={() => change.mutate("completed")}>
+            <Check className="h-4 w-4" aria-hidden />
+            {t("actYesDone")}
+          </Button>
+        </>
       );
     } else if (step === "review") {
       footer = (
@@ -635,7 +679,11 @@ export function EngagementDetailsDialog({
         }
       >
         <p className="text-sm leading-relaxed text-slate-700">
-          {confirming === "decline" ? t("declineBody", { name: otherFirst }) : t("markDoneBody")}
+          {confirming === "decline"
+            ? t("declineBody", { name: otherFirst })
+            : iAmWorker
+              ? t("markDoneBodyWorker", { name: otherFirst })
+              : t("markDoneBody")}
         </p>
         {confirming === "markDone" && feeLine && (
           <p className="mt-2 text-xs text-slate-500">{feeLine.text}</p>

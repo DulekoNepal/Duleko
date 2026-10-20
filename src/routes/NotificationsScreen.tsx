@@ -8,6 +8,7 @@ import {
   Briefcase,
   CalendarCheck,
   CheckCheck,
+  ClipboardCheck,
   ExternalLink,
   HandCoins,
   IdCard,
@@ -77,6 +78,8 @@ const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
   kyc_review: { icon: IdCard, tone: "amber" },
   kyc_result: { icon: IdCard, tone: "slate" },
   post_moderated: { icon: ShieldAlert, tone: "amber" },
+  done_check: { icon: ClipboardCheck, tone: "amber" },
+  done_not_yet: { icon: AlertTriangle, tone: "amber" },
 };
 
 export function NotificationsScreen() {

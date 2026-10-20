@@ -1,9 +1,16 @@
-import { Banknote, CheckCircle2, Phone, Repeat, Star, UserCheck, Users, type LucideIcon } from "lucide-react";
+import { BadgeCheck, Banknote, CheckCircle2, Phone, Repeat, Star, UserCheck, Users, type LucideIcon } from "lucide-react";
 import type { StringKey } from "./i18n";
 import type { ActivityNumbers } from "./queries";
 
 /** Duleko's activity numbers (6900), in the order of Sunil's list - staff screen and website. */
-export const ACTIVITY_ROWS: { key: keyof ActivityNumbers; label: StringKey; icon: LucideIcon; money?: boolean }[] = [
+export const ACTIVITY_ROWS: {
+  key: keyof ActivityNumbers;
+  label: StringKey;
+  icon: LucideIcon;
+  money?: boolean;
+  /** Shown to staff only, never on the website (7800). */
+  staffOnly?: boolean;
+}[] = [
   { key: "calls", label: "statCalls", icon: Phone },
   { key: "accepted", label: "statAccepted", icon: UserCheck },
   { key: "completed", label: "statCompleted", icon: CheckCircle2 },
@@ -11,4 +18,5 @@ export const ACTIVITY_ROWS: { key: keyof ActivityNumbers; label: StringKey; icon
   { key: "repeat", label: "statRepeat", icon: Repeat },
   { key: "active", label: "statActive", icon: Users },
   { key: "deals_npr", label: "statDeals", icon: Banknote, money: true },
+  { key: "verified", label: "statVerified", icon: BadgeCheck, staffOnly: true },
 ];

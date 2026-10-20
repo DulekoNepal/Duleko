@@ -480,7 +480,7 @@ function ActivityNumbers() {
         <Eyebrow>{t("siteStatsEyebrow")}</Eyebrow>
         <SectionHeading>{t("siteStatsTitle")}</SectionHeading>
         <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {ACTIVITY_ROWS.map(({ key, label, icon: Icon, money }) => {
+          {ACTIVITY_ROWS.filter((row) => !row.staffOnly).map(({ key, label, icon: Icon, money }) => {
             const value = numbers[key] ?? 0;
             // Rounded down by the database, so anything past 10 reads "120+".
             const shown = `${money ? formatMoney(value, lang) : formatNumber(value, lang)}${value >= 10 ? "+" : ""}`;

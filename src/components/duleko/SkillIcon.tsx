@@ -18,6 +18,7 @@ import {
   Laptop,
   Music,
   Paintbrush,
+  PawPrint,
   PenTool,
   Plus,
   Ruler,
@@ -108,6 +109,7 @@ const SKILL_ICON: Record<string, LucideIcon | typeof AutoRickshawIcon> = {
   // Professional & skilled services
   it_computer: Laptop,
   health: Stethoscope,
+  veterinary: PawPrint,
   accountant: Calculator,
   tutor: GraduationCap,
   engineer: Ruler,

@@ -13,6 +13,8 @@ import type { EngagementWithParties, Lang } from "./types";
  *   waitConfirm  accepted - the worker waits for that
  *   markDone     confirmed, and the day has come
  *   upcoming     confirmed, day still ahead
+ *   checkDone    confirmed, the worker says it's done - the hirer answers
+ *   waitDoneCheck  confirmed, I said it's done - waiting on the hirer
  *   review       completed, and I haven't rated them
  *   done / declined / cancelled
  */
@@ -23,13 +25,15 @@ export type Step =
   | "waitConfirm"
   | "markDone"
   | "upcoming"
+  | "checkDone"
+  | "waitDoneCheck"
   | "review"
   | "done"
   | "declined"
   | "cancelled";
 
 export function stepOf(
-  e: Pick<EngagementWithParties, "status" | "worker_profile_id" | "work_date" | "my_review" | "last_bidder_id">,
+  e: Pick<EngagementWithParties, "status" | "worker_profile_id" | "work_date" | "my_review" | "last_bidder_id" | "done_reported_at">,
   myProfileId: string,
   today = todayKey(),
 ): Step {
@@ -44,6 +48,7 @@ export function stepOf(
     case "accepted":
       return iAmWorker ? "waitConfirm" : "confirm";
     case "confirmed":
+      if (e.done_reported_at) return iAmWorker ? "waitDoneCheck" : "checkDone";
       return e.work_date <= today ? "markDone" : "upcoming";
     case "completed":
       return e.my_review ? "done" : "review";
@@ -55,7 +60,7 @@ export function stepOf(
 }
 
 /** The steps that put a job under "Needs you". */
-export const NEEDS_ME: ReadonlySet<Step> = new Set<Step>(["reply", "confirm", "markDone", "review"]);
+export const NEEDS_ME: ReadonlySet<Step> = new Set<Step>(["reply", "confirm", "checkDone", "markDone", "review"]);
 
 /** "Today", "Tomorrow", "Yesterday", or the short date - for a job's day in a list. */
 export function dayLabel(iso: string, lang: Lang, t: (key: "dayToday" | "dayTomorrow" | "dayYesterday") => string): string {

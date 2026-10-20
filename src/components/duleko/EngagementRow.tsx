@@ -11,6 +11,7 @@ const ACTION_KEY: Partial<Record<Step, StringKey>> = {
   reply: "actReply",
   confirm: "actConfirm",
   markDone: "actMarkDone",
+  checkDone: "actCheckDone",
   review: "actRate",
 };
 
@@ -18,7 +19,9 @@ const STEP_DOT: Record<Step, string> = {
   reply: "bg-amber-500",
   confirm: "bg-amber-500",
   markDone: "bg-amber-500",
+  checkDone: "bg-amber-500",
   review: "bg-amber-500",
+  waitDoneCheck: "bg-brand-400",
   waitReply: "bg-slate-300",
   waitConfirm: "bg-brand-400",
   upcoming: "bg-brand-600",
@@ -50,6 +53,10 @@ export function useStepLine() {
         return t("stepLineUpcoming");
       case "markDone":
         return t("stepLineMarkDone");
+      case "checkDone":
+        return t("stepLineCheckDone", { name });
+      case "waitDoneCheck":
+        return t("stepLineWaitDoneCheck", { name });
       case "review":
         return t("stepLineReview", { name });
       default:

@@ -261,6 +261,8 @@ export function useNotificationsBadgeSync() {
           queryClient.invalidateQueries({ queryKey: ["unread", profile.id] });
           queryClient.invalidateQueries({ queryKey: ["unread-messages", profile.id] });
           queryClient.invalidateQueries({ queryKey: ["notifications", profile.id] });
+          // A worker may just have said a job is done: ask the hirer now.
+          queryClient.invalidateQueries({ queryKey: ["engagements", "done-checks", profile.id] });
         },
       )
       .subscribe();

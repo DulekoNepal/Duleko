@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, ChevronDown, ChevronRight, Mail, Smartphone } from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { OtpInput } from "@/components/ui/otp-input";
@@ -12,6 +13,8 @@ import { PolicyDialog } from "@/components/duleko/PolicyDialog";
 import { mailto } from "@/components/duleko/site/actions";
 import { onBackFromGoogle, signInWithGoogle } from "@/lib/google-sign-in";
 import { authPhone, isNepaliMobile, isWeakPin, phoneAccountExists, pinToPassword } from "@/lib/phone-auth";
+import { forgetSavedLogin, readSavedLogin, type SavedLogin } from "@/lib/saved-login";
+import { firstName } from "@/lib/work";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
@@ -66,7 +69,11 @@ export function AuthScreen({
   const { clearPasswordRecovery } = useSession();
   const [view, setView] = useState<View>("auth");
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
-  const [method, setMethod] = useState<Method>(readMethod);
+  // The account last signed out here, if they asked to be remembered.
+  const [saved, setSaved] = useState<SavedLogin | null>(readSavedLogin);
+  const [method, setMethod] = useState<Method>(() =>
+    saved?.method === "phone" ? "phone" : saved?.method === "email" ? "email" : readMethod(),
+  );
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -127,8 +134,14 @@ export function AuthScreen({
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: saved?.email && saved.method === "email" ? saved.email : "", password: "" },
   });
+
+  function forgetMe() {
+    forgetSavedLogin();
+    setSaved(null);
+    form.setValue("email", "");
+  }
 
   async function onSubmit(values: FormValues) {
     if (mode === "signup") {
@@ -608,8 +621,12 @@ export function AuthScreen({
                 </button>
               </div>
 
+              {mode === "signin" && saved && <SavedLoginCard saved={saved} onForget={forgetMe} />}
+
               {method === "phone" ? (
                 <PhonePinForm
+                  key={saved?.phone ?? "none"}
+                  initialPhone={saved?.phone ?? ""}
                   mode={mode}
                   agreed={agreed}
                   agreement={agreement}
@@ -738,13 +755,43 @@ export function AuthScreen({
  * No SMS code yet (see migration 6000): a new account is signed in the
  * moment it's made, and onboarding takes it from there.
  */
+/** "Welcome back, Sanjay" - who signed out here last, with a way to forget them. */
+function SavedLoginCard({ saved, onForget }: { saved: SavedLogin; onForget: () => void }) {
+  const { t } = useI18n();
+  const detail =
+    saved.method === "phone" && saved.phone
+      ? `+977 ${saved.phone}`
+      : saved.method === "google"
+        ? t("savedLoginGoogle")
+        : saved.email;
+  return (
+    <div className="mb-4 flex items-center gap-3 rounded-xl border border-brand-100 bg-brand-50/60 px-3 py-2.5">
+      <Avatar name={saved.name} src={saved.avatarUrl} size={40} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-slate-900">{t("savedLoginWelcome", { name: firstName(saved.name) })}</p>
+        {detail && <p className="truncate text-xs tabular-nums text-slate-500">{detail}</p>}
+      </div>
+      <button
+        type="button"
+        onClick={onForget}
+        className="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-brand-700 hover:bg-brand-100/70 hover:text-brand-800"
+      >
+        {t("savedLoginNotYou")}
+      </button>
+    </div>
+  );
+}
+
 function PhonePinForm({
+  initialPhone,
   mode,
   agreed,
   agreement,
   onError,
   onForgotPin,
 }: {
+  /** The remembered number, so signing back in is just the PIN. */
+  initialPhone: string;
   mode: "signin" | "signup";
   agreed: boolean;
   agreement: React.ReactNode;
@@ -752,7 +799,7 @@ function PhonePinForm({
   onForgotPin: () => void;
 }) {
   const { t } = useI18n();
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(initialPhone);
   const [pin, setPin] = useState("");
   const [pinAgain, setPinAgain] = useState("");
   const [pinMasked, setPinMasked] = useState(true);
@@ -845,6 +892,7 @@ function PhonePinForm({
         masked={pinMasked}
         onToggleMasked={() => setPinMasked((v) => !v)}
         disabled={busy}
+        autoFocus={mode === "signin" && Boolean(initialPhone)}
         action={
           mode === "signin" && (
             <button

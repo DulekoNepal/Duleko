@@ -3,7 +3,7 @@ import type { Lang, SkillCategory } from "@/lib/types";
 /**
  * Duleko's skills catalogue as the website shows it - the same ids, names and
  * categories as the skills table (supabase/migrations 0500, 3100, 3200,
- * 5400), kept here so the public pages render instantly and without a
+ * 5400, 7600), kept here so the public pages render instantly and without a
  * network round trip. "Others" is left out: the website says "write your
  * own" instead.
  */
@@ -34,6 +34,7 @@ export const SITE_SKILLS: SiteSkill[] = [
   { id: "it_computer", en: "IT / Computer", ne: "आईटी / कम्प्युटर", category: "professional" },
   { id: "tutor", en: "Tutor", ne: "ट्युटर", category: "professional" },
   { id: "health", en: "Health / Medical", ne: "स्वास्थ्य / चिकित्सा", category: "professional" },
+  { id: "veterinary", en: "Vet Doctor / Veterinary", ne: "पशु चिकित्सक", category: "professional" },
   { id: "accountant", en: "Accountant", ne: "लेखापाल", category: "professional" },
   { id: "engineer", en: "Engineer", ne: "इन्जिनियर", category: "professional" },
   { id: "legal", en: "Legal Services", ne: "कानुनी सेवा", category: "professional" },

@@ -478,10 +478,20 @@ function ActivityRowLink({
 }) {
   const { t, lang } = useI18n();
   const status = statusOf(item.type, item.status);
-  const onlineNow = item.type === "person" && !item.times && Date.now() - new Date(item.at).getTime() < 5 * 60_000;
+  const verifiedRow = item.type === "person" && item.status === "verified";
+  const onlineNow =
+    item.type === "person" && !item.times && !verifiedRow && Date.now() - new Date(item.at).getTime() < 5 * 60_000;
 
   let detail: React.ReactNode;
-  if (item.type === "person") {
+  if (verifiedRow) {
+    // A verified profile: when the badge was given, and by whom (7800).
+    detail = [
+      t("activityVerifiedLine", { time: relativeTime(item.at, lang) }),
+      item.title ? t("activityVerifiedBy", { name: item.title }) : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  } else if (item.type === "person") {
     detail = item.times ? (
       t("activityRepeatLine", { count: formatNumber(item.times, lang), amount: formatMoney(item.amount ?? 0, lang) })
     ) : onlineNow ? (

@@ -5,6 +5,7 @@ import { stopPhoneAlerts } from "@/lib/phone-alerts";
 import { supabase } from "@/lib/supabase";
 import { getMyProfile, touchPresence } from "@/lib/queries";
 import { persistGuestMode } from "@/hooks/use-guest-mode";
+import { forgetSavedLogin, saveLogin } from "@/lib/saved-login";
 import type { Profile } from "@/lib/types";
 
 const PRESENCE_HEARTBEAT_MS = 60_000;
@@ -27,7 +28,8 @@ interface SessionValue {
   /** Called once the new password is actually set, to resume normal routing. */
   clearPasswordRecovery: () => void;
   refreshProfile: () => Promise<void>;
-  signOut: () => Promise<void>;
+  /** `remember` keeps who they are on this phone for the sign-in screen (never the PIN). */
+  signOut: (options?: { remember?: boolean }) => Promise<void>;
 }
 
 // Kept across hot reloads, like the i18n and site-actions contexts.
@@ -108,7 +110,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       refreshProfile: async () => {
         await profileQuery.refetch();
       },
-      signOut: async () => {
+      signOut: async ({ remember = false }: { remember?: boolean } = {}) => {
+        const user = session?.user;
+        const me = profileQuery.data;
+        if (remember && user && me) saveLogin(user, me);
+        else if (!remember) forgetSavedLogin();
         // This phone stops getting the account's alerts.
         await stopPhoneAlerts().catch(() => {});
         await supabase.auth.signOut();

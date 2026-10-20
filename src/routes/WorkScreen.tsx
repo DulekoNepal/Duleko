@@ -45,7 +45,7 @@ import type { WorkRole, WorkView } from "@/router";
 
 const ROLE_KEY = "duleko.workRole";
 
-const NEEDS_ORDER: Step[] = ["reply", "confirm", "markDone", "review"];
+const NEEDS_ORDER: Step[] = ["reply", "confirm", "checkDone", "markDone", "review"];
 
 function storedRole(): WorkRole {
   try {

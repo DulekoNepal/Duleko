@@ -368,6 +368,9 @@ function WorkAreaRow() {
 function SignOutDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useI18n();
   const { signOut } = useSession();
+  // On by default: most phones are one person's, and signing back in is
+  // then just the PIN. Never the PIN itself - see lib/saved-login.ts.
+  const [remember, setRemember] = useState(true);
   return (
     <Dialog
       open={open}
@@ -382,7 +385,7 @@ function SignOutDialog({ open, onClose }: { open: boolean; onClose: () => void }
             variant="danger"
             onClick={() => {
               onClose();
-              void signOut();
+              void signOut({ remember });
             }}
           >
             <LogOut className="h-4 w-4" aria-hidden />
@@ -392,6 +395,18 @@ function SignOutDialog({ open, onClose }: { open: boolean; onClose: () => void }
       }
     >
       <p className="text-sm text-slate-600">{t("signOutConfirmBody")}</p>
+      <label className="mt-3 flex items-start gap-2.5 text-sm text-slate-700">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 accent-brand-700"
+          checked={remember}
+          onChange={(e) => setRemember(e.target.checked)}
+        />
+        <span>
+          {t("signOutRemember")}
+          <span className="mt-0.5 block text-xs text-slate-500">{t("signOutRememberHint")}</span>
+        </span>
+      </label>
     </Dialog>
   );
 }

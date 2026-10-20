@@ -566,7 +566,7 @@ export async function setDayStatus(
 // ---------------------------------------------------------------------
 const ENGAGEMENT_SELECT = `
   id,employer_profile_id,worker_profile_id,skill_id,title,details,work_date,location_text,
-  payment_amount,payment_note,status,cancelled_by,completed_at,created_at,updated_at,
+  payment_amount,payment_note,status,cancelled_by,completed_at,done_reported_at,created_at,updated_at,
   employer:profiles!work_engagements_employer_profile_id_fkey(${PARTY_COLUMNS}),
   worker:profiles!work_engagements_worker_profile_id_fkey(${PARTY_COLUMNS}),
   skill:skills(id,name_en,name_ne,emoji,category),
@@ -695,6 +695,43 @@ export async function setEngagementStatus(
   if (status === "completed") patch.completed_at = new Date().toISOString();
   const { error } = await supabase.from("work_engagements").update(patch).eq("id", engagementId);
   if (error) throw error;
+}
+
+/**
+ * The worker says the job is done (7700). It stays confirmed until the
+ * hirer agrees - or three days pass - so this only stamps the report.
+ */
+export async function reportJobDone(engagementId: string): Promise<void> {
+  const { error } = await supabase
+    .from("work_engagements")
+    .update({ done_reported_at: new Date().toISOString() })
+    .eq("id", engagementId);
+  if (error) throw error;
+}
+
+/** The hirer's answer to that report: done closes the job, "not yet" clears the report. */
+export async function answerJobDone(engagementId: string, done: boolean): Promise<void> {
+  if (done) return setEngagementStatus(engagementId, "completed");
+  const { error } = await supabase
+    .from("work_engagements")
+    .update({ done_reported_at: null })
+    .eq("id", engagementId)
+    .eq("status", "confirmed");
+  if (error) throw error;
+}
+
+/** Jobs where the worker says the work is done and I, the hirer, haven't answered - the pop-up's queue. */
+export async function listJobsToCheckDone(myProfileId: string): Promise<EngagementWithParties[]> {
+  const { data, error } = await supabase
+    .from("work_engagements")
+    .select(ENGAGEMENT_SELECT)
+    .eq("employer_profile_id", myProfileId)
+    .eq("status", "confirmed")
+    .not("done_reported_at", "is", null)
+    .order("done_reported_at", { ascending: true })
+    .limit(10);
+  if (error) throw error;
+  return ((data ?? []) as unknown as RawEngagement[]).map((row) => shapeEngagement(row, myProfileId));
 }
 
 /** Cancelling always requires a reason - enforced here and again in the DB. */
@@ -854,6 +891,8 @@ export interface ActivityNumbers {
   repeat: number;
   active: number;
   deals_npr: number;
+  /** Members with the verified badge (7800). Staff only - never on the website. */
+  verified?: number;
 }
 
 export interface ActivityStats {

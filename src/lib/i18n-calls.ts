@@ -60,6 +60,9 @@ export const callStrings = {
   statRepeat: ["Repeat customers", "दोहोरिएका ग्राहक"],
   statActive: ["Monthly active users", "मासिक सक्रिय प्रयोगकर्ता"],
   statDeals: ["Total reported deals", "जम्मा सम्झौता रकम"],
+  statVerified: ["Verified profiles", "प्रमाणित प्रोफाइल"],
+  activityVerifiedLine: ["Verified {time}", "{time} प्रमाणित भयो"],
+  activityVerifiedBy: ["by {name}", "{name}द्वारा"],
   activityHowCounted: [
     "Completed jobs and deal money include deals agreed over a call once the worker confirms (or 7 days pass). Active users are the last 30 days in both columns.",
     "सम्पन्न काम र सम्झौता रकममा फोनबाट मिलेका सम्झौता पनि पर्छन्, कामदारले पक्का गरेपछि (वा ७ दिनपछि)। सक्रिय प्रयोगकर्ता दुवैमा पछिल्ला ३० दिनका हुन्।",

@@ -247,7 +247,7 @@ export function CallDealPrompt() {
   );
 }
 
-function AnswerButton({
+export function AnswerButton({
   icon: Icon,
   label,
   tone = "plain",

@@ -131,6 +131,11 @@ export interface Engagement {
   cancellation_reason: CancellationReason | null;
   cancellation_note: string | null;
   completed_at: string | null;
+  /**
+   * When the worker said the work is done (7700). The job stays confirmed
+   * until the hirer agrees, or three days pass.
+   */
+  done_reported_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -229,7 +234,11 @@ export interface AppNotification {
     /** To a worker: someone who called them says they made a deal (6800). */
     | "call_deal"
     /** To a poster: staff edited, took down or deleted their service post, and why (7200). */
-    | "post_moderated";
+    | "post_moderated"
+    /** To a hirer: the worker says the job is done - is it? (7700) */
+    | "done_check"
+    /** To a worker: the hirer says the job isn't finished yet (7700). */
+    | "done_not_yet";
   title_en: string;
   title_ne: string;
   body_en: string | null;

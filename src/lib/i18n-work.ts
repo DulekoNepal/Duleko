@@ -48,11 +48,14 @@ export const workStrings = {
   stepLineWaitConfirm: ["Waiting for {name} to confirm", "{name}ले पक्का गर्ने पर्खाइमा"],
   stepLineUpcoming: ["Booked", "बुक भयो"],
   stepLineMarkDone: ["Is the work finished?", "काम सकियो?"],
+  stepLineCheckDone: ["{name} says it's done", "{name}ले काम सकियो भन्नुभयो"],
+  stepLineWaitDoneCheck: ["Waiting for {name} to confirm it's done", "{name}ले काम सकिएको पक्का गर्ने पर्खाइमा"],
   stepLineReview: ["Completed · how did it go?", "सम्पन्न · काम कस्तो भयो?"],
   actReply: ["Reply", "जवाफ"],
   actConfirm: ["Confirm", "पक्का"],
   actMarkDone: ["Mark done", "सम्पन्न"],
   actRate: ["Rate", "रेटिङ"],
+  actCheckDone: ["Check", "हेर्नुहोस्"],
 
   // ---- The job sheet: what's happening, in one banner -------------------
   bannerReplyWorkerTitle: ["{name} wants to hire you", "{name} तपाईंलाई काममा लगाउन चाहनुहुन्छ"],
@@ -95,6 +98,16 @@ export const workStrings = {
     "Mark it done once it's finished, then rate each other.",
     "काम सकिएपछि सम्पन्न चिन्ह लगाउनुहोस्, अनि एकअर्कालाई रेटिङ दिनुहोस्।",
   ],
+  bannerCheckDoneTitle: ["{name} says the work is done", "{name}ले काम सकियो भन्नुभएको छ"],
+  bannerCheckDoneHint: [
+    "Is it finished? Confirm it to close the job, or say not yet. If you don't answer, it closes by itself in 3 days.",
+    "काम सकियो? सकिएको भए पक्का गर्नुहोस्, नसकिएको भए 'अझै सकिएको छैन' थिच्नुहोस्। तपाईंले जवाफ नदिए ३ दिनमा काम आफैँ सम्पन्न हुन्छ।",
+  ],
+  bannerWaitDoneCheckTitle: ["You marked it done", "तपाईंले सम्पन्न चिन्ह लगाउनुभयो"],
+  bannerWaitDoneCheckHint: [
+    "Waiting for {name} to confirm. If they don't answer, it's completed in 3 days.",
+    "{name}ले पक्का गर्ने पर्खाइमा। उहाँले जवाफ नदिए ३ दिनमा काम सम्पन्न हुन्छ।",
+  ],
   bannerReviewTitle: ["Job completed", "काम सम्पन्न भयो"],
   bannerReviewHint: [
     "How did it go? Rate {name} - it helps others choose.",
@@ -125,6 +138,8 @@ export const workStrings = {
   actAcceptAt: ["Accept {amount}", "{amount} स्वीकार"],
   actConfirmBooking: ["Confirm booking", "बुकिङ पक्का गर्नुहोस्"],
   actMarkDoneFull: ["Mark as done", "सम्पन्न भयो"],
+  actYesDone: ["Yes, it's done", "हो, काम सकियो"],
+  actNotYet: ["Not yet", "अझै सकिएको छैन"],
   actRateName: ["Rate {name}", "{name}लाई रेटिङ दिनुहोस्"],
   offerAnotherPrice: ["Offer another price", "अर्को मूल्य भन्नुहोस्"],
   priceTrail: ["How the price moved", "मूल्य कसरी तय हुँदै गयो"],
@@ -140,6 +155,19 @@ export const workStrings = {
     "Do this once the work is finished. The job closes, and you can both leave a review.",
     "काम सकिएपछि मात्र गर्नुहोस्। काम बन्द हुन्छ, अनि दुवैले समीक्षा दिन सक्नुहुन्छ।",
   ],
+  markDoneBodyWorker: [
+    "Do this once the work is finished. We'll ask {name} to confirm it - if they don't answer, the job closes in 3 days.",
+    "काम सकिएपछि मात्र गर्नुहोस्। हामी {name}लाई पक्का गर्न भन्नेछौँ - उहाँले जवाफ नदिए ३ दिनमा काम बन्द हुन्छ।",
+  ],
+
+  // The hirer's pop-up when the worker says the work is done (7700)
+  doneCheckTitle: ["Is the work finished?", "काम सकियो?"],
+  doneCheckQuestion: ["{name} says the work is done", "{name}ले काम सकियो भन्नुभएको छ"],
+  doneCheckWhy: [
+    "Confirm only if it's really finished. If you don't answer, the job closes by itself in 3 days.",
+    "साँच्चै सकिएको भए मात्र पक्का गर्नुहोस्। तपाईंले जवाफ नदिए ३ दिनमा काम आफैँ बन्द हुन्छ।",
+  ],
+  doneCheckLater: ["Ask me later", "पछि सोध्नुहोस्"],
 
   // Toasts
   toastAccepted: ["Accepted. {name} will confirm the booking.", "स्वीकार गरियो। {name}ले बुकिङ पक्का गर्नुहुनेछ।"],
@@ -147,6 +175,8 @@ export const workStrings = {
   toastConfirmed: ["Booked. Contact each other to arrange the day.", "बुक भयो। दिन मिलाउन एकअर्कालाई सम्पर्क गर्नुहोस्।"],
   toastCompleted: ["Marked as done", "सम्पन्न भयो"],
   toastCancelled: ["Job cancelled", "काम रद्द भयो"],
+  toastDoneReported: ["Sent. {name} will confirm the work is done.", "पठाइयो। {name}ले काम सकिएको पक्का गर्नुहुनेछ।"],
+  toastNotYetSent: ["{name} has been told it isn't finished yet", "काम अझै सकिएको छैन भनेर {name}लाई जानकारी दिइयो"],
   toastCounterSent: ["New price sent to {name}", "{name}लाई नयाँ मूल्य पठाइयो"],
   toastAgreed: ["You agreed to {amount}. {name} can accept now.", "तपाईं {amount}मा सहमत हुनुभयो। अब {name}ले स्वीकार गर्न सक्नुहुन्छ।"],
 } as const;
