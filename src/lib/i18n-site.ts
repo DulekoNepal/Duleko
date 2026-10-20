@@ -403,12 +403,6 @@ export const siteStrings = {
     "Mark the days you're busy on a full-year calendar, in Nepali or English dates.",
     "पूरै वर्षको पात्रोमा व्यस्त दिन चिन्ह लगाउनुहोस्, नेपाली वा अंग्रेजी मितिमा।",
   ],
-  originEyebrow: ["Where it started", "सुरुवात कहाँबाट"],
-  originTitle: ["A question from Kapilvastu.", "कपिलवस्तुबाट उठेको एउटा प्रश्न।"],
-  originBody: [
-    "Growing up in Kapilvastu, Sunil saw people searching for work while, in the same communities, others couldn't find the right person for the work they needed done. Duleko is his answer - built with Sanjay and Dipendra, and shaped by the people who use it.",
-    "कपिलवस्तुमा हुर्कँदा सुनिलले एकातिर मानिसहरू काम खोजिरहेको देखे, अर्कातिर उही समुदायमा अरूले आफूलाई चाहिने कामका लागि सही मानिस भेट्न सकिरहेका थिएनन्। डुलेको उनको जवाफ हो - संजय र दिपेन्द्रसँग मिलेर बनाइएको र प्रयोग गर्ने मानिसहरूले आकार दिएको।",
-  ],
   factsEyebrow: ["Duleko today", "आजको डुलेको"],
   factSkillsValue: ["30+", "३०+"],
   factSkillsLabel: ["skills in three groups", "तीन समूहमा सीपहरू"],

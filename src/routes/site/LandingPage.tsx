@@ -32,7 +32,6 @@ import {
   IconCard,
   PrimaryCtas,
   Prose,
-  PullQuote,
   RidgeLines,
   SectionHeading,
   SectionIntro,
@@ -46,7 +45,6 @@ import {
 } from "@/components/duleko/Site";
 import { SkillIcon } from "@/components/duleko/SkillIcon";
 import { SITE_SKILLS, siteSkill, siteSkillName, type SiteSkill } from "@/components/duleko/site/skills";
-import { teamMember, TEAM } from "@/components/duleko/site/team";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import { getPublicActivityStats } from "@/lib/queries";
 import { ACTIVITY_ROWS } from "@/lib/activity";
@@ -95,7 +93,6 @@ const CATEGORY_LABEL: Record<SkillCategory, StringKey> = {
 /** Home for signed-out web visitors - see AppShell. */
 export function LandingPage() {
   const { t, lang } = useI18n();
-  const sunil = teamMember("sunil");
 
   return (
     // English keeps index.html's own tab title; Nepali gets a translated one.
@@ -271,72 +268,18 @@ export function LandingPage() {
         </Link>
       </SiteSection>
 
-      {/* Where it started - the founder's question, and the team */}
+      {/* Duleko at a glance */}
       <SiteSection tone="paper">
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-center lg:gap-16">
-          <div className="relative mx-auto w-full max-w-sm lg:max-w-none">
-            <div className="relative overflow-hidden rounded-[2rem] bg-teal-800 shadow-[0_40px_80px_-40px_rgb(12_60_72/0.6)]">
-              <img
-                src={sunil.image}
-                alt={t(sunil.nameKey)}
-                loading="lazy"
-                className="aspect-[4/5] w-full object-cover"
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent p-5 pt-16 text-white">
-                <p className="font-display text-xl font-semibold">{t(sunil.nameKey)}</p>
-                <p className="mt-0.5 inline-flex items-center gap-1.5 text-sm text-white/80">
-                  <MapPin className="h-4 w-4 text-brand-300" aria-hidden />
-                  {t("sunilLocation")}
-                </p>
-              </div>
-            </div>
-            <Link
-              to="/about"
-              hash="team"
-              className="absolute -bottom-5 right-4 flex items-center gap-2 rounded-full bg-surface py-1.5 pl-1.5 pr-4 text-sm font-semibold text-slate-800 shadow-xl ring-1 ring-slate-200/80 transition-transform hover:-translate-y-0.5 sm:right-6"
-            >
-              <span className="flex -space-x-2">
-                {TEAM.map((m) => (
-                  <img key={m.id} src={m.image} alt="" className="h-8 w-8 rounded-full object-cover ring-2 ring-surface" />
-                ))}
-              </span>
-              {t("meetTheTeam")}
-            </Link>
-          </div>
-
-          <div>
-            <Eyebrow>{t("originEyebrow")}</Eyebrow>
-            <SectionHeading>{t("originTitle")}</SectionHeading>
-            <PullQuote
-              className="mt-8"
-              size="md"
-              quote={t(sunil.quoteKey)}
-              name={t(sunil.nameKey)}
-              role={t(sunil.roleKey)}
-              to={{ slug: sunil.slug }}
-            />
-            <Prose className="mt-8">
-              <p>{t("originBody")}</p>
-            </Prose>
-            <div className="mt-5 flex flex-wrap gap-x-6 gap-y-1">
-              <StoryLink to="/motivation">{t("motivationTitle")}</StoryLink>
-              <StoryLink to="/about">{t("navAboutDuleko")}</StoryLink>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-16 sm:mt-20">
-          <Eyebrow>{t("factsEyebrow")}</Eyebrow>
-          <FactGrid
-            className="mt-2"
-            facts={[
-              { value: t("factSkillsValue"), label: t("factSkillsLabel") },
-              { value: t("factLangValue"), label: t("factLangLabel") },
-              { value: t("factFreeValue"), label: t("factFreeLabel") },
-              { value: t("factAppValue"), label: t("factAppLabel") },
-            ]}
-          />
-        </div>
+        <Eyebrow>{t("factsEyebrow")}</Eyebrow>
+        <FactGrid
+          className="mt-2"
+          facts={[
+            { value: t("factSkillsValue"), label: t("factSkillsLabel") },
+            { value: t("factLangValue"), label: t("factLangLabel") },
+            { value: t("factFreeValue"), label: t("factFreeLabel") },
+            { value: t("factAppValue"), label: t("factAppLabel") },
+          ]}
+        />
       </SiteSection>
 
       <StoryNav current="home" />
