@@ -9,6 +9,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
+  Download,
   Eye,
   Flag,
   GraduationCap,
@@ -56,6 +57,7 @@ import {
   StickyTabBar,
   useStickyTabs,
 } from "@/components/duleko/profile/ProfileUI";
+import { useDownloadCard } from "@/components/duleko/profile/use-download-card";
 import { ReviewsPanel } from "@/components/duleko/ReviewsPanel";
 import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
 import { RequestWorkDialog } from "@/components/duleko/RequestWorkDialog";
@@ -287,6 +289,9 @@ export function WorkerScreen() {
     onSuccess: (result) => (result === "copied" ? toast(t("linkCopied")) : toast(t("copyFailed"), "error")),
   });
 
+  // Staff only: anyone's Professional ID card, drawn from this profile.
+  const downloadCard = useDownloadCard();
+
   const addFriend = useMutation({
     mutationFn: () => sendFriendRequest(me!.id, workerId),
     onSuccess: () => {
@@ -471,13 +476,14 @@ export function WorkerScreen() {
                     variant="outline"
                     size="icon"
                     className="rounded-full"
+                    loading={downloadCard.isPending}
                     onClick={() => setMenuOpen((v) => !v)}
                     aria-haspopup="menu"
                     aria-expanded={menuOpen}
                     aria-label={t("profileOptions")}
                     title={t("profileOptions")}
                   >
-                    <MoreHorizontal className="h-4 w-4" aria-hidden />
+                    {!downloadCard.isPending && <MoreHorizontal className="h-4 w-4" aria-hidden />}
                   </Button>
 
                   {menuOpen && (
@@ -491,10 +497,20 @@ export function WorkerScreen() {
                           onClick={menuAction(() => withAuth(() => setReportOpen(true)))}
                         />
                       )}
-                      {showModeration && (
+                      {isStaffViewer && (
                         <>
                           <MenuDivider />
                           <MenuLabel>{t("moderatorActions")}</MenuLabel>
+                          {/* Every profile - members, staff, your own. */}
+                          <MenuItem
+                            icon={Download}
+                            label={t("downloadCard")}
+                            onClick={menuAction(() => downloadCard.mutate(w))}
+                          />
+                        </>
+                      )}
+                      {showModeration && (
+                        <>
                           {w.is_verified ? (
                             <>
                               <MenuItem icon={IdCard} label={t("kycViewId")} onClick={menuAction(() => setViewingId(true))} />

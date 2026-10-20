@@ -24,6 +24,7 @@ import {
   StatusStrip,
   type StatItem,
 } from "./ProfileUI";
+import { useDownloadCard } from "./use-download-card";
 import { useMyProfileData } from "./use-my-profile-data";
 
 const PHOTO_TYPES = "image/jpeg,image/png,image/webp";
@@ -164,22 +165,7 @@ export function ProfileHero({
     onSuccess: (result) => (result === "copied" ? toast(t("linkCopied")) : toast(t("copyFailed"), "error")),
   });
 
-  // Drawn fresh on a canvas from the real profile - never a screenshot -
-  // then handed to the browser as a plain PNG download.
-  const downloadCard = useMutation({
-    mutationFn: async () => {
-      // Loaded on tap: the card drawer brings a QR encoder and React's
-      // server renderer, which nobody needs just to open their profile.
-      const { profileCardFilename, renderProfileCard, saveProfileCard } = await import("@/lib/profileCard");
-      const blob = await renderProfileCard(profile!, skills.data ?? []);
-      return saveProfileCard(blob, profileCardFilename(profile!));
-    },
-    onSuccess: (result) => {
-      if (result === "cancelled") return;
-      toast(t(result === "shared" ? "cardReadyToShare" : "cardDownloaded"));
-    },
-    onError: (error) => toast(errorMessage(error), "error"),
-  });
+  const downloadCard = useDownloadCard();
 
   if (!profile) return null;
 
@@ -266,7 +252,7 @@ export function ProfileHero({
                 <MenuPanel className="w-64">
                   <MenuItem icon={Eye} label={t("viewPublicProfile")} onClick={menuAction(() => navigate({ to: "/worker/$workerId", params: { workerId: profile.id } }))} />
                   <MenuItem icon={LinkIcon} label={t("copyLink")} onClick={menuAction(() => copy.mutate())} />
-                  <MenuItem icon={Download} label={t("downloadCard")} onClick={menuAction(() => downloadCard.mutate())} />
+                  <MenuItem icon={Download} label={t("downloadCard")} onClick={menuAction(() => downloadCard.mutate(profile))} />
                   {profile.staff_role && (
                     <>
                       <MenuDivider />

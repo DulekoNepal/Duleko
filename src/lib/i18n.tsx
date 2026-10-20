@@ -690,7 +690,11 @@ const strings = {
   downloadCard: ["Download Professional ID card", "व्यावसायिक परिचयपत्र डाउनलोड गर्नुहोस्"],
   generatingCard: ["Preparing your card…", "तपाईंको कार्ड तयार हुँदैछ…"],
   cardDownloaded: ["Professional ID card downloaded.", "व्यावसायिक परिचयपत्र डाउनलोड भयो।"],
-  cardReadyToShare: ["Choose where to save your card.", "आफ्नो कार्ड कहाँ सुरक्षित गर्ने, छान्नुहोस्।"],
+  cardSavedToGallery: ["Professional ID card saved to your gallery.", "व्यावसायिक परिचयपत्र तपाईंको ग्यालेरीमा सुरक्षित भयो।"],
+  cardSaveDenied: [
+    "Allow Duleko to save photos, then try again.",
+    "Duleko लाई फोटो सुरक्षित गर्ने अनुमति दिनुहोस्, अनि फेरि प्रयास गर्नुहोस्।",
+  ],
   profileOptions: ["Profile options", "प्रोफाइल विकल्पहरू"],
   copyLink: ["Copy link", "लिङ्क कपी गर्नुहोस्"],
   linkCopied: ["Profile link copied.", "प्रोफाइल लिङ्क कपी भयो।"],

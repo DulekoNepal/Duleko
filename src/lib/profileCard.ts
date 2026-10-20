@@ -2,9 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { IdCard, MapPin } from "lucide-react";
 import QRCode from "qrcode";
-import { Capacitor } from "@capacitor/core";
-import { Filesystem, Directory } from "@capacitor/filesystem";
-import { Share } from "@capacitor/share";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { skillIconFor } from "@/components/duleko/SkillIcon";
 import { profileUrl } from "@/lib/share";
 import { initials, locationShort } from "@/lib/utils";
@@ -369,7 +367,7 @@ function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      // reader.result is "data:image/png;base64,AAAA..." - Filesystem wants
+      // reader.result is "data:image/png;base64,AAAA..." - the plugin wants
       // the raw base64 payload, not the data URL wrapper.
       const result = reader.result as string;
       resolve(result.slice(result.indexOf(",") + 1));
@@ -379,16 +377,19 @@ function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-export type SaveCardResult = "downloaded" | "shared" | "cancelled";
+/** The app's own native bridge (android/.../GalleryPlugin.java). */
+const Gallery = registerPlugin<{ saveImage(options: { data: string; filename: string }): Promise<void> }>("Gallery");
+
+export type SaveCardResult = "downloaded" | "saved" | "denied";
 
 /**
  * Saves the rendered card. The web's `<a download>` trick has no real
  * equivalent inside an Android WebView - blob-URL downloads there are
  * silently dropped, since there's no browser download manager to catch
- * them. Natively the file is written to disk via the Filesystem plugin and
- * handed to the OS share sheet instead, so "Save to Photos", "Save to
- * Files", or sending it straight to WhatsApp all fall out of the same
- * native picker someone already knows how to use.
+ * them. Natively the card goes straight into the phone's gallery instead
+ * (Pictures › Duleko), the same place a saved photo lands - no picker in
+ * between. "denied" is Android 7-9 only, where saving there needs a
+ * storage permission the person said no to.
  */
 export async function saveProfileCard(blob: Blob, filename: string): Promise<SaveCardResult> {
   if (!Capacitor.isNativePlatform()) {
@@ -396,15 +397,11 @@ export async function saveProfileCard(blob: Blob, filename: string): Promise<Sav
     return "downloaded";
   }
 
-  const base64 = await blobToBase64(blob);
-  const written = await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Cache });
-
   try {
-    await Share.share({ url: written.uri, title: filename });
-    return "shared";
+    await Gallery.saveImage({ data: await blobToBase64(blob), filename });
+    return "saved";
   } catch (err) {
-    // Dismissing the share sheet is a normal outcome, not a failure.
-    if (err instanceof Error && err.name === "AbortError") return "cancelled";
+    if ((err as { code?: string }).code === "PERMISSION_DENIED") return "denied";
     throw err;
   }
 }

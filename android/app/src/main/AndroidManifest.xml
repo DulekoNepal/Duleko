@@ -44,4 +44,6 @@
     <!-- Required by @capacitor/geolocation (AutoShareLocation, Search "nearest", Profile location toggle) -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Android 7-9 only: saving the ID card into the gallery (GalleryPlugin). 10+ needs no permission. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 </manifest>
