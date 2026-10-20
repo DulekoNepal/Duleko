@@ -108,7 +108,7 @@ function HomeSection({
       className={cn("animate-in-up min-w-0", className)}
       style={delay ? ({ "--delay": `${delay}ms` } as CSSProperties) : undefined}
     >
-      <div className="mb-2.5 flex items-end justify-between gap-3 md:mb-3">
+      <div className="mb-2.5 flex items-center justify-between gap-3 md:mb-3">
         <div className="min-w-0">
           <h2 className="truncate text-[15px] font-bold tracking-tight text-slate-900 md:text-lg">{title}</h2>
           {subtitle && <p className="truncate text-xs text-slate-500">{subtitle}</p>}
@@ -237,11 +237,10 @@ export function HomeScreen() {
             </Suspense>
           </div>
 
-          <div className="min-w-0 lg:col-span-2">
+          {/* The two boards side by side from lg, each its own column, so a
+              short list doesn't leave half the row empty. */}
+          <div className="grid min-w-0 gap-5 md:gap-6 lg:col-span-2 lg:grid-cols-2 lg:items-start lg:gap-x-7">
             <RecentPosts kind="hire" area={area} where={where} onPost={() => postJob("hire")} delay={90} />
-          </div>
-
-          <div className="min-w-0 lg:col-span-2">
             <RecentPosts kind="offer" area={area} where={where} onPost={() => postJob("offer")} delay={105} />
           </div>
 
@@ -254,7 +253,9 @@ export function HomeScreen() {
 
             {/* Safety last - always one tap away, never in the way of browsing. */}
             <section className="animate-in-up" style={{ "--delay": "150ms" } as CSSProperties}>
-              <EmergencyContactsSection gridClassName="md:grid-cols-4 lg:grid-cols-2" />
+              {/* One number per row beside the skills, so the column runs
+                  about as tall as they do instead of stopping short. */}
+              <EmergencyContactsSection gridClassName="md:grid-cols-4 lg:grid-cols-1" />
             </section>
           </aside>
         </div>
@@ -981,7 +982,9 @@ function RecentPosts({
           </button>
         </div>
       ) : (
-        <div className="grid gap-2.5 lg:grid-cols-3">
+        // As many columns as fit at ~20rem, and one post fills the row
+        // rather than sitting in a third of it.
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-2.5">
           {items.map((post) => (
             <JobCard key={post.id} post={post} />
           ))}
