@@ -13,7 +13,8 @@ import {
   siteCard,
   siteCardHover,
 } from "@/components/duleko/Site";
-import { RidgeLines } from "@/components/duleko/site/ui";
+import { BrandWatermark, RidgeLines } from "@/components/duleko/site/ui";
+import dulekoMark from "@/assets/duleko-mark.webp";
 import { TEAM, bioParagraphs, telHref } from "@/components/duleko/site/team";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -61,20 +62,41 @@ export function FounderPage() {
         eyebrow={t(member.roleKey)}
         title={name}
         aside={
-          <div className="relative mx-auto w-full max-w-[15rem] sm:max-w-[17rem]">
+          // The portrait framed like a Duleko member card: a white mat over a
+          // tilted brand card (ridge lines + watermark), the mark pinned on top.
+          <div className="relative mx-auto mb-6 mt-4 w-full max-w-[13.5rem] sm:max-w-[15rem]">
             <div
-              className="pointer-events-none absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-brand-300/40 to-accent-500/15 blur-2xl"
+              className="pointer-events-none absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-brand-300/35 to-accent-500/15 blur-2xl"
               aria-hidden
             />
-            <div className="band relative overflow-hidden rounded-[1.75rem] bg-teal-800 shadow-[0_30px_60px_-30px_rgb(12_60_72/0.6)]">
-              <img src={member.image} alt={name} className="aspect-[4/5] w-full object-cover" />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4 pt-14 text-white">
-                <p className="inline-flex items-start gap-1.5 text-[13px] font-medium leading-snug text-white/90">
-                  <AffiliationIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" aria-hidden />
-                  {t(member.affiliationKey)}
-                </p>
-              </div>
+            <span
+              className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 bg-[radial-gradient(circle,var(--color-accent-500)_1.5px,transparent_1.6px)] bg-[length:10px_10px] opacity-50"
+              aria-hidden
+            />
+            <div
+              className="band absolute inset-0 translate-x-5 translate-y-2 rotate-[7deg] overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-brand-600 via-brand-700 to-teal-800 shadow-[0_30px_60px_-30px_rgb(12_60_72/0.6)]"
+              aria-hidden
+            >
+              <RidgeLines className="text-white/20" seed={12} lines={9} />
+              <BrandWatermark className="-bottom-8 -right-8 h-32 w-32" />
             </div>
+            <figure className="relative rounded-[1.75rem] bg-surface p-2 shadow-[0_30px_60px_-30px_rgb(12_60_72/0.55)] ring-1 ring-slate-200/80">
+              <div className="relative overflow-hidden rounded-[1.35rem] bg-teal-800">
+                <img src={member.image} alt={name} className="aspect-[4/5] w-full object-cover" />
+                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent p-3.5 pt-12 text-white">
+                  <p className="inline-flex items-start gap-1.5 text-[13px] font-medium leading-snug text-white/90">
+                    <AffiliationIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" aria-hidden />
+                    {t(member.affiliationKey)}
+                  </p>
+                </figcaption>
+              </div>
+            </figure>
+            <span className="absolute -left-4 -top-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-surface shadow-lg ring-1 ring-slate-200/80">
+              <img src={dulekoMark} alt="Duleko" className="h-10 w-10 rounded-xl object-cover" />
+            </span>
+            <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-700 px-4 py-1.5 text-xs font-bold text-white shadow-lg ring-4 ring-paper">
+              {t("teamAttribution")}
+            </span>
           </div>
         }
       >
