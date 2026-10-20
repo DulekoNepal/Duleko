@@ -1766,7 +1766,7 @@ const MESSAGE_COLUMNS =
   "id,profile_a,profile_b,sender_profile_id,body,created_at,read_at,deleted_at,edited_at,reply_to_id," +
   "message_reactions(profile_id,emoji)";
 
-function shapeMessage(row: unknown): ChatMessage {
+export function shapeMessage(row: unknown): ChatMessage {
   const m = row as ChatMessage;
   return { ...m, reply_to: null, message_reactions: m.message_reactions ?? [] };
 }

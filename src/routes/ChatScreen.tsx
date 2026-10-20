@@ -1,34 +1,33 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import {
   ArrowDown,
   ArrowLeft,
   Check,
-  CheckCheck,
   CornerUpLeft,
-  Loader2,
   Pencil,
   Send,
   Smile,
   UserRound,
   X,
 } from "lucide-react";
-import { HeaderToggles, PAGE_GUTTER, PAGE_WIDTH } from "@/components/duleko/Layout";
+import { PAGE_GUTTER, PAGE_WIDTH } from "@/components/duleko/Layout";
 import { ALL_REACTIONS, ChatBubble, type BubblePanel } from "@/components/duleko/ChatBubble";
-import { useConversationsLive } from "@/components/duleko/ConversationList";
+import { TypingDots, useConversationsLive } from "@/components/duleko/ConversationList";
 import { ChatsPane } from "@/routes/ChatsScreen";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { Avatar } from "@/components/ui/avatar";
-import { FullPageLoader } from "@/components/ui/states";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import { useTypingFrom, useTypingSender } from "@/hooks/use-typing";
 import {
   MESSAGES_PAGE,
+  attachReplies,
   chatPairKey,
+  shapeMessage,
   editMessage,
   getProfile,
   listMessages,
@@ -44,7 +43,7 @@ import { CHAT_SPLIT_QUERY, useMediaQuery } from "@/hooks/use-media-query";
 import { clearChatAlert } from "@/lib/phone-alerts";
 import { supabase, errorMessage } from "@/lib/supabase";
 import { cn, containsPhoneNumber, formatDayLabel, relativeTime, sameMinuteWindow, toDateKey } from "@/lib/utils";
-import type { ChatMessage } from "@/lib/types";
+import type { ChatMessage, ConversationSummary } from "@/lib/types";
 
 const TYPING_BROADCAST_THROTTLE_MS = 1500;
 const TYPING_STOP_AFTER_MS = 3000;
@@ -86,6 +85,13 @@ export function ChatScreen() {
   const anchorFromBottom = useRef<number | null>(null);
 
   const other = useQuery({ queryKey: ["profile", otherId], queryFn: () => getProfile(otherId) });
+  // The Chats list already has their name and photo, so the thread opens
+  // straight away with those while the full profile loads behind it.
+  const summary = me
+    ? queryClient
+        .getQueryData<ConversationSummary[]>(["conversations", me.id])
+        ?.find((c) => c.otherProfileId === otherId)
+    : undefined;
 
   const typingFrom = useTypingFrom(me?.id);
   const otherTyping = typingFrom.has(otherId);
@@ -102,6 +108,9 @@ export function ChatScreen() {
     queryKey: ["messages", pairKey, limit],
     queryFn: () => listMessages(me!.id, otherId, limit),
     enabled: Boolean(me && pairKey),
+    // "Load older" asks for a bigger window under a new key; keep showing
+    // the messages already here until it lands, instead of a blank list.
+    placeholderData: keepPreviousData,
   });
 
   // A full page came back, so there is probably more history behind it.
@@ -110,18 +119,67 @@ export function ChatScreen() {
   // One channel per thread for live message and reaction changes. Typing
   // rides a separate per-person channel (see use-typing) so the Chats list
   // can show it too without opening a channel per conversation.
+  //
+  // Changes are applied straight into what's on screen - a new message
+  // appears the instant it arrives, with no round trip to fetch the thread
+  // again. Only reactions (which arrive without their message) refetch,
+  // and only when they belong to this thread.
   useEffect(() => {
     if (!pairKey) return;
+    const update = (fn: (list: ChatMessage[]) => ChatMessage[]) =>
+      queryClient.setQueriesData<ChatMessage[]>({ queryKey: ["messages", pairKey] }, (old) =>
+        old ? attachReplies(fn(old)) : old,
+      );
     const channel = supabase
       .channel(`messages:${pairKey}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "messages", filter: `pair_key=eq.${pairKey}` },
-        () => queryClient.invalidateQueries({ queryKey: ["messages", pairKey] }),
+        { event: "INSERT", schema: "public", table: "messages", filter: `pair_key=eq.${pairKey}` },
+        ({ new: row }) => {
+          const incoming = shapeMessage(row);
+          update((list) => {
+            if (list.some((x) => x.id === incoming.id)) return list;
+            // My own message, back before the send call answered: it takes
+            // the place of its "sending" copy rather than doubling up.
+            const tempIndex = list.findIndex((x) => x.pending && x.body === incoming.body);
+            const rest = tempIndex >= 0 ? list.filter((_, i) => i !== tempIndex) : list;
+            return [...rest, incoming];
+          });
+        },
       )
-      .on("postgres_changes", { event: "*", schema: "public", table: "message_reactions" }, () =>
-        queryClient.invalidateQueries({ queryKey: ["messages", pairKey] }),
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages", filter: `pair_key=eq.${pairKey}` },
+        ({ new: row }) => {
+          const changed = row as Partial<ChatMessage> & { id: string };
+          update((list) =>
+            list.map((x) =>
+              x.id === changed.id
+                ? {
+                    ...x,
+                    body: changed.body ?? x.body,
+                    read_at: changed.read_at ?? null,
+                    edited_at: changed.edited_at ?? null,
+                    deleted_at: changed.deleted_at ?? null,
+                  }
+                : x,
+            ),
+          );
+        },
       )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "messages", filter: `pair_key=eq.${pairKey}` },
+        ({ old: row }) => update((list) => list.filter((x) => x.id !== (row as { id?: string }).id)),
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "message_reactions" }, (payload) => {
+        const messageId =
+          (payload.new as { message_id?: string })?.message_id ?? (payload.old as { message_id?: string })?.message_id;
+        const inThread = queryClient
+          .getQueriesData<ChatMessage[]>({ queryKey: ["messages", pairKey] })
+          .some(([, list]) => list?.some((x) => x.id === messageId));
+        if (!messageId || inThread) queryClient.invalidateQueries({ queryKey: ["messages", pairKey] });
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -191,7 +249,6 @@ export function ChatScreen() {
       Promise.all([markThreadRead(me.id, otherId), markMessageNotificationsRead(me.id, otherId)])
         .then(() => {
           queryClient.invalidateQueries({ queryKey: ["unread-messages", me.id] });
-          queryClient.invalidateQueries({ queryKey: ["messages", pairKey] });
           // The Chats list's unread bolding is stale otherwise - it isn't
           // watching this thread directly.
           queryClient.invalidateQueries({ queryKey: ["conversations", me.id] });
@@ -212,16 +269,51 @@ export function ChatScreen() {
     if (me) queryClient.invalidateQueries({ queryKey: ["conversations", me.id] });
   };
 
+  // Sending feels instant: the message joins the thread the moment it's
+  // sent, with a clock in its corner, and turns into the real one when the
+  // server answers. A failure takes it back out and returns the text to
+  // the box so nothing typed is lost.
+  const messagesKey = ["messages", pairKey, limit] as const;
   const send = useMutation({
-    mutationFn: ({ body, replyToId }: { body: string; replyToId: string | null }) =>
+    mutationFn: ({ body, replyToId }: { body: string; replyToId: string | null; tempId: string }) =>
       sendMessage(me!.id, otherId, body, replyToId),
-    onSuccess: () => {
-      setDraft("");
-      setReplyTo(null);
-      notifyTyping(false);
-      refreshThread();
+    onMutate: async ({ body, replyToId, tempId }) => {
+      await queryClient.cancelQueries({ queryKey: messagesKey });
+      const [profile_a, profile_b] = me!.id < otherId ? [me!.id, otherId] : [otherId, me!.id];
+      const quoted = replyToId ? (messages.data ?? []).find((x) => x.id === replyToId) : null;
+      const temp: ChatMessage = {
+        id: tempId,
+        profile_a,
+        profile_b,
+        sender_profile_id: me!.id,
+        body,
+        created_at: new Date().toISOString(),
+        read_at: null,
+        deleted_at: null,
+        edited_at: null,
+        reply_to_id: replyToId,
+        reply_to: quoted
+          ? { id: quoted.id, body: quoted.body, sender_profile_id: quoted.sender_profile_id, deleted_at: quoted.deleted_at }
+          : null,
+        message_reactions: [],
+        pending: true,
+      };
+      queryClient.setQueryData<ChatMessage[]>(messagesKey, (old) => [...(old ?? []), temp]);
     },
-    onError: (error) => toast(errorMessage(error), "error"),
+    onSuccess: (saved, { tempId }) => {
+      queryClient.setQueryData<ChatMessage[]>(messagesKey, (old) => {
+        const list = (old ?? []).filter((x) => x.id !== tempId);
+        // Realtime may have brought it in already.
+        if (!list.some((x) => x.id === saved.id)) list.push({ ...saved, reply_to: null });
+        return attachReplies(list);
+      });
+      queryClient.invalidateQueries({ queryKey: ["conversations", me!.id] });
+    },
+    onError: (error, { body, tempId }) => {
+      queryClient.setQueryData<ChatMessage[]>(messagesKey, (old) => (old ?? []).filter((x) => x.id !== tempId));
+      setDraft((current) => (current.trim() ? current : body));
+      toast(errorMessage(error), "error");
+    },
   });
 
   const saveEdit = useMutation({
@@ -235,12 +327,28 @@ export function ChatScreen() {
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
+  // A reaction shows the moment it's tapped (one per person per message,
+  // so it replaces any earlier one of mine); a failure puts it back.
   const react = useMutation({
     mutationFn: ({ messageId, emoji, mine }: { messageId: string; emoji: string; mine: boolean }) =>
       mine ? removeReaction(messageId, me!.id) : setReaction(messageId, me!.id, emoji),
-    onSuccess: refreshThread,
-    onError: (error) => toast(errorMessage(error), "error"),
-    onSettled: closePanels,
+    onMutate: ({ messageId, emoji, mine }) => {
+      closePanels();
+      queryClient.setQueriesData<ChatMessage[]>({ queryKey: ["messages", pairKey] }, (old) =>
+        old?.map((x) => {
+          if (x.id !== messageId) return x;
+          const others = x.message_reactions.filter((r) => r.profile_id !== me!.id);
+          return { ...x, message_reactions: mine ? others : [...others, { profile_id: me!.id, emoji }] };
+        }),
+      );
+    },
+    onError: (error) => {
+      toast(errorMessage(error), "error");
+      queryClient.invalidateQueries({ queryKey: ["messages", pairKey] });
+    },
+    onSuccess: () => {
+      if (me) queryClient.invalidateQueries({ queryKey: ["conversations", me.id] });
+    },
   });
 
   const unsend = useMutation({
@@ -312,17 +420,31 @@ export function ChatScreen() {
     });
   }
 
+  /** Tells the other side I've stopped typing - once, not on every call. */
+  function stopTyping() {
+    if (typingStopTimer.current) clearTimeout(typingStopTimer.current);
+    typingStopTimer.current = null;
+    if (lastTypingSentAt.current === 0) return;
+    lastTypingSentAt.current = 0;
+    notifyTyping(false);
+  }
+
   function onDraftChange(value: string) {
     setDraft(value);
     // Editing an old message shouldn't read as "typing" to the other side.
     if (editing) return;
+    // Cleared the box: they should stop seeing "typing…" right away.
+    if (!value.trim()) {
+      stopTyping();
+      return;
+    }
     const now = Date.now();
-    if (value.trim() && now - lastTypingSentAt.current > TYPING_BROADCAST_THROTTLE_MS) {
+    if (now - lastTypingSentAt.current > TYPING_BROADCAST_THROTTLE_MS) {
       lastTypingSentAt.current = now;
       notifyTyping(true);
     }
     if (typingStopTimer.current) clearTimeout(typingStopTimer.current);
-    typingStopTimer.current = setTimeout(() => notifyTyping(false), TYPING_STOP_AFTER_MS);
+    typingStopTimer.current = setTimeout(stopTyping, TYPING_STOP_AFTER_MS);
   }
 
   function submit() {
@@ -342,8 +464,12 @@ export function ChatScreen() {
       saveEdit.mutate({ messageId: editing.id, body });
       return;
     }
-    if (send.isPending) return;
-    send.mutate({ body, replyToId: replyTo?.id ?? null });
+    send.mutate({ body, replyToId: replyTo?.id ?? null, tempId: `pending-${Date.now()}` });
+    // Clear at once, and tell the other side the typing has stopped - the
+    // message itself is what they see next.
+    setDraft("");
+    setReplyTo(null);
+    stopTyping();
   }
 
   function startReply(m: ChatMessage) {
@@ -374,13 +500,13 @@ export function ChatScreen() {
     window.setTimeout(() => setHighlightId((id) => (id === messageId ? null : id)), HIGHLIGHT_MS);
   }
 
-  if (!me) return <SignInRequiredScreen title={other.data?.full_name ?? t("chat")} />;
-  if (other.isLoading) return <FullPageLoader label={t("loading")} />;
+  if (!me) return <SignInRequiredScreen title={other.data?.full_name ?? summary?.otherName ?? t("chat")} />;
 
   const items = messages.data ?? [];
   const lastMessage = items[items.length - 1];
-  const showSeen = lastMessage && lastMessage.sender_profile_id === me.id && Boolean(lastMessage.read_at);
-  const otherName = other.data?.full_name ?? "";
+  const showSeen = lastMessage && !lastMessage.pending && lastMessage.sender_profile_id === me.id && Boolean(lastMessage.read_at);
+  const otherName = other.data?.full_name ?? summary?.otherName ?? "";
+  const otherAvatar = other.data?.avatar_url ?? summary?.otherAvatarUrl ?? null;
   const isOnline = Boolean(onlineMap[otherId]);
 
   // A run is consecutive messages from one person within a few minutes:
@@ -425,12 +551,12 @@ export function ChatScreen() {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* ---- Thread header ------------------------------------------- */}
         <header className="z-20 border-b border-slate-200 bg-surface/95 pt-[var(--sat)] backdrop-blur md:pt-0">
-          <div className="flex h-16 items-center gap-2 px-2 sm:gap-3 sm:px-4">
+          <div className="flex h-14 items-center gap-1.5 px-2 sm:h-16 sm:gap-3 sm:px-4">
             {!split && (
               <button
                 type="button"
                 onClick={() => window.history.back()}
-                className="rounded-lg p-1.5 text-slate-500 transition-colors duration-200 hover:bg-slate-100"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-600 transition-colors duration-200 hover:bg-slate-100"
                 aria-label={t("back")}
               >
                 <ArrowLeft className="h-5 w-5" aria-hidden />
@@ -440,18 +566,25 @@ export function ChatScreen() {
             <Link
               to="/worker/$workerId"
               params={{ workerId: otherId }}
-              className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-1.5 py-1 transition-colors hover:bg-slate-50"
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1 py-1 transition-colors hover:bg-slate-50"
             >
-              <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={36} online={isOnline} />
+              <Avatar name={otherName || "?"} src={otherAvatar} size={40} online={isOnline} />
               <span className="min-w-0">
                 <span className="flex min-w-0 items-center gap-1.5">
-                  <span className="truncate text-sm font-semibold text-slate-900">{otherName}</span>
-                  <VerifiedBadge staffRole={other.data?.staff_role} verified={other.data?.is_verified} size={15} />
+                  {otherName ? (
+                    <span className="truncate text-[15px] font-semibold leading-tight text-slate-900">{otherName}</span>
+                  ) : (
+                    <span className="skeleton h-4 w-32 rounded" aria-hidden />
+                  )}
+                  <VerifiedBadge
+                    staffRole={other.data?.staff_role ?? summary?.otherStaffRole}
+                    verified={other.data?.is_verified ?? summary?.otherIsVerified}
+                    size={15}
+                  />
                 </span>
-                <span className="block truncate text-[11px]">
+                <span className="mt-0.5 block truncate text-xs leading-tight">
                   {otherTyping ? (
                     <span className="inline-flex items-center gap-1.5 font-medium text-brand-700">
-                      <TypingDots />
                       {t("typingIndicator")}
                     </span>
                   ) : isOnline ? (
@@ -476,18 +609,11 @@ export function ChatScreen() {
               <UserRound className="h-3.5 w-3.5" aria-hidden />
               {t("viewProfile")}
             </Link>
-            {/* The list pane beside it already has one on desktop. */}
-            {/* Phones only - the top bar has it from md up. */}
-            {!split && <HeaderToggles className="h-9 rounded-xl md:hidden" />}
           </div>
         </header>
 
         {/* ---- Messages ------------------------------------------------- */}
         <div className="relative min-h-0 flex-1 bg-slate-50">
-          <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgb(15_76_92/0.06)_1px,transparent_0)] [background-size:20px_20px]"
-            aria-hidden
-          />
           <div
             ref={listRef}
             onScroll={(e) => {
@@ -496,9 +622,11 @@ export function ChatScreen() {
               setAtBottom(near);
               if (near) setUnreadBelow(false);
             }}
-            className="relative h-full overflow-y-auto overflow-x-hidden"
+            className="relative h-full overflow-y-auto overflow-x-hidden overscroll-contain"
           >
-            <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-3 py-3 sm:px-5">
+            {/* justify-end: a short conversation sits at the bottom, by the
+                box you type in, the way every messenger does it. */}
+            <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col justify-end px-3 pb-2 pt-4 sm:px-6">
               {messages.isLoading ? (
                 <div className="space-y-3 py-4" aria-label={t("loading")}>
                   {[48, 64, 40, 56].map((w, i) => (
@@ -511,7 +639,7 @@ export function ChatScreen() {
                 // An empty thread gets a proper welcome - who you're talking
                 // to, and a few one-tap openers.
                 <div className="m-auto flex max-w-sm flex-col items-center py-10 text-center">
-                  <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={64} online={isOnline} className="ring-4 ring-surface shadow-md" />
+                  <Avatar name={otherName || "?"} src={otherAvatar} size={64} online={isOnline} className="ring-4 ring-surface shadow-md" />
                   <p className="mt-3 text-base font-bold text-slate-900">{t("sayHelloTo", { name: otherName })}</p>
                   <p className="mt-1 text-xs text-slate-500">{t("chatStarterHint")}</p>
                   <div className="mt-4 flex flex-wrap justify-center gap-1.5">
@@ -550,12 +678,10 @@ export function ChatScreen() {
                   {rows.map(({ m, newDay, firstInRun, lastInRun }) => (
                     <div key={m.id}>
                       {newDay && (
-                        <div className="my-3 flex items-center gap-3" role="separator">
-                          <span className="h-px flex-1 bg-slate-200" aria-hidden />
-                          <span className="rounded-full bg-surface px-3 py-1 text-[11px] font-semibold text-slate-500 shadow-sm ring-1 ring-slate-200">
+                        <div className="my-4 flex justify-center first:mt-0" role="separator">
+                          <span className="rounded-full bg-slate-200/70 px-3 py-1 text-[11px] font-medium text-slate-600">
                             {formatDayLabel(m.created_at, lang)}
                           </span>
-                          <span className="h-px flex-1 bg-slate-200" aria-hidden />
                         </div>
                       )}
                       <ChatBubble
@@ -563,7 +689,7 @@ export function ChatScreen() {
                         mine={m.sender_profile_id === me.id}
                         myProfileId={me.id}
                         otherName={otherName}
-                        otherAvatarUrl={other.data?.avatar_url ?? null}
+                        otherAvatarUrl={otherAvatar}
                         otherProfileId={otherId}
                         firstInRun={firstInRun}
                         lastInRun={lastInRun}
@@ -590,18 +716,20 @@ export function ChatScreen() {
                 </>
               )}
 
-              {showSeen && (
-                <p className="flex items-center justify-end gap-1 pt-0.5 text-[11px] font-medium text-brand-700">
-                  <CheckCheck className="h-3.5 w-3.5" aria-hidden />
-                  {t("seenLabel")} · {relativeTime(lastMessage.read_at!, lang)}
+              {showSeen && !otherTyping && (
+                <p className="-mt-1.5 mb-1 pr-1 text-right text-[11px] text-slate-400">
+                  {t("seenLabel")} {relativeTime(lastMessage.read_at!, lang)}
                 </p>
               )}
 
+              {/* Where their next message will land: their avatar and a
+                  bubble the shape of a short message, so nothing jumps when
+                  the real one replaces it. */}
               {otherTyping && (
-                <div className="mt-1 flex items-end gap-1.5">
-                  <Avatar name={otherName || "?"} src={other.data?.avatar_url} size={28} profileId={otherId} />
-                  <span className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-surface px-3.5 py-3 text-slate-400 shadow-sm ring-1 ring-slate-200/70">
-                    <TypingDots />
+                <div className="animate-message-in mb-2.5 flex items-end gap-1.5" role="status">
+                  <Avatar name={otherName || "?"} src={otherAvatar} size={28} profileId={otherId} />
+                  <span className="flex h-[34px] items-center rounded-[18px] rounded-bl-[6px] bg-surface px-3.5 text-slate-400 shadow-sm ring-1 ring-slate-200/70">
+                    <TypingDots size="md" />
                     <span className="sr-only">
                       {otherName} {t("typingIndicator")}
                     </span>
@@ -633,7 +761,7 @@ export function ChatScreen() {
 
         {/* ---- Composer ------------------------------------------------- */}
         <form
-          className="border-t border-slate-200 bg-surface px-3 pb-[calc(0.5rem+var(--sab))] pt-2 sm:px-4"
+          className="border-t border-slate-200 bg-surface px-2.5 pb-[calc(0.5rem+var(--sab))] pt-2 sm:px-4"
           onSubmit={(e) => {
             e.preventDefault();
             submit();
@@ -667,7 +795,7 @@ export function ChatScreen() {
             )}
 
             <div className="relative flex items-end gap-2">
-              <div className="flex min-w-0 flex-1 items-end gap-0.5 rounded-3xl border border-slate-200 bg-slate-50 py-1 pl-1 pr-3 transition-all focus-within:border-brand-400 focus-within:bg-surface focus-within:ring-4 focus-within:ring-brand-100">
+              <div className="flex min-w-0 flex-1 items-end gap-0.5 rounded-[22px] border border-slate-200 bg-slate-50 py-[3px] pl-1 pr-3 transition-colors focus-within:border-brand-400 focus-within:bg-surface">
                 <button
                   type="button"
                   data-chat-emoji
@@ -689,6 +817,8 @@ export function ChatScreen() {
                   rows={1}
                   value={draft}
                   onChange={(e) => onDraftChange(e.target.value)}
+                  onBlur={stopTyping}
+                  enterKeyHint="send"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
@@ -705,13 +835,14 @@ export function ChatScreen() {
               </div>
               <button
                 type="submit"
-                disabled={!draft.trim() || send.isPending || saveEdit.isPending}
+                disabled={!draft.trim() || saveEdit.isPending}
                 aria-label={editing ? t("save") : t("send")}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-700 text-white shadow-md shadow-brand-900/15 transition-all duration-200 hover:bg-brand-800 active:scale-95 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+                // Tapping send must not take focus from the box: on a phone
+                // that would drop the keyboard after every message.
+                onPointerDown={(e) => e.preventDefault()}
+                className="inline-flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-brand-700 text-white transition-all duration-200 hover:bg-brand-800 active:scale-95 disabled:bg-slate-200 disabled:text-slate-400"
               >
-                {send.isPending || saveEdit.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                ) : editing ? (
+                {editing ? (
                   <Check className="h-4 w-4" aria-hidden />
                 ) : (
                   <Send className="h-4 w-4 -translate-x-px translate-y-px" aria-hidden />
@@ -738,26 +869,11 @@ export function ChatScreen() {
                 </div>
               )}
             </div>
-            <p className="mt-1.5 hidden px-4 text-[11px] text-slate-400 lg:block">{t("shiftEnterHint")}</p>
           </div>
         </form>
       </div>
       </div>
       </div>
     </div>
-  );
-}
-
-function TypingDots() {
-  return (
-    <span className="inline-flex items-center gap-0.5" aria-hidden>
-      {[0, 150, 300].map((delay) => (
-        <span
-          key={delay}
-          className="h-1.5 w-1.5 animate-bounce rounded-full bg-current"
-          style={{ animationDelay: `${delay}ms` }}
-        />
-      ))}
-    </span>
   );
 }

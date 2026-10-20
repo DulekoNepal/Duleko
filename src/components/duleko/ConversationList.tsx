@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { Check, CheckCheck, CheckCircle2, MessageCircle, Search, Users, X } from "lucide-react";
 import { FriendsPanel } from "./FriendsPanel";
 import { VerifiedBadge } from "./VerifiedBadge";
@@ -8,7 +8,14 @@ import { Avatar } from "@/components/ui/avatar";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { usePresence } from "@/hooks/use-presence";
-import { listConversations, reconcileMessageNotifications } from "@/lib/queries";
+import {
+  MESSAGES_PAGE,
+  chatPairKey,
+  getProfile,
+  listConversations,
+  listMessages,
+  reconcileMessageNotifications,
+} from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { cn, formatNumber, relativeTime } from "@/lib/utils";
 import type { ConversationSummary } from "@/lib/types";
@@ -23,7 +30,13 @@ export function useConversationsLive(profileId: string | undefined) {
   const queryClient = useQueryClient();
   useEffect(() => {
     if (!profileId) return;
-    const refresh = () => queryClient.invalidateQueries({ queryKey: ["conversations", profileId] });
+    // A burst of changes (a thread marked read, a reaction, a message)
+    // becomes one refetch, not one each.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const refresh = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => queryClient.invalidateQueries({ queryKey: ["conversations", profileId] }), 250);
+    };
     const channel = supabase
       .channel(`conversations:${profileId}`)
       .on(
@@ -39,9 +52,34 @@ export function useConversationsLive(profileId: string | undefined) {
       .on("postgres_changes", { event: "*", schema: "public", table: "message_reactions" }, refresh)
       .subscribe();
     return () => {
+      clearTimeout(timer);
       supabase.removeChannel(channel);
     };
   }, [profileId, queryClient]);
+}
+
+/**
+ * Starts loading a thread before it's opened - on hover, focus or the
+ * first touch of its row - so by the time the screen slides in, its code,
+ * the person and their latest messages are usually already here.
+ */
+export function usePrefetchThread(myProfileId: string | undefined) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  return (otherId: string) => {
+    if (!myProfileId) return;
+    void router.preloadRoute({ to: "/chat/$otherId", params: { otherId } }).catch(() => undefined);
+    void queryClient.prefetchQuery({
+      queryKey: ["messages", chatPairKey(myProfileId, otherId), MESSAGES_PAGE],
+      queryFn: () => listMessages(myProfileId, otherId, MESSAGES_PAGE),
+      staleTime: 30_000,
+    });
+    void queryClient.prefetchQuery({
+      queryKey: ["profile", otherId],
+      queryFn: () => getProfile(otherId),
+      staleTime: 5 * 60_000,
+    });
+  };
 }
 
 export function useConversations(profileId: string | undefined) {
@@ -52,13 +90,14 @@ export function useConversations(profileId: string | undefined) {
   });
 }
 
-function TypingDots({ className }: { className?: string }) {
+/** Three dots rising in turn - "typing…" in the list, the header and the thread. */
+export function TypingDots({ className, size = "sm" }: { className?: string; size?: "sm" | "md" }) {
   return (
-    <span className={cn("inline-flex items-center gap-0.5", className)} aria-hidden>
-      {[0, 150, 300].map((delay) => (
+    <span className={cn("inline-flex items-center", size === "md" ? "gap-1" : "gap-0.5", className)} aria-hidden>
+      {[0, 160, 320].map((delay) => (
         <span
           key={delay}
-          className="h-1 w-1 animate-bounce rounded-full bg-current"
+          className={cn("typing-dot rounded-full bg-current", size === "md" ? "h-[7px] w-[7px]" : "h-1 w-1")}
           style={{ animationDelay: `${delay}ms` }}
         />
       ))}
@@ -87,6 +126,7 @@ export function ConversationList({
   const { t, lang } = useI18n();
   const { profile } = useSession();
   const navigate = useNavigate();
+  const prefetchThread = usePrefetchThread(profile?.id);
   const conversations = useConversations(profile?.id);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
@@ -214,6 +254,7 @@ export function ConversationList({
                 online={Boolean(online[c.otherProfileId])}
                 typing={typingFrom.has(c.otherProfileId)}
                 active={c.otherProfileId === activeId}
+                onWarm={() => prefetchThread(c.otherProfileId)}
                 onOpen={() => navigate({ to: "/chat/$otherId", params: { otherId: c.otherProfileId } })}
               />
             ))}
@@ -230,6 +271,7 @@ function ConversationRow({
   online,
   typing,
   active,
+  onWarm,
   onOpen,
 }: {
   c: ConversationSummary;
@@ -237,6 +279,7 @@ function ConversationRow({
   online: boolean;
   typing: boolean;
   active: boolean;
+  onWarm: () => void;
   onOpen: () => void;
 }) {
   const { t, lang } = useI18n();
@@ -257,6 +300,9 @@ function ConversationRow({
       <button
         type="button"
         onClick={onOpen}
+        onPointerEnter={onWarm}
+        onPointerDown={onWarm}
+        onFocus={onWarm}
         aria-current={active ? "true" : undefined}
         className="flex min-w-0 flex-1 items-center gap-2 text-left focus-visible:outline-none"
       >

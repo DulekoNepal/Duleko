@@ -1,11 +1,11 @@
 import { useRef, useState } from "react";
-import { Copy, CornerUpLeft, Pencil, SmilePlus, Trash2 } from "lucide-react";
+import { Check, CheckCheck, Clock3, Copy, CornerUpLeft, Pencil, SmilePlus, Trash2 } from "lucide-react";
 import { Clipboard } from "@capacitor/clipboard";
 import { Avatar } from "@/components/ui/avatar";
 import { useI18n } from "@/lib/i18n";
 import { withinEditWindow } from "@/lib/queries";
 import { cn, formatClockTime } from "@/lib/utils";
-import type { ChatMessage } from "@/lib/types";
+import type { ChatMessage, Lang } from "@/lib/types";
 
 /** The row shown first - the six people actually reach for. */
 export const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "🙏", "👍"];
@@ -32,7 +32,7 @@ interface ChatBubbleProps {
   otherProfileId: string;
   /** First of a run from this sender - gets the full top corner. */
   firstInRun: boolean;
-  /** Last of a run - gets the timestamp, and their avatar. */
+  /** Last of a run - gets the rounded tail corner, the gap after it, and their avatar. */
   lastInRun: boolean;
   panel: BubblePanel | null;
   onPanel: (panel: BubblePanel | null) => void;
@@ -89,6 +89,8 @@ export function ChatBubble({
   const openedAt = useRef(0);
 
   const removed = Boolean(m.deleted_at);
+  // Still on its way: nothing to reply to, react to or unsend yet.
+  const inert = removed || Boolean(m.pending);
   const canEdit = mine && !removed && withinEditWindow(m.created_at);
 
   // Messenger's directions: your own messages drag left, theirs drag
@@ -110,7 +112,7 @@ export function ChatBubble({
   /** Right-click on a mouse, press-and-hold on a phone - no button needed. */
   function onContextMenu(e: React.MouseEvent) {
     e.preventDefault();
-    if (removed) return;
+    if (inert) return;
     if (Date.now() - openedAt.current < SUPPRESS_CONTEXT_MS) return;
     openPanel(panel ? null : "menu");
   }
@@ -121,7 +123,7 @@ export function ChatBubble({
   }
 
   function onPointerDown(e: React.PointerEvent) {
-    if (removed || e.pointerType === "mouse") return;
+    if (inert || e.pointerType === "mouse") return;
     start.current = { x: e.clientX, y: e.clientY };
     axis.current = "undecided";
     // Press and hold is how you reach the menu on a phone.
@@ -176,9 +178,10 @@ export function ChatBubble({
       className={cn(
         "group relative flex flex-col",
         mine ? "items-end" : "items-start",
-        // Mid-run messages have no timestamp under them, so they need the
-        // gap for an overhanging reaction chip themselves.
-        lastInRun ? "mb-1.5" : reactions.length > 0 ? "mb-3.5" : "mb-0.5",
+        // One rhythm: 2px between messages in a run, 10px between runs, and
+        // room underneath for a reaction chip hanging off the bubble.
+        reactions.length > 0 ? "mb-4" : lastInRun ? "mb-2.5" : "mb-0.5",
+        m.pending && "animate-message-in",
         // Lift the whole row while its popover is open, so the popover sits
         // above neighbouring messages rather than under them.
         panel && "z-30",
@@ -193,7 +196,7 @@ export function ChatBubble({
           type="button"
           onClick={() => onJumpTo(quoted.id)}
           className={cn(
-            "-mb-2 max-w-[70%] truncate rounded-t-xl px-3 pb-3.5 pt-1.5 text-left text-xs",
+            "-mb-2 max-w-[70%] truncate rounded-t-xl px-3 pb-3.5 pt-1.5 text-left text-xs sm:max-w-[60%]",
             // Inset 8px from the bubble's own edge on both sides: theirs
             // also clears the 28px avatar and its 6px gap.
             mine ? "mr-2" : "ml-[2.625rem]",
@@ -249,11 +252,12 @@ export function ChatBubble({
             // out of its way - Copy in the menu covers what that takes away.
             // Positioned so reactions can hang off its bottom-right corner
             // on both sides of the thread.
-            "relative max-w-[80%] select-none whitespace-pre-wrap break-words px-3.5 py-2 text-[15px] leading-snug sm:max-w-[70%]",
-            // Rounded on the outside, tightened where a run joins up.
+            "relative max-w-[78%] select-none whitespace-pre-wrap break-words px-3 pb-1.5 pt-1.5 text-[15px] leading-[1.4] sm:max-w-[65%]",
+            // Rounded on the outside, tightened where a run joins up, with
+            // a small tail on the last of the run.
             mine
-              ? cn("rounded-2xl", !firstInRun && "rounded-tr-md", !lastInRun && "rounded-br-md")
-              : cn("rounded-2xl", !firstInRun && "rounded-tl-md", !lastInRun && "rounded-bl-md"),
+              ? cn("rounded-[18px]", !firstInRun && "rounded-tr-md", !lastInRun ? "rounded-br-md" : "rounded-br-[6px]")
+              : cn("rounded-[18px]", !firstInRun && "rounded-tl-md", !lastInRun ? "rounded-bl-md" : "rounded-bl-[6px]"),
             removed
               ? "border border-slate-200 bg-surface italic text-slate-400"
               : mine
@@ -263,12 +267,17 @@ export function ChatBubble({
           )}
         >
           {removed ? t("messageRemoved") : m.body}
+          {/* The time and ticks sit inside the bubble's bottom-right corner.
+              An invisible copy holds their room at the end of the text, so
+              the last line wraps before it would run underneath them. */}
+          <MessageMeta message={m} mine={mine} removed={removed} lang={lang} className="invisible" />
+          <MessageMeta message={m} mine={mine} removed={removed} lang={lang} className="absolute bottom-1.5 right-2.5" />
 
           {reactions.length > 0 && (
-            // Hanging off the bubble's bottom-right corner, anchored to the
-            // bubble itself rather than to the column so it lands the same
-            // way on incoming and outgoing messages.
-            <span className="absolute -bottom-3 right-3 z-10 flex gap-1">
+            // Hanging off the bubble's bottom-left corner - the right one
+            // holds the time and ticks - anchored to the bubble itself so it
+            // lands the same way on incoming and outgoing messages.
+            <span className="absolute -bottom-3 left-3 z-10 flex gap-1">
               {reactions.map(([emoji, { count, mine: myReaction }]) => (
                 <button
                   key={emoji}
@@ -365,20 +374,47 @@ export function ChatBubble({
         )}
       </div>
 
-      {lastInRun && (
-        <p
-          className={cn(
-            "px-1 text-[11px] text-slate-400",
-            // Clear the reaction chip hanging below the bubble.
-            reactions.length > 0 ? "mt-3.5" : "mt-1",
-            mine ? "text-right" : "ml-9",
-          )}
-        >
-          {formatClockTime(m.created_at, lang)}
-          {m.edited_at && !removed && ` · ${t("edited")}`}
-        </p>
-      )}
     </div>
+  );
+}
+
+/**
+ * "10:42 am ✓✓" in the bubble's corner. Your own messages carry where they
+ * are: a clock while sending, one tick once Duleko has it, two once seen.
+ */
+function MessageMeta({
+  message: m,
+  mine,
+  removed,
+  lang,
+  className,
+}: {
+  message: ChatMessage;
+  mine: boolean;
+  removed: boolean;
+  lang: Lang;
+  className?: string;
+}) {
+  const { t } = useI18n();
+  const Tick = m.pending ? Clock3 : m.read_at ? CheckCheck : Check;
+  return (
+    <span
+      className={cn(
+        "ml-2 inline-flex translate-y-[3px] items-center gap-1 whitespace-nowrap align-baseline text-[11px] not-italic leading-none tabular-nums",
+        mine && !removed ? "text-white/70" : "text-slate-400",
+        className,
+      )}
+      aria-hidden={className?.includes("invisible") || undefined}
+    >
+      {m.edited_at && !removed && <span>{t("edited")}</span>}
+      {formatClockTime(m.created_at, lang)}
+      {mine && !removed && (
+        <Tick
+          className={cn("h-3.5 w-3.5", m.read_at && !m.pending ? "text-white" : "")}
+          aria-label={m.pending ? t("sending") : m.read_at ? t("seenLabel") : t("sent")}
+        />
+      )}
+    </span>
   );
 }
 

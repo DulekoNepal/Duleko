@@ -409,6 +409,8 @@ const strings = {
   chatNow: ["Chat now", "अहिले कुराकानी गर्नुहोस्"],
   typingIndicator: ["typing…", "टाइप गर्दै…"],
   seenLabel: ["Seen", "हेरियो"],
+  sending: ["Sending", "पठाउँदै"],
+  sent: ["Sent", "पठाइयो"],
   unsend: ["Unsend", "सन्देश फिर्ता लिनुहोस्"],
   unsendConfirm: ["Unsend this message for everyone?", "यो सन्देश सबैबाट फिर्ता लिने हो?"],
   messageRemoved: ["This message was removed.", "यो सन्देश हटाइयो।"],

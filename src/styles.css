@@ -311,6 +311,46 @@ html.dark .skeleton::after {
   animation-delay: var(--delay, 0ms);
 }
 
+/* Chat: the three typing dots rise and brighten in turn - a calm wave
+   rather than a bounce. */
+@keyframes typing-wave {
+  0%, 60%, 100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+.typing-dot {
+  animation: typing-wave 1.2s ease-in-out infinite;
+}
+
+/* A message or the typing bubble arriving: a short, small rise. */
+@keyframes message-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-message-in {
+  animation: message-in 0.18s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typing-dot,
+  .animate-message-in {
+    animation: none;
+  }
+}
+
 /* ---- Public website ---------------------------------------------------- */
 
 /* Headlines in the display face: tighter tracking, and Nepali (which falls

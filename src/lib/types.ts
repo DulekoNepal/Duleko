@@ -378,6 +378,8 @@ export interface ChatMessage {
   reply_to_id: string | null;
   reply_to: RepliedMessage | null;
   message_reactions: MessageReaction[];
+  /** Shown the moment it is sent, before the server has it (ChatScreen). */
+  pending?: boolean;
 }
 
 /** One row in the "all my chats" list - the other person plus their latest message. */
