@@ -74,21 +74,24 @@ export function TeamCard({ member }: { member: Member }) {
       id={member.id}
       className={cn(siteCard, siteCardHover, "group flex h-full scroll-mt-28 flex-col overflow-hidden")}
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-teal-800 sm:aspect-[4/4.4]">
-        <img
-          src={member.image}
-          alt={name}
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-        />
-        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" aria-hidden />
-        <span className="absolute left-4 top-4 rounded-full bg-surface/90 px-3 py-1 text-xs font-semibold text-teal-800 shadow-sm backdrop-blur">
-          {t(member.roleKey)}
-        </span>
-      </div>
       <div className="flex flex-1 flex-col p-5 sm:p-6">
-        <h3 className="font-display text-xl font-semibold text-slate-900 sm:text-2xl">{name}</h3>
-        <p className="mt-1.5 inline-flex items-start gap-1.5 text-sm text-slate-500">
+        <div className="flex items-center gap-4">
+          <span className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-teal-800 shadow-sm ring-1 ring-slate-200/80">
+            <img
+              src={member.image}
+              alt={name}
+              loading="lazy"
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
+            />
+          </span>
+          <div className="min-w-0">
+            <span className="inline-block rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-teal-800 ring-1 ring-brand-200">
+              {t(member.roleKey)}
+            </span>
+            <h3 className="font-display mt-1.5 text-xl font-semibold text-slate-900 sm:text-2xl">{name}</h3>
+          </div>
+        </div>
+        <p className="mt-4 inline-flex items-start gap-1.5 text-sm text-slate-500">
           <AffiliationIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
           {t(member.affiliationKey)}
         </p>
