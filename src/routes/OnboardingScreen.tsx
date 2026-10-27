@@ -14,6 +14,7 @@ import { PaymentCard } from "@/components/duleko/payments/PaymentCard";
 import { PaymentMethodForm, type PaymentFormResult } from "@/components/duleko/payments/PaymentMethodForm";
 import { AddPaymentTiles, MAX_PAYMENT_METHODS } from "@/components/duleko/payments/PaymentMethodsManager";
 import { useI18n } from "@/lib/i18n";
+import { useTextRule } from "@/lib/text-rules";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -76,6 +77,7 @@ export function OnboardingScreen() {
   const [skillIds, setSkillIds] = useState<string[]>([]);
   const [otherLabel, setOtherLabel] = useState("");
   const [otherNote, setOtherNote] = useState("");
+  const rule = useTextRule();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [payments, setPayments] = useState<PaymentDraft[]>([]);
   const [payForm, setPayForm] = useState<{ index: number | null; kind: PaymentKind } | null>(null);
@@ -173,6 +175,7 @@ export function OnboardingScreen() {
     const next: Record<string, string> = {};
     if (step === 1) {
       if (fullName.trim().length < 2) next.fullName = t("required");
+      if (rule(fullName, about)) return false;
       if (!isValidNepaliPhone(phone)) next.phone = t("phoneInvalid");
       const code = cleanReferralCode(referralCode);
       if (code && !looksLikeReferralCode(code)) next.referral = t("referralErrFormat");
@@ -180,6 +183,7 @@ export function OnboardingScreen() {
     if (step === 2) {
       if (!location.district) next.district = t("required");
     }
+    if (step === 3 && skillIds.includes("other") && rule(otherLabel, otherNote)) return false;
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -270,7 +274,7 @@ export function OnboardingScreen() {
                   </div>
                 </div>
 
-                <Field label={t("yourName")} error={errors.fullName}>
+                <Field label={t("yourName")} error={errors.fullName || rule(fullName)}>
                   <Input
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
@@ -316,7 +320,7 @@ export function OnboardingScreen() {
                   />
                 </Field>
 
-                <Field label={`${t("aboutYou")} (${t("optional")})`} className="mb-0">
+                <Field label={`${t("aboutYou")} (${t("optional")})`} className="mb-0" error={rule(about)}>
                   <Textarea
                     value={about}
                     onChange={(e) => setAbout(e.target.value)}
@@ -350,7 +354,7 @@ export function OnboardingScreen() {
 
                 {skillIds.includes("other") && (
                   <div className="mt-4 space-y-3 rounded-xl border border-slate-200 p-3">
-                    <Field label={t("othersSkillLabel")}>
+                    <Field label={t("othersSkillLabel")} error={rule(otherLabel)}>
                       <Input
                         value={otherLabel}
                         onChange={(e) => setOtherLabel(e.target.value)}
@@ -358,7 +362,7 @@ export function OnboardingScreen() {
                         maxLength={60}
                       />
                     </Field>
-                    <Field label={t("othersSkillNoteLabel")} className="mb-0">
+                    <Field label={t("othersSkillNoteLabel")} className="mb-0" error={rule(otherNote)}>
                       <Input
                         value={otherNote}
                         onChange={(e) => setOtherNote(e.target.value)}

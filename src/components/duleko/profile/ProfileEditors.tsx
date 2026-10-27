@@ -11,6 +11,7 @@ import { Field, Input, Label, Textarea } from "@/components/ui/field";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
+import { useTextRule } from "@/lib/text-rules";
 import { MAX_PHOTO_INPUT_BYTES } from "@/lib/image";
 import {
   addCertificate,
@@ -106,6 +107,7 @@ function IntroEditor({ open, onClose }: { open: boolean; onClose: () => void }) 
   const [about, setAbout] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const nameLocked = Boolean(profile?.is_verified);
+  const rule = useTextRule();
 
   useEffect(() => {
     if (!open || !profile) return;
@@ -138,6 +140,7 @@ function IntroEditor({ open, onClose }: { open: boolean; onClose: () => void }) 
       setNameError(t("profileNameRequired"));
       return;
     }
+    if (rule(nameLocked ? null : name, headline, about)) return;
     save.mutate();
   }
 
@@ -148,7 +151,7 @@ function IntroEditor({ open, onClose }: { open: boolean; onClose: () => void }) 
       title={t("profileEditIntro")}
       footer={<SaveFooter onCancel={onClose} onSave={submit} saving={save.isPending} />}
     >
-      <Field label={t("yourName")} error={nameError ?? undefined}>
+      <Field label={t("yourName")} error={nameError ?? (nameLocked ? undefined : rule(name))}>
         <Input
           value={name}
           onChange={(e) => {
@@ -172,7 +175,7 @@ function IntroEditor({ open, onClose }: { open: boolean; onClose: () => void }) 
           {t("kycNameLocked")}
         </p>
       )}
-      <Field label={`${t("bio")} (${t("optional")})`} hint={t("bioHint")}>
+      <Field label={`${t("bio")} (${t("optional")})`} hint={t("bioHint")} error={rule(headline)}>
         <Input
           value={headline}
           onChange={(e) => setHeadline(e.target.value)}
@@ -195,6 +198,7 @@ function IntroEditor({ open, onClose }: { open: boolean; onClose: () => void }) 
           maxLength={600}
           placeholder={t("profileAboutPlaceholder")}
         />
+        {rule(about) && <p className="mt-1 text-xs text-red-600">{rule(about)}</p>}
       </div>
     </Dialog>
   );
@@ -223,6 +227,7 @@ function DetailsEditor({ open, onClose }: { open: boolean; onClose: () => void }
     locality: null,
   });
   const [errors, setErrors] = useState<{ phone?: string; altPhone?: string; age?: string }>({});
+  const rule = useTextRule();
 
   useEffect(() => {
     if (!open || !profile) return;
@@ -281,7 +286,7 @@ function DetailsEditor({ open, onClose }: { open: boolean; onClose: () => void }
       next.age = t("profileAgeRule");
     }
     setErrors(next);
-    if (Object.keys(next).length === 0) save.mutate();
+    if (Object.keys(next).length === 0 && !rule(education)) save.mutate();
   }
 
   return (
@@ -324,7 +329,7 @@ function DetailsEditor({ open, onClose }: { open: boolean; onClose: () => void }
                 className={cn(ageLocked && "cursor-not-allowed bg-slate-50 text-slate-600")}
               />
             </Field>
-            <Field label={`${t("highestEducation")} (${t("optional")})`}>
+            <Field label={`${t("highestEducation")} (${t("optional")})`} error={rule(education)}>
               <Input value={education} onChange={(e) => setEducation(e.target.value)} maxLength={100} />
             </Field>
           </div>
@@ -356,6 +361,7 @@ function SkillsEditor({ open, onClose }: { open: boolean; onClose: () => void })
   const allSkills = useQuery({ queryKey: ["skills"], queryFn: listSkills, staleTime: 30 * 60_000, enabled: open });
   const [selected, setSelected] = useState<string[]>([]);
   const [drafts, setDrafts] = useState<Record<string, SkillDraft>>({});
+  const rule = useTextRule();
 
   useEffect(() => {
     if (!open) return;
@@ -418,7 +424,16 @@ function SkillsEditor({ open, onClose }: { open: boolean; onClose: () => void })
       onClose={onClose}
       title={t("skillsAndRates")}
       className="sm:max-w-2xl"
-      footer={<SaveFooter onCancel={onClose} onSave={() => save.mutate()} saving={save.isPending} />}
+      footer={
+        <SaveFooter
+          onCancel={onClose}
+          onSave={() => {
+            const other = selected.includes("other") ? draftFor("other") : null;
+            if (!rule(other?.custom_label, other?.custom_note)) save.mutate();
+          }}
+          saving={save.isPending}
+        />
+      }
     >
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <p className="text-sm text-slate-600">{t("profileSkillsPickHint")}</p>
@@ -476,7 +491,7 @@ function SkillsEditor({ open, onClose }: { open: boolean; onClose: () => void })
                   </div>
                   {id === "other" && (
                     <div className="mt-3 grid grid-cols-1 gap-x-3 sm:grid-cols-2">
-                      <Field label={t("othersSkillLabel")} className="mb-0 sm:mb-0">
+                      <Field label={t("othersSkillLabel")} className="mb-0 sm:mb-0" error={rule(d.custom_label)}>
                         <Input
                           value={d.custom_label}
                           onChange={(e) => setDraft(id, { custom_label: e.target.value })}
@@ -485,7 +500,7 @@ function SkillsEditor({ open, onClose }: { open: boolean; onClose: () => void })
                           className="h-9 bg-surface"
                         />
                       </Field>
-                      <Field label={t("othersSkillNoteLabel")} className="mb-0 mt-2.5 sm:mt-0">
+                      <Field label={t("othersSkillNoteLabel")} className="mb-0 mt-2.5 sm:mt-0" error={rule(d.custom_note)}>
                         <Input
                           value={d.custom_note}
                           onChange={(e) => setDraft(id, { custom_note: e.target.value })}

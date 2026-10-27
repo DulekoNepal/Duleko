@@ -13,7 +13,9 @@ export function MobileNumberInput({
   disabled,
   autoFocus,
   readOnly,
+  className,
 }: {
+  className?: string;
   id?: string;
   value: string;
   onChange: (value: string) => void;
@@ -27,6 +29,7 @@ export function MobileNumberInput({
         "flex h-10 items-stretch overflow-hidden rounded-xl border border-slate-300 bg-surface transition-colors duration-200",
         "focus-within:border-brand-600 focus-within:ring-2 focus-within:ring-brand-600/25",
         (disabled || readOnly) && "bg-slate-100",
+        className,
       )}
     >
       <span className="flex items-center border-r border-slate-200 bg-slate-50 px-3 text-sm font-medium tabular-nums text-slate-600">
@@ -72,7 +75,10 @@ export function PinField({
   autoFocus,
   action,
   className,
+  boxesClassName,
 }: {
+  /** Overrides the row of boxes, e.g. stretched across the sign-in form. */
+  boxesClassName?: string;
   label: string;
   length?: number;
   value: string;
@@ -119,6 +125,7 @@ export function PinField({
         className={cn(
           "gap-2",
           length > PIN_LENGTH ? "justify-between sm:justify-start" : "justify-start [&>input]:w-12",
+          boxesClassName,
         )}
       />
       {error ? (

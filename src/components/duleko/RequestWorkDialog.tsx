@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { AvailabilityCalendar } from "./AvailabilityCalendar";
 import { useI18n } from "@/lib/i18n";
+import { useTextRule } from "@/lib/text-rules";
 import { useToast } from "@/hooks/use-toast";
 import { createEngagement, getAvailability, getUserSkills } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
@@ -37,6 +38,7 @@ export function RequestWorkDialog({
   const [location, setLocation] = useState(defaultLocation ?? "");
   const [offerAmount, setOfferAmount] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const rule = useTextRule();
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   // Shown as a reference so the hirer's opening bid is in the right ballpark -
@@ -107,6 +109,7 @@ export function RequestWorkDialog({
 
   function validate(): boolean {
     const next: Record<string, string> = {};
+    if (rule(title, location, details)) return false;
     if (title.trim().length < 3) next.title = t("required");
     if (location.trim().length < 2) next.location = t("required");
     if (workDate < todayKey()) next.workDate = t("dateInPast");
@@ -139,7 +142,7 @@ export function RequestWorkDialog({
         </div>
       }
     >
-      <Field label={t("jobTitle")} error={errors.title}>
+      <Field label={t("jobTitle")} error={errors.title || rule(title)}>
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -184,7 +187,7 @@ export function RequestWorkDialog({
         </div>
       </Field>
 
-      <Field label={t("workLocation")} error={errors.location}>
+      <Field label={t("workLocation")} error={errors.location || rule(location)}>
         <Input
           value={location}
           onChange={(e) => setLocation(e.target.value)}
@@ -227,7 +230,7 @@ export function RequestWorkDialog({
         </div>
       </Field>
 
-      <Field label={`${t("jobDetails")} (${t("optional")})`}>
+      <Field label={`${t("jobDetails")} (${t("optional")})`} error={rule(details)}>
         <Textarea
           value={details}
           onChange={(e) => setDetails(e.target.value)}

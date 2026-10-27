@@ -226,6 +226,13 @@ const strings = {
   goodEvening: ["Good evening", "शुभ साँझ"],
   homeHeroPrompt: ["What do you need done today?", "आज के काम गराउनु छ?"],
   popularSkills: ["Popular", "लोकप्रिय"],
+  // What people write for others can't carry a number or emoji (8200).
+  errTextHasPhone: [
+    "Phone numbers can't go here. Your number is shared once you agree on a job.",
+    "यहाँ फोन नम्बर राख्न मिल्दैन। काम पक्का भएपछि तपाईंको नम्बर आफैं देखिन्छ।",
+  ],
+  errTextHasEmoji: ["Emojis can't go here. Please write plain text.", "यहाँ इमोजी राख्न मिल्दैन। सादा अक्षर मात्र लेख्नुहोस्।"],
+  homeJoinTitle: ["New here? Join Duleko for free", "यहाँ नयाँ हुनुहुन्छ? डुलेकोमा निःशुल्क जोडिनुहोस्"],
   quickActions: ["Quick actions", "छिटो पहुँच"],
   quickFindWorkers: ["Find workers", "कामदार खोज्नुहोस्"],
   quickFindWorkersHint: ["Search by skill", "सीप अनुसार खोज्नुहोस्"],

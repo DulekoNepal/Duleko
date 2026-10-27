@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
-import { AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, Languages, Mail, MapPin, ShieldCheck, Smartphone } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, Mail, Smartphone } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Label } from "@/components/ui/field";
@@ -24,6 +24,8 @@ const RESEND_COOLDOWN_SECONDS = 45;
 /** Duleko's own email code (migration 8100), not Supabase's 6-digit one. */
 const CODE_LENGTH = 4;
 const MIN_PASSWORD = 6;
+/** Every full-width button on this screen: one height, one shape. */
+const PRIMARY = "h-12 w-full rounded-xl text-[15px]";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
@@ -299,8 +301,14 @@ export function AuthScreen({
   const quietLink = "mt-4 block w-full text-center text-sm font-medium text-slate-500 hover:text-slate-800";
 
   return (
-    <div className="flex min-h-dvh flex-col bg-cream-50">
-      <div className="flex items-center justify-between px-4 pb-2 pt-[calc(1rem+var(--sat))]">
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-cream-50">
+      {/* One soft green glow behind the card: the page's only colour. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-[-20rem] h-[40rem] w-[60rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(34,197,94,0.14),transparent)] dark:bg-[radial-gradient(closest-side,rgba(74,222,128,0.09),transparent)]"
+      />
+
+      <header className="relative flex items-center justify-between px-4 pb-2 pt-[calc(1rem+var(--sat))] sm:px-6">
         {onBack ? (
           <button
             type="button"
@@ -314,30 +322,25 @@ export function AuthScreen({
           <span />
         )}
         <HeaderToggles />
-      </div>
+      </header>
 
-      <main className="flex flex-1 justify-center px-4 pb-10 sm:items-center sm:px-6">
-        <div className="grid w-full max-w-[400px] items-center gap-12 lg:max-w-5xl lg:grid-cols-[1fr_420px]">
-          <BrandPanel />
+      <main className="relative flex flex-1 justify-center px-4 pb-8 pt-2 sm:items-center sm:px-6">
+        <section aria-labelledby="auth-title" className="w-full max-w-[420px]">
+          <div className="mb-6 text-center">
+            <img
+              src={dulekoMark}
+              alt=""
+              className="mx-auto mb-4 h-14 w-14 rounded-2xl object-cover shadow-md ring-1 ring-slate-200/80"
+            />
+            <h1 id="auth-title" className="text-[26px] font-bold tracking-tight text-slate-900">
+              {heading.title}
+            </h1>
+            {heading.blurb && (
+              <p className="mx-auto mt-1.5 max-w-xs break-words text-sm text-slate-500">{heading.blurb}</p>
+            )}
+          </div>
 
-          <section aria-labelledby="auth-title" className="w-full">
-            <div className="mb-6 text-center lg:text-left">
-              <img
-                src={dulekoMark}
-                alt=""
-                className="mx-auto mb-4 h-12 w-12 rounded-2xl object-cover shadow-sm lg:hidden"
-              />
-              <h1 id="auth-title" className="text-2xl font-bold tracking-tight text-slate-900">
-                {heading.title}
-              </h1>
-              {heading.blurb && (
-                <p className="mx-auto mt-1.5 max-w-xs break-words text-sm text-slate-500 lg:mx-0 lg:max-w-none">
-                  {heading.blurb}
-                </p>
-              )}
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-surface p-5 shadow-sm sm:p-6">
+          <div className="rounded-3xl border border-slate-200 bg-surface p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_16px_40px_-16px_rgba(15,23,42,0.18)] sm:p-7">
               {step && <StepBar step={step} />}
 
               {error && (
@@ -366,12 +369,12 @@ export function AuthScreen({
                     disabled={busy}
                     autoFocus
                     label={t("authStepCode")}
-                    className="mb-5 gap-3 [&>input]:h-14 [&>input]:w-14 [&>input]:text-2xl"
+                    className="mb-5 grid grid-cols-4 gap-3 [&>input]:h-16 [&>input]:w-full [&>input]:text-2xl"
                   />
                   <Button
                     type="button"
                     size="lg"
-                    className="w-full"
+                    className={PRIMARY}
                     loading={busy}
                     disabled={code.length !== CODE_LENGTH}
                     onClick={() => onVerifyCode()}
@@ -421,7 +424,7 @@ export function AuthScreen({
                       autoFocus
                     />
                   </Field>
-                  <Button type="submit" size="lg" className="mt-1 w-full" loading={busy}>
+                  <Button type="submit" size="lg" className={cn(PRIMARY, "mt-1")} loading={busy}>
                     {t("authPasswordSave")}
                   </Button>
                 </form>
@@ -473,6 +476,7 @@ export function AuthScreen({
                           autoComplete="email"
                           inputMode="email"
                           placeholder={t("emailPlaceholder")}
+                          className="h-12"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                         />
@@ -509,7 +513,7 @@ export function AuthScreen({
 
                       {agreement}
 
-                      <Button type="submit" size="lg" className="w-full" loading={busy}>
+                      <Button type="submit" size="lg" className={PRIMARY} loading={busy}>
                         {mode === "signin" ? t("signIn") : t("authContinue")}
                       </Button>
                     </form>
@@ -521,7 +525,7 @@ export function AuthScreen({
                     <span className="h-px flex-1 bg-slate-200" />
                   </div>
 
-                  <Button type="button" variant="outline" size="lg" className="w-full" loading={googleBusy} onClick={onGoogle}>
+                  <Button type="button" variant="outline" size="lg" className={PRIMARY} loading={googleBusy} onClick={onGoogle}>
                     <GoogleIcon className="h-4 w-4" aria-hidden />
                     {t("continueWithGoogle")}
                   </Button>
@@ -541,9 +545,17 @@ export function AuthScreen({
                 </button>
               </p>
             )}
-          </section>
-        </div>
+        </section>
       </main>
+
+      <footer className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 pb-[calc(1.25rem+var(--sab,0px))] text-xs text-slate-400">
+        <span>© {new Date().getFullYear()} Duleko</span>
+        {POLICY_PAGES.slice(0, 2).map(({ path, label }) => (
+          <PolicyLink key={path} path={path} className="text-slate-400 hover:text-slate-600">
+            {t(label)}
+          </PolicyLink>
+        ))}
+      </footer>
     </div>
   );
 }
@@ -562,7 +574,7 @@ const PUBLIC_SITE = ((import.meta.env.VITE_SITE_URL as string | undefined) || "h
  * on the web, the in-app browser in the Android app (whose own pages live
  * on a local address that means nothing outside the app).
  */
-function PolicyLink({ path, children }: { path: string; children: React.ReactNode }) {
+function PolicyLink({ path, children, className }: { path: string; children: React.ReactNode; className?: string }) {
   const native = Capacitor.isNativePlatform();
   return (
     <a
@@ -574,40 +586,10 @@ function PolicyLink({ path, children }: { path: string; children: React.ReactNod
         e.preventDefault();
         void Browser.open({ url: `${PUBLIC_SITE}${path}` });
       }}
-      className="font-medium text-brand-700 underline-offset-2 hover:underline"
+      className={className ?? "font-medium text-brand-700 underline-offset-2 hover:underline"}
     >
       {children}
     </a>
-  );
-}
-
-/** Wide screens only: what Duleko is, beside the form. Phones go straight to the form. */
-function BrandPanel() {
-  const { t } = useI18n();
-  const points = [
-    { icon: MapPin, text: t("authBrandPoint1") },
-    { icon: ShieldCheck, text: t("authBrandPoint2") },
-    { icon: Languages, text: t("authBrandPoint3") },
-  ];
-  return (
-    <aside className="hidden lg:block">
-      <div className="mb-8 flex items-center gap-3">
-        <img src={dulekoMark} alt="" className="h-11 w-11 rounded-xl object-cover shadow-sm" />
-        <span className="text-xl font-bold tracking-tight text-slate-900">Duleko</span>
-      </div>
-      <p className="max-w-md text-4xl font-bold leading-tight tracking-tight text-slate-900">{t("authBrandTitle")}</p>
-      <p className="mt-4 max-w-md text-base text-slate-600">{t("authBlurb")}</p>
-      <ul className="mt-8 space-y-4">
-        {points.map(({ icon: Icon, text }) => (
-          <li key={text} className="flex items-center gap-3 text-sm font-medium text-slate-700">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-              <Icon className="h-4 w-4" aria-hidden />
-            </span>
-            {text}
-          </li>
-        ))}
-      </ul>
-    </aside>
   );
 }
 
@@ -630,7 +612,7 @@ function MethodSwitch({ value, onChange }: { value: Method; onChange: (next: Met
             aria-checked={selected}
             onClick={() => !selected && onChange(v)}
             className={cn(
-              "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg text-sm transition-colors",
+              "inline-flex h-10 items-center justify-center gap-2 rounded-lg text-sm transition-colors",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/40",
               selected
                 ? "bg-surface font-semibold text-slate-900 shadow-sm"
@@ -700,7 +682,7 @@ function PasswordInput({
         type={show ? "text" : "password"}
         autoComplete={autoComplete}
         autoFocus={autoFocus}
-        className="pr-11"
+        className="h-12 pr-11"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
@@ -708,7 +690,7 @@ function PasswordInput({
         type="button"
         onClick={onToggle}
         aria-label={show ? "Hide password" : "Show password"}
-        className="absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:text-slate-600"
+        className="absolute right-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:text-slate-600"
       >
         {show ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
       </button>
@@ -845,12 +827,8 @@ function PhonePinForm({
 
   return (
     <form onSubmit={onSubmit} noValidate>
-      <Field
-        label={t("authPhoneLabel")}
-        hint={mode === "signup" ? t("authPhoneSignUpHint") : undefined}
-        error={errors.phone}
-      >
-        <MobileNumberInput value={phone} onChange={setPhone} disabled={busy} />
+      <Field label={t("authPhoneLabel")} error={errors.phone}>
+        <MobileNumberInput value={phone} onChange={setPhone} disabled={busy} className="h-12" />
       </Field>
 
       <PinField
@@ -862,7 +840,6 @@ function PhonePinForm({
               : t("authPinLabel")
         }
         length={pinLength}
-        hint={mode === "signup" ? t("authPinCreateHint") : undefined}
         error={errors.pin}
         value={pin}
         onChange={setPin}
@@ -870,6 +847,10 @@ function PhonePinForm({
         onToggleMasked={() => setPinMasked((v) => !v)}
         disabled={busy}
         autoFocus={mode === "signin" && Boolean(initialPhone)}
+        boxesClassName={cn(
+          "grid gap-2.5 [&>input]:h-14 [&>input]:w-full [&>input]:text-xl",
+          pinLength === OLD_PIN_LENGTH ? "grid-cols-6" : "grid-cols-4",
+        )}
         action={
           mode === "signin" && (
             <button
@@ -885,7 +866,7 @@ function PhonePinForm({
 
       {agreement}
 
-      <Button type="submit" size="lg" className="w-full" loading={busy}>
+      <Button type="submit" size="lg" className={PRIMARY} loading={busy}>
         {mode === "signin" ? t("signIn") : t("signUp")}
       </Button>
     </form>
@@ -921,11 +902,12 @@ function ForgotEmailStep({
           inputMode="email"
           autoFocus
           placeholder={t("emailPlaceholder")}
+          className="h-12"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
       </Field>
-      <Button type="submit" size="lg" className="w-full" loading={busy} disabled={!email.trim()}>
+      <Button type="submit" size="lg" className={PRIMARY} loading={busy} disabled={!email.trim()}>
         {t("sendResetCode")}
       </Button>
       <button

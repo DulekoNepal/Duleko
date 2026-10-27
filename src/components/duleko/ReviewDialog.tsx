@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Textarea } from "@/components/ui/field";
 import { StarPicker } from "./Rating";
 import { useI18n } from "@/lib/i18n";
+import { useTextRule } from "@/lib/text-rules";
 import { useToast } from "@/hooks/use-toast";
 import { submitReview } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
@@ -29,6 +30,7 @@ export function ReviewDialog({
   const queryClient = useQueryClient();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const rule = useTextRule();
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -58,7 +60,7 @@ export function ReviewDialog({
       footer={
         <Button
           className="w-full"
-          disabled={rating === 0}
+          disabled={rating === 0 || Boolean(rule(comment))}
           loading={mutation.isPending}
           onClick={() => mutation.mutate()}
         >
@@ -71,7 +73,7 @@ export function ReviewDialog({
         <p className="mb-1.5 text-sm font-medium text-slate-700">{t("yourRating")}</p>
         <StarPicker value={rating} onChange={setRating} disabled={mutation.isPending} />
       </div>
-      <Field label={`${t("reviewComment")} (${t("optional")})`}>
+      <Field label={`${t("reviewComment")} (${t("optional")})`} error={rule(comment)}>
         <Textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}

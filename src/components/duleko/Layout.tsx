@@ -2,8 +2,10 @@ import { useEffect } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Bell, Briefcase, Globe, Home, MessageSquare, Moon, Sun, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Avatar } from "@/components/ui/avatar";
 import { useI18n } from "@/lib/i18n";
 import { useIsDark, useThemeChoice } from "@/lib/theme";
+import { useGuestMode } from "@/hooks/use-guest-mode";
 import { useSession } from "@/hooks/use-session";
 import { countUnread, countUnreadMessages } from "@/lib/queries";
 import { setAppBadge } from "@/lib/native-android";
@@ -362,66 +364,109 @@ export function BottomNav() {
 }
 
 /**
- * Tablets and up: a top navigation bar replaces the phone's bottom tab bar -
- * logo on the left, the five sections centred. From lg the links sit in the
- * exact middle of the bar (a 1fr | auto | 1fr grid); on a tablet they centre
- * in the room beside the logo so the two can never collide. It sits in the page
- * flow (sticky, not fixed), so nothing needs padding to clear it; screen
- * headers become plain title rows beneath it (see AppHeader), so it's the
- * only bar on desktop. It carries the language switch.
+ * Tablets and up: a top navigation bar replaces the phone's bottom tab bar.
+ * Its edges line up with the page content (PAGE_WIDTH), not the window.
+ * The four sections sit in one pill track in the middle, the active one
+ * raised; on the right are theme + language, the bell, and either your
+ * photo (signed in) or a Sign in button (guests). From lg the track sits
+ * in the exact middle (a 1fr | auto | 1fr grid). Sticky in the page flow,
+ * so nothing needs padding to clear it; screen headers become plain title
+ * rows beneath it (see AppHeader).
  */
 export function TopNav() {
   const { t, lang } = useI18n();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const badges = useNavBadges();
+  const { profile } = useSession();
+  const { isGuest, requestSignIn } = useGuestMode();
 
   return (
-    <header className="sticky top-0 z-40 hidden border-b border-slate-200 bg-surface/95 pt-[var(--sat)] backdrop-blur md:block">
-      {/* Same height, logo and controls as the website's bar (SiteHeader). */}
-      <div className="flex h-16 items-center gap-4 px-4 lg:grid lg:h-[72px] lg:grid-cols-[1fr_auto_1fr] lg:px-6">
+    <header className="sticky top-0 z-40 hidden border-b border-slate-200/70 bg-surface/80 pt-[var(--sat)] backdrop-blur-xl backdrop-saturate-150 md:block">
+      <div
+        className={cn(
+          "mx-auto flex h-16 items-center gap-4 lg:grid lg:grid-cols-[1fr_auto_1fr]",
+          PAGE_WIDTH,
+          PAGE_GUTTER,
+        )}
+      >
         {/* The logo goes to the website's home (the Android app, which has
             no website, is sent on to /home by the "/" route). */}
         <Link
           to="/"
-          className="flex shrink-0 items-center gap-2.5 justify-self-start rounded-xl"
+          className="group flex shrink-0 items-center gap-2.5 justify-self-start rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
           aria-label={t("siteHomeAria")}
         >
-          <img src={dulekoMark} alt="" className="h-9 w-9 rounded-xl object-cover shadow-sm" />
-          <span className="text-lg font-bold tracking-tight text-slate-900">{t("appName")}</span>
+          <img
+            src={dulekoMark}
+            alt=""
+            className="h-9 w-9 rounded-xl object-cover shadow-sm ring-1 ring-slate-200/80 transition-transform duration-200 group-hover:scale-105"
+          />
+          <span className="text-lg font-bold tracking-tight text-slate-900">
+            {t("appName")}
+            <span className="ml-2 hidden border-l border-slate-200 pl-2 text-sm font-semibold text-slate-400 xl:inline" lang="ne">
+              डुलेको
+            </span>
+          </span>
         </Link>
-        <nav className="flex flex-1 items-center justify-center gap-1" aria-label={t("mainNavLabel")}>
-          {NAV.map(({ to, key, icon: Icon }) => {
-            const active = pathname === to || pathname.startsWith(`${to}/`);
-            const badge = navBadgeFor(to, badges);
-            return (
-              <Link
-                key={to}
-                to={to}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand-500",
-                  active ? "bg-brand-50 text-brand-800" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-                )}
-              >
-                <span className="relative">
-                  <Icon className="h-5 w-5 shrink-0" aria-hidden />
+
+        <nav
+          className="flex flex-1 justify-center lg:flex-none"
+          aria-label={t("mainNavLabel")}
+        >
+          <div className="flex items-center gap-0.5 rounded-full bg-slate-100/80 p-1 ring-1 ring-inset ring-slate-200/70">
+            {NAV.map(({ to, key, icon: Icon }) => {
+              const active = pathname === to || pathname.startsWith(`${to}/`);
+              const badge = navBadgeFor(to, badges);
+              const photo = to === "/profile" && profile ? profile : null;
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "relative flex h-9 items-center gap-2 rounded-full px-3.5 text-sm outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-brand-500 lg:px-4",
+                    active
+                      ? "bg-surface font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200/80"
+                      : "font-medium text-slate-500 hover:text-slate-900",
+                  )}
+                >
+                  {photo ? (
+                    <Avatar name={photo.full_name} src={photo.avatar_url} size={20} className="shrink-0" />
+                  ) : (
+                    <Icon
+                      className={cn("h-[18px] w-[18px] shrink-0", active && "text-brand-700")}
+                      strokeWidth={active ? 2.25 : 2}
+                      aria-hidden
+                    />
+                  )}
+                  <span className="whitespace-nowrap">{t(key)}</span>
                   {badge > 0 && (
-                    <span className="absolute -right-2 -top-1.5 min-w-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-4 text-white">
+                    <span className="min-w-[18px] rounded-full bg-red-500 px-1.5 text-center text-[10px] font-bold leading-[18px] text-white">
                       {formatNumber(badge > 9 ? "9+" : badge, lang)}
                     </span>
                   )}
-                </span>
-                <span className="whitespace-nowrap">{t(key)}</span>
-              </Link>
-            );
-          })}
+                </Link>
+              );
+            })}
+          </div>
         </nav>
-        {/* Right column: the theme and language switches - here on desktop
-            instead of in each screen's header. It also balances the logo
-            column so the links stay truly centred. */}
+
+        {/* Theme + language, then the bell for members or Sign in for
+            guests. It also balances the logo column so the track stays
+            truly centred. */}
         <div className="flex shrink-0 items-center justify-end gap-2">
-          <HeaderToggles className="h-9 rounded-xl" />
-          <AlertsBellButton />
+          <HeaderToggles className="h-9" />
+          {isGuest || !profile ? (
+            <button
+              type="button"
+              onClick={requestSignIn}
+              className="inline-flex h-9 items-center rounded-full bg-brand-700 px-4 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+            >
+              {t("signIn")}
+            </button>
+          ) : (
+            <AlertsBellButton className="h-9 w-9 rounded-full" />
+          )}
         </div>
       </div>
     </header>

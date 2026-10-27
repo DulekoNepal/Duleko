@@ -31,6 +31,7 @@ import {
 import { SkillIcon } from "@/components/duleko/SkillIcon";
 import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { BrandWatermark } from "@/components/duleko/site/ui";
+import { siteSkill, siteSkillName } from "@/components/duleko/site/skills";
 import { AreaPickerDialog, JobCard, JobCardSkeleton } from "@/components/duleko/jobs/JobParts";
 import { PostJobDialog } from "@/components/duleko/jobs/PostJobDialog";
 import { useI18n, type StringKey } from "@/lib/i18n";
@@ -56,9 +57,8 @@ const NOTICE_FRESH_MS = 14 * 24 * 60 * 60_000;
 /** Popular's tie-break while few skills have anyone behind them yet. */
 const DEFAULT_SHORTCUTS = ["electrician", "plumber", "mechanic", "tutor", "carpenter", "cleaner", "painter", "driver"];
 
-/** How many skills Popular holds once opened; each section shows its first four. */
-const POPULAR_COUNT = 12;
-const SECTION_PREVIEW = 4;
+/** How many skills the Popular row holds once opened. */
+const POPULAR_COUNT = 18;
 
 /**
  * From tablets up the map is a big, movable one; on phones a small
@@ -190,15 +190,7 @@ export function HomeScreen() {
 
         {/* ---- Things waiting on you: one strip, only what applies ---- */}
         <div className="grid gap-2.5 empty:hidden md:grid-cols-2 md:[&>:last-child:nth-child(odd)]:col-span-2">
-          {isGuest && !profile && (
-            <AttentionRow
-              onClick={requestSignIn}
-              icon={LogIn}
-              tone="brand"
-              title={t("signUpOrLogIn")}
-              hint={t("signUpOrLogInHint")}
-            />
-          )}
+          {isGuest && !profile && <JoinCard onJoin={requestSignIn} />}
           {pendingCount > 0 && (
             <AttentionRow
               to="/work"
@@ -255,7 +247,7 @@ export function HomeScreen() {
             <section className="animate-in-up" style={{ "--delay": "150ms" } as CSSProperties}>
               {/* One number per row beside the skills, so the column runs
                   about as tall as they do instead of stopping short. */}
-              <EmergencyContactsSection gridClassName="md:grid-cols-4 lg:grid-cols-1" />
+              <EmergencyContactsSection gridClassName="md:grid-cols-2 lg:grid-cols-1" />
             </section>
           </aside>
         </div>
@@ -299,21 +291,26 @@ function HomeHero({
   onPickArea: () => void;
   onPost: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const firstName = profile?.full_name.trim().split(/\s+/)[0];
   const greeting = firstName ? `${t(timeGreetingKey())}, ${firstName}` : t(timeGreetingKey());
 
   return (
-    <section className="band animate-in-up relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 via-brand-700 to-teal-800 p-4 text-white shadow-sm sm:p-5 md:p-7">
+    <section className="band animate-in-up relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 via-brand-700 to-teal-800 p-4 text-white shadow-[0_18px_40px_-22px_rgba(21,128,61,0.7)] sm:p-6 md:p-8">
+      {/* Depth: a faint dot grid on the right, two soft glows, the mark. */}
       <div
-        className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10 blur-3xl"
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px] [mask-image:linear-gradient(90deg,transparent_35%,#000_100%)]"
+      />
+      <div
+        className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-brand-300/20 blur-3xl"
+        className="pointer-events-none absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-brand-300/20 blur-3xl"
         aria-hidden
       />
-      <BrandWatermark className="-bottom-10 -right-10 h-40 w-40 sm:h-48 sm:w-48 md:-right-6 md:h-60 md:w-60" />
+      <BrandWatermark className="-bottom-10 -right-10 h-40 w-40 sm:h-48 sm:w-48 md:-right-6 md:h-64 md:w-64" />
 
       <div className="relative">
         <div className="flex items-center justify-between gap-3">
@@ -322,7 +319,7 @@ function HomeHero({
             type="button"
             onClick={onPickArea}
             aria-label={t("homeLocationAria", { place })}
-            className="inline-flex min-w-0 max-w-[60%] shrink-0 items-center gap-1 rounded-full bg-white/15 py-1 pl-2 pr-2.5 text-xs font-semibold text-white ring-1 ring-white/25 transition-colors hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="inline-flex min-w-0 max-w-[60%] shrink-0 items-center gap-1.5 rounded-full bg-white/15 py-1.5 pl-2.5 pr-3 text-xs font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm transition-colors hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
             <span className="truncate">{place}</span>
@@ -330,17 +327,17 @@ function HomeHero({
           </button>
         </div>
 
-        <h2 className="mt-1 max-w-xl text-balance text-xl font-bold leading-tight tracking-tight sm:text-2xl md:mt-1.5 md:text-[28px]">
+        <h2 className="mt-1.5 max-w-xl text-balance text-[22px] font-bold leading-tight tracking-tight sm:text-[26px] md:mt-2 md:text-[32px]">
           {t("homeHeroPrompt")}
         </h2>
 
-        <div className="mt-3.5 flex flex-col gap-2.5 md:mt-5 md:max-w-3xl md:flex-row md:items-center">
+        <div className="mt-4 flex flex-col gap-2.5 md:mt-6 md:max-w-3xl md:flex-row md:items-center">
           <HomeSearch />
           <div className="grid grid-cols-2 gap-2.5 md:flex md:shrink-0">
             <button
               type="button"
               onClick={onPost}
-              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-surface px-4 text-sm font-semibold text-brand-800 shadow-sm transition-all hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-700 active:scale-[0.98]"
+              className="inline-flex h-12 items-center justify-center gap-1.5 rounded-2xl bg-white px-4 text-sm font-semibold text-[#166534] shadow-sm transition-all hover:bg-[#f0fdf4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-700 active:scale-[0.98] md:px-5"
             >
               <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden />
               {t("postJob")}
@@ -348,12 +345,27 @@ function HomeHero({
             <Link
               to="/jobs"
               search={area ? { district: area } : {}}
-              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-white/10 px-4 text-sm font-semibold text-white ring-1 ring-inset ring-white/30 transition-all hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-[0.98]"
+              className="inline-flex h-12 items-center justify-center gap-1.5 rounded-2xl bg-white/10 px-4 text-sm font-semibold text-white ring-1 ring-inset ring-white/30 backdrop-blur-sm transition-all hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-[0.98] md:px-5"
             >
               <Briefcase className="h-4 w-4" aria-hidden />
               {t("homeFindWork")}
             </Link>
           </div>
+        </div>
+
+        {/* One-tap shortcuts to the everyday skills. */}
+        <div className="-mx-4 mt-4 flex items-center gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] sm:-mx-6 sm:px-6 md:mx-0 md:mt-5 md:flex-wrap md:overflow-visible md:px-0">
+          <span className="shrink-0 text-xs font-medium text-brand-100">{t("popularSkills")}:</span>
+          {DEFAULT_SHORTCUTS.slice(0, 6).map((id) => (
+            <Link
+              key={id}
+              to="/search"
+              search={{ skill: id }}
+              className="inline-flex shrink-0 items-center rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white ring-1 ring-inset ring-white/20 transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              {siteSkillName(siteSkill(id), lang)}
+            </Link>
+          ))}
         </div>
       </div>
     </section>
@@ -374,7 +386,7 @@ function HomeSearch() {
         navigate({ to: "/search", search: { q: query.trim() || undefined } });
       }}
     >
-      <label className="flex h-11 items-center gap-2.5 rounded-xl bg-surface px-3.5 shadow-sm ring-1 ring-black/5 transition-shadow focus-within:ring-4 focus-within:ring-white/40">
+      <label className="flex h-12 items-center gap-2.5 rounded-2xl bg-surface px-4 shadow-sm ring-1 ring-black/5 transition-shadow focus-within:ring-4 focus-within:ring-white/40">
         <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
         <span className="sr-only">{t("search")}</span>
         <input
@@ -469,6 +481,35 @@ function AttentionRow({
   );
 }
 
+/**
+ * For visitors browsing without an account: what joining gets them, and
+ * one clear button. The whole card is the button on phones.
+ */
+function JoinCard({ onJoin }: { onJoin: () => void }) {
+  const { t } = useI18n();
+  return (
+    <button
+      type="button"
+      onClick={onJoin}
+      className="group animate-in-up relative flex w-full min-w-0 items-center gap-3.5 overflow-hidden rounded-2xl border border-slate-200 bg-surface px-4 py-3.5 text-left shadow-sm transition-colors hover:border-brand-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 md:px-5"
+    >
+      <span className="absolute inset-y-0 left-0 w-1 bg-brand-600" aria-hidden />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+        <LogIn className="h-[18px] w-[18px]" aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-semibold text-slate-900 md:text-[15px]">{t("homeJoinTitle")}</span>
+        <span className="block truncate text-xs text-slate-500 md:text-[13px]">{t("signUpOrLogInHint")}</span>
+      </span>
+      <span className="hidden h-9 shrink-0 items-center gap-1 rounded-full bg-brand-700 px-4 text-sm font-semibold text-white transition-colors group-hover:bg-brand-800 sm:inline-flex">
+        {t("signUpOrLogIn")}
+        <ChevronRight className="h-4 w-4" aria-hidden />
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 sm:hidden" aria-hidden />
+    </button>
+  );
+}
+
 /** A nudge until the basics people look for are filled in; hidden after. */
 function ProfileProgress({ profile }: { profile: Profile }) {
   const { t, lang } = useI18n();
@@ -524,8 +565,12 @@ function ProfileProgress({ profile }: { profile: Profile }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Skills: Popular and the three categories, all four open at once     */
+/* Skills: Popular and the three categories, one row each              */
 /* ------------------------------------------------------------------ */
+
+/** Skills a row shows before "See all": four on phones, six from sm. */
+const ROW_PREVIEW_PHONE = 4;
+const ROW_PREVIEW = 6;
 
 function HomeSkills() {
   const { t } = useI18n();
@@ -536,8 +581,8 @@ function HomeSkills() {
   const counts = useQuery({ queryKey: ["skill-counts"], queryFn: () => skillCounts(null) });
 
   // Most people first, the everyday ones first among equals - in every
-  // section, so its first row is its four most popular skills. "Others"
-  // is a catch-all, not a suggestion.
+  // row, so it opens on its most popular skills. "Others" is a catch-all,
+  // not a suggestion.
   const byPopularity = (skills.data ?? [])
     .filter((skill) => skill.id !== "other")
     .sort((a, b) => {
@@ -548,43 +593,37 @@ function HomeSkills() {
     });
   const byCategory = groupSkillsByCategory(byPopularity);
   const sections: { id: SkillSection; skills: Skill[] }[] = [
-    { id: "popular", skills: byPopularity.slice(0, POPULAR_COUNT) },
-    ...SKILL_CATEGORY_ORDER.map((id) => ({ id, skills: byCategory[id] })),
-  ];
+    { id: "popular" as SkillSection, skills: byPopularity.slice(0, POPULAR_COUNT) },
+    ...SKILL_CATEGORY_ORDER.map((id) => ({ id: id as SkillSection, skills: byCategory[id] })),
+  ].filter((entry) => entry.skills.length > 0);
 
   return (
     <HomeSection title={t("browseSkills")} action={<SeeAll to="/search" />} delay={30}>
-      {/* One under the other on phones, two by two from tablets up. */}
-      <div className="grid gap-2.5 md:grid-cols-2 md:items-start">
+      <div className="space-y-2.5">
         {skills.isLoading
           ? Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="rounded-2xl border border-slate-200 bg-surface p-3 shadow-sm">
-                <div className="skeleton h-4 w-40 rounded" />
-                <div className="mt-3 grid grid-cols-4 gap-1">
-                  {Array.from({ length: 4 }).map((_, j) => (
-                    <div key={j} className="flex flex-col items-center gap-2 py-1">
-                      <div className="skeleton h-10 w-10 rounded-xl" />
+                <div className="skeleton h-5 w-44 rounded" />
+                <div className="mt-3 grid grid-cols-4 gap-1 sm:grid-cols-6">
+                  {Array.from({ length: 6 }).map((_, j) => (
+                    <div key={j} className={cn("flex flex-col items-center gap-2 py-1", j >= 4 && "hidden sm:flex")}>
+                      <div className="skeleton h-11 w-11 rounded-2xl" />
                       <div className="skeleton h-3 w-14 rounded" />
                     </div>
                   ))}
                 </div>
               </div>
             ))
-          : sections
-              .filter((section) => section.skills.length > 0)
-              .map((section) => (
-                <SkillSectionCard key={section.id} section={section.id} skills={section.skills} counts={counts.data} />
-              ))}
+          : sections.map((section) => (
+              <SkillRow key={section.id} section={section.id} skills={section.skills} counts={counts.data} />
+            ))}
       </div>
     </HomeSection>
   );
 }
 
-/**
- * One section of Home's skills: its four most popular skills, and a
- * "See all" that opens the rest right here.
- */
-function SkillSectionCard({
+/** One row of Home's skills: its most popular first, "See all" opens the rest here. */
+function SkillRow({
   section,
   skills,
   counts,
@@ -593,80 +632,99 @@ function SkillSectionCard({
   skills: Skill[];
   counts?: Record<string, number>;
 }) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const Icon = section === "popular" ? Flame : SKILL_CATEGORY_ICON[section];
   const title = t(section === "popular" ? "popularSkills" : SKILL_CATEGORY_LABEL[section]);
-  const shown = expanded ? skills : skills.slice(0, SECTION_PREVIEW);
+  const shown = expanded ? skills : skills.slice(0, ROW_PREVIEW);
 
   return (
-    <section
-      aria-labelledby={`home-skills-${section}`}
-      className="rounded-2xl border border-slate-200 bg-surface shadow-sm"
-    >
-      <div className="flex items-center gap-2.5 px-3 pt-3">
+    <section aria-labelledby={`home-skills-${section}`} className="rounded-2xl border border-slate-200 bg-surface shadow-sm">
+      <div className="flex items-center gap-2.5 px-3.5 pt-3 sm:px-4">
         <span
           className={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
             section === "popular" ? "bg-accent-50 text-accent-600" : "bg-brand-50 text-brand-700",
           )}
         >
           <Icon className="h-4 w-4" aria-hidden />
         </span>
-        <h3 id={`home-skills-${section}`} className="line-clamp-2 min-w-0 flex-1 text-sm font-semibold leading-tight text-slate-900">
+        <h3 id={`home-skills-${section}`} className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">
           {title}
         </h3>
-        {skills.length > SECTION_PREVIEW && (
+        {skills.length > ROW_PREVIEW_PHONE && (
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
-            className="inline-flex shrink-0 items-center gap-0.5 rounded-lg py-1 pl-2 text-xs font-semibold text-accent-600 transition-colors hover:text-accent-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500"
+            className={cn(
+              "inline-flex shrink-0 items-center gap-0.5 rounded-lg py-1 pl-2 text-xs font-semibold text-accent-600 transition-colors hover:text-accent-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500",
+              // From sm a row already shows six: nothing more to open.
+              skills.length <= ROW_PREVIEW && "sm:hidden",
+            )}
           >
             {expanded ? t("showLess") : t("seeAll")}
-            <ChevronDown
-              className={cn("h-3.5 w-3.5 transition-transform duration-200", expanded && "rotate-180")}
-              aria-hidden
-            />
+            <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", expanded && "rotate-180")} aria-hidden />
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-1 p-2">
-        {shown.map((skill, i) => {
-          const count = counts?.[skill.id] ?? 0;
-          return (
-            <Link
-              key={skill.id}
-              to="/search"
-              // No area filter: everyone with the skill, nearest first (6500).
-              search={{ skill: skill.id }}
-              className={cn(
-                "group flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-center transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
-                i >= SECTION_PREVIEW && "animate-[fade-in-up_0.25s_ease-out]",
-              )}
-            >
-              <span
-                className={cn(
-                  "mb-0.5 flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105 group-active:scale-95",
-                  TILE_WASH[skill.category] ?? "bg-navy-50",
-                )}
-              >
-                <SkillIcon skillId={skill.id} category={skill.category} className="h-5 w-5" />
-              </span>
-              <span className="line-clamp-2 w-full text-[11px] font-medium leading-tight text-slate-800">
-                {skillName(skill, lang)}
-              </span>
-              {count > 0 && (
-                <span className="-mt-0.5 text-[10px] font-medium tabular-nums leading-none text-slate-400">
-                  {formatNumber(count, lang)}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+      <div className="grid grid-cols-4 gap-1 p-2 sm:grid-cols-6 sm:px-3">
+        {shown.map((skill, i) => (
+          <SkillTile
+            key={skill.id}
+            skill={skill}
+            count={counts?.[skill.id] ?? 0}
+            late={i >= ROW_PREVIEW}
+            className={!expanded && i >= ROW_PREVIEW_PHONE ? "hidden sm:flex" : undefined}
+          />
+        ))}
       </div>
     </section>
+  );
+}
+
+/** One skill: its icon on a soft tile, its name, and how many people offer it. */
+function SkillTile({
+  skill,
+  count,
+  late,
+  className,
+}: {
+  skill: Skill;
+  count: number;
+  late: boolean;
+  className?: string;
+}) {
+  const { lang } = useI18n();
+  return (
+    <Link
+      to="/search"
+      // No area filter: everyone with the skill, nearest first (6500).
+      search={{ skill: skill.id }}
+      className={cn(
+        "group flex min-w-0 flex-col items-center gap-1.5 rounded-xl px-1 py-2.5 text-center transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
+        late && "animate-[fade-in-up_0.25s_ease-out]",
+        className,
+      )}
+    >
+      <span
+        className={cn(
+          "flex h-11 w-11 items-center justify-center rounded-2xl transition-transform duration-200 group-hover:-translate-y-0.5 group-active:scale-95",
+          TILE_WASH[skill.category] ?? "bg-navy-50",
+        )}
+      >
+        <SkillIcon skillId={skill.id} category={skill.category} className="h-5 w-5" />
+      </span>
+      <span className="line-clamp-2 w-full text-[11px] font-medium leading-tight text-slate-800 sm:text-xs">
+        {skillName(skill, lang)}
+      </span>
+      {count > 0 && (
+        <span className="rounded-full bg-slate-100 px-1.5 text-[10px] font-semibold tabular-nums leading-4 text-slate-500">
+          {formatNumber(count, lang)}
+        </span>
+      )}
+    </Link>
   );
 }
 

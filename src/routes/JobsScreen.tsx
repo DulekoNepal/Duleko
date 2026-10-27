@@ -51,6 +51,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { useI18n, type StringKey } from "@/lib/i18n";
+import { useTextRule } from "@/lib/text-rules";
 import { useSession } from "@/hooks/use-session";
 import { useGuestMode } from "@/hooks/use-guest-mode";
 import { useHomeArea } from "@/hooks/use-home-area";
@@ -784,6 +785,7 @@ function OfferForm({
   const [amount, setAmount] = useState(suggested ? String(Math.round(suggested)) : "");
   const [note, setNote] = useState(offer?.note ?? "");
   const [error, setError] = useState("");
+  const rule = useTextRule();
   const updating = offer?.status === "pending";
 
   const send = useMutation({
@@ -804,6 +806,7 @@ function OfferForm({
           setError(t("errJobBadAmount"));
           return;
         }
+        if (rule(note)) return;
         send.mutate();
       }}
     >
@@ -823,7 +826,7 @@ function OfferForm({
           />
         </div>
       </Field>
-      <Field label={`${t("jobOfferNote", { name: posterName })} (${t("optional")})`}>
+      <Field label={`${t("jobOfferNote", { name: posterName })} (${t("optional")})`} error={rule(note)}>
         <Textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -1148,6 +1151,7 @@ function StaffEditDialog({
   const [budgetMax, setBudgetMax] = useState(job.budget_max == null ? "" : String(job.budget_max));
   const [reason, setReason] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const rule = useTextRule();
 
   function save() {
     const next: Record<string, string> = {};
@@ -1158,7 +1162,7 @@ function StaffEditDialog({
     else if (lo != null && hi != null && hi < lo) next.budget = t("postJobBudgetOrder");
     if (reason.trim().length < 5) next.reason = t("errModReasonRequired");
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    if (Object.keys(next).length > 0 || rule(title, details)) return;
     onSave({ title: title.trim(), details: details.trim() || null, budget_min: lo, budget_max: hi }, reason.trim());
   }
 
@@ -1178,10 +1182,10 @@ function StaffEditDialog({
         </>
       }
     >
-      <Field label={t("postJobTitle")} error={errors.title}>
+      <Field label={t("postJobTitle")} error={errors.title || rule(title)}>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
       </Field>
-      <Field label={`${t("postJobDetails")} (${t("optional")})`}>
+      <Field label={`${t("postJobDetails")} (${t("optional")})`} error={rule(details)}>
         <Textarea value={details} onChange={(e) => setDetails(e.target.value)} maxLength={800} rows={4} className="min-h-24" />
       </Field>
       <Field label={`${money} (${t("optional")})`} error={errors.budget}>

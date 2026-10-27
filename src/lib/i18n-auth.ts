@@ -61,13 +61,6 @@ export const authStrings = {
   authStepEmail: ["Email", "इमेल"],
   authStepCode: ["Code", "कोड"],
   authStepPassword: ["Password", "पासवर्ड"],
-  authBrandTitle: ["Find work and workers near you.", "नजिकै काम र कामदार भेट्टाउनुहोस्।"],
-  authBrandPoint1: ["Workers and employers from your own area", "तपाईंकै क्षेत्रका कामदार र काम दिनेहरू"],
-  authBrandPoint2: [
-    "Your number stays hidden until you agree on a job",
-    "काम पक्का नभएसम्म तपाईंको नम्बर लुकेको रहन्छ",
-  ],
-  authBrandPoint3: ["Use it in Nepali or English", "नेपाली वा अंग्रेजी, जुन सजिलो लाग्छ"],
 
   // ---- email: a 4-digit code, then a password (migration 8100) ----------
   authContinue: ["Continue", "जारी राख्नुहोस्"],

@@ -71,6 +71,9 @@ const KYC_ERRORS: [string, StringKey][] = [
   ["CALL_DEAL_NOT_FOUND", "errCallNotFound"],
   ["CALL_DEAL_ANSWERED", "errCallDealAnswered"],
   ["AGE_LOCKED_VERIFIED", "errAgeLockedVerified"],
+  // No phone numbers or emojis in bios, posts and the like (8200)
+  ["TEXT_HAS_PHONE", "errTextHasPhone"],
+  ["TEXT_HAS_EMOJI", "errTextHasEmoji"],
 ];
 
 /** Turns any thrown value into a short message we can show a user. */

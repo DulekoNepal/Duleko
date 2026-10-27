@@ -8,6 +8,7 @@ import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { AvailabilityCalendar } from "@/components/duleko/AvailabilityCalendar";
 import { SKILL_CATEGORY_ORDER, groupSkillsByCategory } from "@/components/duleko/SkillGrid";
 import { useI18n, type StringKey } from "@/lib/i18n";
+import { useTextRule } from "@/lib/text-rules";
 import { useToast } from "@/hooks/use-toast";
 import { createJobPost, getUserSkills, listSkills } from "@/lib/queries";
 import { ALL_DISTRICTS, municipalitiesOf } from "@/lib/nepal";
@@ -109,6 +110,7 @@ export function PostJobDialog({
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const rule = useTextRule();
 
   function pinHere() {
     setLocating(true);
@@ -165,6 +167,7 @@ export function PostJobDialog({
 
   function validate(): boolean {
     const next: Record<string, string> = {};
+    if (rule(title, details, offering ? null : place)) return false;
     if (!skillId) next.skill = t("errJobSkillRequired");
     if (title.trim().length < 3) next.title = t("required");
     if (!district) next.district = t("required");
@@ -289,7 +292,7 @@ export function PostJobDialog({
         </Field>
       )}
 
-      <Field label={t("postJobTitle")} error={errors.title}>
+      <Field label={t("postJobTitle")} error={errors.title || rule(title)}>
         <Input
           value={title}
           onChange={(e) => {
@@ -301,7 +304,7 @@ export function PostJobDialog({
         />
       </Field>
 
-      <Field label={`${t("postJobDetails")} (${t("optional")})`}>
+      <Field label={`${t("postJobDetails")} (${t("optional")})`} error={rule(details)}>
         <Textarea
           value={details}
           onChange={(e) => setDetails(e.target.value)}
@@ -348,7 +351,7 @@ export function PostJobDialog({
 
       {!offering && (
         <>
-          <Field label={t("postJobPlace")} error={errors.place} hint={t("postJobPlaceHint")}>
+          <Field label={t("postJobPlace")} error={errors.place || rule(place)} hint={t("postJobPlaceHint")}>
             <Input
               value={place}
               onChange={(e) => {
