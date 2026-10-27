@@ -7,14 +7,18 @@ import { supabase } from "./supabase";
  * off, so there is no SMS code yet.
  */
 
-export const PIN_LENGTH = 6;
+/** New PINs (migration 8100), checked by the account-auth function. */
+export const PIN_LENGTH = 4;
+/** PINs made before 8100, which are still the account's Supabase password. */
+export const OLD_PIN_LENGTH = 6;
 
 /**
- * The PIN is the account's Supabase password, with a fixed wrapper so it
- * meets any password-strength rule the project sets for email accounts.
- * It adds no secrecy (this repo is public); the 6 digits are the secret.
- * Never change it: every phone account's password depends on it, and
- * staff resets in the SQL editor use the same wrapper (see 6000).
+ * An old 6-digit PIN is the account's Supabase password, with a fixed
+ * wrapper so it meets any password-strength rule the project sets for
+ * email accounts. It adds no secrecy (this repo is public); the 6 digits
+ * are the secret. Never change it: those accounts' passwords depend on
+ * it, and staff resets in the SQL editor use the same wrapper (see 6000).
+ * 4-digit PINs never touch it (see account-auth.ts).
  */
 export function pinToPassword(pin: string): string {
   return `Duleko-PIN-${pin}`;

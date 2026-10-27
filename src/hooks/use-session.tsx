@@ -27,6 +27,12 @@ interface SessionValue {
   isPasswordRecovery: boolean;
   /** Called once the new password is actually set, to resume normal routing. */
   clearPasswordRecovery: () => void;
+  /**
+   * The same hold, started by the app itself just before a 4-digit email
+   * code signs someone in (new account or forgot password): the code is
+   * for choosing a password, so that step comes before the app.
+   */
+  holdForPassword: () => void;
   refreshProfile: () => Promise<void>;
   /** `remember` keeps who they are on this phone for the sign-in screen (never the PIN). */
   signOut: (options?: { remember?: boolean }) => Promise<void>;
@@ -107,6 +113,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       loadingProfile: Boolean(userId) && profileQuery.isLoading,
       isPasswordRecovery,
       clearPasswordRecovery: () => setIsPasswordRecovery(false),
+      holdForPassword: () => setIsPasswordRecovery(true),
       refreshProfile: async () => {
         await profileQuery.refetch();
       },

@@ -58,9 +58,10 @@ export function MobileNumberInput({
   );
 }
 
-/** Six masked boxes for a PIN, with a label, an optional Show/Hide, and a hint or error. */
+/** Masked boxes for a PIN (4, or 6 for an older one), with a label, an optional Show/Hide, and a hint or error. */
 export function PinField({
   label,
+  length = PIN_LENGTH,
   value,
   onChange,
   masked,
@@ -73,6 +74,7 @@ export function PinField({
   className,
 }: {
   label: string;
+  length?: number;
   value: string;
   onChange: (value: string) => void;
   masked: boolean;
@@ -106,7 +108,7 @@ export function PinField({
       </div>
       <OtpInput
         id={id}
-        length={PIN_LENGTH}
+        length={length}
         value={value}
         onChange={onChange}
         masked={masked}
@@ -114,7 +116,10 @@ export function PinField({
         autoFocus={autoFocus}
         label={label}
         digitLabel={(n) => t("authPinDigit", { n })}
-        className="justify-between gap-1.5 sm:justify-start sm:gap-2"
+        className={cn(
+          "gap-2",
+          length > PIN_LENGTH ? "justify-between sm:justify-start" : "justify-start [&>input]:w-12",
+        )}
       />
       {error ? (
         <p className="mt-1 text-xs text-red-600">{error}</p>

@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, ChevronDown, ChevronRight, Mail, Smartphone } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
+import { AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, Languages, Mail, MapPin, ShieldCheck, Smartphone } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/field";
+import { Field, Input, Label } from "@/components/ui/field";
 import { OtpInput } from "@/components/ui/otp-input";
 import { HeaderToggles } from "@/components/duleko/Layout";
 import { MobileNumberInput, PinField } from "@/components/duleko/PhonePinFields";
-import { PolicyDialog } from "@/components/duleko/PolicyDialog";
 import { mailto } from "@/components/duleko/site/actions";
+import { AccountAuthError, phonePinLength, pinSignIn, pinSignUp, sendEmailCode, verifyEmailCode } from "@/lib/account-auth";
 import { onBackFromGoogle, signInWithGoogle } from "@/lib/google-sign-in";
-import { authPhone, isNepaliMobile, isWeakPin, phoneAccountExists, pinToPassword } from "@/lib/phone-auth";
+import { OLD_PIN_LENGTH, PIN_LENGTH, authPhone, isNepaliMobile, isWeakPin, pinToPassword } from "@/lib/phone-auth";
 import { forgetSavedLogin, readSavedLogin, type SavedLogin } from "@/lib/saved-login";
 import { firstName } from "@/lib/work";
 import { cn } from "@/lib/utils";
@@ -21,40 +20,33 @@ import { useSession } from "@/hooks/use-session";
 import { supabase, errorMessage } from "@/lib/supabase";
 import dulekoMark from "@/assets/duleko-mark.webp";
 
-const schema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
-type FormValues = z.infer<typeof schema>;
-
 const RESEND_COOLDOWN_SECONDS = 45;
-// Supabase's own email OTP - the `{{ .Token }}` in the auth email
-// templates - is always 6 digits; there's no project setting that
-// changes it, so this has to match that fixed length, not the other
-// way around.
-const OTP_LENGTH = 6;
+/** Duleko's own email code (migration 8100), not Supabase's 6-digit one. */
+const CODE_LENGTH = 4;
+const MIN_PASSWORD = 6;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Everything past the initial sign-in form: confirming a brand new email
- * account by code, and resetting a forgotten password by code. Both reuse
- * the same three beats - request a code, enter it, then finish the action
- * it unlocked - which is why they share one screen instead of two. A
- * forgotten PIN has no code yet (no SMS), so "forgotPin" says who resets it.
+ * One step at a time. A new email account goes email -> code -> password;
+ * a forgotten password goes forgotEmail -> code -> password. The code
+ * signs them in, and the session hook holds this screen on "password"
+ * until one is saved (holdForPassword). A forgotten PIN has no code yet
+ * (no SMS), so "forgotPin" says who resets it.
  */
-type View = "auth" | "verify" | "forgotEmail" | "forgotCode" | "forgotPassword" | "forgotPin" | "locationConsent";
+type View = "auth" | "code" | "forgotEmail" | "password" | "forgotPin";
 
 /**
- * Mobile number + PIN is the default way in. Email (and Google) stay for
- * everyone who joined that way; whichever was used last is remembered.
+ * Email is the default way in. Mobile number + PIN and Google stay for
+ * everyone who prefers them; whichever was used last is remembered.
  */
 type Method = "phone" | "email";
 const METHOD_KEY = "duleko.authMethod";
 
 function readMethod(): Method {
   try {
-    return window.localStorage.getItem(METHOD_KEY) === "email" ? "email" : "phone";
+    return window.localStorage.getItem(METHOD_KEY) === "phone" ? "phone" : "email";
   } catch {
-    return "phone";
+    return "email";
   }
 }
 
@@ -66,8 +58,8 @@ export function AuthScreen({
   initialMode?: "signin" | "signup";
 }) {
   const { t, lang } = useI18n();
-  const { clearPasswordRecovery } = useSession();
-  const [view, setView] = useState<View>("auth");
+  const { user, isPasswordRecovery, holdForPassword, clearPasswordRecovery } = useSession();
+  const [view, setView] = useState<View>(isPasswordRecovery ? "password" : "auth");
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   // The account last signed out here, if they asked to be remembered.
   const [saved, setSaved] = useState<SavedLogin | null>(readSavedLogin);
@@ -79,18 +71,15 @@ export function AuthScreen({
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
-  const [policyOpen, setPolicyOpen] = useState<"terms" | "privacy" | "registration" | null>(null);
-  const [policiesExpanded, setPoliciesExpanded] = useState(false);
 
-  // Shared between the verify-email and forgot-password flows - both are
-  // "a code went to this address, now type it back" at heart.
-  const [pendingEmail, setPendingEmail] = useState("");
-  const [otp, setOtp] = useState("");
+  const [email, setEmail] = useState(saved?.method === "email" ? (saved.email ?? "") : "");
+  const [password, setPassword] = useState("");
+  // The code step serves both new accounts and forgotten passwords.
+  const [purpose, setPurpose] = useState<"signup" | "reset">("signup");
+  const [code, setCode] = useState("");
   const [cooldown, setCooldown] = useState(0);
   const [newPassword, setNewPassword] = useState("");
-  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -103,12 +92,15 @@ export function AuthScreen({
     setNotice(null);
   }
 
+  function showError(err: unknown) {
+    setNotice(null);
+    setError(err instanceof AccountAuthError ? err.message : errorMessage(err));
+  }
+
   function goToAuth() {
     setView("auth");
-    setOtp("");
-    setPendingEmail("");
+    setCode("");
     setNewPassword("");
-    setNewPasswordConfirm("");
     resetTransient();
   }
 
@@ -132,156 +124,92 @@ export function AuthScreen({
     }
   }
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { email: saved?.email && saved.method === "email" ? saved.email : "", password: "" },
-  });
-
   function forgetMe() {
     forgetSavedLogin();
     setSaved(null);
-    form.setValue("email", "");
+    setEmail("");
   }
 
-  async function onSubmit(values: FormValues) {
+  /** Sends a code and moves to the code step. */
+  async function requestCode(address: string, why: "signup" | "reset") {
+    setBusy(true);
+    resetTransient();
+    try {
+      await sendEmailCode(address, why, lang);
+      setEmail(address.trim());
+      setPurpose(why);
+      setCode("");
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+      setView("code");
+    } catch (err) {
+      showError(err);
+      // Already has an account: the sign-in form, with the email kept.
+      if (err instanceof AccountAuthError && err.code === "email_taken") setMode("signin");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onEmailSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!EMAIL_RE.test(email.trim())) {
+      setError(t("authEmailInvalid"));
+      return;
+    }
     if (mode === "signup") {
       if (!agreed) {
         setError(t("mustAgreeToPolicies"));
         return;
       }
-      if (values.password !== confirmPassword) {
-        setError(t("passwordsDontMatch"));
-        return;
-      }
-    }
-    setBusy(true);
-    resetTransient();
-    try {
-      if (mode === "signup") {
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email: values.email,
-          password: values.password,
-        });
-        if (signUpError) throw signUpError;
-        // With email confirmation on, there is no session yet - move to
-        // the code-entry step instead of just telling them to go check.
-        if (!data.session) {
-          setPendingEmail(values.email);
-          setOtp("");
-          setCooldown(RESEND_COOLDOWN_SECONDS);
-          setView("verify");
-        }
-      } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: values.email,
-          password: values.password,
-        });
-        if (signInError) throw signInError;
-      }
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onVerifySignup() {
-    if (otp.length !== OTP_LENGTH) return;
-    setBusy(true);
-    resetTransient();
-    try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email: pendingEmail,
-        token: otp,
-        type: "signup",
-      });
-      if (verifyError) throw verifyError;
-      // A session now exists - AppShell notices and moves on by itself.
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onResendSignupCode() {
-    if (cooldown > 0) return;
-    setBusy(true);
-    resetTransient();
-    try {
-      const { error: resendError } = await supabase.auth.resend({
-        type: "signup",
-        email: pendingEmail,
-      });
-      if (resendError) throw resendError;
-      setNotice(t("codeResent"));
-      setCooldown(RESEND_COOLDOWN_SECONDS);
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onRequestReset(email: string) {
-    setBusy(true);
-    resetTransient();
-    try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email);
-      if (resetError) throw resetError;
-      setPendingEmail(email);
-      setOtp("");
-      setCooldown(RESEND_COOLDOWN_SECONDS);
-      setView("forgotCode");
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onResendResetCode() {
-    if (cooldown > 0) return;
-    setBusy(true);
-    resetTransient();
-    try {
-      const { error: resendError } = await supabase.auth.resetPasswordForEmail(pendingEmail);
-      if (resendError) throw resendError;
-      setNotice(t("codeResent"));
-      setCooldown(RESEND_COOLDOWN_SECONDS);
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onVerifyResetCode() {
-    if (otp.length !== OTP_LENGTH) return;
-    setBusy(true);
-    resetTransient();
-    try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email: pendingEmail,
-        token: otp,
-        type: "recovery",
-      });
-      if (verifyError) throw verifyError;
-      setView("forgotPassword");
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onSetNewPassword() {
-    if (newPassword.length < 6) {
-      setError(t("passwordHint"));
+      await requestCode(email, "signup");
       return;
     }
-    if (newPassword !== newPasswordConfirm) {
-      setError(t("passwordsDontMatch"));
+    if (!password) {
+      setError(t("incorrectCredentials"));
+      return;
+    }
+    setBusy(true);
+    resetTransient();
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (signInError) throw signInError;
+      // A session now exists - AppShell notices and moves on by itself.
+    } catch (err) {
+      showError(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onVerifyCode(value = code) {
+    if (value.length !== CODE_LENGTH || busy) return;
+    setBusy(true);
+    resetTransient();
+    // Before the session appears, so AppShell keeps this screen for the password.
+    holdForPassword();
+    try {
+      await verifyEmailCode(email, value);
+      setNewPassword("");
+      setView("password");
+    } catch (err) {
+      clearPasswordRecovery();
+      setCode("");
+      showError(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onResendCode() {
+    if (cooldown > 0) return;
+    await requestCode(email, purpose);
+    setNotice(t("codeResent"));
+  }
+
+  async function onSavePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (newPassword.length < MIN_PASSWORD) {
+      setError(t("passwordHint"));
       return;
     }
     setBusy(true);
@@ -289,11 +217,10 @@ export function AuthScreen({
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
       if (updateError) throw updateError;
-      // The recovery code already left them signed in - this is what
-      // actually lets AppShell move on to the app instead of holding here.
+      // Lets AppShell move on - to onboarding for a new account.
       clearPasswordRecovery();
     } catch (err) {
-      setError(errorMessage(err));
+      showError(err);
     } finally {
       setBusy(false);
     }
@@ -302,7 +229,7 @@ export function AuthScreen({
   function switchMode(next: "signin" | "signup") {
     if (next === mode) return;
     setMode(next);
-    setConfirmPassword("");
+    setPassword("");
     resetTransient();
   }
 
@@ -316,78 +243,38 @@ export function AuthScreen({
     }
   }
 
+  const passwordFor = email || user?.email || "";
+  const creatingWithEmail = purpose === "signup" && !isPasswordRecoveryLink(isPasswordRecovery, user?.email, email);
   const heading =
-    view === "verify"
-      ? { title: t("verifyEmailTitle"), blurb: t("verifyEmailBlurb", { email: pendingEmail }) }
+    view === "code"
+      ? { title: t("authCodeTitle"), blurb: t("authCodeBlurb", { email }) }
       : view === "forgotEmail"
         ? { title: t("resetPasswordTitle"), blurb: t("resetPasswordBlurb") }
-        : view === "forgotCode"
-          ? { title: t("resetPasswordTitle"), blurb: t("verifyResetCodeBlurb", { email: pendingEmail }) }
-          : view === "forgotPassword"
-            ? { title: t("resetPasswordTitle"), blurb: null }
-            : view === "forgotPin"
-              ? { title: t("authForgotPinTitle"), blurb: null }
-              : { title: t("authWelcome"), blurb: t("authBlurb") };
+        : view === "password"
+          ? creatingWithEmail
+            ? { title: t("authPasswordTitle"), blurb: t("authPasswordBlurb") }
+            : { title: t("resetPasswordTitle"), blurb: t("authNewPasswordBlurb", { email: passwordFor }) }
+          : view === "forgotPin"
+            ? { title: t("authForgotPinTitle"), blurb: null }
+            : mode === "signup"
+              ? { title: t("authSignUpTitle"), blurb: t("authSignUpBlurb") }
+              : { title: t("authSignInTitle"), blurb: t("authSignInBlurb") };
 
-  // Both ways of creating an account ask for the same agreement.
+  // A new email account is three short steps; say where they are.
+  const step =
+    view === "auth" && mode === "signup" && method === "email"
+      ? 1
+      : view === "code" && purpose === "signup"
+        ? 2
+        : view === "password" && creatingWithEmail
+          ? 3
+          : null;
+
+  // Both ways of creating an account ask for the same agreement: one line.
   const agreement =
     mode === "signup" ? (
-      <>
-        <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <button
-            type="button"
-            onClick={() => setPoliciesExpanded(!policiesExpanded)}
-            className="flex w-full items-center justify-between text-left font-medium text-slate-900 hover:text-brand-700 transition-colors"
-          >
-            <span>{t("registrationAgreement")}</span>
-            {policiesExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </button>
-
-          {policiesExpanded && (
-            <div className="mt-3 space-y-2 text-sm text-slate-700">
-              <p>{t("registrationPolicyIntro")}</p>
-              <div className="space-y-1 pl-2">
-                <p className="text-xs">• {t("regPolicyAge")}</p>
-                <p className="text-xs">• {t("regPolicyGenuineInfo")}</p>
-                <p className="text-xs">• {t("regPolicyPhoneVerification")}</p>
-                <p className="text-xs">• {t("regPolicyResponsibleUse")}</p>
-                <p className="text-xs">• {t("regPolicyTruthfulSkills")}</p>
-                <p className="text-xs">• {t("regPolicyRespectOthers")}</p>
-                <p className="text-xs">• {t("regPolicyProtectInfo")}</p>
-                <p className="text-xs">• {t("regPolicyWorkPayment")}</p>
-                <p className="text-xs">• {t("regPolicySafetyFirst")}</p>
-                <p className="text-xs">• {t("regPolicyAccountAction")}</p>
-              </div>
-              <div className="mt-3 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPolicyOpen("terms")}
-                  className="text-xs font-medium text-brand-700 underline"
-                >
-                  {t("termsOfService")}
-                </button>
-                <span className="text-xs text-slate-400">•</span>
-                <button
-                  type="button"
-                  onClick={() => setPolicyOpen("privacy")}
-                  className="text-xs font-medium text-brand-700 underline"
-                >
-                  {t("privacyPolicy")}
-                </button>
-                <span className="text-xs text-slate-400">•</span>
-                <button
-                  type="button"
-                  onClick={() => setPolicyOpen("registration")}
-                  className="text-xs font-medium text-brand-700 underline"
-                >
-                  {t("registrationPolicyTitle")}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <label className="mb-4 flex items-start gap-2.5 text-sm text-slate-600">
+      <div className="mb-5">
+        <label className="flex cursor-pointer items-start gap-2.5 text-sm leading-snug text-slate-600">
           <input
             type="checkbox"
             className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 accent-brand-700"
@@ -397,14 +284,23 @@ export function AuthScreen({
               if (e.target.checked) setError(null);
             }}
           />
-          <span>{t("registrationAgreePolicies")}</span>
+          <span>{t("authAgreeShort")}</span>
         </label>
-      </>
+        <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 pl-[26px] text-xs">
+          {POLICY_PAGES.map(({ path, label }) => (
+            <PolicyLink key={path} path={path}>
+              {t(label)}
+            </PolicyLink>
+          ))}
+        </p>
+      </div>
     ) : null;
+
+  const quietLink = "mt-4 block w-full text-center text-sm font-medium text-slate-500 hover:text-slate-800";
 
   return (
     <div className="flex min-h-dvh flex-col bg-cream-50">
-      <div className="flex items-center justify-between p-4 pt-[calc(1rem+var(--sat))]">
+      <div className="flex items-center justify-between px-4 pb-2 pt-[calc(1rem+var(--sat))]">
         {onBack ? (
           <button
             type="button"
@@ -420,341 +316,406 @@ export function AuthScreen({
         <HeaderToggles />
       </div>
 
-      <div className="mx-auto w-full max-w-sm flex-1 px-5 pb-10">
-        <div className="mb-5 text-center">
-          <img
-            src={dulekoMark}
-            alt=""
-            className="mx-auto mb-3 h-12 w-12 rounded-xl object-cover shadow-sm"
-          />
-          <h1 className="text-xl font-bold text-slate-900">{heading.title}</h1>
-          {heading.blurb && (
-            <p className="mx-auto mt-1 max-w-xs text-[13px] text-slate-500">{heading.blurb}</p>
-          )}
-        </div>
+      <main className="flex flex-1 justify-center px-4 pb-10 sm:items-center sm:px-6">
+        <div className="grid w-full max-w-[400px] items-center gap-12 lg:max-w-5xl lg:grid-cols-[1fr_420px]">
+          <BrandPanel />
 
-        <div className="rounded-2xl border border-slate-200 bg-surface p-4 shadow-sm sm:p-5">
-          {error && (
-            <p className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-700">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-              {error}
-            </p>
-          )}
-          {notice && (
-            <p className="mb-4 flex items-start gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-sm text-brand-800">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-              {notice}
-            </p>
-          )}
+          <section aria-labelledby="auth-title" className="w-full">
+            <div className="mb-6 text-center lg:text-left">
+              <img
+                src={dulekoMark}
+                alt=""
+                className="mx-auto mb-4 h-12 w-12 rounded-2xl object-cover shadow-sm lg:hidden"
+              />
+              <h1 id="auth-title" className="text-2xl font-bold tracking-tight text-slate-900">
+                {heading.title}
+              </h1>
+              {heading.blurb && (
+                <p className="mx-auto mt-1.5 max-w-xs break-words text-sm text-slate-500 lg:mx-0 lg:max-w-none">
+                  {heading.blurb}
+                </p>
+              )}
+            </div>
 
-          {view === "verify" && (
-            <>
-              <div className="mb-4 flex justify-center">
-                <OtpInput value={otp} onChange={setOtp} length={OTP_LENGTH} disabled={busy} autoFocus />
-              </div>
-              <Button
-                type="button"
-                size="lg"
-                className="w-full"
-                loading={busy}
-                disabled={otp.length !== OTP_LENGTH}
-                onClick={onVerifySignup}
-              >
-                {t("verify")}
-              </Button>
-              <div className="mt-4 text-center text-sm">
-                {cooldown > 0 ? (
-                  <span className="text-slate-400">{t("resendCodeIn", { seconds: cooldown })}</span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={onResendSignupCode}
-                    className="font-medium text-brand-700 hover:text-brand-800"
-                  >
-                    {t("resendCode")}
-                  </button>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={goToAuth}
-                className="mt-3 block w-full text-center text-sm text-slate-500 hover:text-slate-700"
-              >
-                {t("useAnotherEmail")}
-              </button>
-            </>
-          )}
+            <div className="rounded-2xl border border-slate-200 bg-surface p-5 shadow-sm sm:p-6">
+              {step && <StepBar step={step} />}
 
-          {view === "forgotEmail" && (
-            <ForgotEmailStep busy={busy} onSubmit={onRequestReset} onCancel={goToAuth} />
-          )}
+              {error && (
+                <p role="alert" className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-700">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                  {error}
+                </p>
+              )}
+              {notice && (
+                <p className="mb-4 flex items-start gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-sm text-brand-800">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                  {notice}
+                </p>
+              )}
 
-          {view === "forgotCode" && (
-            <>
-              <div className="mb-4 flex justify-center">
-                <OtpInput value={otp} onChange={setOtp} length={OTP_LENGTH} disabled={busy} autoFocus />
-              </div>
-              <Button
-                type="button"
-                size="lg"
-                className="w-full"
-                loading={busy}
-                disabled={otp.length !== OTP_LENGTH}
-                onClick={onVerifyResetCode}
-              >
-                {t("verify")}
-              </Button>
-              <div className="mt-4 text-center text-sm">
-                {cooldown > 0 ? (
-                  <span className="text-slate-400">{t("resendCodeIn", { seconds: cooldown })}</span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={onResendResetCode}
-                    className="font-medium text-brand-700 hover:text-brand-800"
-                  >
-                    {t("resendCode")}
-                  </button>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={goToAuth}
-                className="mt-3 block w-full text-center text-sm text-slate-500 hover:text-slate-700"
-              >
-                {t("useAnotherEmail")}
-              </button>
-            </>
-          )}
-
-          {view === "forgotPassword" && (
-            <>
-              <Field label={t("newPassword")} hint={t("passwordHint")}>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="new-password"
-                    className="pr-11"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+              {view === "code" && (
+                <>
+                  <OtpInput
+                    value={code}
+                    onChange={(next) => {
+                      setCode(next);
+                      // The fourth digit sends it - no extra tap.
+                      if (next.length === CODE_LENGTH) void onVerifyCode(next);
+                    }}
+                    length={CODE_LENGTH}
+                    disabled={busy}
+                    autoFocus
+                    label={t("authStepCode")}
+                    className="mb-5 gap-3 [&>input]:h-14 [&>input]:w-14 [&>input]:text-2xl"
                   />
-                  <button
+                  <Button
                     type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    className="absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:text-slate-600"
+                    size="lg"
+                    className="w-full"
+                    loading={busy}
+                    disabled={code.length !== CODE_LENGTH}
+                    onClick={() => onVerifyCode()}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
-                  </button>
-                </div>
-              </Field>
-              <Field label={t("confirmPassword")}>
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  value={newPasswordConfirm}
-                  onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                />
-              </Field>
-              <Button
-                type="button"
-                size="lg"
-                className="w-full"
-                loading={busy}
-                onClick={onSetNewPassword}
-              >
-                {t("setNewPassword")}
-              </Button>
-            </>
-          )}
-
-          {view === "forgotPin" && (
-            <>
-              <p className="mb-4 text-sm leading-relaxed text-slate-600">{t("authForgotPinBody")}</p>
-              <a
-                href={mailto(t("authForgotPinSubject"))}
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
-              >
-                <Mail className="h-4 w-4" aria-hidden />
-                {t("authForgotPinEmail")}
-              </a>
-              <button
-                type="button"
-                onClick={goToAuth}
-                className="mt-3 block w-full text-center text-sm text-slate-500 hover:text-slate-700"
-              >
-                {t("backToSignIn")}
-              </button>
-            </>
-          )}
-
-          {view === "auth" && (
-            <>
-              <div
-                className="mb-4 grid grid-cols-2 rounded-xl bg-slate-100 p-1 text-[13px] font-medium"
-                role="tablist"
-                aria-label={t("signInOrSignUp")}
-              >
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={mode === "signin"}
-                  onClick={() => switchMode("signin")}
-                  className={cn(
-                    "rounded-lg py-2 transition-colors duration-200",
-                    mode === "signin" ? "bg-surface text-slate-900 shadow-sm" : "text-slate-500",
-                  )}
-                >
-                  {t("signIn")}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={mode === "signup"}
-                  onClick={() => switchMode("signup")}
-                  className={cn(
-                    "rounded-lg py-2 transition-colors duration-200",
-                    mode === "signup" ? "bg-surface text-slate-900 shadow-sm" : "text-slate-500",
-                  )}
-                >
-                  {t("signUp")}
-                </button>
-              </div>
-
-              {mode === "signin" && saved && <SavedLoginCard saved={saved} onForget={forgetMe} />}
-
-              {method === "phone" ? (
-                <PhonePinForm
-                  key={saved?.phone ?? "none"}
-                  initialPhone={saved?.phone ?? ""}
-                  mode={mode}
-                  agreed={agreed}
-                  agreement={agreement}
-                  onError={(message) => {
-                    setNotice(null);
-                    setError(message);
-                  }}
-                  onForgotPin={() => {
-                    setView("forgotPin");
-                    resetTransient();
-                  }}
-                />
-              ) : (
-                <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-                  <Field label={t("email")} error={form.formState.errors.email && t("required")}>
-                    <Input
-                      type="email"
-                      autoComplete="email"
-                      inputMode="email"
-                      placeholder={t("emailPlaceholder")}
-                      {...form.register("email")}
-                    />
-                  </Field>
-
-                  <Field
-                    label={t("password")}
-                    hint={mode === "signup" ? t("passwordHint") : undefined}
-                    error={form.formState.errors.password && t("passwordHint")}
-                  >
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                        className="pr-11"
-                        {...form.register("password")}
-                      />
+                    {t("verify")}
+                  </Button>
+                  <div className="mt-4 flex items-center justify-between gap-3 text-sm">
+                    <span className="text-xs text-slate-500">{t("authCodeSpam")}</span>
+                    {cooldown > 0 ? (
+                      <span className="shrink-0 tabular-nums text-slate-400">
+                        {t("resendCodeIn", { seconds: cooldown })}
+                      </span>
+                    ) : (
                       <button
                         type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                        className="absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:text-slate-600"
+                        onClick={onResendCode}
+                        className="shrink-0 font-medium text-brand-700 hover:text-brand-800"
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+                        {t("resendCode")}
                       </button>
-                    </div>
+                    )}
+                  </div>
+                  <button type="button" onClick={goToAuth} className={quietLink}>
+                    {t("useAnotherEmail")}
+                  </button>
+                </>
+              )}
+
+              {view === "forgotEmail" && (
+                <ForgotEmailStep
+                  initialEmail={email}
+                  busy={busy}
+                  onSubmit={(address) => requestCode(address, "reset")}
+                  onCancel={goToAuth}
+                />
+              )}
+
+              {view === "password" && (
+                <form onSubmit={onSavePassword} noValidate>
+                  <Field label={t("password")} hint={t("passwordHint")}>
+                    <PasswordInput
+                      value={newPassword}
+                      onChange={setNewPassword}
+                      show={showPassword}
+                      onToggle={() => setShowPassword((v) => !v)}
+                      autoComplete="new-password"
+                      autoFocus
+                    />
                   </Field>
-
-                  {mode === "signup" && (
-                    <Field label={t("confirmPassword")}>
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        autoComplete="new-password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                      />
-                    </Field>
-                  )}
-
-                  {mode === "signin" && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setView("forgotEmail");
-                        resetTransient();
-                      }}
-                      className="mb-4 -mt-2 block text-sm font-medium text-brand-700 hover:text-brand-800"
-                    >
-                      {t("forgotPassword")}
-                    </button>
-                  )}
-
-                  {agreement}
-
-                  <Button type="submit" size="lg" className="w-full" loading={busy}>
-                    {mode === "signin" ? t("signIn") : t("signUp")}
+                  <Button type="submit" size="lg" className="mt-1 w-full" loading={busy}>
+                    {t("authPasswordSave")}
                   </Button>
                 </form>
               )}
 
-              <div className="my-5 flex items-center gap-3 text-xs uppercase text-slate-400">
-                <span className="h-px flex-1 bg-slate-200" />
-                {t("orDivider")}
-                <span className="h-px flex-1 bg-slate-200" />
-              </div>
+              {view === "forgotPin" && (
+                <>
+                  <p className="mb-5 text-sm leading-relaxed text-slate-600">{t("authForgotPinBody")}</p>
+                  <a
+                    href={mailto(t("authForgotPinSubject"))}
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+                  >
+                    <Mail className="h-4 w-4" aria-hidden />
+                    {t("authForgotPinEmail")}
+                  </a>
+                  <button type="button" onClick={goToAuth} className={quietLink}>
+                    {t("backToSignIn")}
+                  </button>
+                </>
+              )}
 
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                className="mb-2.5 w-full"
-                onClick={() => switchMethod(method === "phone" ? "email" : "phone")}
-              >
-                {method === "phone" ? (
-                  <Mail className="h-4 w-4" aria-hidden />
-                ) : (
-                  <Smartphone className="h-4 w-4" aria-hidden />
-                )}
-                {method === "phone" ? t("authUseEmail") : t("authUsePhone")}
-              </Button>
+              {view === "auth" && (
+                <>
+                  <MethodSwitch value={method} onChange={switchMethod} />
 
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                className="w-full"
-                loading={googleBusy}
-                onClick={onGoogle}
-              >
-                <GoogleIcon className="h-4 w-4" aria-hidden />
-                {t("continueWithGoogle")}
-              </Button>
-            </>
-          )}
+                  {mode === "signin" && saved && <SavedLoginCard saved={saved} onForget={forgetMe} />}
 
+                  {method === "phone" ? (
+                    <PhonePinForm
+                      key={saved?.phone ?? "none"}
+                      initialPhone={saved?.phone ?? ""}
+                      mode={mode}
+                      agreed={agreed}
+                      agreement={agreement}
+                      onError={(message) => {
+                        setNotice(null);
+                        setError(message);
+                      }}
+                      onForgotPin={() => {
+                        setView("forgotPin");
+                        resetTransient();
+                      }}
+                    />
+                  ) : (
+                    <form onSubmit={onEmailSubmit} noValidate>
+                      <Field label={t("email")} hint={mode === "signup" ? t("authEmailCodeHint") : undefined}>
+                        <Input
+                          type="email"
+                          autoComplete="email"
+                          inputMode="email"
+                          placeholder={t("emailPlaceholder")}
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                        />
+                      </Field>
+
+                      {mode === "signin" && (
+                        <div className="mb-5">
+                          <div className="mb-1 flex items-center justify-between gap-2">
+                            <Label htmlFor="auth-password" className="mb-0">
+                              {t("password")}
+                            </Label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setView("forgotEmail");
+                                resetTransient();
+                              }}
+                              className="text-xs font-medium text-brand-700 hover:text-brand-800"
+                            >
+                              {t("forgotPassword")}
+                            </button>
+                          </div>
+                          <PasswordInput
+                            id="auth-password"
+                            value={password}
+                            onChange={setPassword}
+                            show={showPassword}
+                            onToggle={() => setShowPassword((v) => !v)}
+                            autoComplete="current-password"
+                            autoFocus={Boolean(saved?.email)}
+                          />
+                        </div>
+                      )}
+
+                      {agreement}
+
+                      <Button type="submit" size="lg" className="w-full" loading={busy}>
+                        {mode === "signin" ? t("signIn") : t("authContinue")}
+                      </Button>
+                    </form>
+                  )}
+
+                  <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wide text-slate-400">
+                    <span className="h-px flex-1 bg-slate-200" />
+                    {t("orDivider")}
+                    <span className="h-px flex-1 bg-slate-200" />
+                  </div>
+
+                  <Button type="button" variant="outline" size="lg" className="w-full" loading={googleBusy} onClick={onGoogle}>
+                    <GoogleIcon className="h-4 w-4" aria-hidden />
+                    {t("continueWithGoogle")}
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {view === "auth" && (
+              <p className="mt-5 text-center text-sm text-slate-600">
+                {mode === "signin" ? t("authNewHere") : t("authHaveAccount")}{" "}
+                <button
+                  type="button"
+                  onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
+                  className="font-semibold text-brand-700 hover:text-brand-800"
+                >
+                  {mode === "signin" ? t("authCreateOne") : t("signIn")}
+                </button>
+              </p>
+            )}
+          </section>
         </div>
-      </div>
+      </main>
+    </div>
+  );
+}
 
-      <PolicyDialog open={policyOpen === "terms"} onClose={() => setPolicyOpen(null)} kind="terms" />
-      <PolicyDialog open={policyOpen === "privacy"} onClose={() => setPolicyOpen(null)} kind="privacy" />
+/** The website's own policy pages, which the sign-up agreement points at. */
+const POLICY_PAGES = [
+  { path: "/terms", label: "termsOfService" },
+  { path: "/privacy", label: "privacyPolicy" },
+  { path: "/registration-policy", label: "authRegistrationRules" },
+] as const;
+
+const PUBLIC_SITE = ((import.meta.env.VITE_SITE_URL as string | undefined) || "https://www.duleko.com").replace(/\/+$/, "");
+
+/**
+ * Opens a real policy page without losing the half-filled form: a new tab
+ * on the web, the in-app browser in the Android app (whose own pages live
+ * on a local address that means nothing outside the app).
+ */
+function PolicyLink({ path, children }: { path: string; children: React.ReactNode }) {
+  const native = Capacitor.isNativePlatform();
+  return (
+    <a
+      href={native ? `${PUBLIC_SITE}${path}` : path}
+      target="_blank"
+      rel="noopener"
+      onClick={(e) => {
+        if (!native) return;
+        e.preventDefault();
+        void Browser.open({ url: `${PUBLIC_SITE}${path}` });
+      }}
+      className="font-medium text-brand-700 underline-offset-2 hover:underline"
+    >
+      {children}
+    </a>
+  );
+}
+
+/** Wide screens only: what Duleko is, beside the form. Phones go straight to the form. */
+function BrandPanel() {
+  const { t } = useI18n();
+  const points = [
+    { icon: MapPin, text: t("authBrandPoint1") },
+    { icon: ShieldCheck, text: t("authBrandPoint2") },
+    { icon: Languages, text: t("authBrandPoint3") },
+  ];
+  return (
+    <aside className="hidden lg:block">
+      <div className="mb-8 flex items-center gap-3">
+        <img src={dulekoMark} alt="" className="h-11 w-11 rounded-xl object-cover shadow-sm" />
+        <span className="text-xl font-bold tracking-tight text-slate-900">Duleko</span>
+      </div>
+      <p className="max-w-md text-4xl font-bold leading-tight tracking-tight text-slate-900">{t("authBrandTitle")}</p>
+      <p className="mt-4 max-w-md text-base text-slate-600">{t("authBlurb")}</p>
+      <ul className="mt-8 space-y-4">
+        {points.map(({ icon: Icon, text }) => (
+          <li key={text} className="flex items-center gap-3 text-sm font-medium text-slate-700">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+              <Icon className="h-4 w-4" aria-hidden />
+            </span>
+            {text}
+          </li>
+        ))}
+      </ul>
+    </aside>
+  );
+}
+
+/** Email or mobile number: both always in view, the chosen one filled. */
+function MethodSwitch({ value, onChange }: { value: Method; onChange: (next: Method) => void }) {
+  const { t } = useI18n();
+  const options = [
+    { value: "email" as const, label: t("authUseEmailShort"), icon: Mail },
+    { value: "phone" as const, label: t("authUsePhoneShort"), icon: Smartphone },
+  ];
+  return (
+    <div role="radiogroup" aria-label={t("authMethodLabel")} className="mb-5 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
+      {options.map(({ value: v, label, icon: Icon }) => {
+        const selected = v === value;
+        return (
+          <button
+            key={v}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            onClick={() => !selected && onChange(v)}
+            className={cn(
+              "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg text-sm transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/40",
+              selected
+                ? "bg-surface font-semibold text-slate-900 shadow-sm"
+                : "font-medium text-slate-500 hover:text-slate-800",
+            )}
+          >
+            <Icon className={cn("h-4 w-4", selected ? "text-brand-700" : "text-slate-400")} aria-hidden />
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** "Step 2 of 3" over three short bars: Email, Code, Password. */
+function StepBar({ step }: { step: 1 | 2 | 3 }) {
+  const { t } = useI18n();
+  const names = [t("authStepEmail"), t("authStepCode"), t("authStepPassword")];
+  return (
+    <div className="mb-5">
+      <div className="mb-2 flex items-baseline justify-between text-xs">
+        <span className="font-semibold text-brand-700">{t("authStepOf", { n: step })}</span>
+        <span className="text-slate-500">{names[step - 1]}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5" aria-hidden>
+        {[1, 2, 3].map((n) => (
+          <span
+            key={n}
+            className={cn("h-1.5 rounded-full transition-colors", n <= step ? "bg-brand-600" : "bg-slate-200")}
+          />
+        ))}
+      </div>
     </div>
   );
 }
 
 /**
- * Mobile number + 6-digit PIN, for both signing in and creating an account.
- * No SMS code yet (see migration 6000): a new account is signed in the
- * moment it's made, and onboarding takes it from there.
+ * True when the password step came from Supabase's own reset link (no
+ * code typed here), so it reads "Reset your password", not "Create".
  */
+function isPasswordRecoveryLink(holding: boolean, sessionEmail: string | undefined, typedEmail: string): boolean {
+  return holding && Boolean(sessionEmail) && !typedEmail;
+}
+
+function PasswordInput({
+  value,
+  onChange,
+  show,
+  onToggle,
+  autoComplete,
+  autoFocus,
+  id,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  show: boolean;
+  onToggle: () => void;
+  autoComplete: string;
+  autoFocus?: boolean;
+  id?: string;
+}) {
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        type={show ? "text" : "password"}
+        autoComplete={autoComplete}
+        autoFocus={autoFocus}
+        className="pr-11"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={show ? "Hide password" : "Show password"}
+        className="absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:text-slate-600"
+      >
+        {show ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+      </button>
+    </div>
+  );
+}
+
 /** "Welcome back, Sanjay" - who signed out here last, with a way to forget them. */
 function SavedLoginCard({ saved, onForget }: { saved: SavedLogin; onForget: () => void }) {
   const { t } = useI18n();
@@ -782,6 +743,12 @@ function SavedLoginCard({ saved, onForget }: { saved: SavedLogin; onForget: () =
   );
 }
 
+/**
+ * Mobile number + a 4-digit PIN, for both signing in and creating an
+ * account (migration 8100). One row of PIN boxes, shown while it's being
+ * made so nobody has to type it twice. A number that still has an older
+ * 6-digit PIN gets six boxes when signing in.
+ */
 function PhonePinForm({
   initialPhone,
   mode,
@@ -801,32 +768,41 @@ function PhonePinForm({
   const { t } = useI18n();
   const [phone, setPhone] = useState(initialPhone);
   const [pin, setPin] = useState("");
-  const [pinAgain, setPinAgain] = useState("");
-  const [pinMasked, setPinMasked] = useState(true);
+  const [pinLength, setPinLength] = useState(PIN_LENGTH);
+  const [pinMasked, setPinMasked] = useState(mode === "signin");
   const [busy, setBusy] = useState(false);
-  const [errors, setErrors] = useState<{ phone?: string; pin?: string; pinAgain?: string }>({});
+  const [errors, setErrors] = useState<{ phone?: string; pin?: string }>({});
 
   // Switching between Sign in and Create account keeps the number, not the
-  // complaints about it.
+  // complaints about it. A new PIN shows its digits; a sign-in hides them.
   useEffect(() => {
     setErrors({});
-    setPinAgain("");
+    setPinMasked(mode === "signin");
   }, [mode]);
 
-  /** Supabase's wording for the phone cases, in the person's own terms. */
-  function phoneError(err: unknown): string {
+  // Six boxes for a number whose account still has an older 6-digit PIN.
+  const complete = isNepaliMobile(phone);
+  useEffect(() => {
+    if (mode !== "signin" || !complete) {
+      setPinLength(PIN_LENGTH);
+      return;
+    }
+    let live = true;
+    phonePinLength(phone)
+      .then((length) => live && setPinLength(length === OLD_PIN_LENGTH ? OLD_PIN_LENGTH : PIN_LENGTH))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [mode, complete, phone]);
+
+  useEffect(() => setPin((p) => p.slice(0, pinLength)), [pinLength]);
+
+  /** Supabase's wording for an older 6-digit PIN sign-in, in the person's own terms. */
+  function oldPinError(err: unknown): string {
     const e = err as { code?: string; message?: string };
-    const message = e?.message ?? "";
-    if (e?.code === "invalid_credentials" || /invalid login credentials/i.test(message)) {
+    if (e?.code === "invalid_credentials" || /invalid login credentials/i.test(e?.message ?? "")) {
       return t("authWrongPhoneOrPin");
-    }
-    if (e?.code === "user_already_exists" || e?.code === "phone_exists" || /already registered/i.test(message)) {
-      return t("authPhoneTaken");
-    }
-    // The Phone provider is off, or phone confirmations are on and the SMS
-    // hook said no - either way the dashboard setup isn't done.
-    if (e?.code === "phone_provider_disabled" || /phone (signups|logins) are disabled|sms/i.test(message)) {
-      return t("authPhoneOff");
     }
     return errorMessage(err);
   }
@@ -834,10 +810,9 @@ function PhonePinForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const next: typeof errors = {};
-    if (!isNepaliMobile(phone)) next.phone = t("authPhoneInvalid");
-    if (!/^\d{6}$/.test(pin)) next.pin = t("authPinIncomplete");
+    if (!complete) next.phone = t("authPhoneInvalid");
+    if (pin.length !== pinLength) next.pin = t("authPinIncomplete");
     else if (mode === "signup" && isWeakPin(pin)) next.pin = t("authPinWeak");
-    if (mode === "signup" && !next.pin && pinAgain !== pin) next.pinAgain = t("authPinsDontMatch");
     setErrors(next);
     if (Object.keys(next).length > 0) return;
     if (mode === "signup" && !agreed) {
@@ -848,26 +823,21 @@ function PhonePinForm({
     setBusy(true);
     onError(null);
     try {
-      const credentials = { phone: authPhone(phone), password: pinToPassword(pin) };
       if (mode === "signup") {
-        // A number already on an account (a phone sign-in, or an email
-        // account's contact number) would only fail later, at onboarding.
-        // If the check itself fails, sign-up still has its own guard.
-        if (await phoneAccountExists(phone).catch(() => false)) {
-          onError(t("authPhoneTaken"));
-          return;
-        }
-        const { data, error } = await supabase.auth.signUp(credentials);
+        await pinSignUp(phone, pin);
+      } else if (pinLength === OLD_PIN_LENGTH) {
+        const { error } = await supabase.auth.signInWithPassword({
+          phone: authPhone(phone),
+          password: pinToPassword(pin),
+        });
         if (error) throw error;
-        // Only when phone confirmations are still on in the dashboard.
-        if (!data.session) throw new Error(t("authPhoneOff"));
       } else {
-        const { error } = await supabase.auth.signInWithPassword(credentials);
-        if (error) throw error;
+        await pinSignIn(phone, pin);
       }
       // A session now exists - AppShell notices and moves on by itself.
     } catch (err) {
-      onError(phoneError(err));
+      setPin("");
+      onError(err instanceof AccountAuthError ? err.message : oldPinError(err));
     } finally {
       setBusy(false);
     }
@@ -884,7 +854,14 @@ function PhonePinForm({
       </Field>
 
       <PinField
-        label={mode === "signup" ? t("authPinCreate") : t("authPinLabel")}
+        label={
+          mode === "signup"
+            ? t("authPinCreate")
+            : pinLength === OLD_PIN_LENGTH
+              ? t("authPinOld")
+              : t("authPinLabel")
+        }
+        length={pinLength}
         hint={mode === "signup" ? t("authPinCreateHint") : undefined}
         error={errors.pin}
         value={pin}
@@ -906,17 +883,6 @@ function PhonePinForm({
         }
       />
 
-      {mode === "signup" && (
-        <PinField
-          label={t("authPinConfirm")}
-          error={errors.pinAgain}
-          value={pinAgain}
-          onChange={setPinAgain}
-          masked={pinMasked}
-          disabled={busy}
-        />
-      )}
-
       {agreement}
 
       <Button type="submit" size="lg" className="w-full" loading={busy}>
@@ -928,16 +894,18 @@ function PhonePinForm({
 
 /** Its own tiny form so a stray keystroke here can't touch the sign-in form's state. */
 function ForgotEmailStep({
+  initialEmail,
   busy,
   onSubmit,
   onCancel,
 }: {
+  initialEmail: string;
   busy: boolean;
   onSubmit: (email: string) => void;
   onCancel: () => void;
 }) {
   const { t } = useI18n();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
 
   return (
     <form

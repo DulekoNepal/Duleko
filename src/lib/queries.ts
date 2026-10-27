@@ -1,7 +1,5 @@
 import type { PriceUnit } from "./price-units";
 import { supabase } from "./supabase";
-import { translateStatic } from "./i18n";
-import { authPhone, pinToPassword } from "./phone-auth";
 import { IMAGE_MAX_SIDE, shrinkImage } from "./image";
 import { addDays, toDateKey, todayKey } from "./utils";
 import type {
@@ -203,21 +201,6 @@ export async function verifyPassword(
   password: string,
 ): Promise<void> {
   const { error } = await supabase.auth.signInWithPassword({ ...login, password });
-  if (error) throw error;
-}
-
-/**
- * A phone account's new PIN (migration 6000). The current PIN is checked
- * first, the same way verifyPassword does, so an unlocked phone left lying
- * around can't be used to lock its owner out.
- */
-export async function changePin(mobile: string, currentPin: string, newPin: string): Promise<void> {
-  try {
-    await verifyPassword({ phone: authPhone(mobile) }, pinToPassword(currentPin));
-  } catch {
-    throw new Error(translateStatic("wrongPin"));
-  }
-  const { error } = await supabase.auth.updateUser({ password: pinToPassword(newPin) });
   if (error) throw error;
 }
 

@@ -1,12 +1,12 @@
 import { lazy, Suspense, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Eye, Gift, Info, KeyRound, Languages, LogOut, Mail, MapPin, MessageSquare, Store, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Eye, Gift, Info, KeyRound, Smartphone, Languages, LogOut, Mail, MapPin, MessageSquare, Store, Trash2, Users } from "lucide-react";
 import { AppearancePicker } from "@/components/duleko/AppearancePicker";
 import { InviteFriendsDialog } from "@/components/duleko/profile/InviteFriendsDialog";
 import { CalendarPicker } from "@/components/duleko/CalendarPicker";
 import { ContactPrivacyRows } from "@/components/duleko/ContactPrivacyRows";
 import { DulekoPagesHub } from "@/components/duleko/DulekoPagesHub";
-import { PinField } from "@/components/duleko/PhonePinFields";
+import { MobileNumberInput, PinField } from "@/components/duleko/PhonePinFields";
 import { ListGroup, ListRow } from "@/components/duleko/SettingsList";
 import { CONTACT_EMAIL } from "@/components/duleko/site/actions";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,9 @@ import { useMyLocation } from "@/hooks/use-my-location";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
-import { authPhone, isWeakPin, pinToPassword, signInMobile } from "@/lib/phone-auth";
+import { AccountAuthError, checkMyPin, getMyPin, setMyPin, type MyPin } from "@/lib/account-auth";
+import { OLD_PIN_LENGTH, PIN_LENGTH, authPhone, isNepaliMobile, isWeakPin, pinToPassword, signInMobile } from "@/lib/phone-auth";
 import {
-  changePin,
   deleteMyAccount,
   getNotificationPrefs,
   saveNotificationPrefs,
@@ -50,7 +50,9 @@ export function SettingsTab({ onOpenAbout }: { onOpenAbout: () => void }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [changePinOpen, setChangePinOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const accountMobile = signInMobile(user);
+  const [addPinOpen, setAddPinOpen] = useState(false);
+  // The number + PIN this account signs in with, if any (migration 8100).
+  const myPin = useMyPin();
 
   const alertPrefs = useQuery({
     queryKey: ["notification-prefs", profile?.id],
@@ -128,14 +130,16 @@ export function SettingsTab({ onOpenAbout }: { onOpenAbout: () => void }) {
           </ListGroup>
 
           <ListGroup title={t("accountTitle")}>
-            {accountMobile && (
+            {myPin.data ? (
               <ListRow
                 icon={KeyRound}
                 title={t("changePin")}
-                hint={t("changePinHint", { phone: accountMobile })}
+                hint={t("changePinHint", { phone: myPin.data.phone })}
                 onClick={() => setChangePinOpen(true)}
               />
-            )}
+            ) : myPin.isSuccess ? (
+              <ListRow icon={Smartphone} title={t("addPin")} hint={t("addPinHint")} onClick={() => setAddPinOpen(true)} />
+            ) : null}
             <ListRow icon={Gift} title={t("referralInvite")} hint={t("referralInviteHint")} onClick={() => setInviteOpen(true)} />
             <ListRow icon={Users} title={t("myFriends")} to="/friends" />
             <ListRow
@@ -173,21 +177,29 @@ export function SettingsTab({ onOpenAbout }: { onOpenAbout: () => void }) {
       <SignOutDialog open={signOutOpen} onClose={() => setSignOutOpen(false)} />
       <InviteFriendsDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />
       <DeleteAccountDialog open={deleteOpen} onClose={() => setDeleteOpen(false)} />
-      {accountMobile && (
-        <ChangePinDialog mobile={accountMobile} open={changePinOpen} onClose={() => setChangePinOpen(false)} />
+      {myPin.data && (
+        <ChangePinDialog pin={myPin.data} open={changePinOpen} onClose={() => setChangePinOpen(false)} />
       )}
+      <AddPinDialog open={addPinOpen} onClose={() => setAddPinOpen(false)} />
     </>
   );
 }
 
+function useMyPin() {
+  const { user } = useSession();
+  return useQuery({ queryKey: ["my-pin", user?.id], queryFn: getMyPin, enabled: Boolean(user) });
+}
+
 /**
  * Settings > Change PIN, for an account that signs in with a mobile number.
- * The current PIN first, then the new one twice - the same rules as when
- * the account was made.
+ * The current PIN first (4 digits, or an older 6), then the new 4-digit
+ * one twice - the same rules as when the account was made.
  */
-function ChangePinDialog({ mobile, open, onClose }: { mobile: string; open: boolean; onClose: () => void }) {
+function ChangePinDialog({ pin, open, onClose }: { pin: MyPin; open: boolean; onClose: () => void }) {
   const { t } = useI18n();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const mobile = pin.phone;
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [again, setAgain] = useState("");
@@ -195,18 +207,19 @@ function ChangePinDialog({ mobile, open, onClose }: { mobile: string; open: bool
   const [errors, setErrors] = useState<{ current?: string; next?: string; again?: string }>({});
 
   const save = useMutation({
-    mutationFn: () => changePin(mobile, current, next),
+    mutationFn: () => setMyPin({ pin: next, currentPin: current }),
     onSuccess: () => {
       close();
       toast(t("pinChanged"));
+      queryClient.invalidateQueries({ queryKey: ["my-pin"] });
     },
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
   function submit() {
     const found: typeof errors = {};
-    if (!/^\d{6}$/.test(current)) found.current = t("authPinIncomplete");
-    if (!/^\d{6}$/.test(next)) found.next = t("authPinIncomplete");
+    if (current.length !== pin.length) found.current = t("authPinIncomplete");
+    if (next.length !== PIN_LENGTH) found.next = t("authPinIncomplete");
     else if (isWeakPin(next)) found.next = t("authPinWeak");
     else if (next === current) found.next = t("pinSameAsOld");
     if (!found.next && again !== next) found.again = t("authPinsDontMatch");
@@ -240,9 +253,13 @@ function ChangePinDialog({ mobile, open, onClose }: { mobile: string; open: bool
         </>
       }
     >
-      <p className="mb-4 text-sm text-slate-600">{t("changePinHint", { phone: mobile })}</p>
+      <p className="mb-4 text-sm text-slate-600">
+        {t("changePinHint", { phone: mobile })}
+        {pin.length === OLD_PIN_LENGTH && <> {t("pinUpgradeHint")}</>}
+      </p>
       <PinField
         label={t("currentPin")}
+        length={pin.length}
         value={current}
         onChange={setCurrent}
         masked={masked}
@@ -265,6 +282,81 @@ function ChangePinDialog({ mobile, open, onClose }: { mobile: string; open: bool
         onChange={setAgain}
         masked={masked}
         error={errors.again}
+        disabled={save.isPending}
+        className="mb-0"
+      />
+    </Dialog>
+  );
+}
+
+/**
+ * Settings > Add mobile number + PIN: a second way in for an email or
+ * Google account. Their email sign-in stays exactly as it was.
+ */
+function AddPinDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useI18n();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [phone, setPhone] = useState("");
+  const [pin, setPin] = useState("");
+  const [masked, setMasked] = useState(false);
+  const [errors, setErrors] = useState<{ phone?: string; pin?: string }>({});
+
+  const save = useMutation({
+    mutationFn: () => setMyPin({ pin, phone }),
+    onSuccess: () => {
+      close();
+      toast(t("pinAdded"));
+      queryClient.invalidateQueries({ queryKey: ["my-pin"] });
+    },
+    onError: (error) => toast(errorMessage(error), "error"),
+  });
+
+  function submit() {
+    const found: typeof errors = {};
+    if (!isNepaliMobile(phone)) found.phone = t("authPhoneInvalid");
+    if (pin.length !== PIN_LENGTH) found.pin = t("authPinIncomplete");
+    else if (isWeakPin(pin)) found.pin = t("authPinWeak");
+    setErrors(found);
+    if (Object.keys(found).length === 0) save.mutate();
+  }
+
+  function close() {
+    setPhone("");
+    setPin("");
+    setMasked(false);
+    setErrors({});
+    onClose();
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onClose={close}
+      title={t("addPin")}
+      footer={
+        <>
+          <Button variant="outline" onClick={close}>
+            {t("cancel")}
+          </Button>
+          <Button loading={save.isPending} onClick={submit}>
+            <KeyRound className="h-4 w-4" aria-hidden />
+            {t("save")}
+          </Button>
+        </>
+      }
+    >
+      <p className="mb-4 text-sm text-slate-600">{t("addPinHint")}</p>
+      <Field label={t("authPhoneLabel")} error={errors.phone}>
+        <MobileNumberInput value={phone} onChange={setPhone} disabled={save.isPending} />
+      </Field>
+      <PinField
+        label={t("authPinCreate")}
+        value={pin}
+        onChange={setPin}
+        masked={masked}
+        onToggleMasked={() => setMasked((v) => !v)}
+        error={errors.pin}
         disabled={save.isPending}
         className="mb-0"
       />
@@ -438,9 +530,10 @@ function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose: () => 
     user?.app_metadata?.provider,
   ];
   const mobile = signInMobile(user);
+  const pinLength = useMyPin().data?.length ?? PIN_LENGTH;
   const hasPassword = !mobile && signInMethods.includes("email");
   const ready = mobile
-    ? /^\d{6}$/.test(pin)
+    ? pin.length === pinLength
     : hasPassword
       ? password.length > 0
       : confirmWord.trim().toUpperCase() === t("deleteAccountWord");
@@ -448,7 +541,14 @@ function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose: () => 
   const remove = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error(t("somethingWrong"));
-      if (mobile) {
+      if (mobile && pinLength === PIN_LENGTH) {
+        try {
+          await checkMyPin(pin);
+        } catch (err) {
+          // Locked out says so; anything else is just a wrong PIN.
+          throw err instanceof AccountAuthError && err.code === "pin_locked" ? err : new Error(t("wrongPin"));
+        }
+      } else if (mobile) {
         try {
           await verifyPassword({ phone: authPhone(mobile) }, pinToPassword(pin));
         } catch {
@@ -500,6 +600,7 @@ function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose: () => 
       {mobile ? (
         <PinField
           label={t("deleteAccountPinLabel")}
+          length={pinLength}
           value={pin}
           onChange={setPin}
           masked
