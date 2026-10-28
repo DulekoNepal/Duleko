@@ -381,7 +381,8 @@ export function AuthScreen({
                   >
                     {t("verify")}
                   </Button>
-                  <div className="mt-4 flex items-center justify-between gap-3 text-sm">
+                  {/* Side by side where there's room; stacked and centred on a narrow phone. */}
+                  <div className="mt-4 flex flex-col items-center gap-1.5 text-center text-sm min-[400px]:flex-row min-[400px]:justify-between min-[400px]:gap-3 min-[400px]:text-left">
                     <span className="text-xs text-slate-500">{t("authCodeSpam")}</span>
                     {cooldown > 0 ? (
                       <span className="shrink-0 tabular-nums text-slate-400">
