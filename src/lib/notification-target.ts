@@ -69,6 +69,12 @@ export async function openNotification(
     return;
   }
 
+  // (Staff) someone sent the website's investor form.
+  if (n.kind === "investor_interest") {
+    void navigate({ to: "/staff/investors" });
+    return;
+  }
+
   // Duleko's fees: the verdict on your payment, or (staff) one to check.
   // A free job from a referral: where free jobs are counted.
   if (n.kind === "referral") {

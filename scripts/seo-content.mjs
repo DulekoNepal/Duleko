@@ -238,6 +238,13 @@ export const content = {
       { p: "Municipalities and training providers can partner with Duleko so their trainees create profiles, become visible to people nearby, and turn training into work. Contact us at dulekonepal@gmail.com." },
     ],
   },
+  "/invest": {
+    h1: "Would you like to invest in Duleko?",
+    blocks: [
+      { p: "Duleko connects local skills with local opportunities across Nepal. If you'd like to help it grow, fill in the form with your name, email, complete address and a message, and the Duleko team will reply to you by email." },
+      { p: "Prefer to write yourself? Email dulekonepal@gmail.com." },
+    ],
+  },
   "/safety": {
     h1: "Built for connection. Designed with safety in mind.",
     blocks: [
@@ -313,6 +320,7 @@ export const breadcrumbNames = {
   "/individuals": "For Individuals",
   "/businesses": "For Businesses",
   "/partners": "Municipalities & Training Providers",
+  "/invest": "Investors",
   "/safety": "Trust & Safety",
   "/motivation": "Our Motivation",
   "/privacy": "Privacy Policy",

@@ -63,6 +63,8 @@ const STATIC_PATHS = [
   "/individuals",
   "/businesses",
   "/partners",
+  // Its form calls Supabase on Send only, signed in or not.
+  "/invest",
   "/safety",
   "/registration-policy",
 ];

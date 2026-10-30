@@ -11,6 +11,7 @@ import {
   IdCard,
   Pin,
   ShieldCheck,
+  TrendingUp,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -21,6 +22,7 @@ import { ACTIVITY_ROWS } from "@/lib/activity";
 import { useI18n, type StringKey } from "@/lib/i18n";
 import {
   countKycQueue,
+  countNewInvestorInterests,
   getActivityStats,
   getFeeOverview,
   listOpenReports,
@@ -57,6 +59,7 @@ export function StaffTab() {
   const payments = useQuery({ queryKey: ["fee-payments-to-check"], queryFn: listPaymentsToCheck, enabled: isStaff });
   const stats = useQuery({ queryKey: ["activity-stats"], queryFn: getActivityStats, enabled: isStaff });
   const fees = useQuery({ queryKey: ["fee-overview"], queryFn: getFeeOverview, enabled: isStaff });
+  const investors = useQuery({ queryKey: ["investor-interests-new"], queryFn: countNewInvestorInterests, enabled: isStaff });
 
   if (!profile?.staff_role) return null;
 
@@ -257,6 +260,22 @@ export function StaffTab() {
         <ListRow icon={ShieldCheck} title={t("moderation")} hint={t("staffToolModerationHint")} to="/moderation" />
         <ListRow icon={IdCard} title={t("kycQueueTitle")} hint={t("kycQueueSubtitle")} to="/staff/verify" />
         <ListRow icon={Handshake} title={t("dealsTitle")} hint={t("staffToolDealsHint")} to="/staff/deals" />
+        <ListRow
+          icon={TrendingUp}
+          title={t("investorsTitle")}
+          hint={t("staffToolInvestorsHint")}
+          to="/staff/investors"
+          trailing={
+            investors.data ? (
+              <span className="flex items-center gap-1">
+                <span className="rounded-full bg-amber-100 px-1.5 text-[11px] font-semibold tabular-nums leading-[18px] text-amber-800">
+                  {formatNumber(investors.data, lang)}
+                </span>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300" aria-hidden />
+              </span>
+            ) : undefined
+          }
+        />
         <ListRow icon={Wallet} title={t("staffFeesShortcut")} hint={t("staffFeesShortcutHint")} to="/staff/fees" />
         <ListRow icon={Activity} title={t("activityShortcut")} hint={t("staffToolActivityHint")} to="/staff/activity" />
         <ListRow icon={Pin} title={t("noticeBoard")} hint={t("staffToolNoticesHint")} to="/notices" />

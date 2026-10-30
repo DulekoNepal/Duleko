@@ -83,6 +83,10 @@ const KYC_ERRORS: [string, StringKey][] = [
   // No phone numbers or emojis in bios, posts and the like (8200)
   ["TEXT_HAS_PHONE", "errTextHasPhone"],
   ["TEXT_HAS_EMOJI", "errTextHasEmoji"],
+  // The investor form (8500)
+  ["INVESTOR_INCOMPLETE", "errInvestorIncomplete"],
+  ["INVESTOR_BAD_EMAIL", "investErrEmail"],
+  ["INVESTOR_TOO_MANY", "errInvestorTooMany"],
 ];
 
 /** Turns any thrown value into a short message we can show a user. */

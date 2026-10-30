@@ -30,6 +30,8 @@ interface Delivery {
   /** Notice emails only (migration 5000): the notice's image, and its path in the app. */
   image_url?: string | null;
   link_path?: string | null;
+  /** Emails to Duleko's own inbox (migration 8500): who a reply goes to. */
+  reply_to?: string | null;
 }
 
 const MAX_ATTEMPTS = 3;
@@ -39,8 +41,8 @@ const env = (key: string, fallback = "") => Deno.env.get(key) ?? fallback;
 const SITE_URL = env("SITE_URL", "https://www.duleko.com");
 
 const COPY = {
-  en: { open: "Open Duleko", view: "See the notice", footer: "You are getting this because you have an account on Duleko.", settings: "Turn these off in Profile → Settings." },
-  ne: { open: "डुलेको खोल्नुहोस्", view: "सूचना हेर्नुहोस्", footer: "तपाईंको डुलेकोमा खाता भएकाले यो सन्देश पठाइएको हो।", settings: "प्रोफाइल → सेटिङबाट यो बन्द गर्न सकिन्छ।" },
+  en: { open: "Open Duleko", view: "See the notice", footer: "You are getting this because you have an account on Duleko.", settings: "Turn these off in Profile → Settings.", staff: "Open in Duleko", inbox: "Sent to Duleko's official inbox from a form on the website." },
+  ne: { open: "डुलेको खोल्नुहोस्", view: "सूचना हेर्नुहोस्", footer: "तपाईंको डुलेकोमा खाता भएकाले यो सन्देश पठाइएको हो।", settings: "प्रोफाइल → सेटिङबाट यो बन्द गर्न सकिन्छ।", staff: "डुलेकोमा खोल्नुहोस्", inbox: "वेबसाइटको फारमबाट डुलेकोको आधिकारिक इमेलमा पठाइएको।" },
 } as const;
 
 function escapeHtml(text: string): string {
@@ -71,10 +73,10 @@ function emailHtml(d: Delivery): string {
         <h1 style="margin:0 0 12px;font-size:18px;line-height:1.4">${escapeHtml(d.subject)}</h1>
         ${image}
         <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#475569;white-space:pre-wrap">${escapeHtml(d.body)}</p>
-        <a href="${href}" style="display:inline-block;background:#0f766e;color:#fff;text-decoration:none;padding:11px 20px;border-radius:9999px;font-size:14px;font-weight:600">${d.link_path ? c.view : c.open}</a>
+        <a href="${href}" style="display:inline-block;background:#0f766e;color:#fff;text-decoration:none;padding:11px 20px;border-radius:9999px;font-size:14px;font-weight:600">${d.reply_to ? c.staff : d.link_path ? c.view : c.open}</a>
       </div>
       <div style="padding:16px 24px;background:#f8fafc;border-top:1px solid #f1f5f9;font-size:12px;color:#94a3b8;line-height:1.5">
-        ${c.footer}<br />${c.settings}
+        ${d.reply_to ? c.inbox : `${c.footer}<br />${c.settings}`}
       </div>
     </div>
   </body>
@@ -106,6 +108,7 @@ async function sendEmail(d: Delivery): Promise<void> {
     body: JSON.stringify({
       sender,
       to: [{ email: d.destination }],
+      ...(d.reply_to ? { replyTo: { email: d.reply_to } } : {}),
       subject: d.subject,
       htmlContent: emailHtml(d),
       textContent: `${d.subject}\n\n${d.body}\n\n${openUrl(d)}`,

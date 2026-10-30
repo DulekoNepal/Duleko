@@ -22,6 +22,7 @@ import {
   Sparkles,
   Star,
   ThumbsUp,
+  TrendingUp,
   UserCheck,
   UserPlus,
   XCircle,
@@ -85,6 +86,7 @@ const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
   referral: { icon: Gift, tone: "green" },
   call_deal: { icon: Handshake, tone: "brand" },
   deal_dispute: { icon: Handshake, tone: "amber" },
+  investor_interest: { icon: TrendingUp, tone: "green" },
 };
 
 export function NotificationsScreen() {

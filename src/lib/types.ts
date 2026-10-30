@@ -259,7 +259,9 @@ export interface AppNotification {
     /** To both sides: someone joined with a referral code - a free job each (7900). */
     | "referral"
     /** To staff: a worker said no to a deal someone reported - settle it (8400). */
-    | "deal_dispute";
+    | "deal_dispute"
+    /** To staff: someone sent the website's investor form (8500). */
+    | "investor_interest";
   title_en: string;
   title_ne: string;
   body_en: string | null;

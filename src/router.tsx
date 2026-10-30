@@ -229,6 +229,16 @@ const staffDealsRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/CallDealsScreen"), "CallDealsScreen"),
 });
 
+// Staff: messages from the website's investor form (8500).
+const staffInvestorsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/staff/investors",
+  validateSearch: (search: Record<string, unknown>): { view?: "all" } => ({
+    view: search.view === "all" ? "all" : undefined,
+  }),
+  component: lazyRouteComponent(() => import("@/routes/InvestorsScreen"), "InvestorsScreen"),
+});
+
 // Get verified: send your ID for the verified badge.
 const verifyRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -306,6 +316,13 @@ const partnersRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/site/AudiencePages"), "PartnersPage"),
 });
 
+// Partnerships > Investors: "Would you like to invest in Duleko?" and its form.
+const investRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/invest",
+  component: lazyRouteComponent(() => import("@/routes/site/InvestPage"), "InvestPage"),
+});
+
 const safetyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/safety",
@@ -359,6 +376,7 @@ const routeTree = rootRoute.addChildren([
   staffActivityListRoute,
   staffActivityItemRoute,
   staffDealsRoute,
+  staffInvestorsRoute,
   verifyRoute,
   staffVerifyRoute,
   moderationRoute,
@@ -371,6 +389,7 @@ const routeTree = rootRoute.addChildren([
   individualsRoute,
   businessesRoute,
   partnersRoute,
+  investRoute,
   safetyRoute,
   motivationRoute,
   registrationPolicyRoute,

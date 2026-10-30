@@ -10,6 +10,7 @@ import { kycStrings } from "./i18n-kyc";
 import { badgeStrings } from "./i18n-badges";
 import { callStrings } from "./i18n-calls";
 import { referralStrings } from "./i18n-referral";
+import { investStrings } from "./i18n-invest";
 import { setActiveCalendar, storeCalendar, storedCalendar, type CalendarChoice } from "./bs-calendar";
 
 /**
@@ -1432,6 +1433,9 @@ const strings = {
 
   // ---- referral codes (see i18n-referral.ts) ---------------------------
   ...referralStrings,
+
+  // ---- the investor form and Investors screen (see i18n-invest.ts) -----
+  ...investStrings,
 } as const;
 
 export type StringKey = keyof typeof strings;

@@ -7,6 +7,7 @@ export type SitePath =
   | "/individuals"
   | "/businesses"
   | "/partners"
+  | "/invest"
   | "/about"
   | "/safety"
   | "/motivation"

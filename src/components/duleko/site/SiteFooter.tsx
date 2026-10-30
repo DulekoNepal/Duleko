@@ -40,6 +40,7 @@ const COLUMNS: { id: string; titleKey: StringKey; links: FooterLink[] }[] = [
       { labelKey: "navForBusinesses", to: "/businesses" },
       { labelKey: "footerForMunicipalities", to: "/partners" },
       { labelKey: "footerTrainingProviders", to: "/partners" },
+      { labelKey: "footerInvestors", to: "/invest" },
     ],
   },
   {

@@ -995,6 +995,79 @@ export async function settleCallDeal(dealId: string, count: boolean, note?: stri
   if (error) throw error;
 }
 
+// ---- The investor form (8500) ------------------------------------------------
+
+export interface InvestorInterestInput {
+  name: string;
+  email: string;
+  address: string;
+  message: string;
+}
+
+/**
+ * The website's "Invest in Duleko" form. Anyone can send it, signed in or
+ * not: it is kept for staff, emailed to Duleko's official inbox and
+ * alerts every staff member.
+ */
+export async function submitInvestorInterest(input: InvestorInterestInput, lang: "en" | "ne"): Promise<void> {
+  const { error } = await supabase.rpc("submit_investor_interest", {
+    p_name: input.name.trim(),
+    p_email: input.email.trim(),
+    p_address: input.address.trim(),
+    p_message: input.message.trim(),
+    p_lang: lang,
+  });
+  if (error) throw error;
+}
+
+export type InvestorView = "new" | "all";
+
+export const INVESTORS_PAGE = 20;
+
+/** One message from the investor form, on the staff Investors screen. */
+export interface InvestorInterestRow {
+  id: string;
+  full_name: string;
+  email: string;
+  address: string;
+  message: string;
+  lang: "en" | "ne";
+  /** Set when they were signed in to Duleko when they sent it. */
+  profile_id: string | null;
+  created_at: string;
+  replied_at: string | null;
+  replied_by_name: string | null;
+}
+
+/** Staff: one page of investor messages - waiting for a reply, or all - and how many in all. */
+export async function listStaffInvestorInterests(
+  view: InvestorView,
+  page: number,
+): Promise<{ rows: InvestorInterestRow[]; total: number }> {
+  const { data, error } = await supabase.rpc("staff_investor_interests", {
+    p_view: view,
+    p_limit: INVESTORS_PAGE,
+    p_offset: page * INVESTORS_PAGE,
+  });
+  if (error) throw error;
+  const rows = ((data ?? []) as (InvestorInterestRow & { total: number })[]).map(({ total: _, ...r }) => r);
+  const total = Number((data as { total?: number }[] | null)?.[0]?.total ?? 0);
+  return { rows, total };
+}
+
+/** Staff: how many investor messages still wait for a reply. */
+export async function countNewInvestorInterests(): Promise<number> {
+  const { data, error } = await supabase.rpc("count_new_investor_interests");
+  if (error) throw error;
+  return Number(data ?? 0);
+}
+
+/** Staff: someone answered this one - or, `replied` false, undo that. */
+export async function markInvestorInterestReplied(id: string, replied: boolean): Promise<void> {
+  const { error } = await supabase.rpc("mark_investor_interest_replied", { p_id: id, p_replied: replied });
+  if (error) throw error;
+}
+
 /** A person on the staff activity pages (7500) - no phone number. */
 export interface ActivityPerson {
   id: string;
