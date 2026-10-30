@@ -81,10 +81,7 @@ export const kycStrings = {
 
   // ---- the card on your profile -------------------------------------------
   kycCardTitle: ["Get the verified badge", "प्रमाणित ब्याज लिनुहोस्"],
-  kycCardBody: [
-    "Send a photo of your citizenship, national ID, driving licence or passport.",
-    "आफ्नो नागरिकता, राष्ट्रिय परिचयपत्र, सवारी चालक अनुमतिपत्र वा राहदानीको फोटो पठाउनुहोस्।",
-  ],
+  kycCardBody: ["KYC and certifications.", "KYC र प्रमाणपत्र।"],
   kycCardPending: ["ID check in progress", "परिचयपत्र जाँच हुँदैछ"],
   kycCardPendingBody: ["Duleko staff will check it soon.", "डुलेकोको टोलीले चाँडै जाँच्नेछ।"],
   kycCardRejected: ["ID not accepted", "परिचयपत्र स्वीकृत भएन"],

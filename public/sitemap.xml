@@ -97,6 +97,15 @@
     </image:image>
   </url>
   <url>
+    <loc>https://www.duleko.com/invest</loc>
+    <lastmod>2026-10-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <image:image>
+      <image:loc>https://www.duleko.com/og-image.png</image:loc>
+    </image:image>
+  </url>
+  <url>
     <loc>https://www.duleko.com/safety</loc>
     <lastmod>2026-10-11</lastmod>
     <changefreq>monthly</changefreq>
