@@ -16,6 +16,14 @@ export const organization = {
   foundingLocation: "Kapilvastu, Nepal",
   areaServed: "Nepal",
   languages: ["English", "Nepali"],
+  // Duleko's own social accounts (same list as src/components/duleko/site/social.tsx).
+  sameAs: [
+    "https://www.facebook.com/dulekonepal/",
+    "https://www.instagram.com/dulekonepal/",
+    "https://www.youtube.com/@DulekoNepal",
+    "https://www.tiktok.com/@dulekonepal",
+    "https://www.linkedin.com/company/146724170/",
+  ],
   // The person who founded Duleko - the only founder.
   founder: "sunil",
   // The person who designed and built the platform (web app, Android app, backend).

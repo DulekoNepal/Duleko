@@ -68,7 +68,7 @@ export function ListRow({
   expanded,
   ...target
 }: {
-  icon: LucideIcon;
+  icon: LucideIcon | ((props: { className?: string; "aria-hidden"?: boolean }) => React.ReactElement);
   title: React.ReactNode;
   hint?: React.ReactNode;
   trailing?: React.ReactNode;

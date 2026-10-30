@@ -4,6 +4,7 @@ import { useI18n, type StringKey } from "@/lib/i18n";
 import { formatNumber } from "@/lib/utils";
 import { NEPALI_TAGLINE, mailto, useSiteActions } from "./actions";
 import type { SitePath } from "./nav";
+import { SOCIAL_LINKS } from "./social";
 import { Brand, Container } from "./ui";
 
 type FooterLink =
@@ -121,6 +122,31 @@ function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) 
   );
 }
 
+/** Round icon buttons for Duleko's social accounts, under the tagline. */
+function SocialLinks() {
+  const { t } = useI18n();
+  return (
+    <nav aria-label={t("footerFollowUs")} className="mt-6">
+      <ul className="flex flex-wrap gap-2.5">
+        {SOCIAL_LINKS.map(({ id, nameKey, href, icon: Icon }) => (
+          <li key={id}>
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener"
+              aria-label={t("footerFollowOn", { network: t(nameKey) })}
+              title={t(nameKey)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-teal-50/85 ring-1 ring-white/15 transition-all hover:-translate-y-0.5 hover:bg-white/20 hover:text-white"
+            >
+              <Icon className="h-[18px] w-[18px]" aria-hidden />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 export function SiteFooter() {
   const { t, lang } = useI18n();
   return (
@@ -155,6 +181,7 @@ export function SiteFooter() {
             <p lang="ne" className="mt-2 text-base font-semibold text-brand-300">
               {NEPALI_TAGLINE}
             </p>
+            <SocialLinks />
           </div>
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-7 border-t border-white/10 pt-8 sm:grid-cols-4 sm:gap-x-8 lg:col-span-8 lg:border-0 lg:pt-1">

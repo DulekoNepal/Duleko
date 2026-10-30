@@ -97,6 +97,13 @@ export const siteStrings = {
   footerPrivacy: ["Privacy", "गोपनीयता"],
   footerTerms: ["Terms", "सर्तहरू"],
   footerBackToTop: ["Back to top", "माथि जानुहोस्"],
+  footerFollowUs: ["Follow us", "हामीलाई फलो गर्नुहोस्"],
+  footerFollowOn: ["Duleko on {network}", "{network} मा डुलेको"],
+  socialFacebook: ["Facebook", "फेसबुक"],
+  socialInstagram: ["Instagram", "इन्स्टाग्राम"],
+  socialYoutube: ["YouTube", "युट्युब"],
+  socialTiktok: ["TikTok", "टिकटक"],
+  socialLinkedin: ["LinkedIn", "लिंक्डइन"],
 
   // ---- Home ---------------------------------------------------------------
   homeHeroTitle: ["Your skills deserve an opportunity.", "तपाईंको सीपले अवसर पाउनुपर्छ।"],

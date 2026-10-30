@@ -85,6 +85,7 @@ const organizationLd = {
   description: organization.description,
   slogan: organization.slogan,
   email: organization.email,
+  sameAs: organization.sameAs,
   foundingLocation: { "@type": "Place", name: organization.foundingLocation },
   areaServed: { "@type": "Country", name: organization.areaServed },
   knowsLanguage: ["en", "ne"],

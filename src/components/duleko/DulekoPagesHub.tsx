@@ -1,4 +1,5 @@
 import {
+  ArrowUpRight,
   Building2,
   ClipboardCheck,
   FileText,
@@ -17,6 +18,7 @@ import {
 import { ListGroup, ListRow } from "@/components/duleko/SettingsList";
 import { cn } from "@/lib/utils";
 import { CONTACT_EMAIL } from "@/components/duleko/site/actions";
+import { SOCIAL_LINKS } from "@/components/duleko/site/social";
 import type { SitePath } from "@/components/duleko/site/nav";
 import { useI18n, type StringKey } from "@/lib/i18n";
 
@@ -91,6 +93,20 @@ export function DulekoPagesHub({ wide = false }: { wide?: boolean }) {
 
         <ListGroup title={t("contactUs")}>
           <ListRow icon={Mail} title={t("footerContactUs")} hint={CONTACT_EMAIL} href={`mailto:${CONTACT_EMAIL}`} />
+        </ListGroup>
+
+        <ListGroup title={t("footerFollowUs")}>
+          {SOCIAL_LINKS.map((link) => (
+            <ListRow
+              key={link.id}
+              icon={link.icon}
+              title={t(link.nameKey)}
+              hint={link.handle}
+              href={link.href}
+              external
+              trailing={<ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-slate-300" aria-hidden />}
+            />
+          ))}
         </ListGroup>
       </div>
 
