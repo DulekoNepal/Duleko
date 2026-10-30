@@ -73,7 +73,7 @@
     },
     "/invest": {
       "title": "Invest in Duleko | Duleko",
-      "description": "Would you like to invest in Duleko? Fill in a short form with your name, email, address and message, and the Duleko team will reply to you by email.",
+      "description": "Would you like to invest in Duleko? Fill in a short form with your name, email, phone, address and message, and the Duleko team will reply to you by email.",
       "priority": "0.4",
       "changefreq": "monthly",
       "lastmod": "2026-10-30"

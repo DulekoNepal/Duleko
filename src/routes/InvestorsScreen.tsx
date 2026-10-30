@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useCanGoBack, useNavigate, useRouter, useSearch } from "@tanstack/react-router";
-import { ArrowLeft, Check, Clock, Mail, MapPin, RotateCcw, ShieldCheck, TrendingUp, UserRound } from "lucide-react";
+import { ArrowLeft, Check, Clock, Mail, MapPin, Phone, RotateCcw, ShieldCheck, TrendingUp, UserRound } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { Badge } from "@/components/ui/badge";
@@ -194,7 +194,14 @@ function InvestorCard({ row }: { row: InvestorInterestRow }) {
         </Badge>
       </div>
 
-      <p className="mt-2 flex gap-1.5 text-[11px] text-slate-600 sm:text-xs">
+      <a
+        href={`tel:${row.phone}`}
+        className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-600 hover:text-brand-700 sm:text-xs"
+      >
+        <Phone className="h-3 w-3 shrink-0 text-slate-400 sm:h-3.5 sm:w-3.5" aria-hidden />
+        <span className="tabular-nums">{row.phone}</span>
+      </a>
+      <p className="mt-1 flex gap-1.5 text-[11px] text-slate-600 sm:text-xs">
         <MapPin className="mt-px h-3 w-3 shrink-0 text-slate-400 sm:h-3.5 sm:w-3.5" aria-hidden />
         <span className="break-words">{row.address}</span>
       </p>

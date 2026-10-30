@@ -241,7 +241,7 @@ export const content = {
   "/invest": {
     h1: "Would you like to invest in Duleko?",
     blocks: [
-      { p: "Duleko connects local skills with local opportunities across Nepal. If you'd like to help it grow, fill in the form with your name, email, complete address and a message, and the Duleko team will reply to you by email." },
+      { p: "Duleko connects local skills with local opportunities across Nepal. If you'd like to help it grow, fill in the form with your name, email, phone number, complete address and a message, and the Duleko team will reply to you by email." },
       { p: "Prefer to write yourself? Email dulekonepal@gmail.com." },
     ],
   },

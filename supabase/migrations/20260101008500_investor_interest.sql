@@ -4,11 +4,11 @@
 -- Run after 8400.
 --
 -- The website's footer (Partnerships > Investors) opens /invest, a short
--- form: name, email, complete address and a message. Anyone can send it,
--- signed in or not. Each one sent:
+-- form: name, email, phone number, complete address and a message.
+-- Anyone can send it, signed in or not. Each one sent:
 --
---   1. is kept in investor_interests (staff only - it holds an email and
---      a home address),
+--   1. is kept in investor_interests (staff only - it holds an email, a
+--      phone number and a home address),
 --   2. is emailed to Duleko's official inbox (app_settings
 --      'official_email'), with Reply-To set to the sender so answering
 --      is one tap - through the same outbox as every other email (2500),
@@ -30,7 +30,9 @@ create table if not exists public.investor_interests (
   id           uuid primary key default gen_random_uuid(),
   full_name    text not null check (char_length(full_name) between 2 and 100),
   email        text not null check (char_length(email) between 5 and 200),
-  address      text not null check (char_length(address) between 5 and 300),
+  -- Any country: digits with an optional leading +.
+  phone        text not null check (phone ~ '^\+?[0-9]{7,15}$'),
+  address     text not null check (char_length(address) between 5 and 300),
   message      text not null check (char_length(message) between 10 and 2000),
   lang         text not null default 'en' check (lang in ('en', 'ne')),
   -- Set when the sender was signed in.
@@ -102,6 +104,7 @@ create trigger trg_notification_deliveries_a_investor
 create or replace function public.submit_investor_interest(
   p_name    text,
   p_email   text,
+  p_phone   text,
   p_address text,
   p_message text,
   p_lang    text default 'en'
@@ -111,6 +114,8 @@ language plpgsql security definer set search_path = public as $$
 declare
   v_name    text := left(regexp_replace(trim(coalesce(p_name, '')), '\s+', ' ', 'g'), 100);
   v_email   text := lower(trim(coalesce(p_email, '')));
+  -- Spaces, dashes, dots and brackets dropped; a leading 00 means +.
+  v_phone   text := regexp_replace(regexp_replace(coalesce(p_phone, ''), '[\s().-]', '', 'g'), '^00', '+');
   v_address text := left(trim(coalesce(p_address, '')), 300);
   v_message text := left(trim(coalesce(p_message, '')), 2000);
   v_lang    text := case when p_lang = 'ne' then 'ne' else 'en' end;
@@ -121,6 +126,9 @@ begin
   end if;
   if char_length(v_email) > 200 or v_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then
     raise exception 'INVESTOR_BAD_EMAIL' using errcode = 'P0001';
+  end if;
+  if v_phone !~ '^\+?[0-9]{7,15}$' then
+    raise exception 'INVESTOR_BAD_PHONE' using errcode = 'P0001';
   end if;
 
   -- Two at the same moment must not both slip under the limits.
@@ -133,8 +141,8 @@ begin
     raise exception 'INVESTOR_TOO_MANY' using errcode = 'P0001';
   end if;
 
-  insert into public.investor_interests (full_name, email, address, message, lang, profile_id)
-  values (v_name, v_email, v_address, v_message, v_lang, public.current_profile_id());
+  insert into public.investor_interests (full_name, email, phone, address, message, lang, profile_id)
+  values (v_name, v_email, v_phone, v_address, v_message, v_lang, public.current_profile_id());
 
   -- 1. The official inbox.
   select nullif(trim(value), '') into inbox from public.app_settings where key = 'official_email';
@@ -147,6 +155,7 @@ begin
        'Someone filled in the "Invest in Duleko" form.' || E'\n\n'
          || 'Name: ' || v_name || E'\n'
          || 'Email: ' || v_email || E'\n'
+         || 'Phone: ' || v_phone || E'\n'
          || 'Address: ' || v_address || E'\n\n'
          || 'Message:' || E'\n' || v_message || E'\n\n'
          || 'Reply to this email to answer them. Once someone has, mark it replied on the Investors screen.');
@@ -163,8 +172,8 @@ begin
 end;
 $$;
 
-revoke execute on function public.submit_investor_interest(text, text, text, text, text) from public;
-grant execute on function public.submit_investor_interest(text, text, text, text, text) to anon, authenticated;
+revoke execute on function public.submit_investor_interest(text, text, text, text, text, text) from public;
+grant execute on function public.submit_investor_interest(text, text, text, text, text, text) to anon, authenticated;
 
 -- ---------------------------------------------------------------------
 -- staff_investor_interests: the Investors screen
@@ -180,6 +189,7 @@ returns table (
   id              uuid,
   full_name       text,
   email           text,
+  phone           text,
   address         text,
   message         text,
   lang            text,
@@ -198,7 +208,7 @@ begin
     raise exception 'Unknown view' using errcode = 'invalid_parameter_value';
   end if;
   return query
-    select i.id, i.full_name, i.email, i.address, i.message, i.lang, i.profile_id,
+    select i.id, i.full_name, i.email, i.phone, i.address, i.message, i.lang, i.profile_id,
            i.created_at, i.replied_at, rp.full_name,
            count(*) over ()
       from public.investor_interests i

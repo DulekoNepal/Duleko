@@ -23,6 +23,8 @@ export const investStrings = {
   investNamePlaceholder: ["Your full name", "तपाईंको पूरा नाम"],
   investEmail: ["Email", "इमेल"],
   investEmailHint: ["We'll reply to this address.", "हामी यही ठेगानामा जवाफ दिन्छौं।"],
+  investPhone: ["Phone number", "फोन नम्बर"],
+  investPhoneHint: ["With the country code if outside Nepal.", "नेपाल बाहिर हुनुहुन्छ भने देशको कोडसहित।"],
   investAddress: ["Complete address", "पूरा ठेगाना"],
   investAddressPlaceholder: [
     "Tole or street, municipality, district, country",
@@ -45,6 +47,7 @@ export const investStrings = {
   investSendAnother: ["Send another", "अर्को पठाउनुहोस्"],
   investErrName: ["Please write your name.", "कृपया आफ्नो नाम लेख्नुहोस्।"],
   investErrEmail: ["Please check your email address.", "कृपया इमेल ठेगाना जाँच गर्नुहोस्।"],
+  investErrPhone: ["Please check your phone number.", "कृपया फोन नम्बर जाँच गर्नुहोस्।"],
   investErrAddress: ["Please write your complete address.", "कृपया पूरा ठेगाना लेख्नुहोस्।"],
   investErrMessage: ["Please write a little more in your message.", "कृपया सन्देशमा अलि बढी लेख्नुहोस्।"],
   errInvestorIncomplete: ["Please fill in every field.", "कृपया सबै विवरण भर्नुहोस्।"],

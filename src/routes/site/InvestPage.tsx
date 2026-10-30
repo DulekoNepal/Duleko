@@ -21,13 +21,14 @@ import { cn, formatNumber } from "@/lib/utils";
 
 const NEXT_STEPS: StringKey[] = ["investNext1", "investNext2", "investNext3"];
 
-const EMPTY: InvestorInterestInput = { name: "", email: "", address: "", message: "" };
+const EMPTY: InvestorInterestInput = { name: "", email: "", phone: "", address: "", message: "" };
 
 /** Same rules as submit_investor_interest (8500), so most mistakes never reach it. */
 function validate(form: InvestorInterestInput): Partial<Record<keyof InvestorInterestInput, StringKey>> {
   const errors: Partial<Record<keyof InvestorInterestInput, StringKey>> = {};
   if (form.name.trim().length < 2) errors.name = "investErrName";
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) errors.email = "investErrEmail";
+  if (!/^\+?[0-9]{7,15}$/.test(form.phone.replace(/[\s().-]/g, "").replace(/^00/, "+"))) errors.phone = "investErrPhone";
   if (form.address.trim().length < 5) errors.address = "investErrAddress";
   if (form.message.trim().length < 10) errors.message = "investErrMessage";
   return errors;
@@ -35,7 +36,7 @@ function validate(form: InvestorInterestInput): Partial<Record<keyof InvestorInt
 
 /**
  * Partnerships > Investors: "Would you like to invest in Duleko?" and a
- * short form - name, email, complete address, message. What's sent lands
+ * short form - name, email, phone, complete address, message. What's sent lands
  * in Duleko's official inbox and on the staff Investors screen (8500).
  */
 export function InvestPage() {
@@ -190,6 +191,18 @@ function InvestForm() {
           />
         </Field>
       </div>
+      <Field label={t("investPhone")} hint={t("investPhoneHint")} error={fieldError("phone")}>
+        <Input
+          type="tel"
+          inputMode="tel"
+          value={form.phone}
+          onChange={set("phone")}
+          autoComplete="tel"
+          maxLength={24}
+          placeholder="+977 98XXXXXXXX"
+          aria-invalid={Boolean(fieldError("phone"))}
+        />
+      </Field>
       <Field label={t("investAddress")} error={fieldError("address")}>
         <Input
           value={form.address}

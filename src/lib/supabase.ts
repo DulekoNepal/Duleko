@@ -86,6 +86,7 @@ const KYC_ERRORS: [string, StringKey][] = [
   // The investor form (8500)
   ["INVESTOR_INCOMPLETE", "errInvestorIncomplete"],
   ["INVESTOR_BAD_EMAIL", "investErrEmail"],
+  ["INVESTOR_BAD_PHONE", "investErrPhone"],
   ["INVESTOR_TOO_MANY", "errInvestorTooMany"],
 ];
 

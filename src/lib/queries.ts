@@ -1000,6 +1000,7 @@ export async function settleCallDeal(dealId: string, count: boolean, note?: stri
 export interface InvestorInterestInput {
   name: string;
   email: string;
+  phone: string;
   address: string;
   message: string;
 }
@@ -1013,6 +1014,7 @@ export async function submitInvestorInterest(input: InvestorInterestInput, lang:
   const { error } = await supabase.rpc("submit_investor_interest", {
     p_name: input.name.trim(),
     p_email: input.email.trim(),
+    p_phone: input.phone.trim(),
     p_address: input.address.trim(),
     p_message: input.message.trim(),
     p_lang: lang,
@@ -1029,6 +1031,7 @@ export interface InvestorInterestRow {
   id: string;
   full_name: string;
   email: string;
+  phone: string;
   address: string;
   message: string;
   lang: "en" | "ne";
