@@ -32,7 +32,7 @@ create table if not exists public.investor_interests (
   email        text not null check (char_length(email) between 5 and 200),
   -- Any country: digits with an optional leading +.
   phone        text not null check (phone ~ '^\+?[0-9]{7,15}$'),
-  address     text not null check (char_length(address) between 5 and 300),
+  address      text not null check (char_length(address) between 5 and 300),
   message      text not null check (char_length(message) between 10 and 2000),
   lang         text not null default 'en' check (lang in ('en', 'ne')),
   -- Set when the sender was signed in.
