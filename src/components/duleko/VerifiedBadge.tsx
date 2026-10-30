@@ -12,33 +12,59 @@ const SEAL_PATH =
   "M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z";
 const CHECK_PATH = "m9 12 2 2 4-4";
 
+/** How far Duleko has checked someone (8300). */
+export type VerificationTier = "staff" | "full" | "half" | "none";
+
 /**
- * Two distinct badges, both the same spiky seal shape, both in the brand
- * green - so at a glance one reads as "this account speaks for Duleko"
- * and the other as "this person got checked out":
+ * staff - Duleko staff, whatever else.
+ * full  - ID approved and a skill certificate approved.
+ * half  - only one of the two.
+ */
+export function verificationTier(person: {
+  staff_role?: StaffRole | null;
+  is_verified?: boolean;
+  skill_verified?: boolean;
+  verified_skill_ids?: string[];
+}): VerificationTier {
+  if (person.staff_role) return "staff";
+  const id = Boolean(person.is_verified);
+  const skill = Boolean(person.skill_verified) || (person.verified_skill_ids?.length ?? 0) > 0;
+  if (id && skill) return "full";
+  if (id || skill) return "half";
+  return "none";
+}
+
+/**
+ * Three badges, all the same seal shape:
  *
- *  - staff (moderator/admin/technical_admin): the seal filled solid
- *    brand-700, with a bold white tick - the same mark across every
- *    tier, since viewers only need to know "this is staff", not which.
- *  - verified: the same seal, hollow - brand-700 outline only - with a
- *    brand-700 tick. Lighter weight on purpose, so it never gets
- *    mistaken for the staff mark.
+ *  - staff: the seal filled solid brand green with a bold white tick -
+ *    "this account speaks for Duleko".
+ *  - fully verified: the seal hollow, bold brand-green outline and tick.
+ *  - half verified: the same hollow seal in orange - ID or a skill
+ *    certificate checked, not both yet.
  */
 export function VerifiedBadge({
   staffRole,
   verified,
+  skillVerified,
   size = 16,
   className,
 }: {
   staffRole?: StaffRole | null;
+  /** ID check approved. */
   verified?: boolean;
+  /** A skill certificate approved. */
+  skillVerified?: boolean;
   size?: number;
   className?: string;
 }) {
   const { t } = useI18n();
-  if (!staffRole && !verified) return null;
+  const tier = verificationTier({ staff_role: staffRole, is_verified: verified, skill_verified: skillVerified });
+  if (tier === "none") return null;
 
-  const label = staffRole ? t("staffBadgeLabel") : t("verifiedBadgeLabel");
+  const label =
+    tier === "staff" ? t("staffBadgeLabel") : tier === "full" ? t("fullyVerifiedLabel") : t("halfVerifiedLabel");
+  const stroke = tier === "full" ? "stroke-brand-700" : "stroke-accent-600";
 
   return (
     <svg
@@ -50,7 +76,7 @@ export function VerifiedBadge({
       aria-label={label}
     >
       <title>{label}</title>
-      {staffRole ? (
+      {tier === "staff" ? (
         <>
           <path d={SEAL_PATH} className="fill-brand-700" />
           <path
@@ -64,19 +90,12 @@ export function VerifiedBadge({
         </>
       ) : (
         <>
-          <path
-            d={SEAL_PATH}
-            fill="none"
-            className="stroke-brand-700"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <path d={SEAL_PATH} fill="none" className={stroke} strokeWidth="2.5" strokeLinejoin="round" />
           <path
             d={CHECK_PATH}
             fill="none"
-            className="stroke-brand-700"
-            strokeWidth="1.75"
+            className={stroke}
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />

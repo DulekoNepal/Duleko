@@ -321,7 +321,12 @@ function ConversationRow({
               >
                 {c.otherName}
               </span>
-              <VerifiedBadge staffRole={c.otherStaffRole} verified={c.otherIsVerified} size={14} />
+              <VerifiedBadge
+                staffRole={c.otherStaffRole}
+                verified={c.otherIsVerified}
+                skillVerified={c.otherSkillVerified}
+                size={14}
+              />
             </span>
             <span className={cn("shrink-0 text-[11px]", c.unread ? "font-semibold text-brand-700" : "text-slate-400")}>
               {relativeTime(c.lastCreatedAt, lang)}

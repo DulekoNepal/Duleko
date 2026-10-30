@@ -70,7 +70,7 @@ export function WorkerRow({
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1">
           <h3 className="truncate text-sm font-semibold text-slate-900">{worker.full_name}</h3>
-          <VerifiedBadge staffRole={worker.staff_role} verified={worker.is_verified} />
+          <VerifiedBadge staffRole={worker.staff_role} verified={worker.is_verified} skillVerified={worker.skill_verified} />
         </div>
 
         {skills.length > 0 && (

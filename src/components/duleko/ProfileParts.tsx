@@ -1,43 +1,13 @@
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import { SectionIcon } from "@/components/ui/card";
-import { BrandWatermark } from "@/components/duleko/site/ui";
 import { useI18n } from "@/lib/i18n";
 import { cn, formatNumber } from "@/lib/utils";
 
 /**
- * The cover, the titled card and the stat tile - used by both profile pages
- * (see profile/ProfileUI.tsx for the rest) and the fee screens.
+ * The titled card and the stat tile - used by both profile pages (see
+ * profile/ProfileUI.tsx for the rest, and profile/DulekoCover.tsx for the
+ * cover) and the fee screens.
  */
-
-/** Cover banner: the photo when there is one, a soft patterned wash when not. */
-export function ProfileCover({
-  src,
-  className,
-  children,
-}: {
-  src?: string | null;
-  /** Height override - defaults to growing with the screen. */
-  className?: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div className={cn("relative", className ?? "h-32 sm:h-44 lg:h-52")}>
-      <div className="absolute inset-0 bg-gradient-to-br from-brand-100 via-brand-50 to-cream-50" aria-hidden />
-      <div
-        className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgb(21_128_61/0.14)_1px,transparent_0)] [background-size:18px_18px]"
-        aria-hidden
-      />
-      <BrandWatermark tone="light" className="inset-y-3 right-6 aspect-square" />
-      {src && (
-        <>
-          <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" aria-hidden />
-        </>
-      )}
-      {children}
-    </div>
-  );
-}
 
 /** A titled white card - every block on a profile page is one of these. */
 export function SectionCard({

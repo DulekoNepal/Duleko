@@ -7,6 +7,7 @@ import { profileStrings } from "./i18n-profile";
 import { workStrings } from "./i18n-work";
 import { authStrings } from "./i18n-auth";
 import { kycStrings } from "./i18n-kyc";
+import { badgeStrings } from "./i18n-badges";
 import { callStrings } from "./i18n-calls";
 import { referralStrings } from "./i18n-referral";
 import { setActiveCalendar, storeCalendar, storedCalendar, type CalendarChoice } from "./bs-calendar";
@@ -1402,6 +1403,9 @@ const strings = {
 
   // ---- ID checks for the verified badge (see i18n-kyc.ts) --------------
   ...kycStrings,
+
+  // ---- the two-level badge, covers, certificate checks (see i18n-badges.ts)
+  ...badgeStrings,
 
   // ---- work agreed over a phone call (see i18n-calls.ts) ---------------
   ...callStrings,

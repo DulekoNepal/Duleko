@@ -9,10 +9,11 @@ import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import { MAX_PHOTO_INPUT_BYTES } from "@/lib/image";
-import { updateProfile, uploadAvatar, uploadCover } from "@/lib/queries";
+import { updateProfile, uploadAvatar } from "@/lib/queries";
 import { copyLink, profileUrl, shareProfile } from "@/lib/share";
 import { errorMessage } from "@/lib/supabase";
 import { cn, formatNumber } from "@/lib/utils";
+import { verificationTier } from "@/components/duleko/VerifiedBadge";
 import {
   HeroBody,
   HeroCard,
@@ -30,10 +31,11 @@ import { useMyProfileData } from "./use-my-profile-data";
 const PHOTO_TYPES = "image/jpeg,image/png,image/webp";
 
 /**
- * Uploads a new profile or cover photo, showing it straight away while it
- * goes up. Shared by the header and the "Add a profile photo" step.
+ * Uploads a new profile photo, showing it straight away while it goes up.
+ * Shared by the header and the "Add a profile photo" step. (Covers are
+ * Duleko's own artwork now - see DulekoCover.)
  */
-export function usePhotoUpload(kind: "avatar" | "cover") {
+export function usePhotoUpload() {
   const { t } = useI18n();
   const { user, profile, refreshProfile } = useSession();
   const { toast } = useToast();
@@ -45,8 +47,8 @@ export function usePhotoUpload(kind: "avatar" | "cover") {
   const upload = useMutation({
     mutationFn: async (file: File) => {
       if (!user || !profile) return;
-      const url = kind === "avatar" ? await uploadAvatar(user.id, file) : await uploadCover(user.id, file);
-      await updateProfile(profile.id, kind === "avatar" ? { avatar_url: url } : { cover_url: url });
+      const url = await uploadAvatar(user.id, file);
+      await updateProfile(profile.id, { avatar_url: url });
     },
     onSuccess: async () => {
       await refreshProfile();
@@ -109,12 +111,10 @@ export type StatTarget = "reviews" | "skills" | "calendar";
  */
 export function ProfileHero({
   avatar,
-  cover,
   onEdit,
   onJump,
 }: {
   avatar: PhotoUpload;
-  cover: PhotoUpload;
   /** Opens the intro editor - name, headline and about. */
   onEdit: () => void;
   onJump: (target: StatTarget) => void;
@@ -194,20 +194,13 @@ export function ProfileHero({
 
   return (
     <HeroCard lifted={menuOpen}>
-      <HeroCover src={cover.preview ?? profile.cover_url}>
-        <PhotoPicker
-          upload={cover}
-          className="absolute right-3 top-3 inline-flex h-8 items-center gap-1.5 rounded-full bg-black/35 px-2.5 text-xs font-semibold text-white ring-1 ring-white/20 backdrop-blur transition-colors hover:bg-black/50 focus-within:ring-2 focus-within:ring-white @2xl:right-4 @2xl:top-4"
-        >
-          <Camera className="h-3.5 w-3.5" aria-hidden />
-          <span className="sr-only @lg:not-sr-only">{t("changeCover")}</span>
-        </PhotoPicker>
-      </HeroCover>
+      <HeroCover person={profile} skills={skills.data ?? []} />
 
       <HeroBody>
         <HeroTopRow
           name={profile.full_name}
           src={avatar.preview ?? profile.avatar_url}
+          tier={verificationTier(profile)}
           badge={
             <PhotoPicker
               upload={avatar}

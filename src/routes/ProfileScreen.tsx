@@ -42,8 +42,7 @@ export function ProfileScreen() {
   const activeTab = tab === "about" ? "settings" : tab;
 
   const [editor, setEditor] = useState<EditorKind | null>(null);
-  const avatar = usePhotoUpload("avatar");
-  const cover = usePhotoUpload("cover");
+  const avatar = usePhotoUpload();
 
   const sticky = useStickyTabs(tab);
   const [jumpTo, setJumpTo] = useState<"skills" | null>(null);
@@ -96,7 +95,7 @@ export function ProfileScreen() {
     <>
       <AppHeader title={t("myProfile")} />
       <PageContainer className="space-y-3 md:space-y-4">
-        <ProfileHero avatar={avatar} cover={cover} onEdit={() => setEditor("intro")} onJump={jump} />
+        <ProfileHero avatar={avatar} onEdit={() => setEditor("intro")} onJump={jump} />
 
         <StickyTabBar
           tabs={TABS.filter((x) => !x.staffOnly || profile.staff_role).map(({ id, label }) => ({ id, label: t(label) }))}

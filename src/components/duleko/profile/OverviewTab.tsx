@@ -275,8 +275,8 @@ function DetailsCard({ onEdit, className }: { onEdit: (kind: EditorKind) => void
 
 function CertificatesCard({ onEdit, className }: { onEdit: (kind: EditorKind) => void; className?: string }) {
   const { t, lang } = useI18n();
-  const { profile } = useSession();
-  const { certificates } = useMyProfileData();
+  const { profile, refreshProfile } = useSession();
+  const { certificates, skills } = useMyProfileData();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [removing, setRemoving] = useState<Certificate | null>(null);
@@ -287,6 +287,8 @@ function CertificatesCard({ onEdit, className }: { onEdit: (kind: EditorKind) =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["certificates", profile?.id] });
       setRemoving(null);
+      // An approved certificate carried the skill half of the badge.
+      if (removing?.status === "approved") void refreshProfile();
     },
     onError: (error) => toast(errorMessage(error), "error"),
   });
@@ -306,7 +308,7 @@ function CertificatesCard({ onEdit, className }: { onEdit: (kind: EditorKind) =>
         ) : list.length === 0 ? (
           <EmptyPrompt icon={Plus} title={t("addCertificate")} hint={t("certificatesHint")} onClick={() => onEdit("certificate")} />
         ) : (
-          <CertificateList certificates={list} onRemove={setRemoving} />
+          <CertificateList certificates={list} skills={skills.data ?? []} onRemove={setRemoving} />
         )}
       </SectionCard>
 

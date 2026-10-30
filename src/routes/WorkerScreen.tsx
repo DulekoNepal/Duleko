@@ -64,6 +64,7 @@ import { RequestWorkDialog } from "@/components/duleko/RequestWorkDialog";
 import { ReportDialog } from "@/components/duleko/ReportDialog";
 import { SuspendUserDialog } from "@/components/duleko/SuspendUserDialog";
 import { StaffIdDialog } from "@/components/duleko/kyc/KycStaffParts";
+import { verificationTier } from "@/components/duleko/VerifiedBadge";
 import { trackCallTap } from "@/lib/call-tracking";
 import { MenuDivider, MenuItem, MenuLabel, MenuPanel } from "@/components/ui/menu";
 import { Avatar } from "@/components/ui/avatar";
@@ -448,11 +449,12 @@ export function WorkerScreen() {
             came here to do in place of the editing controls.
             ============================================================== */}
         <HeroCard lifted={menuOpen}>
-          <HeroCover src={w.cover_url} />
+          <HeroCover person={w} skills={skillList} />
           <HeroBody>
             <HeroTopRow
               name={w.full_name}
               src={w.avatar_url}
+              tier={verificationTier(w)}
               badge={
                 online && (
                   <span className="absolute bottom-1.5 right-1.5 h-4.5 w-4.5 rounded-full border-[3px] border-surface bg-green-500 @2xl:bottom-2.5 @2xl:right-2.5">
@@ -718,7 +720,7 @@ export function WorkerScreen() {
 
                 {certList.length > 0 && (
                   <SectionCard compact icon={Award} title={t("certificates")} badge={certList.length} className="order-4 @3xl:order-none">
-                    <CertificateList certificates={certList} />
+                    <CertificateList certificates={certList} skills={skillList} />
                   </SectionCard>
                 )}
 

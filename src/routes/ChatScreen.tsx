@@ -601,6 +601,7 @@ export function ChatScreen() {
                   <VerifiedBadge
                     staffRole={other.data?.staff_role ?? summary?.otherStaffRole}
                     verified={other.data?.is_verified ?? summary?.otherIsVerified}
+                    skillVerified={other.data ? other.data.verified_skill_ids.length > 0 : summary?.otherSkillVerified}
                     size={15}
                   />
                 </span>

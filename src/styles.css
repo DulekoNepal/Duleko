@@ -422,6 +422,120 @@ html[data-keyboard="open"] .hide-with-keyboard {
   }
 }
 
+/*
+ * The Duleko profile cover (DulekoCover.tsx): stars twinkle, clouds drift,
+ * prayer flags sway, the skill medal floats inside a slowly turning ring,
+ * a sheen crosses now and then and, on staff covers, the aurora breathes.
+ * All of it stops for people who ask for less motion.
+ */
+@keyframes cover-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes cover-drift {
+  from {
+    transform: translateX(-140px);
+  }
+  to {
+    transform: translateX(760px);
+  }
+}
+@keyframes cover-sway {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(1.4deg);
+  }
+}
+@keyframes cover-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes cover-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes cover-aurora {
+  from {
+    transform: translateX(-30px) scaleY(0.9);
+  }
+  to {
+    transform: translateX(30px) scaleY(1.1);
+  }
+}
+@keyframes cover-sheen {
+  0%,
+  65% {
+    background-position: 160% 0;
+  }
+  100% {
+    background-position: -60% 0;
+  }
+}
+@keyframes cover-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 currentColor;
+  }
+  60% {
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
+.cover-twinkle {
+  animation: cover-twinkle 3s ease-in-out infinite;
+}
+.cover-drift {
+  animation: cover-drift 30s linear infinite;
+}
+.cover-sway {
+  transform-box: view-box;
+  transform-origin: 20px 30px;
+  animation: cover-sway 5s ease-in-out infinite;
+}
+.cover-spin {
+  animation: cover-spin 18s linear infinite;
+}
+.cover-float {
+  animation: cover-float 6s ease-in-out infinite;
+}
+.cover-aurora {
+  transform-box: view-box;
+  animation: cover-aurora 9s ease-in-out infinite alternate;
+}
+.cover-sheen {
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.1) 50%, transparent 70%);
+  background-size: 250% 100%;
+  animation: cover-sheen 8s ease-in-out infinite;
+}
+.cover-pulse {
+  animation: cover-pulse 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cover-twinkle,
+  .cover-drift,
+  .cover-sway,
+  .cover-spin,
+  .cover-float,
+  .cover-aurora,
+  .cover-sheen,
+  .cover-pulse {
+    animation: none;
+  }
+}
+
 /* Soft fade at both ends of a scrolling row. */
 .fade-x {
   mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);

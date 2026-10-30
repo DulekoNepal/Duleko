@@ -62,6 +62,12 @@ const KYC_ERRORS: [string, StringKey][] = [
   ["KYC_ALREADY_REVIEWED", "errKycAlreadyReviewed"],
   ["KYC_NOT_FOUND", "errKycAlreadyReviewed"],
   ["KYC_REASON_REQUIRED", "errKycReasonRequired"],
+  // Certificate checks for the skill badge (8300)
+  ["CERT_SKILL_NOT_LISTED", "errCertSkillNotListed"],
+  ["CERT_SKILL_REQUIRED", "errCertSkillRequired"],
+  ["CERT_ALREADY_REVIEWED", "errCertAlreadyReviewed"],
+  ["CERT_NOT_FOUND", "errCertAlreadyReviewed"],
+  ["CERT_REASON_REQUIRED", "errKycReasonRequired"],
   ["NAME_LOCKED_VERIFIED", "errNameLockedVerified"],
   // Work agreed over a call (6800_call_deals.sql)
   ["CALL_NOT_ALLOWED", "errCallNotAllowed"],

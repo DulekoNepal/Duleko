@@ -70,13 +70,21 @@ export interface Profile {
   call_permission: CallPermission;
   created_at: string;
   updated_at: string;
-  /** Set once staff approve this person's ID check - drives the hollow green badge. */
+  /** Set once staff approve this person's ID check. */
   is_verified: boolean;
+  /** The skills staff checked a certificate for (8300). Any one = the skill half of the badge. */
+  verified_skill_ids: string[];
   /** Set when this profile belongs to staff - drives the solid staff badge instead. */
   staff_role: StaffRole | null;
+  /** The staff member's role on the team ("Tech Lead"), for their cover. */
+  staff_title_en: string | null;
+  staff_title_ne: string | null;
 }
 
-/** A training/skill certificate a worker has chosen to show on their profile. */
+export type CertificateStatus = "pending" | "approved" | "rejected";
+export type CertificateRejection = "unclear" | "name_mismatch" | "not_valid" | "other";
+
+/** A training/skill certificate a worker has chosen to show on their profile. Staff check it (8300). */
 export interface Certificate {
   id: string;
   profile_id: string;
@@ -84,6 +92,12 @@ export interface Certificate {
   file_url: string;
   file_type: string | null;
   created_at: string;
+  /** The skill it proves - picked when uploading, or by staff when approving. */
+  skill_id: string | null;
+  status: CertificateStatus;
+  reviewed_at: string | null;
+  rejection_code: CertificateRejection | null;
+  rejection_note: string | null;
 }
 
 /** Row shape returned by the search_workers RPC. */
@@ -106,6 +120,8 @@ export interface WorkerCardData {
   distance_km: number | null;
   is_verified: boolean;
   staff_role: StaffRole | null;
+  /** Has a staff-checked certificate (8300). */
+  skill_verified?: boolean;
 }
 
 export type CancellationReason =
@@ -390,6 +406,7 @@ export interface ConversationSummary {
   otherAvatarUrl: string | null;
   otherIsOfficial: boolean;
   otherIsVerified: boolean;
+  otherSkillVerified: boolean;
   otherStaffRole: StaffRole | null;
   lastBody: string;
   lastCreatedAt: string;
@@ -560,7 +577,7 @@ export type JobOfferStatus = "pending" | "accepted" | "declined" | "withdrawn";
 export type JobPerson = Pick<
   Profile,
   "id" | "full_name" | "avatar_url" | "rating" | "rating_count" | "district" | "municipality" | "locality"
-> & { is_verified: boolean; staff_role: StaffRole | null };
+> & { is_verified: boolean; verified_skill_ids: string[]; staff_role: StaffRole | null };
 
 /**
  * A job someone posted for workers to send offers on (5800_job_board.sql).

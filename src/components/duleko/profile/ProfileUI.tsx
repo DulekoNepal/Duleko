@@ -1,13 +1,25 @@
 import { useEffect, useRef, useState } from "react";
-import { CalendarDays, ExternalLink, FileText, Image as ImageIcon, MapPin, Pencil, Star, Trash2, type LucideIcon } from "lucide-react";
-import { ProfileCover } from "@/components/duleko/ProfileParts";
+import {
+  BadgeCheck,
+  CalendarDays,
+  Clock,
+  ExternalLink,
+  FileText,
+  Image as ImageIcon,
+  MapPin,
+  Pencil,
+  Star,
+  Trash2,
+  type LucideIcon,
+} from "lucide-react";
 import { SkillTile } from "@/components/duleko/SkillIcon";
-import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
+import { VerifiedBadge, verificationTier, type VerificationTier } from "@/components/duleko/VerifiedBadge";
+import { DulekoCover } from "./DulekoCover";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PhotoLightbox } from "@/components/ui/photo-lightbox";
 import { useI18n } from "@/lib/i18n";
-import type { AvailabilityDay, Certificate, Profile, UserSkillDetail } from "@/lib/types";
+import type { AvailabilityDay, Certificate, Profile, Skill, UserSkillDetail } from "@/lib/types";
 import { cn, formatDate, formatMoney, formatNumber, locationShort, skillName } from "@/lib/utils";
 
 /**
@@ -37,24 +49,29 @@ export function HeroCard({ lifted = false, children }: { lifted?: boolean; child
   );
 }
 
-/** The cover photo. Tap it to see it whole - anyone can (the default cover has nothing to open). */
-export function HeroCover({ src, children }: { src?: string | null; children?: React.ReactNode }) {
-  const { t } = useI18n();
-  const [open, setOpen] = useState(false);
+/**
+ * The cover: Duleko's own artwork for everyone (see DulekoCover), coloured
+ * by the top skill and showing how far Duleko has checked the person.
+ */
+export function HeroCover({
+  person,
+  skills,
+}: {
+  person: Pick<Profile, "is_verified" | "verified_skill_ids" | "staff_role" | "staff_title_en" | "staff_title_ne">;
+  /** Their skills in profile order; the first verified one, else the first, is the "top skill". */
+  skills: Skill[];
+}) {
+  const { lang } = useI18n();
+  const tier = verificationTier(person);
+  const top = skills.find((s) => person.verified_skill_ids.includes(s.id)) ?? skills[0] ?? null;
+  const role = lang === "ne" ? (person.staff_title_ne ?? person.staff_title_en) : person.staff_title_en;
   return (
-    <ProfileCover src={src} className="h-28 overflow-hidden sm:rounded-t-3xl @md:h-36 @2xl:h-44 @4xl:h-52">
-      {src && (
-        // Under the camera button (it comes later in the page), over the picture.
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label={t("viewCoverPhoto")}
-          className="absolute inset-0 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
-        />
-      )}
-      {children}
-      <PhotoLightbox src={open ? (src ?? null) : null} alt={t("viewCoverPhoto")} onClose={() => setOpen(false)} />
-    </ProfileCover>
+    <DulekoCover
+      tier={tier}
+      skill={top}
+      roleTitle={role}
+      className="h-28 sm:rounded-t-3xl @md:h-36 @2xl:h-44 @4xl:h-52"
+    />
   );
 }
 
@@ -68,14 +85,24 @@ export function HeroBody({ children }: { children: React.ReactNode }) {
  * camera button on your own, the online dot on someone else's), and the
  * actions using the room beside it.
  */
+/** The ring around the profile photo: mild green, mild orange, both for staff. */
+const PHOTO_RING: Record<VerificationTier, React.CSSProperties> = {
+  staff: { background: "conic-gradient(#86efac, #fdba74, #86efac, #fdba74, #86efac)" },
+  full: { background: "#86efac" },
+  half: { background: "#fdba74" },
+  none: {},
+};
+
 export function HeroTopRow({
   name,
   src,
+  tier = "none",
   badge,
   actions,
 }: {
   name: string;
   src?: string | null;
+  tier?: VerificationTier;
   badge?: React.ReactNode;
   actions?: React.ReactNode;
 }) {
@@ -84,7 +111,15 @@ export function HeroTopRow({
   const avatar = <Avatar name={name} src={src} size={112} className="h-22! w-22! @2xl:h-30! @2xl:w-30!" />;
   return (
     <div className="flex items-start justify-between gap-3">
-      <div className="relative -mt-12 shrink-0 rounded-full bg-surface p-1 shadow-md @2xl:-mt-16">
+      <div
+        className={cn(
+          "relative -mt-12 shrink-0 rounded-full bg-surface shadow-md @2xl:-mt-16",
+          // A ring draws outside its element, so the white gap takes the
+          // inner half of the padding and the colour shows in the outer half.
+          tier === "none" ? "p-1" : "p-1.5 [&>*:first-child]:ring-[3px] [&>*:first-child]:ring-surface",
+        )}
+        style={PHOTO_RING[tier]}
+      >
         {/* A real photo opens full screen, for anyone; initials have nothing to show. */}
         {src ? (
           <button
@@ -112,7 +147,17 @@ export function HeroIdentity({
 }: {
   person: Pick<
     Profile,
-    "full_name" | "bio" | "staff_role" | "is_verified" | "created_at" | "province" | "district" | "municipality" | "ward" | "locality"
+    | "full_name"
+    | "bio"
+    | "staff_role"
+    | "is_verified"
+    | "verified_skill_ids"
+    | "created_at"
+    | "province"
+    | "district"
+    | "municipality"
+    | "ward"
+    | "locality"
   >;
 }) {
   const { t, lang } = useI18n();
@@ -122,7 +167,12 @@ export function HeroIdentity({
       {/* Wraps rather than truncates - a name is never cut short. */}
       <h2 className="flex min-w-0 items-center gap-2 text-xl font-bold leading-tight tracking-tight text-slate-900 @2xl:text-2xl">
         <span className="min-w-0 break-words">{person.full_name}</span>
-        <VerifiedBadge staffRole={person.staff_role} verified={person.is_verified} size={20} />
+        <VerifiedBadge
+          staffRole={person.staff_role}
+          verified={person.is_verified}
+          skillVerified={person.verified_skill_ids.length > 0}
+          size={22}
+        />
       </h2>
       {person.bio && <p className="mt-1 text-[15px] leading-snug text-slate-700">{person.bio}</p>}
       <ul className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-slate-500">
@@ -469,19 +519,42 @@ export function SkillRateList({ skills, onRateMissing }: { skills: UserSkillDeta
   );
 }
 
-/** Certificates, each opening its file. `onRemove` adds a delete button (your own profile). */
+/** Why a certificate wasn't accepted, as one sentence. */
+function certReason(c: Certificate, t: ReturnType<typeof useI18n>["t"]): string | null {
+  switch (c.rejection_code) {
+    case "unclear":
+      return t("kycReasonUnclear");
+    case "name_mismatch":
+      return t("certReasonNameMismatch");
+    case "not_valid":
+      return t("certReasonNotValid");
+    default:
+      return null;
+  }
+}
+
+/**
+ * Certificates, each opening its file and showing whether Duleko checked
+ * it. `onRemove` adds a delete button and means it's your own profile:
+ * only you see "Being checked" and why one wasn't accepted.
+ */
 export function CertificateList({
   certificates,
+  skills = [],
   onRemove,
 }: {
   certificates: Certificate[];
+  /** The person's skills, to name the one each certificate proves. */
+  skills?: Skill[];
   onRemove?: (certificate: Certificate) => void;
 }) {
   const { t, lang } = useI18n();
+  const own = Boolean(onRemove);
   return (
     <ul className="-my-1 divide-y divide-slate-100">
       {certificates.map((c) => {
         const Icon = c.file_type === "application/pdf" ? FileText : ImageIcon;
+        const skill = skills.find((s) => s.id === c.skill_id);
         return (
           <li key={c.id} className="group flex min-w-0 items-center gap-3 py-2">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sun-400/15 text-sun-500">
@@ -497,7 +570,26 @@ export function CertificateList({
                 <span className="truncate">{c.title}</span>
                 <ExternalLink className="h-3 w-3 shrink-0 text-slate-400" aria-hidden />
               </span>
-              <span className="block text-xs text-slate-500">{formatDate(c.created_at.slice(0, 10), lang)}</span>
+              <span className="block text-xs text-slate-500">
+                {[skill && skillName(skill, lang), formatDate(c.created_at.slice(0, 10), lang)].filter(Boolean).join(" · ")}
+              </span>
+              {c.status === "approved" ? (
+                <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-700">
+                  <BadgeCheck className="h-3 w-3" aria-hidden />
+                  {t("certStatusApproved")}
+                </span>
+              ) : own && c.status === "pending" ? (
+                <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                  <Clock className="h-3 w-3" aria-hidden />
+                  {t("certStatusPending")}
+                </span>
+              ) : own && c.status === "rejected" ? (
+                <span className="mt-1 block text-[11px] leading-snug text-red-600">
+                  <span className="font-semibold">{t("certStatusRejected")}</span>
+                  {" · "}
+                  {[certReason(c, t), c.rejection_note].filter(Boolean).join(" ")}
+                </span>
+              ) : null}
             </a>
             {onRemove && (
               <button

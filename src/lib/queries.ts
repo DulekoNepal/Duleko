@@ -8,6 +8,7 @@ import type {
   Bid,
   CancellationReason,
   Certificate,
+  CertificateRejection,
   ChatMessage,
   ConversationSummary,
   Engagement,
@@ -56,10 +57,12 @@ const PROFILE_COLUMNS =
 // tables have a second FK back to profiles (verified_by/granted_by), so
 // the embed must name the profile_id constraint explicitly or PostgREST
 // refuses the query as ambiguous.
-const PROFILE_COLUMNS_WITH_BADGES =
-  PROFILE_COLUMNS +
+const BADGE_COLUMNS =
   ",profile_verifications!profile_verifications_profile_id_fkey(verified_at)" +
-  ",staff_roles!staff_roles_profile_id_fkey(role)";
+  ",skill_verifications!skill_verifications_profile_id_fkey(skill_id)";
+
+const PROFILE_COLUMNS_WITH_BADGES =
+  PROFILE_COLUMNS + BADGE_COLUMNS + ",staff_roles!staff_roles_profile_id_fkey(role,title_en,title_ne)";
 
 const PARTY_COLUMNS = "id,full_name,avatar_url,rating,rating_count";
 
@@ -83,16 +86,23 @@ function one<T>(value: T | T[] | null | undefined): T | null {
  */
 function mapProfileRow(row: unknown): Profile | null {
   if (!row) return null;
-  const { profile_verifications, staff_roles, ...rest } = row as Record<string, unknown> & {
+  const { profile_verifications, skill_verifications, staff_roles, ...rest } = row as Record<string, unknown> & {
     profile_verifications?: { verified_at: string } | { verified_at: string }[] | null;
-    staff_roles?: { role: StaffRole } | { role: StaffRole }[] | null;
+    skill_verifications?: { skill_id: string }[] | null;
+    staff_roles?: StaffRoleRow | StaffRoleRow[] | null;
   };
+  const staff = one(staff_roles);
   return {
-    ...(rest as Omit<Profile, "is_verified" | "staff_role">),
+    ...(rest as Omit<Profile, "is_verified" | "verified_skill_ids" | "staff_role" | "staff_title_en" | "staff_title_ne">),
     is_verified: one(profile_verifications) != null,
-    staff_role: one(staff_roles)?.role ?? null,
+    verified_skill_ids: [...new Set((skill_verifications ?? []).map((v) => v.skill_id))],
+    staff_role: staff?.role ?? null,
+    staff_title_en: staff?.title_en ?? null,
+    staff_title_ne: staff?.title_ne ?? null,
   };
 }
+
+type StaffRoleRow = { role: StaffRole; title_en?: string | null; title_ne?: string | null };
 
 // ---------------------------------------------------------------------
 // Profile
@@ -445,6 +455,7 @@ export interface MapPerson {
   is_available: boolean;
   is_verified: boolean;
   staff_role: StaffRole | null;
+  skill_verified?: boolean;
   skills: Skill[];
   lat: number;
   lng: number;
@@ -1495,13 +1506,15 @@ export async function getLatestKyc(profileId: string): Promise<KycQueueItem | nu
 }
 
 /** Staff: how many ID checks are waiting. */
+/** Everything waiting in ID checks: IDs plus certificates (8300). */
 export async function countKycQueue(): Promise<number> {
-  const { count, error } = await supabase
-    .from("kyc_submissions")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "pending");
-  if (error) throw error;
-  return count ?? 0;
+  const [ids, certificates] = await Promise.all([
+    supabase.from("kyc_submissions").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("certificates").select("id", { count: "exact", head: true }).eq("status", "pending"),
+  ]);
+  if (ids.error) throw ids.error;
+  if (certificates.error) throw certificates.error;
+  return (ids.count ?? 0) + (certificates.count ?? 0);
 }
 
 /** Signed links to ID photos, by path. */
@@ -1579,27 +1592,17 @@ export async function uploadAvatar(userId: string, original: File): Promise<stri
   return data.publicUrl;
 }
 
-/** Cover photo shown behind the avatar - workers use it to show a work-site photo. */
-export async function uploadCover(userId: string, original: File): Promise<string> {
-  const file = await shrinkImage(original, IMAGE_MAX_SIDE.cover);
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-  const path = `${userId}/cover-${Date.now()}.${ext}`;
-  const { error } = await supabase.storage
-    .from("covers")
-    .upload(path, file, { upsert: true, cacheControl: IMMUTABLE_CACHE, contentType: file.type });
-  if (error) throw error;
-  const { data } = supabase.storage.from("covers").getPublicUrl(path);
-  return data.publicUrl;
-}
-
 // ---------------------------------------------------------------------
 // Certificates (optional proof of training, shown on the profile)
 // ---------------------------------------------------------------------
+const CERTIFICATE_COLUMNS =
+  "id,profile_id,title,file_url,file_type,created_at,skill_id,status,reviewed_at,rejection_code,rejection_note";
+
 export async function listCertificates(profileId: string): Promise<Certificate[]> {
   return unwrap(
     await supabase
       .from("certificates")
-      .select("id,profile_id,title,file_url,file_type,created_at")
+      .select(CERTIFICATE_COLUMNS)
       .eq("profile_id", profileId)
       .order("created_at", { ascending: false }),
   );
@@ -1609,6 +1612,7 @@ export async function addCertificate(
   userId: string,
   profileId: string,
   title: string,
+  skillId: string | null,
   original: File,
 ): Promise<Certificate> {
   const file = await shrinkImage(original, IMAGE_MAX_SIDE.certificate);
@@ -1622,14 +1626,76 @@ export async function addCertificate(
   return unwrap(
     await supabase
       .from("certificates")
-      .insert({ profile_id: profileId, title: title.trim(), file_url: pub.publicUrl, file_type: file.type })
-      .select("id,profile_id,title,file_url,file_type,created_at")
+      .insert({ profile_id: profileId, title: title.trim(), skill_id: skillId, file_url: pub.publicUrl, file_type: file.type })
+      .select(CERTIFICATE_COLUMNS)
       .single(),
   );
 }
 
 export async function removeCertificate(id: string): Promise<void> {
   const { error } = await supabase.from("certificates").delete().eq("id", id);
+  if (error) throw error;
+}
+
+/** A certificate waiting in the staff queue, with who sent it and the skills they list. */
+export interface CertificateToCheck extends Certificate {
+  owner: {
+    id: string;
+    full_name: string;
+    avatar_url: string | null;
+    skills: UserSkillDetail[];
+  };
+}
+
+/** Staff: certificates waiting for a check, oldest first. */
+export async function listPendingCertificates(): Promise<CertificateToCheck[]> {
+  const { data, error } = await supabase
+    .from("certificates")
+    .select(
+      CERTIFICATE_COLUMNS +
+        ",owner:profiles!certificates_profile_id_fkey(id,full_name,avatar_url," +
+        "user_skills(custom_label,custom_note,rate_amount,rate_unit,skills(id,name_en,name_ne,emoji,category,sort_order)))",
+    )
+    .eq("status", "pending")
+    .order("created_at", { ascending: true })
+    .limit(100);
+  if (error) throw error;
+  type Row = Certificate & {
+    owner: {
+      id: string;
+      full_name: string;
+      avatar_url: string | null;
+      user_skills: (Omit<UserSkillDetail, keyof Skill> & { skills: Skill | Skill[] | null })[];
+    } | null;
+  };
+  return ((data ?? []) as unknown as Row[]).flatMap((row) => {
+    if (!row.owner) return [];
+    const { user_skills, ...owner } = row.owner;
+    const skills = user_skills
+      .flatMap(({ skills: s, ...us }) => {
+        const skill = one(s);
+        return skill ? [{ ...skill, ...us }] : [];
+      })
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    return [{ ...row, owner: { ...owner, skills } }];
+  });
+}
+
+/** Staff: approve a certificate for one of the member's skills, or turn it down. */
+export async function reviewCertificate(input: {
+  certificateId: string;
+  approve: boolean;
+  skillId?: string | null;
+  reason?: CertificateRejection | null;
+  note?: string | null;
+}): Promise<void> {
+  const { error } = await supabase.rpc("review_certificate", {
+    p_certificate: input.certificateId,
+    p_approve: input.approve,
+    p_skill: input.skillId ?? null,
+    p_reason: input.reason ?? null,
+    p_note: input.note?.trim() || null,
+  });
   if (error) throw error;
 }
 
@@ -1910,6 +1976,7 @@ interface ConversationParty {
   avatar_url: string | null;
   is_official: boolean;
   profile_verifications?: { verified_at: string } | { verified_at: string }[] | null;
+  skill_verifications?: { skill_id: string }[] | null;
   staff_roles?: { role: StaffRole } | { role: StaffRole }[] | null;
 }
 
@@ -1924,12 +1991,12 @@ export async function listConversations(myProfileId: string): Promise<Conversati
     .select(
       "profile_a,profile_b,sender_profile_id,body,created_at,read_at,deleted_at," +
         "message_reactions(profile_id,emoji)," +
-        "a:profiles!messages_profile_a_fkey(id,full_name,avatar_url,is_official," +
-        "profile_verifications!profile_verifications_profile_id_fkey(verified_at)," +
-        "staff_roles!staff_roles_profile_id_fkey(role))," +
-        "b:profiles!messages_profile_b_fkey(id,full_name,avatar_url,is_official," +
-        "profile_verifications!profile_verifications_profile_id_fkey(verified_at)," +
-        "staff_roles!staff_roles_profile_id_fkey(role))",
+        "a:profiles!messages_profile_a_fkey(id,full_name,avatar_url,is_official" +
+        BADGE_COLUMNS +
+        ",staff_roles!staff_roles_profile_id_fkey(role))," +
+        "b:profiles!messages_profile_b_fkey(id,full_name,avatar_url,is_official" +
+        BADGE_COLUMNS +
+        ",staff_roles!staff_roles_profile_id_fkey(role))",
     )
     .or(`profile_a.eq.${myProfileId},profile_b.eq.${myProfileId}`)
     .order("created_at", { ascending: false })
@@ -1950,6 +2017,7 @@ export async function listConversations(myProfileId: string): Promise<Conversati
       otherAvatarUrl: other.avatar_url,
       otherIsOfficial: Boolean(other.is_official),
       otherIsVerified: one(other.profile_verifications) != null,
+      otherSkillVerified: (other.skill_verifications?.length ?? 0) > 0,
       otherStaffRole: one(other.staff_roles)?.role ?? null,
       lastBody: row.body,
       lastCreatedAt: row.created_at,
@@ -2238,7 +2306,7 @@ export async function reviewFeePayment(id: string, accept: boolean, reason?: str
 // ---------------------------------------------------------------------
 const JOB_PERSON_COLUMNS =
   "id,full_name,avatar_url,rating,rating_count,district,municipality,locality" +
-  ",profile_verifications!profile_verifications_profile_id_fkey(verified_at)" +
+  BADGE_COLUMNS +
   ",staff_roles!staff_roles_profile_id_fkey(role)";
 
 const JOB_POST_COLUMNS =

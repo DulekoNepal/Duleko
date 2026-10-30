@@ -520,7 +520,11 @@ function PersonLine({ person, size = 44 }: { person: JobPerson; size?: number })
           className="flex min-w-0 items-center gap-1 text-sm font-semibold text-slate-900 hover:underline"
         >
           <span className="truncate">{person.full_name}</span>
-          <VerifiedBadge staffRole={person.staff_role} verified={person.is_verified} />
+          <VerifiedBadge
+            staffRole={person.staff_role}
+            verified={person.is_verified}
+            skillVerified={person.verified_skill_ids.length > 0}
+          />
         </Link>
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 text-xs text-slate-500">
           <RatingLine rating={person.rating} count={person.rating_count} className="text-xs" />

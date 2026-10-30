@@ -358,7 +358,12 @@ function PersonSheet({ person, onClose }: { person: MapPerson; onClose: () => vo
         <span className="min-w-0 flex-1">
           <span className="flex min-w-0 items-center gap-1">
             <span className="truncate text-sm font-semibold text-slate-900">{person.full_name}</span>
-            <VerifiedBadge staffRole={person.staff_role} verified={person.is_verified} size={14} />
+            <VerifiedBadge
+              staffRole={person.staff_role}
+              verified={person.is_verified}
+              skillVerified={person.skill_verified}
+              size={14}
+            />
           </span>
           {skills && <span className="block truncate text-xs text-slate-600">{skills}</span>}
           <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">

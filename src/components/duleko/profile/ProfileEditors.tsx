@@ -522,7 +522,7 @@ function SkillsEditor({ open, onClose }: { open: boolean; onClose: () => void })
 }
 
 // ---------------------------------------------------------------------
-// Certificate: name it, pick the file
+// Certificate: the skill it proves, its name, the file. Staff check it (8300).
 // ---------------------------------------------------------------------
 
 function CertificateEditor({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -530,6 +530,9 @@ function CertificateEditor({ open, onClose }: { open: boolean; onClose: () => vo
   const { user, profile } = useSession();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { skills } = useMyProfileData();
+  const mySkills = skills.data ?? [];
+  const [skillId, setSkillId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
@@ -537,10 +540,14 @@ function CertificateEditor({ open, onClose }: { open: boolean; onClose: () => vo
     if (!open) return;
     setTitle("");
     setFile(null);
+    setSkillId(null);
   }, [open]);
 
+  // With one skill there's nothing to choose.
+  const chosenSkill = skillId ?? (mySkills.length === 1 ? mySkills[0].id : null);
+
   const upload = useMutation({
-    mutationFn: () => addCertificate(user!.id, profile!.id, title.trim(), file!),
+    mutationFn: () => addCertificate(user!.id, profile!.id, title.trim(), chosenSkill, file!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["certificates", profile?.id] });
       toast(t("profileSaved"));
@@ -560,7 +567,7 @@ function CertificateEditor({ open, onClose }: { open: boolean; onClose: () => vo
     setFile(next);
   }
 
-  const ready = Boolean(title.trim() && file);
+  const ready = Boolean(title.trim() && file && chosenSkill);
   const FileIcon = file?.type === "application/pdf" ? FileText : ImageIcon;
 
   return (
@@ -578,7 +585,41 @@ function CertificateEditor({ open, onClose }: { open: boolean; onClose: () => vo
         />
       }
     >
-      <p className="mb-3.5 text-sm text-slate-600">{t("certificatesHint")}</p>
+      <p className="mb-3.5 flex gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-sm text-brand-800">
+        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+        {t("certCheckHint")}
+      </p>
+      <div className="mb-3.5">
+        <Label>{t("certSkillLabel")}</Label>
+        {skills.isSuccess && mySkills.length === 0 ? (
+          <p className="mt-1.5 text-sm text-slate-500">{t("certNeedSkill")}</p>
+        ) : (
+          <div role="radiogroup" aria-label={t("certSkillLabel")} className="mt-1.5 flex flex-wrap gap-2">
+            {mySkills.map((s) => {
+              const on = chosenSkill === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => setSkillId(s.id)}
+                  className={cn(
+                    "inline-flex min-h-10 items-center gap-2 rounded-full border py-1 pl-1 pr-3.5 text-sm font-medium transition-colors",
+                    on
+                      ? "border-brand-600 bg-brand-50 text-brand-800 ring-1 ring-brand-600"
+                      : "border-slate-200 bg-surface text-slate-700 hover:border-brand-300",
+                  )}
+                >
+                  <SkillTile skillId={s.id} category={s.category} className="h-8 w-8 rounded-full bg-slate-50" />
+                  {s.custom_label || skillName(s, lang)}
+                  {on && <Check className="h-3.5 w-3.5" aria-hidden />}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
       <Field label={t("certificateTitlePlaceholder")}>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder={t("profileCertNamePlaceholder")} />
       </Field>

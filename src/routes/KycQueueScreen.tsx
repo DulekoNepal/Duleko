@@ -5,6 +5,7 @@ import { Check, History, Hourglass, ShieldCheck, X } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { SectionCard } from "@/components/duleko/ProfileParts";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
+import { CertificateChecks } from "@/components/duleko/kyc/CertificateChecks";
 import { KYC_REASON_SHORT, KYC_REJECTION_CODES } from "@/components/duleko/kyc/KycParts";
 import { KycDocumentList, PhotoViewer, StaffIdDialog, type Photo } from "@/components/duleko/kyc/KycStaffParts";
 import { Avatar } from "@/components/ui/avatar";
@@ -223,6 +224,10 @@ export function KycQueueScreen() {
                   </ul>
                 )}
               </SectionCard>
+            </div>
+
+            <div className="mt-3 md:mt-4">
+              <CertificateChecks onOpenPhoto={setViewing} />
             </div>
           </div>
         )}

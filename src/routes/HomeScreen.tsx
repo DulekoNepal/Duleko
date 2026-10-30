@@ -773,7 +773,7 @@ function NearbyPeople({ area, where }: { area: string | null; where: string }) {
           lat,
           lng,
         });
-        found.push(...batch.filter((w) => w.is_verified || w.staff_role));
+        found.push(...batch.filter((w) => w.is_verified || w.skill_verified || w.staff_role));
         if (batch.length < VERIFIED_PAGE_SIZE) break;
       }
       return found.slice(0, NEARBY_COUNT);
@@ -919,7 +919,13 @@ function PersonCard({ worker }: { worker: WorkerCardData }) {
       <span className="flex flex-1 flex-col p-2.5">
         <span className="flex min-w-0 items-center gap-1">
           <span className="truncate text-sm font-semibold leading-tight text-slate-900">{worker.full_name}</span>
-          <VerifiedBadge staffRole={worker.staff_role} verified={worker.is_verified} size={13} className="shrink-0" />
+          <VerifiedBadge
+            staffRole={worker.staff_role}
+            verified={worker.is_verified}
+            skillVerified={worker.skill_verified}
+            size={13}
+            className="shrink-0"
+          />
         </span>
         {skill && (
           <span className="mt-1 flex min-w-0 items-center gap-1 text-xs text-slate-600">

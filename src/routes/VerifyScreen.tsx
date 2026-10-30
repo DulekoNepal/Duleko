@@ -1,8 +1,22 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useCanGoBack, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, BadgeCheck, Camera, Check, ChevronDown, Hourglass, Lock, ShieldAlert, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Award,
+  BadgeCheck,
+  Camera,
+  Check,
+  ChevronDown,
+  Hourglass,
+  IdCard,
+  Lock,
+  ShieldAlert,
+  X,
+} from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
+import { ProfileEditors } from "@/components/duleko/profile/ProfileEditors";
+import { useMyProfileData } from "@/components/duleko/profile/use-my-profile-data";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { VerifiedBadge } from "@/components/duleko/VerifiedBadge";
 import { KYC_DOC_ICON, KYC_DOC_LABEL, useMyKyc, useRejectionText } from "@/components/duleko/kyc/KycParts";
@@ -12,12 +26,12 @@ import { Button } from "@/components/ui/button";
 import { CardSkeleton, ErrorState } from "@/components/ui/states";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, type StringKey } from "@/lib/i18n";
 import { MAX_PHOTO_INPUT_BYTES } from "@/lib/image";
 import { KYC_DOC_TYPES, kycHasBack, submitKyc, type KycDraft } from "@/lib/queries";
 import { errorMessage } from "@/lib/supabase";
 import type { KycDocType, KycSubmission } from "@/lib/types";
-import { cn, formatNumber, relativeTime } from "@/lib/utils";
+import { cn, formatNumber, relativeTime, skillName } from "@/lib/utils";
 
 const ACCEPT = "image/jpeg,image/png,image/webp";
 
@@ -76,6 +90,7 @@ export function VerifyScreen() {
       <AppHeader title={t("kycTitle")} subtitle={t("kycSubtitle")} back={<BackButton />} />
       <PageContainer>
         <div className="mx-auto max-w-xl space-y-3">
+          {!profile.staff_role && <VerificationSteps idPending={latest?.status === "pending"} />}
           {profile.staff_role ? (
             <StatusPanel
               icon={<VerifiedBadge staffRole={profile.staff_role} size={28} />}
@@ -89,7 +104,7 @@ export function VerifyScreen() {
           ) : profile.is_verified ? (
             <>
               <StatusPanel
-                icon={<VerifiedBadge verified size={28} />}
+                icon={<VerifiedBadge verified skillVerified={profile.verified_skill_ids.length > 0} size={28} />}
                 title={t("kycVerifiedTitle")}
                 body={t("kycVerifiedBody")}
               >
@@ -129,6 +144,93 @@ export function VerifyScreen() {
         </div>
       </PageContainer>
     </>
+  );
+}
+
+type StepState = "done" | "waiting" | "todo";
+
+const STEP_LABEL: Record<StepState, StringKey> = {
+  done: "verifyStepDone",
+  waiting: "verifyStepWaiting",
+  todo: "verifyStepTodo",
+};
+
+/**
+ * The two checks behind the badge (8300): an ID and a skill certificate.
+ * One gives the orange badge, both the green one. The certificate step
+ * opens the same sheet as Profile's Certificates card.
+ */
+function VerificationSteps({ idPending }: { idPending: boolean }) {
+  const { t, lang } = useI18n();
+  const { profile } = useSession();
+  const { certificates, skills } = useMyProfileData();
+  const [adding, setAdding] = useState(false);
+  if (!profile) return null;
+
+  const id: StepState = profile.is_verified ? "done" : idPending ? "waiting" : "todo";
+  const skill: StepState =
+    profile.verified_skill_ids.length > 0
+      ? "done"
+      : certificates.data?.some((c) => c.status === "pending")
+        ? "waiting"
+        : "todo";
+  const verifiedNames = (skills.data ?? [])
+    .filter((s) => profile.verified_skill_ids.includes(s.id))
+    .map((s) => s.custom_label || skillName(s, lang))
+    .join(", ");
+
+  const steps = [
+    { key: "id", icon: IdCard, label: t("verifyStepId"), state: id },
+    { key: "skill", icon: Award, label: t("verifyStepSkill"), state: skill },
+  ];
+
+  return (
+    <section className="animate-in-up rounded-2xl border border-slate-200 bg-surface p-4 shadow-sm">
+      <div className="flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-slate-900">{t("verifyLevelsTitle")}</h3>
+        <VerifiedBadge verified={profile.is_verified} skillVerified={profile.verified_skill_ids.length > 0} size={18} />
+      </div>
+      <p className="mt-0.5 text-xs text-slate-500">{t("verifyLevelsBody")}</p>
+      <ol className="mt-3 grid grid-cols-2 gap-2">
+        {steps.map(({ key, icon: Icon, label, state }) => (
+          <li
+            key={key}
+            className={cn(
+              "flex items-center gap-2.5 rounded-xl px-3 py-2.5 ring-1",
+              state === "done" ? "bg-brand-50 ring-brand-200" : "bg-slate-50 ring-slate-200",
+            )}
+          >
+            <Icon className={cn("h-4 w-4 shrink-0", state === "done" ? "text-brand-700" : "text-slate-400")} aria-hidden />
+            <span className="min-w-0">
+              <span className="block truncate text-[13px] font-semibold text-slate-900">{label}</span>
+              <span
+                className={cn(
+                  "block text-[11px] font-medium",
+                  state === "done" ? "text-brand-700" : state === "waiting" ? "text-accent-600" : "text-slate-500",
+                )}
+              >
+                {t(STEP_LABEL[state])}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ol>
+
+      {skill === "done" ? (
+        <p className="mt-3 text-xs text-brand-700">{t("verifySkillDone", { skills: verifiedNames })}</p>
+      ) : skill === "todo" ? (
+        <div className="mt-3 rounded-xl border border-dashed border-slate-300 p-3">
+          <p className="text-sm font-semibold text-slate-900">{t("verifySkillTitle")}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-slate-500">{t("verifySkillBody")}</p>
+          <Button size="sm" variant="outline" className="mt-2.5" onClick={() => setAdding(true)}>
+            <Award className="h-3.5 w-3.5" aria-hidden />
+            {t("verifySkillAdd")}
+          </Button>
+        </div>
+      ) : null}
+
+      <ProfileEditors open={adding ? "certificate" : null} onClose={() => setAdding(false)} />
+    </section>
   );
 }
 
