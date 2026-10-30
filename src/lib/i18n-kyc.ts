@@ -117,7 +117,7 @@ export const kycStrings = {
 
   // ---- staff: ID checks (/staff/verify) -------------------------------------
   kycQueueTitle: ["ID checks", "परिचयपत्र जाँच"],
-  kycQueueSubtitle: ["Check each ID, then give the verified badge", "हरेक परिचयपत्र जाँचेर प्रमाणित ब्याज दिनुहोस्"],
+  kycQueueSubtitle: ["Check IDs and skill certificates for the badge", "ब्याजका लागि परिचयपत्र र सीपका प्रमाणपत्र जाँच्नुहोस्"],
   kycQueueWaiting: ["Waiting", "जाँच्न बाँकी"],
   kycQueueHowTo: [
     "Approving gives the verified badge. Approve only when the name matches the profile, the face matches the profile photo, and the ID looks real and readable.",

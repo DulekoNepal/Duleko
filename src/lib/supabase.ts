@@ -76,6 +76,9 @@ const KYC_ERRORS: [string, StringKey][] = [
   ["CALL_BAD_AMOUNT", "errCallBadAmount"],
   ["CALL_DEAL_NOT_FOUND", "errCallNotFound"],
   ["CALL_DEAL_ANSWERED", "errCallDealAnswered"],
+  // Staff settle disputed deals (8400)
+  ["CALL_DEAL_SETTLED", "errDealSettled"],
+  ["CALL_DEAL_OWN", "errDealOwn"],
   ["AGE_LOCKED_VERIFIED", "errAgeLockedVerified"],
   // No phone numbers or emojis in bios, posts and the like (8200)
   ["TEXT_HAS_PHONE", "errTextHasPhone"],

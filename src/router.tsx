@@ -217,6 +217,18 @@ const staffActivityItemRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/ActivityDetailScreens"), "ActivityItemScreen"),
 });
 
+// Staff: deals agreed over a call - disputes to settle first (8400).
+export type CallDealsView = "disputed" | "waiting" | "settled" | "all";
+const staffDealsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/staff/deals",
+  validateSearch: (search: Record<string, unknown>): { view?: CallDealsView; range?: "last_30_days" } => ({
+    view: search.view === "waiting" || search.view === "settled" || search.view === "all" ? search.view : undefined,
+    range: search.range === "last_30_days" ? "last_30_days" : undefined,
+  }),
+  component: lazyRouteComponent(() => import("@/routes/CallDealsScreen"), "CallDealsScreen"),
+});
+
 // Get verified: send your ID for the verified badge.
 const verifyRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -346,6 +358,7 @@ const routeTree = rootRoute.addChildren([
   staffActivityRoute,
   staffActivityListRoute,
   staffActivityItemRoute,
+  staffDealsRoute,
   verifyRoute,
   staffVerifyRoute,
   moderationRoute,

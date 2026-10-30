@@ -944,6 +944,57 @@ export async function removeCallDeal(dealId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Which call deals the Call deals screen lists (8400). */
+export type CallDealView = "disputed" | "waiting" | "settled" | "all";
+
+/** A call deal on the Call deals screen, with both people and how it ended. */
+export interface StaffCallDealRow extends StaffCallDeal {
+  hirer_photo: string | null;
+  worker_photo: string | null;
+  rating: number | null;
+  comment: string | null;
+  confirm_by: string;
+  worker_answered_at: string | null;
+  settlement: "counted" | "no_deal" | null;
+  settled_at: string | null;
+  /** Who settled or removed it. */
+  settled_by_name: string | null;
+  settle_note: string | null;
+}
+
+export const CALL_DEALS_PAGE = 20;
+
+/**
+ * Staff: one page of call deals for a view - disputes to settle, ones
+ * waiting on the worker, settled, or all - and how many there are in all.
+ * `since` keeps deals reported from then on (null = all time).
+ */
+export async function listStaffCallDeals(
+  view: CallDealView,
+  since: string | null,
+  page: number,
+): Promise<{ rows: StaffCallDealRow[]; total: number }> {
+  const { data, error } = await supabase.rpc("staff_call_deals", {
+    p_view: view,
+    p_since: since,
+    p_limit: CALL_DEALS_PAGE,
+    p_offset: page * CALL_DEALS_PAGE,
+  });
+  if (error) throw error;
+  const rows = ((data ?? []) as (StaffCallDealRow & { total: number })[]).map(({ total: _, ...d }) => ({
+    ...d,
+    amount: d.amount == null ? null : Number(d.amount),
+  }));
+  const total = Number((data as { total?: number }[] | null)?.[0]?.total ?? 0);
+  return { rows, total };
+}
+
+/** Staff: settle a disputed deal - count it after all, or confirm there was no deal. Both people are told. */
+export async function settleCallDeal(dealId: string, count: boolean, note?: string): Promise<void> {
+  const { error } = await supabase.rpc("settle_call_deal", { p_deal: dealId, p_count: count, p_note: note?.trim() || null });
+  if (error) throw error;
+}
+
 /** A person on the staff activity pages (7500) - no phone number. */
 export interface ActivityPerson {
   id: string;
@@ -1007,6 +1058,11 @@ export interface ActivityItem {
   confirm_by?: string;
   worker_answered_at?: string | null;
   removed_by?: ActivityPerson | null;
+  /** How staff settled a dispute (8400). */
+  settlement?: "counted" | "no_deal" | null;
+  settled_at?: string | null;
+  settled_by?: ActivityPerson | null;
+  settle_note?: string | null;
   call_id?: string | null;
   review_id?: string | null;
   // review (and call -> deal)

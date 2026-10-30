@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Segmented } from "@/components/ui/segmented";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
@@ -48,6 +50,7 @@ export function StaffTab() {
   const { profile } = useSession();
   const navigate = useNavigate();
   const isStaff = Boolean(profile?.staff_role);
+  const [range, setRange] = useState<"last_30_days" | "all_time">("last_30_days");
 
   const kyc = useQuery({ queryKey: ["kyc-queue-count"], queryFn: countKycQueue, enabled: isStaff });
   const reports = useQuery({ queryKey: ["open-reports"], queryFn: listOpenReports, enabled: isStaff });
@@ -57,7 +60,7 @@ export function StaffTab() {
 
   if (!profile?.staff_role) return null;
 
-  const month = stats.data?.last_30_days;
+  const numbers = stats.data?.[range];
   const disputed = stats.data?.disputed_deals ?? 0;
   const waitingDeals = stats.data?.waiting_deals ?? 0;
 
@@ -67,7 +70,7 @@ export function StaffTab() {
     label: string;
     count: number | undefined;
     hint: string;
-    to: "/staff/verify" | "/moderation" | "/staff/fees" | "/staff/activity";
+    to: "/staff/verify" | "/moderation" | "/staff/fees" | "/staff/deals";
   }[] = [
     {
       key: "kyc",
@@ -97,9 +100,10 @@ export function StaffTab() {
       key: "deals",
       icon: Handshake,
       label: t("staffQueueDeals"),
+      // Only disputes nobody has settled yet (8400) - this can reach "All clear".
       count: stats.data ? disputed : undefined,
-      hint: waitingDeals > 0 ? t("staffQueueDealsWaiting", { count: formatNumber(waitingDeals, lang) }) : t("staffQueueDealsHint"),
-      to: "/staff/activity",
+      hint: t("staffQueueDealsHint"),
+      to: "/staff/deals",
     },
   ];
   const loaded = queue.every((q) => q.count !== undefined);
@@ -108,20 +112,20 @@ export function StaffTab() {
   return (
     <div className="space-y-5">
       {/* Who you are here, and how much is waiting. */}
-      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-surface p-3.5 shadow-sm">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-          <ShieldCheck className="h-5 w-5" aria-hidden />
+      <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-surface p-3 shadow-sm sm:gap-3 sm:rounded-2xl sm:p-3.5">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 sm:h-10 sm:w-10 sm:rounded-xl">
+          <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-900">{t("staffDashboard")}</p>
-          <p className="text-xs leading-snug text-slate-500">
+          <p className="text-[13px] font-semibold text-slate-900 sm:text-sm">{t("staffDashboard")}</p>
+          <p className="text-[11px] leading-snug text-slate-500 sm:text-xs">
             {t("staffSignedInAs", { role: t(ROLE_LABEL[profile.staff_role]) })}
           </p>
         </div>
         {loaded && (
           <span
             className={cn(
-              "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold",
+              "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold sm:px-2.5 sm:py-1 sm:text-xs",
               waiting > 0 ? "bg-amber-50 text-amber-800" : "bg-green-50 text-green-800",
             )}
           >
@@ -143,34 +147,43 @@ export function StaffTab() {
                 key={key}
                 to={to}
                 className={cn(
-                  "group flex min-w-0 flex-col rounded-2xl border p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
+                  "group flex min-w-0 flex-col rounded-xl border p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:rounded-2xl sm:p-3",
                   busy ? "border-amber-200 bg-amber-50/60 hover:border-amber-300" : "border-slate-200 bg-surface hover:border-brand-300",
                 )}
               >
                 <span className="flex items-center justify-between gap-2">
                   <span
                     className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-lg",
+                      "flex h-7 w-7 items-center justify-center rounded-lg sm:h-8 sm:w-8",
                       busy ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500",
                     )}
                   >
-                    <Icon className="h-4 w-4" aria-hidden />
+                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
                   </span>
-                  <ChevronRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                  <ChevronRight
+                    className="h-3.5 w-3.5 text-slate-300 transition-transform group-hover:translate-x-0.5 sm:h-4 sm:w-4"
+                    aria-hidden
+                  />
                 </span>
-                <span className="mt-2.5 flex items-baseline gap-1.5">
+                <span className="mt-2 flex items-baseline gap-1.5 sm:mt-2.5">
                   {count === undefined ? (
-                    <span className="skeleton h-6 w-8 rounded" aria-hidden />
+                    <span className="skeleton h-5 w-7 rounded sm:h-6 sm:w-8" aria-hidden />
                   ) : busy ? (
-                    <span className="text-2xl font-bold tabular-nums leading-none text-slate-900">
+                    <span className="text-xl font-bold tabular-nums leading-none text-slate-900 sm:text-2xl">
                       {formatNumber(count, lang)}
                     </span>
                   ) : (
-                    <CheckCircle2 className="h-5 w-5 text-green-600" aria-label={t("staffAllClear")} />
+                    <CheckCircle2 className="h-4 w-4 text-green-600 sm:h-5 sm:w-5" aria-label={t("staffAllClear")} />
                   )}
                 </span>
-                <span className="mt-1.5 text-sm font-semibold leading-snug text-slate-900">{label}</span>
+                <span className="mt-1.5 text-[13px] font-semibold leading-snug text-slate-900 sm:text-sm">{label}</span>
                 <span className="mt-0.5 text-[11px] leading-snug text-slate-500">{busy ? hint : t("staffAllClear")}</span>
+                {/* Deals still waiting on the worker aren't staff's to do - just worth knowing. */}
+                {key === "deals" && waitingDeals > 0 && (
+                  <span className="mt-1 text-[10px] font-medium leading-snug text-amber-700 sm:text-[11px]">
+                    {t("staffQueueDealsWaiting", { count: formatNumber(waitingDeals, lang) })}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -179,16 +192,32 @@ export function StaffTab() {
 
       {/* ---- 2. How Duleko is doing ---------------------------------------- */}
       <section>
-        <div className="flex items-end justify-between gap-3 px-1 pb-1.5">
-          <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t("staffAtAGlance")}</h3>
-          <Link to="/staff/activity" className="text-xs font-semibold text-brand-700 hover:text-brand-800">
-            {t("seeAll")}
-          </Link>
+        <div className="flex items-center justify-between gap-3 px-1 pb-1.5">
+          <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            {t("siteStatsEyebrow")}
+          </h3>
+          <div className="flex items-center gap-2">
+            <Segmented
+              label={t("activityTitle")}
+              options={[
+                { value: "last_30_days", label: t("activityLast30") },
+                { value: "all_time", label: t("activityAllTime") },
+              ]}
+              value={range}
+              onChange={(next) => setRange(next)}
+            />
+            <Link
+              to="/staff/activity"
+              className="hidden text-xs font-semibold text-brand-700 hover:text-brand-800 @md:inline"
+            >
+              {t("seeAll")}
+            </Link>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-2 @xl:grid-cols-3 @2xl:grid-cols-6">
           {GLANCE_KEYS.map((key) => {
             const row = ACTIVITY_ROWS.find((r) => r.key === key)!;
-            const value = month?.[key];
+            const value = numbers?.[key];
             return (
               <StatTile
                 key={key}
@@ -198,7 +227,11 @@ export function StaffTab() {
                   value == null ? "…" : row.money ? formatMoney(value, lang) : formatNumber(value, lang)
                 }
                 onClick={() =>
-                  navigate({ to: "/staff/activity/$kind", params: { kind: key }, search: { range: "last_30_days" } })
+                  navigate({
+                    to: "/staff/activity/$kind",
+                    params: { kind: key },
+                    search: range === "last_30_days" ? { range } : {},
+                  })
                 }
               />
             );
@@ -210,13 +243,20 @@ export function StaffTab() {
             onClick={() => navigate({ to: "/staff/fees" })}
           />
         </div>
-        <p className="px-1 pt-1.5 text-[11px] text-slate-500">{t("staffAtAGlanceHint")}</p>
+        <div className="flex items-center justify-between gap-3 px-1 pt-1.5">
+          <p className="text-[11px] text-slate-500">{t("staffAtAGlanceHint")}</p>
+          {/* On a phone the header has no room for it. */}
+          <Link to="/staff/activity" className="shrink-0 text-xs font-semibold text-brand-700 hover:text-brand-800 @md:hidden">
+            {t("seeAll")}
+          </Link>
+        </div>
       </section>
 
       {/* ---- 3. Every staff tool ------------------------------------------- */}
       <ListGroup title={t("staffTools")}>
         <ListRow icon={ShieldCheck} title={t("moderation")} hint={t("staffToolModerationHint")} to="/moderation" />
         <ListRow icon={IdCard} title={t("kycQueueTitle")} hint={t("kycQueueSubtitle")} to="/staff/verify" />
+        <ListRow icon={Handshake} title={t("dealsTitle")} hint={t("staffToolDealsHint")} to="/staff/deals" />
         <ListRow icon={Wallet} title={t("staffFeesShortcut")} hint={t("staffFeesShortcutHint")} to="/staff/fees" />
         <ListRow icon={Activity} title={t("activityShortcut")} hint={t("staffToolActivityHint")} to="/staff/activity" />
         <ListRow icon={Pin} title={t("noticeBoard")} hint={t("staffToolNoticesHint")} to="/notices" />

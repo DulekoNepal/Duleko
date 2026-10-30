@@ -63,6 +63,12 @@ export async function openNotification(
     return;
   }
 
+  // (Staff) a worker said no to a reported deal: the disputes to settle.
+  if (n.kind === "deal_dispute") {
+    void navigate({ to: "/staff/deals" });
+    return;
+  }
+
   // Duleko's fees: the verdict on your payment, or (staff) one to check.
   // A free job from a referral: where free jobs are counted.
   if (n.kind === "referral") {

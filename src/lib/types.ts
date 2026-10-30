@@ -257,7 +257,9 @@ export interface AppNotification {
     /** To a worker: the hirer says the job isn't finished yet (7700). */
     | "done_not_yet"
     /** To both sides: someone joined with a referral code - a free job each (7900). */
-    | "referral";
+    | "referral"
+    /** To staff: a worker said no to a deal someone reported - settle it (8400). */
+    | "deal_dispute";
   title_en: string;
   title_ne: string;
   body_en: string | null;

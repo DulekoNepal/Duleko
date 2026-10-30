@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useCanGoBack, useNavigate, useParams, useRouter, useSearch } from "@tanstack/react-router";
 import {
@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Briefcase,
   CalendarDays,
+  Check,
   ChevronRight,
   Clock,
   Copy,
@@ -17,6 +18,7 @@ import {
   MapPin,
   Phone,
   Quote,
+  Scale,
   Search,
   ShieldAlert,
   ShieldCheck,
@@ -28,6 +30,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
+import { CALL_DEAL_KEYS, SettleDealDialog } from "@/components/duleko/calls/SettleDealDialog";
 import { SectionCard } from "@/components/duleko/ProfileParts";
 import { RatingStars } from "@/components/duleko/Rating";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
@@ -36,6 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/field";
+import { Pager } from "@/components/ui/pager";
 import { Segmented } from "@/components/ui/segmented";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { useSession } from "@/hooks/use-session";
@@ -70,6 +74,9 @@ import {
 } from "@/lib/utils";
 
 export type ActivityRange = "all_time" | "last_30_days";
+
+/** Rows per page on an activity list. */
+const LIST_PAGE = 25;
 
 type Tone = "warning" | "success" | "danger" | "muted" | "neutral" | "brand";
 type T = ReturnType<typeof useI18n>["t"];
@@ -247,16 +254,20 @@ export function ActivityListScreen() {
     () => rows.filter((r) => (chip == null || chipKeyOf(kind, r) === chip) && matches(r, q, skillLabel)),
     [rows, chip, kind, q, skillLabel],
   );
+  // A page at a time; a new search, filter or range starts again at page 1.
+  const [page, setPage] = useState(0);
+  useEffect(() => setPage(0), [kind, range, chip, q]);
+  const pageRows = useMemo(() => shown.slice(page * LIST_PAGE, (page + 1) * LIST_PAGE), [shown, page]);
   const groups = useMemo(() => {
     const out: { day: string; rows: ActivityRow[] }[] = [];
-    for (const r of shown) {
+    for (const r of pageRows) {
       const day = toDateKey(new Date(r.at));
       const last = out[out.length - 1];
       if (last?.day === day) last.rows.push(r);
       else out.push({ day, rows: [r] });
     }
     return out;
-  }, [shown]);
+  }, [pageRows]);
 
   const title = row ? t(row.label) : t("activityTitle");
   if (!profile) return <SignInRequiredScreen title={title} />;
@@ -393,6 +404,7 @@ export function ActivityListScreen() {
                     </ul>
                   </section>
                 ))}
+                <Pager page={page} pageSize={LIST_PAGE} total={shown.length} onChange={setPage} />
                 {rows.length >= 300 && <p className="text-center text-xs text-slate-500">{t("activityListCapped")}</p>}
               </>
             )}
@@ -588,6 +600,8 @@ export function ActivityItemScreen() {
   const known = type in TYPE_STYLE;
   const skillLabel = useSkillNames();
   const [removing, setRemoving] = useState(false);
+  // Settling a dispute: true = count it, false = no deal, null = closed.
+  const [settling, setSettling] = useState<boolean | null>(null);
 
   const item = useQuery({
     queryKey: ["activity-item", type, itemId],
@@ -600,10 +614,7 @@ export function ActivityItemScreen() {
     onSuccess: () => {
       toast(t("activityRemoved"));
       setRemoving(false);
-      void queryClient.invalidateQueries({ queryKey: ["activity-item"] });
-      void queryClient.invalidateQueries({ queryKey: ["activity-list"] });
-      void queryClient.invalidateQueries({ queryKey: ["activity-stats"] });
-      void queryClient.invalidateQueries({ queryKey: ["call-deals"] });
+      for (const key of CALL_DEAL_KEYS) void queryClient.invalidateQueries({ queryKey: key });
     },
     onError: (error) => toast(errorMessage(error), "error"),
   });
@@ -640,6 +651,34 @@ export function ActivityItemScreen() {
             <div className="space-y-3 md:space-y-4">
               <TimelineCard item={data} />
               <LinkedRecords item={data} />
+              {data.type === "deal" &&
+                data.status === "disputed" &&
+                !data.settled_at &&
+                profile.id !== data.from?.id &&
+                profile.id !== data.to?.id && (
+                  <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-900">
+                      <Scale className="h-4 w-4" aria-hidden />
+                      {t("dealsSettleTitle")}
+                    </h3>
+                    <p className="mt-1.5 text-xs leading-relaxed text-amber-900/80">{t("dealsHowDisputed")}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Button size="sm" className="h-8 rounded-lg px-2.5 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm" onClick={() => setSettling(true)}>
+                        <Check className="h-3.5 w-3.5" aria-hidden />
+                        {t("dealsCount")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 rounded-lg px-2.5 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
+                        onClick={() => setSettling(false)}
+                      >
+                        <X className="h-3.5 w-3.5" aria-hidden />
+                        {t("dealsNoDeal")}
+                      </Button>
+                    </div>
+                  </section>
+                )}
               {data.type === "deal" && data.status !== "removed" && (
                 <section className="rounded-2xl border border-red-200 bg-red-50 p-4">
                   <h3 className="flex items-center gap-2 text-sm font-semibold text-red-700">
@@ -675,6 +714,13 @@ export function ActivityItemScreen() {
       >
         <p className="text-sm leading-relaxed text-slate-700">{t("activityRemoveBody")}</p>
       </Dialog>
+
+      <SettleDealDialog
+        dealId={settling === null ? null : itemId}
+        count={settling ?? false}
+        names={data ? `${data.from?.name ?? "?"} → ${data.to?.name ?? "?"}` : undefined}
+        onClose={() => setSettling(null)}
+      />
     </>
   );
 }
@@ -919,12 +965,23 @@ function timelineOf(item: ActivityItem, t: T): TimelineEvent[] {
     for (const r of item.reviews ?? []) ev.push({ text: t("evReviewWritten", { name: r.from?.name ?? "?" }), at: r.at, tone: "done" });
   } else if (item.type === "deal") {
     ev.push({ text: t("evDealReported", { name: from }), at: item.created_at, tone: "done" });
-    if (item.worker_answered_at && item.status === "disputed")
+    if (item.worker_answered_at && (item.status === "disputed" || item.settlement))
       ev.push({ text: t("evWorkerDisputed", { name: to }), at: item.worker_answered_at, tone: "bad" });
     else if (item.worker_answered_at)
       ev.push({ text: t("evWorkerConfirmed", { name: to }), at: item.worker_answered_at, tone: "good" });
     else if (item.status === "reported") ev.push({ text: t("evAutoCount"), at: item.confirm_by ?? null, tone: "waiting" });
     else if (item.status === "confirmed") ev.push({ text: t("evAutoCounted"), at: item.confirm_by ?? null, tone: "good" });
+    if (item.settlement) {
+      const name = item.settled_by?.name ?? "?";
+      ev.push({
+        text: t(item.settlement === "counted" ? "evSettledCounted" : "evSettledNoDeal", { name }) +
+          (item.settle_note ? ` - "${item.settle_note}"` : ""),
+        at: item.settled_at ?? null,
+        tone: item.settlement === "counted" ? "good" : "done",
+      });
+    } else if (item.status === "disputed") {
+      ev.push({ text: t("evWaitingStaff"), at: null, tone: "waiting" });
+    }
     if (item.status === "removed")
       ev.push({ text: t("evRemoved", { name: item.removed_by?.name ?? "?" }), at: item.updated_at ?? null, tone: "bad" });
   } else {

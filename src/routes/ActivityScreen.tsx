@@ -4,6 +4,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, Globe2, Handshake, ShieldCheck } from "lucide-react";
 import { AppHeader, PageContainer } from "@/components/duleko/Layout";
 import { SectionCard, StatTile } from "@/components/duleko/ProfileParts";
+import { CALL_DEAL_KEYS } from "@/components/duleko/calls/SettleDealDialog";
 import { SignInRequiredScreen } from "@/components/duleko/SignInGate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -69,10 +70,7 @@ export function ActivityScreen() {
     onSuccess: () => {
       toast(t("activityRemoved"));
       setRemoving(null);
-      void queryClient.invalidateQueries({ queryKey: ["activity-stats"] });
-      void queryClient.invalidateQueries({ queryKey: ["call-deals"] });
-      void queryClient.invalidateQueries({ queryKey: ["activity-list"] });
-      void queryClient.invalidateQueries({ queryKey: ["activity-item"] });
+      for (const key of CALL_DEAL_KEYS) void queryClient.invalidateQueries({ queryKey: key });
     },
     onError: (error) => toast(errorMessage(error), "error"),
   });
@@ -143,17 +141,33 @@ export function ActivityScreen() {
               </div>
             </SectionCard>
 
-            <SectionCard compact icon={Handshake} title={t("activityDealsTitle")}>
-              {stats.data && (stats.data.waiting_deals > 0 || stats.data.disputed_deals > 0) && (
+            <SectionCard
+              compact
+              icon={Handshake}
+              title={t("activityDealsTitle")}
+              action={
+                <Link
+                  to="/staff/deals"
+                  search={{ view: "all" }}
+                  className="text-xs font-semibold text-brand-700 hover:text-brand-800"
+                >
+                  {t("dealsSeeAll")}
+                </Link>
+              }
+            >
+              {stats.data && stats.data.disputed_deals > 0 && (
+                <Link
+                  to="/staff/deals"
+                  className="mb-2.5 flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 ring-1 ring-red-200 hover:bg-red-100"
+                >
+                  {t("activityDealsDisputed", { count: formatNumber(stats.data.disputed_deals, lang) })}
+                  <span className="font-normal text-red-700/80">· {t("staffQueueDealsHint")}</span>
+                  <ChevronRight className="ml-auto h-4 w-4 shrink-0" aria-hidden />
+                </Link>
+              )}
+              {stats.data && stats.data.waiting_deals > 0 && (
                 <p className="mb-2.5 text-xs text-slate-500">
-                  {[
-                    stats.data.waiting_deals > 0 &&
-                      t("activityDealsWaiting", { count: formatNumber(stats.data.waiting_deals, lang) }),
-                    stats.data.disputed_deals > 0 &&
-                      t("activityDealsDisputed", { count: formatNumber(stats.data.disputed_deals, lang) }),
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
+                  {t("activityDealsWaiting", { count: formatNumber(stats.data.waiting_deals, lang) })}
                 </p>
               )}
               {deals.isPending ? (

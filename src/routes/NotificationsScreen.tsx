@@ -11,6 +11,7 @@ import {
   ClipboardCheck,
   ExternalLink,
   Gift,
+  Handshake,
   HandCoins,
   IdCard,
   Megaphone,
@@ -82,6 +83,8 @@ const KIND_ICON: Record<string, { icon: LucideIcon; tone: IconTone }> = {
   done_check: { icon: ClipboardCheck, tone: "amber" },
   done_not_yet: { icon: AlertTriangle, tone: "amber" },
   referral: { icon: Gift, tone: "green" },
+  call_deal: { icon: Handshake, tone: "brand" },
+  deal_dispute: { icon: Handshake, tone: "amber" },
 };
 
 export function NotificationsScreen() {
