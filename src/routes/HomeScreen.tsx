@@ -568,8 +568,8 @@ function ProfileProgress({ profile }: { profile: Profile }) {
 /* Skills: Popular and the three categories, one row each              */
 /* ------------------------------------------------------------------ */
 
-/** Skills a row shows before "See all": four on phones, six from sm. */
-const ROW_PREVIEW_PHONE = 4;
+/** Skills a row shows before "See all": five on phones, six from sm. */
+const ROW_PREVIEW_PHONE = 5;
 const ROW_PREVIEW = 6;
 
 function HomeSkills() {
@@ -605,9 +605,9 @@ function HomeSkills() {
           ? Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="rounded-2xl border border-slate-200 bg-surface p-3 shadow-sm">
                 <div className="skeleton h-5 w-44 rounded" />
-                <div className="mt-3 grid grid-cols-4 gap-1 sm:grid-cols-6">
+                <div className="mt-3 grid grid-cols-5 gap-1 sm:grid-cols-6">
                   {Array.from({ length: 6 }).map((_, j) => (
-                    <div key={j} className={cn("flex flex-col items-center gap-2 py-1", j >= 4 && "hidden sm:flex")}>
+                    <div key={j} className={cn("flex flex-col items-center gap-2 py-1", j >= 5 && "hidden sm:flex")}>
                       <div className="skeleton h-11 w-11 rounded-2xl" />
                       <div className="skeleton h-3 w-14 rounded" />
                     </div>
@@ -672,7 +672,7 @@ function SkillRow({
         )}
       </div>
 
-      <div className={cn("grid gap-1 p-2 sm:px-3", popular ? "grid-cols-5" : "grid-cols-4 sm:grid-cols-6")}>
+      <div className={cn("grid gap-1 p-2 sm:px-3", popular ? "grid-cols-5" : "grid-cols-5 sm:grid-cols-6")}>
         {shown.map((skill, i) => (
           <SkillTile
             key={skill.id}
@@ -711,7 +711,7 @@ function SkillTile({
       search={{ skill: skill.id }}
       className={cn(
         "group flex min-w-0 flex-col items-center gap-1.5 rounded-xl py-2.5 text-center transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
-        big ? "px-0" : "px-1",
+        "px-0 sm:px-1",
         late && "animate-[fade-in-up_0.25s_ease-out]",
         className,
       )}
@@ -729,7 +729,9 @@ function SkillTile({
         className={cn(
           "line-clamp-2 w-full font-medium leading-tight text-slate-800",
           // Five across on a phone: small enough that "Electrician" fits whole.
-          big ? "text-[10.5px] font-semibold tracking-tight sm:text-[13px] sm:tracking-normal" : "text-[11px] sm:text-xs",
+          big
+            ? "text-[10.5px] font-semibold tracking-tight sm:text-[13px] sm:tracking-normal"
+            : "text-[10px] tracking-tight sm:text-xs sm:tracking-normal",
         )}
       >
         {skillName(skill, lang)}
