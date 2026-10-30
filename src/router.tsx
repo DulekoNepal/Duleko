@@ -239,10 +239,15 @@ const staffInvestorsRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/InvestorsScreen"), "InvestorsScreen"),
 });
 
-// Get verified: send your ID for the verified badge.
+// Get verified: two buttons - ID check (KYC) and Duleko certification.
+// ?step= opens one of them.
+export type VerifyStep = "id" | "certificates";
 const verifyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/verify",
+  validateSearch: (search: Record<string, unknown>): { step?: VerifyStep } => ({
+    step: search.step === "id" || search.step === "certificates" ? search.step : undefined,
+  }),
   component: lazyRouteComponent(() => import("@/routes/VerifyScreen"), "VerifyScreen"),
 });
 

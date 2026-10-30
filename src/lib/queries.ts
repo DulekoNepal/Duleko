@@ -1497,7 +1497,8 @@ export async function resolveReport(
 // short-lived signed links for the owner and staff.
 
 /** The order the documents are offered in - the one most people carry first. */
-export const KYC_DOC_TYPES: KycDocType[] = ["citizenship", "national_id", "driving_license", "passport"];
+// The national ID card first: the one Duleko asks for.
+export const KYC_DOC_TYPES: KycDocType[] = ["national_id", "citizenship", "driving_license", "passport"];
 
 /** Every kind is a two-sided card except the passport, which has one photo page. */
 export function kycHasBack(type: KycDocType): boolean {

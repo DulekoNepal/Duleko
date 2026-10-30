@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, FileText, Image as ImageIcon, ShieldCheck, Upload } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
 import { CallPermissionChoice, callChoice } from "@/components/duleko/ContactPrivacyRows";
 import { LocationFields, type LocationValue } from "@/components/duleko/LocationFields";
 import { SkillPicker } from "@/components/duleko/SkillGrid";
@@ -12,9 +12,7 @@ import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import { useTextRule } from "@/lib/text-rules";
-import { MAX_PHOTO_INPUT_BYTES } from "@/lib/image";
 import {
-  addCertificate,
   listSkills,
   saveContact,
   setUserSkills,
@@ -27,7 +25,7 @@ import type { CallPermission } from "@/lib/types";
 import { useMyProfileData } from "./use-my-profile-data";
 
 /** Which part of the profile is being edited - one focused sheet each. */
-export type EditorKind = "intro" | "details" | "skills" | "certificate";
+export type EditorKind = "intro" | "details" | "skills";
 
 /**
  * Every editor on your Profile. Each is a short sheet for one section,
@@ -39,7 +37,6 @@ export function ProfileEditors({ open, onClose }: { open: EditorKind | null; onC
       <IntroEditor open={open === "intro"} onClose={onClose} />
       <DetailsEditor open={open === "details"} onClose={onClose} />
       <SkillsEditor open={open === "skills"} onClose={onClose} />
-      <CertificateEditor open={open === "certificate"} onClose={onClose} />
     </>
   );
 }
@@ -517,144 +514,6 @@ function SkillsEditor({ open, onClose }: { open: boolean; onClose: () => void })
           </ul>
         </SheetSection>
       )}
-    </Dialog>
-  );
-}
-
-// ---------------------------------------------------------------------
-// Certificate: the skill it proves, its name, the file. Staff check it (8300).
-// ---------------------------------------------------------------------
-
-function CertificateEditor({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t, lang } = useI18n();
-  const { user, profile } = useSession();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { skills } = useMyProfileData();
-  const mySkills = skills.data ?? [];
-  const [skillId, setSkillId] = useState<string | null>(null);
-  const [title, setTitle] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    setTitle("");
-    setFile(null);
-    setSkillId(null);
-  }, [open]);
-
-  // With one skill there's nothing to choose.
-  const chosenSkill = skillId ?? (mySkills.length === 1 ? mySkills[0].id : null);
-
-  const upload = useMutation({
-    mutationFn: () => addCertificate(user!.id, profile!.id, title.trim(), chosenSkill, file!),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["certificates", profile?.id] });
-      toast(t("profileSaved"));
-      onClose();
-    },
-    onError: (e) => toast(errorMessage(e), "error"),
-  });
-
-  function choose(next: File | undefined) {
-    if (!next) return;
-    // Photos are shrunk before upload; a PDF goes up as-is.
-    const limit = next.type === "application/pdf" ? 5 * 1024 * 1024 : MAX_PHOTO_INPUT_BYTES;
-    if (next.size > limit) {
-      toast(t("photoTooBig"), "error");
-      return;
-    }
-    setFile(next);
-  }
-
-  const ready = Boolean(title.trim() && file && chosenSkill);
-  const FileIcon = file?.type === "application/pdf" ? FileText : ImageIcon;
-
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title={t("addCertificate")}
-      footer={
-        <SaveFooter
-          onCancel={onClose}
-          onSave={() => upload.mutate()}
-          saving={upload.isPending}
-          disabled={!ready}
-          label={t("upload")}
-        />
-      }
-    >
-      <p className="mb-3.5 flex gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-sm text-brand-800">
-        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-        {t("certCheckHint")}
-      </p>
-      <div className="mb-3.5">
-        <Label>{t("certSkillLabel")}</Label>
-        {skills.isSuccess && mySkills.length === 0 ? (
-          <p className="mt-1.5 text-sm text-slate-500">{t("certNeedSkill")}</p>
-        ) : (
-          <div role="radiogroup" aria-label={t("certSkillLabel")} className="mt-1.5 flex flex-wrap gap-2">
-            {mySkills.map((s) => {
-              const on = chosenSkill === s.id;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  onClick={() => setSkillId(s.id)}
-                  className={cn(
-                    "inline-flex min-h-10 items-center gap-2 rounded-full border py-1 pl-1 pr-3.5 text-sm font-medium transition-colors",
-                    on
-                      ? "border-brand-600 bg-brand-50 text-brand-800 ring-1 ring-brand-600"
-                      : "border-slate-200 bg-surface text-slate-700 hover:border-brand-300",
-                  )}
-                >
-                  <SkillTile skillId={s.id} category={s.category} className="h-8 w-8 rounded-full bg-slate-50" />
-                  {s.custom_label || skillName(s, lang)}
-                  {on && <Check className="h-3.5 w-3.5" aria-hidden />}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-      <Field label={t("certificateTitlePlaceholder")}>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder={t("profileCertNamePlaceholder")} />
-      </Field>
-      <label
-        className={cn(
-          "flex cursor-pointer items-center gap-3 rounded-2xl border-2 border-dashed p-4 transition-colors focus-within:border-brand-500",
-          file ? "border-brand-300 bg-brand-50/50" : "border-slate-300 bg-slate-50/60 hover:border-brand-300 hover:bg-brand-50/40",
-        )}
-      >
-        <span
-          className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
-            file ? "bg-brand-100 text-brand-700" : "bg-surface text-slate-500 ring-1 ring-slate-200",
-          )}
-        >
-          {file ? <FileIcon className="h-5 w-5" aria-hidden /> : <Upload className="h-5 w-5" aria-hidden />}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-slate-900">{file ? file.name : t("profileCertChoose")}</span>
-          <span className="block text-xs text-slate-500">
-            {file
-              ? `${formatNumber((file.size / (1024 * 1024)).toFixed(1), lang)} MB · ${t("profileCertChange")}`
-              : t("uploadCertificateHint")}
-          </span>
-        </span>
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp,application/pdf"
-          className="sr-only"
-          onChange={(e) => {
-            choose(e.target.files?.[0]);
-            e.target.value = "";
-          }}
-        />
-      </label>
     </Dialog>
   );
 }

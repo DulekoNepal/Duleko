@@ -64,6 +64,7 @@ const KYC_ERRORS: [string, StringKey][] = [
   ["KYC_REASON_REQUIRED", "errKycReasonRequired"],
   // Certificate checks for the skill badge (8300)
   ["CERT_SKILL_NOT_LISTED", "errCertSkillNotListed"],
+  ["CERT_LIMIT", "errCertLimit"],
   ["CERT_SKILL_REQUIRED", "errCertSkillRequired"],
   ["CERT_ALREADY_REVIEWED", "errCertAlreadyReviewed"],
   ["CERT_NOT_FOUND", "errCertAlreadyReviewed"],

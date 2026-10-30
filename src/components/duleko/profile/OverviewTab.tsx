@@ -53,7 +53,7 @@ export function OverviewTab({ onEdit, avatar }: { onEdit: (kind: EditorKind) => 
         </ProfileColumn>
         <ProfileColumn>
           <DetailsCard onEdit={onEdit} className="order-2 @3xl:order-none" />
-          <CertificatesCard onEdit={onEdit} className="order-4 @3xl:order-none" />
+          <CertificatesCard className="order-4 @3xl:order-none" />
         </ProfileColumn>
       </ProfileColumns>
     </div>
@@ -79,7 +79,6 @@ function FinishProfileCard({ onEdit, avatar }: { onEdit: (kind: EditorKind) => v
     { done: skills.data.length > 0, label: t("profileItemSkills"), icon: Briefcase, editor: "skills" },
     { done: Boolean(profile.district), label: t("profileItemLocation"), icon: MapPin, editor: "details" },
     { done: Boolean(contact.data?.phone), label: t("profileItemPhone"), icon: Phone, editor: "details" },
-    { done: certificates.data.length > 0, label: t("profileItemCertificate"), icon: Award, editor: "certificate" },
   ];
   const missing = steps.filter((s) => !s.done);
   if (missing.length === 0) return null;
@@ -273,7 +272,11 @@ function DetailsCard({ onEdit, className }: { onEdit: (kind: EditorKind) => void
 
 // ---------------------------------------------------------------------
 
-function CertificatesCard({ onEdit, className }: { onEdit: (kind: EditorKind) => void; className?: string }) {
+/**
+ * What you've sent for Duleko certification, each removable. New ones are
+ * added from Get verified > Duleko certification, not here.
+ */
+function CertificatesCard({ className }: { className?: string }) {
   const { t, lang } = useI18n();
   const { profile, refreshProfile } = useSession();
   const { certificates, skills } = useMyProfileData();
@@ -293,6 +296,8 @@ function CertificatesCard({ onEdit, className }: { onEdit: (kind: EditorKind) =>
     onError: (error) => toast(errorMessage(error), "error"),
   });
 
+  if (certificates.isSuccess && list.length === 0) return null;
+
   return (
     <>
       <SectionCard
@@ -301,12 +306,9 @@ function CertificatesCard({ onEdit, className }: { onEdit: (kind: EditorKind) =>
         title={t("certificates")}
         badge={list.length > 0 ? list.length : undefined}
         className={className}
-        action={list.length > 0 ? <SectionAction icon={Plus} label={t("profileAdd")} onClick={() => onEdit("certificate")} /> : undefined}
       >
         {certificates.isPending ? (
           <SectionSkeleton rows={1} />
-        ) : list.length === 0 ? (
-          <EmptyPrompt icon={Plus} title={t("addCertificate")} hint={t("certificatesHint")} onClick={() => onEdit("certificate")} />
         ) : (
           <CertificateList certificates={list} skills={skills.data ?? []} onRemove={setRemoving} />
         )}

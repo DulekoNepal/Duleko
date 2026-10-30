@@ -51,6 +51,57 @@ export const badgeStrings = {
   verifySkillAdd: ["Add a certificate", "प्रमाणपत्र थप्नुहोस्"],
   verifySkillDone: ["Verified: {skills}", "प्रमाणित: {skills}"],
 
+  // ---- Get verified: the two buttons, and the certification step ------------------
+  verifyChooseIdTitle: ["ID check (KYC)", "परिचयपत्र जाँच (KYC)"],
+  verifyChooseIdBody: [
+    "Send a photo of your national ID card, or another ID",
+    "आफ्नो राष्ट्रिय परिचयपत्र वा अर्को परिचयपत्रको फोटो पठाउनुहोस्",
+  ],
+  verifyChooseCertTitle: ["Duleko certification", "डुलेको प्रमाणीकरण"],
+  verifyChooseCertBody: [
+    "Send certificates that show your skills, up to five",
+    "आफ्नो सीप देखाउने प्रमाणपत्र पठाउनुहोस्, बढीमा पाँचवटा",
+  ],
+  verifyIdHeader: ["Send your ID for the verified badge", "प्रमाणित ब्याजका लागि परिचयपत्र पठाउनुहोस्"],
+  verifyCertHeader: ["Certificates that show your skills", "तपाईंको सीप देखाउने प्रमाणपत्र"],
+  verifyStart: ["Start", "सुरु गर्नुहोस्"],
+  verifyOpen: ["Open", "खोल्नुहोस्"],
+  verifyBackToChoices: ["Both verification steps", "प्रमाणीकरणका दुवै चरण"],
+  kycDocRecommended: ["Recommended", "सिफारिस गरिएको"],
+
+  certStepYours: ["Your certificates", "तपाईंका प्रमाणपत्र"],
+  certStepCount: ["{count} of 5", "५ मध्ये {count}"],
+  certStepAddTitle: ["Add certificates", "प्रमाणपत्र थप्नुहोस्"],
+  certStepAddBody: [
+    "One photo per certificate - a training certificate, licence or diploma - and the skill it shows. Up to {count} more.",
+    "हरेक प्रमाणपत्रको एउटा फोटो - तालिमको प्रमाणपत्र, अनुमतिपत्र वा डिप्लोमा - र त्यसले देखाउने सीप। अझै {count}वटासम्म।",
+  ],
+  certStepItem: ["Certificate {n}", "प्रमाणपत्र {n}"],
+  certStepRemove: ["Remove this certificate", "यो प्रमाणपत्र हटाउनुहोस्"],
+  certStepPhoto: ["Photo or PDF", "फोटो वा PDF"],
+  certStepName: ["Name of the certificate (optional)", "प्रमाणपत्रको नाम (वैकल्पिक)"],
+  certStepAddAnother: ["Add another certificate", "अर्को प्रमाणपत्र थप्नुहोस्"],
+  certStepSend: ["Send for checking", "जाँचका लागि पठाउनुहोस्"],
+  certStepSent: ["Sent. You'll get an alert once each one is checked.", "पठाइयो। हरेक जाँच भएपछि सूचना आउनेछ।"],
+  certStepFull: [
+    "You have five certificates. Remove one on your profile to add another.",
+    "तपाईंसँग पाँचवटा प्रमाणपत्र छन्। अर्को थप्न प्रोफाइलबाट एउटा हटाउनुहोस्।",
+  ],
+  certStepNeedSkill: [
+    "Add your skills to your profile first, then a certificate for each.",
+    "पहिले प्रोफाइलमा आफ्नो सीप थप्नुहोस्, त्यसपछि हरेकको प्रमाणपत्र।",
+  ],
+  certStepAddSkills: ["Add skills", "सीप थप्नुहोस्"],
+  certStepMissing: ["Each certificate needs a photo and a skill.", "हरेक प्रमाणपत्रमा फोटो र सीप चाहिन्छ।"],
+  certStepUploadFailed: [
+    "{done} sent. The rest didn't go through: {reason}",
+    "{done}वटा पठाइयो। बाँकी पठाउन सकिएन: {reason}",
+  ],
+  errCertLimit: [
+    "A profile holds at most five certificates. Remove one to add another.",
+    "एउटा प्रोफाइलमा बढीमा पाँचवटा प्रमाणपत्र राख्न मिल्छ। अर्को थप्न एउटा हटाउनुहोस्।",
+  ],
+
   // ---- staff: certificate checks ------------------------------------------------
   checksTabIds: ["IDs", "परिचयपत्र"],
   checksTabCertificates: ["Certificates", "प्रमाणपत्र"],

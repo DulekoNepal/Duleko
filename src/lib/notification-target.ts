@@ -96,7 +96,11 @@ export async function openNotification(
     void navigate({ to: "/staff/verify" });
     return;
   }
-  if (n.kind === "kyc_result" || n.kind === "verify_reminder") {
+  if (n.kind === "kyc_result") {
+    void navigate({ to: "/verify", search: { step: "id" } });
+    return;
+  }
+  if (n.kind === "verify_reminder") {
     void navigate({ to: "/verify" });
     return;
   }
