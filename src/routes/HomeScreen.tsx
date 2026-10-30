@@ -54,11 +54,11 @@ const HomeMapCard = lazy(() =>
 // lives on the board (Alerts → Notice board) only.
 const NOTICE_FRESH_MS = 14 * 24 * 60 * 60_000;
 
-/** Popular's tie-break while few skills have anyone behind them yet. */
-const DEFAULT_SHORTCUTS = ["electrician", "plumber", "mechanic", "tutor", "carpenter", "cleaner", "painter", "driver"];
+/** Popular's tie-break while few skills have anyone behind them yet - and the banner's shortcuts. */
+const DEFAULT_SHORTCUTS = ["auto_rickshaw", "electrician", "plumber", "mechanic", "tutor", "carpenter", "cleaner", "driver"];
 
-/** How many skills the Popular row holds once opened. */
-const POPULAR_COUNT = 18;
+/** Popular is a fixed pick of five, in this order, one row on every screen. */
+const POPULAR = ["auto_rickshaw", "veterinary", "tutor", "electrician", "it_computer"];
 
 /**
  * From tablets up the map is a big, movable one; on phones a small
@@ -592,8 +592,9 @@ function HomeSkills() {
       return rank(a) - rank(b);
     });
   const byCategory = groupSkillsByCategory(byPopularity);
+  const popular = POPULAR.flatMap((id) => byPopularity.filter((s) => s.id === id));
   const sections: { id: SkillSection; skills: Skill[] }[] = [
-    { id: "popular" as SkillSection, skills: byPopularity.slice(0, POPULAR_COUNT) },
+    { id: "popular" as SkillSection, skills: popular },
     ...SKILL_CATEGORY_ORDER.map((id) => ({ id: id as SkillSection, skills: byCategory[id] })),
   ].filter((entry) => entry.skills.length > 0);
 
@@ -634,9 +635,11 @@ function SkillRow({
 }) {
   const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
-  const Icon = section === "popular" ? Flame : SKILL_CATEGORY_ICON[section];
-  const title = t(section === "popular" ? "popularSkills" : SKILL_CATEGORY_LABEL[section]);
-  const shown = expanded ? skills : skills.slice(0, ROW_PREVIEW);
+  const popular = section === "popular";
+  const Icon = popular ? Flame : SKILL_CATEGORY_ICON[section];
+  const title = t(popular ? "popularSkills" : SKILL_CATEGORY_LABEL[section]);
+  // Popular shows all five at once, nothing to open.
+  const shown = expanded || popular ? skills : skills.slice(0, ROW_PREVIEW);
 
   return (
     <section aria-labelledby={`home-skills-${section}`} className="rounded-2xl border border-slate-200 bg-surface shadow-sm">
@@ -652,7 +655,7 @@ function SkillRow({
         <h3 id={`home-skills-${section}`} className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">
           {title}
         </h3>
-        {skills.length > ROW_PREVIEW_PHONE && (
+        {!popular && skills.length > ROW_PREVIEW_PHONE && (
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
@@ -669,14 +672,15 @@ function SkillRow({
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-1 p-2 sm:grid-cols-6 sm:px-3">
+      <div className={cn("grid gap-1 p-2 sm:px-3", popular ? "grid-cols-5" : "grid-cols-4 sm:grid-cols-6")}>
         {shown.map((skill, i) => (
           <SkillTile
             key={skill.id}
             skill={skill}
             count={counts?.[skill.id] ?? 0}
+            big={popular}
             late={i >= ROW_PREVIEW}
-            className={!expanded && i >= ROW_PREVIEW_PHONE ? "hidden sm:flex" : undefined}
+            className={!popular && !expanded && i >= ROW_PREVIEW_PHONE ? "hidden sm:flex" : undefined}
           />
         ))}
       </div>
@@ -688,11 +692,14 @@ function SkillRow({
 function SkillTile({
   skill,
   count,
+  big = false,
   late,
   className,
 }: {
   skill: Skill;
   count: number;
+  /** Popular's tiles: a larger icon than the category rows. */
+  big?: boolean;
   late: boolean;
   className?: string;
 }) {
@@ -703,20 +710,28 @@ function SkillTile({
       // No area filter: everyone with the skill, nearest first (6500).
       search={{ skill: skill.id }}
       className={cn(
-        "group flex min-w-0 flex-col items-center gap-1.5 rounded-xl px-1 py-2.5 text-center transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
+        "group flex min-w-0 flex-col items-center gap-1.5 rounded-xl py-2.5 text-center transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
+        big ? "px-0" : "px-1",
         late && "animate-[fade-in-up_0.25s_ease-out]",
         className,
       )}
     >
       <span
         className={cn(
-          "flex h-11 w-11 items-center justify-center rounded-2xl transition-transform duration-200 group-hover:-translate-y-0.5 group-active:scale-95",
+          "flex items-center justify-center rounded-2xl transition-transform duration-200 group-hover:-translate-y-0.5 group-active:scale-95",
+          big ? "h-14 w-14" : "h-11 w-11",
           TILE_WASH[skill.category] ?? "bg-navy-50",
         )}
       >
-        <SkillIcon skillId={skill.id} category={skill.category} className="h-5 w-5" />
+        <SkillIcon skillId={skill.id} category={skill.category} className={big ? "h-7 w-7" : "h-5 w-5"} />
       </span>
-      <span className="line-clamp-2 w-full text-[11px] font-medium leading-tight text-slate-800 sm:text-xs">
+      <span
+        className={cn(
+          "line-clamp-2 w-full font-medium leading-tight text-slate-800",
+          // Five across on a phone: small enough that "Electrician" fits whole.
+          big ? "text-[10.5px] font-semibold tracking-tight sm:text-[13px] sm:tracking-normal" : "text-[11px] sm:text-xs",
+        )}
+      >
         {skillName(skill, lang)}
       </span>
       {count > 0 && (

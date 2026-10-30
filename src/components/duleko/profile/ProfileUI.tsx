@@ -58,17 +58,17 @@ export function HeroCover({
   skills,
 }: {
   person: Pick<Profile, "is_verified" | "verified_skill_ids" | "staff_role" | "staff_title_en" | "staff_title_ne">;
-  /** Their skills in profile order; the first verified one, else the first, is the "top skill". */
+  /** Their skills in profile order - the cover follows them (see DulekoCover). */
   skills: Skill[];
 }) {
   const { lang } = useI18n();
   const tier = verificationTier(person);
-  const top = skills.find((s) => person.verified_skill_ids.includes(s.id)) ?? skills[0] ?? null;
   const role = lang === "ne" ? (person.staff_title_ne ?? person.staff_title_en) : person.staff_title_en;
   return (
     <DulekoCover
       tier={tier}
-      skill={top}
+      skills={skills}
+      verifiedSkillIds={person.verified_skill_ids}
       roleTitle={role}
       className="h-28 sm:rounded-t-3xl @md:h-36 @2xl:h-44 @4xl:h-52"
     />

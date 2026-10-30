@@ -485,6 +485,21 @@ html[data-keyboard="open"] .hide-with-keyboard {
     background-position: -60% 0;
   }
 }
+@keyframes cover-rise {
+  0% {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 0.9;
+  }
+  /* Stops below the prayer flags, even on a phone's short cover. */
+  100% {
+    transform: translateY(-60px);
+    opacity: 0;
+  }
+}
 @keyframes cover-pulse {
   0%,
   100% {
@@ -523,6 +538,11 @@ html[data-keyboard="open"] .hide-with-keyboard {
 .cover-pulse {
   animation: cover-pulse 2.4s ease-in-out infinite;
 }
+/* A lantern starts hidden and rises; stopped, it rests low and visible. */
+.cover-rise {
+  opacity: 0;
+  animation: cover-rise 9s linear infinite;
+}
 @media (prefers-reduced-motion: reduce) {
   .cover-twinkle,
   .cover-drift,
@@ -531,8 +551,13 @@ html[data-keyboard="open"] .hide-with-keyboard {
   .cover-float,
   .cover-aurora,
   .cover-sheen,
-  .cover-pulse {
+  .cover-pulse,
+  .cover-rise {
     animation: none;
+  }
+  .cover-rise {
+    opacity: 0.8;
+    transform: translateY(-24px);
   }
 }
 

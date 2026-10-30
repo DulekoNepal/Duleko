@@ -7,10 +7,11 @@ export const badgeStrings = {
   // ---- the badge and the cover -------------------------------------------
   fullyVerifiedLabel: ["Fully verified", "पूर्ण प्रमाणित"],
   halfVerifiedLabel: ["Half verified", "आंशिक प्रमाणित"],
-  coverDulekoTeam: ["Duleko team", "डुलेको टोली"],
+  coverDulekoTeam: ["Duleko staff", "डुलेको स्टाफ"],
   coverNotVerified: ["Not verified yet", "अझै प्रमाणित छैन"],
   coverTopSkill: ["Top skill", "मुख्य सीप"],
   coverRole: ["Role", "भूमिका"],
+  coverVerifiedSkills: ["Verified skills", "प्रमाणित सीप"],
 
   // ---- certificates on your profile -----------------------------------------
   certSkillLabel: ["Which skill does it prove?", "यसले कुन सीप प्रमाणित गर्छ?"],

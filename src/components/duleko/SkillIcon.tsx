@@ -57,7 +57,9 @@ function AutoRickshawIcon({
   "aria-hidden"?: boolean | "true" | "false";
 }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+    // Framed around the drawing (it fills x 4-19, y 8-20), so it sits centred
+    // and as large as the stroked icons beside it rather than low and small.
+    <svg viewBox="1.5 4 20 20" className={className} aria-hidden>
       <path
         fill="currentColor"
         fillRule="evenodd"
