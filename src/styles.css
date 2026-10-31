@@ -427,8 +427,9 @@ html[data-keyboard="open"] .hide-with-keyboard {
  * twinkle and now and then one falls, the sun breathes, first light sweeps
  * across the snow, clouds and mist drift, birds cross, prayer flags
  * flutter one after another, the windows flicker, the person's tools bob,
- * fireflies hover and light flows up the footpath. All of it stops for
- * people who ask for less motion.
+ * fireflies hover and light flows up the footpath; over the staff lake
+ * paragliders circle by day. All of it stops for people who ask for less
+ * motion.
  */
 @keyframes cover-twinkle {
   0%,
@@ -566,6 +567,21 @@ html[data-keyboard="open"] .hide-with-keyboard {
     stroke-dashoffset: -32;
   }
 }
+@keyframes cover-glide {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(14px, -5px) rotate(4deg);
+  }
+  50% {
+    transform: translate(26px, 2px) rotate(0deg);
+  }
+  75% {
+    transform: translate(12px, 6px) rotate(-4deg);
+  }
+}
 @keyframes cover-aurora {
   from {
     transform: translateX(-30px) scaleY(0.9);
@@ -621,6 +637,11 @@ html[data-keyboard="open"] .hide-with-keyboard {
 .cover-flow {
   animation: cover-flow 2s linear infinite;
 }
+.cover-glide {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cover-glide 18s ease-in-out infinite;
+}
 .cover-aurora {
   transform-box: view-box;
   animation: cover-aurora 9s ease-in-out infinite alternate;
@@ -636,6 +657,7 @@ html[data-keyboard="open"] .hide-with-keyboard {
   .cover-flicker,
   .cover-bob,
   .cover-flow,
+  .cover-glide,
   .cover-aurora {
     animation: none;
   }
