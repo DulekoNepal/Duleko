@@ -11,18 +11,18 @@ import { cn } from "@/lib/utils";
 import type { CallPermission } from "@/lib/types";
 
 /**
- * The three call choices. "Friends only" is stored as 'nobody': friends
- * can always call whatever is picked (4400), so the two are the same rule.
+ * The three call choices (8700): 'friends' also lets in anyone with a work
+ * request, and 'accepted_work' shuts out friends too.
  */
 const OPTIONS: { value: CallPermission; label: StringKey; hint: StringKey }[] = [
   { value: "everyone", label: "callEveryone", hint: "callEveryoneHint" },
-  { value: "nobody", label: "callNobody", hint: "callNobodyHint" },
+  { value: "friends", label: "callFriends", hint: "callFriendsHint" },
   { value: "accepted_work", label: "callAcceptedWork", hint: "callAcceptedWorkHint" },
 ];
 
-/** 'friends' (gone since 4400) or anything unknown reads as the default. */
+/** Anything unknown reads as the default, Everyone. */
 export function callChoice(value: CallPermission | null | undefined): CallPermission {
-  return value === "everyone" || value === "nobody" ? value : "accepted_work";
+  return value === "friends" || value === "accepted_work" ? value : "everyone";
 }
 
 /**
@@ -74,7 +74,7 @@ export function CallPermissionChoice({
           );
         })}
       </div>
-      <p className="mt-1.5 text-xs text-slate-500">{t("friendsAlwaysHint")}</p>
+      <p className="mt-1.5 text-xs text-slate-500">{t("callChatStillOpenHint")}</p>
     </div>
   );
 }

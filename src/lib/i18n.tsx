@@ -392,23 +392,21 @@ const strings = {
   ],
   callSettingTitle: ["Who can call me", "मलाई कसले फोन गर्न सक्छ"],
   callEveryone: ["Everyone", "सबैजना"],
-  callAcceptedWork: ["After work acceptance", "काम स्वीकार भएपछि मात्र"],
-  callFriends: ["Friends", "साथीहरू"],
-  callNobody: ["Friends only", "साथीहरू मात्र"],
+  callAcceptedWork: ["No one, only after work is accepted", "कोही पनि होइन, काम स्वीकार भएपछि मात्र"],
+  callFriends: ["Friends and work requests", "साथी र कामको अनुरोध भएकाहरू"],
   privacyContactTitle: ["Privacy & contact", "गोपनीयता र सम्पर्क"],
   callEveryoneHint: ["Any signed-in user can see your number and call you.", "लगइन गरेका जो कोहीले तपाईंको नम्बर देखेर फोन गर्न सक्छन्।"],
   callAcceptedWorkHint: [
-    "Only people whose work request with you was accepted.",
-    "तपाईंसँगको कामको अनुरोध स्वीकार भएका व्यक्तिहरू मात्र।",
+    "Only the other person on a job that was accepted. Friends can't call either.",
+    "स्वीकार भएको कामको अर्को व्यक्तिले मात्र। साथीहरूले पनि फोन गर्न सक्दैनन्।",
   ],
-  callFriendsHint: ["Only people you have added as friends.", "तपाईंले साथी बनाएका व्यक्तिहरू मात्र।"],
-  callNobodyHint: [
-    "Only your friends can see your number. Everyone else can still chat with you.",
-    "तपाईंका साथीहरूले मात्र नम्बर देख्न सक्छन्। अरूले भने कुराकानी गर्न सक्छन्।",
+  callFriendsHint: [
+    "Your friends, and anyone with a work request with you, sent or received.",
+    "तपाईंका साथीहरू, र तपाईंसँग कामको अनुरोध भएका जो कोही, पठाएको होस् वा पाएको।",
   ],
-  friendsAlwaysHint: [
-    "Friends can always call and chat with you, whatever you pick.",
-    "तपाईंले जुनसुकै विकल्प छाने पनि साथीहरूले सधैं फोन र कुराकानी गर्न सक्छन्।",
+  callChatStillOpenHint: [
+    "Anyone can still chat with you, whatever you pick.",
+    "तपाईंले जुनसुकै विकल्प छाने पनि जो कोहीले तपाईंसँग कुराकानी गर्न सक्छन्।",
   ],
   callSettingSaved: ["Call setting saved.", "फोन सेटिङ सुरक्षित भयो।"],
   chatSettingTitle: ["Who can chat with me", "मसँग कसले कुराकानी गर्न सक्छ"],

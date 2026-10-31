@@ -31,7 +31,7 @@ import { useMyProfileData } from "./use-my-profile-data";
 const CALL_RULE_LABEL: Record<string, StringKey> = {
   everyone: "callEveryone",
   accepted_work: "callAcceptedWork",
-  nobody: "callNobody",
+  friends: "callFriends",
 };
 
 /**
@@ -243,7 +243,7 @@ function DetailsCard({ onEdit, className }: { onEdit: (kind: EditorKind) => void
                 <span className="block tabular-nums text-slate-600">{contact.data.alt_phone}</span>
               )}
               <span className="mt-0.5 block text-xs font-normal text-slate-500">
-                {t("profilePhoneSeenBy", { who: t(CALL_RULE_LABEL[profile.call_permission] ?? "callAcceptedWork") })}
+                {t("profilePhoneSeenBy", { who: t(CALL_RULE_LABEL[profile.call_permission] ?? "callEveryone") })}
               </span>
             </>
           ) : contact.isPending ? (

@@ -113,7 +113,7 @@ export function OnboardingScreen() {
       };
       const profile = existing
         ? await updateProfile(existing.id, profileInput)
-        : await createProfile(user.id, { ...profileInput, about: null, is_available: true, call_permission: "accepted_work" });
+        : await createProfile(user.id, { ...profileInput, about: null, is_available: true, call_permission: "everyone" });
       await saveContact(profile.id, normalisePhone(phone));
       if (withSkills && skillIds.length > 0) {
         await setUserSkills(

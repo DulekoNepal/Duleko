@@ -6,7 +6,7 @@ export type Lang = "en" | "ne";
  * table - never stored as a column on `profiles` itself, so a profile
  * update can never grant a role.
  */
-export type CallPermission = "everyone" | "accepted_work" | "friends" | "nobody";
+export type CallPermission = "everyone" | "friends" | "accepted_work";
 
 export type StaffRole = "moderator" | "admin" | "technical_admin";
 
