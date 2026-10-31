@@ -346,7 +346,7 @@ function CertificateRow({
                     : "border-slate-200 bg-surface text-slate-700 hover:border-brand-300",
                 )}
               >
-                <SkillTile skillId={s.id} category={s.category} className="h-7 w-7 rounded-full bg-slate-50" />
+                <SkillTile skillId={s.id} category={s.category} className="h-7 w-7" />
                 {skillText(s)}
                 {on && <Check className="h-3.5 w-3.5" aria-hidden />}
               </button>

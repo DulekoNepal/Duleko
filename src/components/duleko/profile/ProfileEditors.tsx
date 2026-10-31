@@ -460,7 +460,7 @@ function SkillsEditor({ open, onClose }: { open: boolean; onClose: () => void })
                 <li key={id} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3">
                   <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
                     <p className="flex min-w-0 flex-1 items-center gap-2.5 text-sm font-semibold text-slate-800">
-                      <SkillTile skillId={skill.id} category={skill.category} className="h-8 w-8 rounded-lg bg-surface ring-1 ring-slate-200" />
+                      <SkillTile skillId={skill.id} category={skill.category} className="h-8 w-8" />
                       <span className="truncate">{skillName(skill, lang)}</span>
                     </p>
                     <div className="flex items-center gap-1.5 sm:w-72 sm:shrink-0">

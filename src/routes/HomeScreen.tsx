@@ -66,13 +66,6 @@ const POPULAR = ["auto_rickshaw", "veterinary", "tutor", "electrician", "it_comp
  */
 const BIG_MAP_QUERY = "(min-width: 768px)";
 
-/** The pale wash behind each skill icon, in its category's colour. */
-const TILE_WASH: Record<SkillCategory, string> = {
-  trades: "bg-accent-50",
-  professional: "bg-navy-50",
-  personal: "bg-brand-50",
-};
-
 type SkillSection = "popular" | SkillCategory;
 
 function timeGreetingKey(): StringKey {
@@ -603,12 +596,12 @@ function HomeSkills() {
       <div className="space-y-2.5">
         {skills.isLoading
           ? Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-2xl border border-slate-200 bg-surface p-3 shadow-sm">
+              <div key={i} className="rounded-2xl border border-slate-200 bg-surface p-3">
                 <div className="skeleton h-5 w-44 rounded" />
                 <div className="mt-3 grid grid-cols-5 gap-1 sm:grid-cols-6">
                   {Array.from({ length: 6 }).map((_, j) => (
                     <div key={j} className={cn("flex flex-col items-center gap-2 py-1", j >= 5 && "hidden sm:flex")}>
-                      <div className="skeleton h-11 w-11 rounded-2xl" />
+                      <div className="skeleton h-6 w-6 rounded-md" />
                       <div className="skeleton h-3 w-14 rounded" />
                     </div>
                   ))}
@@ -642,16 +635,12 @@ function SkillRow({
   const shown = expanded || popular ? skills : skills.slice(0, ROW_PREVIEW);
 
   return (
-    <section aria-labelledby={`home-skills-${section}`} className="rounded-2xl border border-slate-200 bg-surface shadow-sm">
-      <div className="flex items-center gap-2.5 px-3.5 pt-3 sm:px-4">
-        <span
-          className={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
-            section === "popular" ? "bg-accent-50 text-accent-600" : "bg-brand-50 text-brand-700",
-          )}
-        >
-          <Icon className="h-4 w-4" aria-hidden />
-        </span>
+    <section aria-labelledby={`home-skills-${section}`} className="rounded-2xl border border-slate-200 bg-surface">
+      <div className="flex items-center gap-2 px-3.5 pt-3 sm:px-4">
+        <Icon
+          className={cn("h-4 w-4 shrink-0", section === "popular" ? "text-accent-600" : "text-brand-700")}
+          aria-hidden
+        />
         <h3 id={`home-skills-${section}`} className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">
           {title}
         </h3>
@@ -688,7 +677,7 @@ function SkillRow({
   );
 }
 
-/** One skill: its icon on a soft tile, its name, and how many people offer it. */
+/** One skill: its bare outline icon, its name, and how many people offer it. */
 function SkillTile({
   skill,
   count,
@@ -718,12 +707,11 @@ function SkillTile({
     >
       <span
         className={cn(
-          "flex items-center justify-center rounded-2xl transition-transform duration-200 group-hover:-translate-y-0.5 group-active:scale-95",
-          big ? "h-14 w-14" : "h-11 w-11",
-          TILE_WASH[skill.category] ?? "bg-navy-50",
+          "flex items-center justify-center transition-transform duration-200 group-hover:-translate-y-0.5 group-active:scale-95",
+          big ? "h-10 w-10" : "h-8 w-8",
         )}
       >
-        <SkillIcon skillId={skill.id} category={skill.category} className={big ? "h-7 w-7" : "h-5 w-5"} />
+        <SkillIcon skillId={skill.id} category={skill.category} className={big ? "h-7 w-7" : "h-6 w-6"} />
       </span>
       <span
         className={cn(

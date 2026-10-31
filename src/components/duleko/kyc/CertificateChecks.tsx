@@ -150,7 +150,7 @@ export function CertificateChecks({ onOpenPhoto }: { onOpenPhoto: (photo: Photo)
                               : "border-slate-300 bg-surface text-slate-700 hover:bg-slate-50",
                           )}
                         >
-                          <SkillTile skillId={s.id} category={s.category} className="h-6 w-6 rounded-full bg-slate-50" />
+                          <SkillTile skillId={s.id} category={s.category} className="h-6 w-6" />
                           {s.custom_label || skillName(s, lang)}
                         </button>
                       ))}

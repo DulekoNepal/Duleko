@@ -192,11 +192,10 @@ export function SkillIcon({
 }
 
 /**
- * A larger, neutral tile for a skill icon - one flat wash, the same for
- * every skill, used where a row wants a leading icon slot (the profile's
- * own skills list). The browse grid on Home deliberately skips this: an
- * outline icon straight on the card's own background is what actually
- * reads as "one clean icon set" rather than "icons in boxes".
+ * A fixed slot for a skill icon, where a row wants a leading icon (the
+ * profile's own skills list). No wash or ring behind it: an outline icon
+ * straight on the card's own background is what reads as "one clean icon
+ * set" rather than "icons in boxes".
  */
 export function SkillTile({
   skillId,
@@ -212,7 +211,7 @@ export function SkillTile({
     <span
       aria-hidden
       className={cn(
-        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100",
+        "flex h-10 w-10 shrink-0 items-center justify-center",
         className,
       )}
     >

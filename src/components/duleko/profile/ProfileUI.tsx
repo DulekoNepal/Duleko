@@ -491,7 +491,7 @@ export function SkillRateList({ skills, onRateMissing }: { skills: UserSkillDeta
         const label = s.id === "other" && s.custom_label ? s.custom_label : skillName(s, lang);
         return (
           <li key={s.id} className="flex min-w-0 items-center gap-3 py-2.5">
-            <SkillTile skillId={s.id} category={s.category} className="h-10 w-10 rounded-xl bg-slate-50 ring-1 ring-slate-200" />
+            <SkillTile skillId={s.id} category={s.category} className="h-10 w-10" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-slate-900">{label}</p>
               {s.custom_note && <p className="line-clamp-1 text-xs text-slate-500">{s.custom_note}</p>}
