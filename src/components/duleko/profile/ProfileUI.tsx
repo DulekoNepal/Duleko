@@ -50,8 +50,8 @@ export function HeroCard({ lifted = false, children }: { lifted?: boolean; child
 }
 
 /**
- * The cover: Duleko's own artwork for everyone (see DulekoCover), coloured
- * by the top skill and showing how far Duleko has checked the person.
+ * The cover: Duleko's own artwork for everyone (see DulekoCover), showing
+ * how far Duleko has checked the person and the tools of their skills.
  */
 export function HeroCover({
   person,

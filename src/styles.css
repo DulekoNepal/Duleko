@@ -423,49 +423,147 @@ html[data-keyboard="open"] .hide-with-keyboard {
 }
 
 /*
- * The Duleko profile cover (DulekoCover.tsx): stars twinkle, clouds drift,
- * prayer flags sway, the skill medal floats inside a slowly turning ring,
- * a sheen crosses now and then and, on staff covers, the aurora breathes.
- * All of it stops for people who ask for less motion.
+ * The Duleko profile cover (DulekoCover.tsx), "Hills at dawn": stars
+ * twinkle and now and then one falls, the sun breathes, first light sweeps
+ * across the snow, clouds and mist drift, birds cross, prayer flags
+ * flutter one after another, the windows flicker, the person's tools bob,
+ * fireflies hover and light flows up the footpath. All of it stops for
+ * people who ask for less motion.
  */
 @keyframes cover-twinkle {
   0%,
   100% {
-    opacity: 0.25;
+    opacity: 0.2;
   }
   50% {
     opacity: 1;
   }
 }
-@keyframes cover-drift {
-  from {
-    transform: translateX(-140px);
+@keyframes cover-shoot {
+  0%,
+  88% {
+    transform: translate(0, 0);
+    opacity: 0;
   }
-  to {
-    transform: translateX(760px);
+  90% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    transform: translate(-150px, 50px);
+    opacity: 0;
   }
 }
-@keyframes cover-sway {
+@keyframes cover-breathe {
   0%,
   100% {
-    transform: rotate(0deg);
+    transform: scale(1);
+    opacity: 0.85;
   }
   50% {
-    transform: rotate(1.4deg);
+    transform: scale(1.12);
+    opacity: 1;
   }
 }
-@keyframes cover-spin {
+@keyframes cover-sweep {
+  from {
+    transform: translateX(-120px);
+  }
   to {
-    transform: rotate(360deg);
+    transform: translateX(800px);
   }
 }
-@keyframes cover-float {
+@keyframes cover-drift {
+  from {
+    transform: translateX(-180px);
+  }
+  to {
+    transform: translateX(780px);
+  }
+}
+@keyframes cover-mist {
+  0%,
+  100% {
+    transform: translateX(-24px);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateX(24px);
+    opacity: 1;
+  }
+}
+@keyframes cover-fly {
+  from {
+    transform: translate(-60px, 10px);
+  }
+  50% {
+    transform: translate(340px, -6px);
+  }
+  to {
+    transform: translate(740px, 8px);
+  }
+}
+@keyframes cover-flap {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(-0.4);
+  }
+}
+@keyframes cover-flutter {
+  0%,
+  100% {
+    transform: skewX(0deg) rotate(0deg);
+  }
+  50% {
+    transform: skewX(-10deg) rotate(4deg);
+  }
+}
+@keyframes cover-bob {
   0%,
   100% {
     transform: translateY(0);
+    opacity: 0.75;
   }
   50% {
     transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+@keyframes cover-flicker {
+  0%,
+  100% {
+    opacity: 0.95;
+  }
+  40% {
+    opacity: 0.7;
+  }
+  45% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.8;
+  }
+}
+@keyframes cover-firefly {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  30%,
+  70% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(6px, -12px);
+  }
+}
+@keyframes cover-flow {
+  to {
+    stroke-dashoffset: -32;
   }
 }
 @keyframes cover-aurora {
@@ -476,88 +574,77 @@ html[data-keyboard="open"] .hide-with-keyboard {
     transform: translateX(30px) scaleY(1.1);
   }
 }
-@keyframes cover-sheen {
-  0%,
-  65% {
-    background-position: 160% 0;
-  }
-  100% {
-    background-position: -60% 0;
-  }
-}
-@keyframes cover-rise {
-  0% {
-    transform: translateY(16px);
-    opacity: 0;
-  }
-  15%,
-  80% {
-    opacity: 0.9;
-  }
-  /* Stops below the prayer flags, even on a phone's short cover. */
-  100% {
-    transform: translateY(-60px);
-    opacity: 0;
-  }
-}
-@keyframes cover-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 currentColor;
-  }
-  60% {
-    box-shadow: 0 0 0 5px transparent;
-  }
-}
 .cover-twinkle {
   animation: cover-twinkle 3s ease-in-out infinite;
 }
+.cover-shoot {
+  opacity: 0;
+  animation: cover-shoot 11s ease-in infinite;
+}
+.cover-breathe {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cover-breathe 6s ease-in-out infinite;
+}
+.cover-sweep {
+  animation: cover-sweep 7s ease-in-out infinite;
+}
 .cover-drift {
-  animation: cover-drift 30s linear infinite;
+  animation: cover-drift 60s linear infinite;
 }
-.cover-sway {
-  transform-box: view-box;
-  transform-origin: 20px 30px;
-  animation: cover-sway 5s ease-in-out infinite;
+.cover-mist {
+  animation: cover-mist 14s ease-in-out infinite;
 }
-.cover-spin {
-  animation: cover-spin 18s linear infinite;
+.cover-fly {
+  animation: cover-fly 28s linear infinite;
 }
-.cover-float {
-  animation: cover-float 6s ease-in-out infinite;
+.cover-flap {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cover-flap 0.7s ease-in-out infinite;
+}
+.cover-flutter {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: cover-flutter 2.4s ease-in-out infinite;
+}
+.cover-bob {
+  animation: cover-bob 4.5s ease-in-out infinite;
+}
+.cover-flicker {
+  animation: cover-flicker 3.2s ease-in-out infinite;
+}
+.cover-firefly {
+  opacity: 0;
+  animation: cover-firefly 5s ease-in-out infinite;
+}
+.cover-flow {
+  animation: cover-flow 2s linear infinite;
 }
 .cover-aurora {
   transform-box: view-box;
   animation: cover-aurora 9s ease-in-out infinite alternate;
 }
-.cover-sheen {
-  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.1) 50%, transparent 70%);
-  background-size: 250% 100%;
-  animation: cover-sheen 8s ease-in-out infinite;
-}
-.cover-pulse {
-  animation: cover-pulse 2.4s ease-in-out infinite;
-}
-/* A lantern starts hidden and rises; stopped, it rests low and visible. */
-.cover-rise {
-  opacity: 0;
-  animation: cover-rise 9s linear infinite;
-}
 @media (prefers-reduced-motion: reduce) {
   .cover-twinkle,
+  .cover-breathe,
   .cover-drift,
-  .cover-sway,
-  .cover-spin,
-  .cover-float,
-  .cover-aurora,
-  .cover-sheen,
-  .cover-pulse,
-  .cover-rise {
+  .cover-mist,
+  .cover-fly,
+  .cover-flap,
+  .cover-flutter,
+  .cover-flicker,
+  .cover-bob,
+  .cover-flow,
+  .cover-aurora {
     animation: none;
   }
-  .cover-rise {
-    opacity: 0.8;
-    transform: translateY(-24px);
+  /* Things that only make sense moving are hidden. */
+  .cover-shoot,
+  .cover-sweep,
+  .cover-firefly,
+  .cover-walker {
+    display: none;
   }
 }
 
