@@ -194,7 +194,13 @@ export function ProfileHero({
 
   return (
     <HeroCard lifted={menuOpen}>
-      <HeroCover person={profile} skills={skills.data ?? []} />
+      {/* Your badge opens Get verified; your skills, your Skills and badge page. */}
+      <HeroCover
+        person={profile}
+        skills={skills.data ?? []}
+        onBadge={() => navigate({ to: "/verify" })}
+        onSkill={(skill) => navigate({ to: "/skills", search: { skill } })}
+      />
 
       <HeroBody>
         <HeroTopRow

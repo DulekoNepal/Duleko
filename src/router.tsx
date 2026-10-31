@@ -70,6 +70,17 @@ const workerRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/WorkerScreen"), "WorkerScreen"),
 });
 
+// Someone's skills and badge, read-only - where a tap on their cover leads.
+// ?skill= scrolls to one skill.
+const workerSkillsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/worker/$workerId/skills",
+  validateSearch: (search: Record<string, unknown>): { skill?: string } => ({
+    skill: typeof search.skill === "string" && search.skill ? search.skill : undefined,
+  }),
+  component: lazyRouteComponent(() => import("@/routes/SkillsScreen"), "WorkerSkillsScreen"),
+});
+
 export type WorkRole = "worker" | "employer";
 export type WorkView = "active" | "offers" | "posts" | "history";
 
@@ -251,6 +262,17 @@ const verifyRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/VerifyScreen"), "VerifyScreen"),
 });
 
+// Your skills and badge: what Duleko checked, send a certificate, add or
+// change skills. Where a tap on your cover leads; ?skill= scrolls to one.
+const skillsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/skills",
+  validateSearch: (search: Record<string, unknown>): { skill?: string } => ({
+    skill: typeof search.skill === "string" && search.skill ? search.skill : undefined,
+  }),
+  component: lazyRouteComponent(() => import("@/routes/SkillsScreen"), "MySkillsScreen"),
+});
+
 // Staff: ID checks waiting, approve (gives the badge) or reject.
 const staffVerifyRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -366,6 +388,7 @@ const routeTree = rootRoute.addChildren([
   homeRoute,
   searchRoute,
   workerRoute,
+  workerSkillsRoute,
   workRoute,
   jobsRoute,
   jobRoute,
@@ -383,6 +406,7 @@ const routeTree = rootRoute.addChildren([
   staffDealsRoute,
   staffInvestorsRoute,
   verifyRoute,
+  skillsRoute,
   staffVerifyRoute,
   moderationRoute,
   noticesRoute,

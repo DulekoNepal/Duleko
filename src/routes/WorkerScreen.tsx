@@ -449,7 +449,19 @@ export function WorkerScreen() {
             came here to do in place of the editing controls.
             ============================================================== */}
         <HeroCard lifted={menuOpen}>
-          <HeroCover person={w} skills={skillList} />
+          {/* Their badge and skills open their Skills and badge page, read-only; your own, yours. */}
+          <HeroCover
+            person={w}
+            skills={skillList}
+            onBadge={() =>
+              isMe ? navigate({ to: "/verify" }) : navigate({ to: "/worker/$workerId/skills", params: { workerId: handle } })
+            }
+            onSkill={(skill) =>
+              isMe
+                ? navigate({ to: "/skills", search: { skill } })
+                : navigate({ to: "/worker/$workerId/skills", params: { workerId: handle }, search: { skill } })
+            }
+          />
           <HeroBody>
             <HeroTopRow
               name={w.full_name}

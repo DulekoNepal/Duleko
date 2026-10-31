@@ -13,6 +13,18 @@ export const badgeStrings = {
   coverRole: ["Role", "भूमिका"],
   coverVerifiedSkills: ["Verified skills", "प्रमाणित सीप"],
 
+  // ---- Skills and badge (/skills, and /worker/…/skills read-only) ---------------
+  skillsPageTitle: ["Skills and badge", "सीप र ब्याज"],
+  skillsPageMine: ["Your skills, and what Duleko has checked", "तपाईंका सीप र डुलेकोले जाँचेका कुरा"],
+  skillsBadgeHow: ["What the badge means", "ब्याजको अर्थ"],
+  skillsChecked: ["{count} of {total} checked by Duleko", "{total} मध्ये {count} डुलेकोले जाँचेको"],
+  skillsEdit: ["Add or change skills", "सीप थप्नुहोस् वा बदल्नुहोस्"],
+  skillsVerify: ["Verify", "प्रमाणित गर्नुहोस्"],
+  skillsVerifyAria: ["Verify {skill}", "{skill} प्रमाणित गर्नुहोस्"],
+  skillsStepIdOther: ["ID checked by Duleko", "डुलेकोले परिचयपत्र जाँचेको"],
+  skillsStepSkillOther: ["A skill certificate checked by Duleko", "डुलेकोले सीपको प्रमाणपत्र जाँचेको"],
+  coverOpenSkill: ["See {skill} and the other skills", "{skill} र अन्य सीप हेर्नुहोस्"],
+
   // ---- certificates on your profile -----------------------------------------
   certSkillLabel: ["Which skill does it prove?", "यसले कुन सीप प्रमाणित गर्छ?"],
   certNeedSkill: ["Add a skill first, then a certificate for it.", "पहिले सीप थप्नुहोस्, त्यसपछि त्यसको प्रमाणपत्र।"],

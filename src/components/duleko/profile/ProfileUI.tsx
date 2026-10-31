@@ -52,14 +52,19 @@ export function HeroCard({ lifted = false, children }: { lifted?: boolean; child
 /**
  * The cover: Duleko's own artwork for everyone (see DulekoCover), showing
  * how far Duleko has checked the person and the tools of their skills.
+ * Its badge pill and skills open whatever `onBadge` and `onSkill` lead to.
  */
 export function HeroCover({
   person,
   skills,
+  onBadge,
+  onSkill,
 }: {
   person: Pick<Profile, "is_verified" | "verified_skill_ids" | "staff_role" | "staff_title_en" | "staff_title_ne">;
   /** Their skills in profile order - the cover follows them (see DulekoCover). */
   skills: Skill[];
+  onBadge?: () => void;
+  onSkill?: (skillId: string) => void;
 }) {
   const { lang } = useI18n();
   const tier = verificationTier(person);
@@ -70,6 +75,8 @@ export function HeroCover({
       skills={skills}
       verifiedSkillIds={person.verified_skill_ids}
       roleTitle={role}
+      onBadge={onBadge}
+      onSkill={onSkill}
       className="h-28 sm:rounded-t-3xl @md:h-36 @2xl:h-44 @4xl:h-52"
     />
   );

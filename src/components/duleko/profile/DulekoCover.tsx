@@ -489,7 +489,18 @@ function Moon({ id, light, reflection = false }: { id: string; light: Light; ref
   );
 }
 
-function HillsAtDawn({ ink, tools, light }: { ink: Ink; tools: LucideIcon[]; light: Light }) {
+function HillsAtDawn({
+  ink,
+  tools,
+  light,
+  onTool,
+}: {
+  ink: Ink;
+  tools: Tool[];
+  light: Light;
+  /** Makes each tool a tap target that opens its skill. */
+  onTool?: (skillId: string) => void;
+}) {
   const id = useId().replace(/:/g, "");
   const scene = paletteAt(light, NIGHT, DAY, GOLDEN);
   const glowAt = light.sun.shown ? light.sun : light.moon;
@@ -674,12 +685,19 @@ function HillsAtDawn({ ink, tools, light }: { ink: Ink; tools: LucideIcon[]; lig
       ))}
 
       {/* The tools of their work, glowing along the way. */}
-      {tools.slice(0, TOOL_SPOTS.length).map((Tool, i) => {
+      {tools.slice(0, TOOL_SPOTS.length).map(({ Icon, skillId }, i) => {
         const [x, y] = TOOL_SPOTS[i];
         return (
-          <g key={i} className="cover-bob" style={{ animationDelay: `${i * -1.4}s` }}>
-            <circle cx={x} cy={y} r="10" fill="#0b1220" fillOpacity="0.55" stroke={ink.line} strokeWidth="1.2" />
-            <Tool x={x - 6} y={y - 6} width="12" height="12" color={ink.soft} strokeWidth={2} />
+          <g
+            key={skillId}
+            className={cn("cover-bob", onTool && "cursor-pointer")}
+            style={{ animationDelay: `${i * -1.4}s` }}
+            onClick={onTool ? () => onTool(skillId) : undefined}
+          >
+            {/* A bigger, invisible circle so the small tool is easy to tap. */}
+            {onTool && <circle cx={x} cy={y} r="14" fill="transparent" />}
+            <circle cx={x} cy={y} r="8" fill="#0b1220" fillOpacity="0.55" stroke={ink.line} strokeWidth="1" />
+            <Icon x={x - 4.5} y={y - 4.5} width="9" height="9" color={ink.soft} strokeWidth={2} />
           </g>
         );
       })}
@@ -1203,12 +1221,58 @@ function iconOf(skill: Skill): LucideIcon {
 /** How many verified skills show as icons before "+N". */
 const MAX_VERIFIED_SHOWN = 4;
 
+/** One of the person's tools on the path, and the skill it stands for. */
+interface Tool {
+  Icon: LucideIcon;
+  skillId: string;
+}
+
+/** A button when there is somewhere to go, otherwise just the same box. */
+function Tap({
+  onClick,
+  label,
+  className,
+  style,
+  children,
+}: {
+  onClick?: () => void;
+  label?: string;
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  if (!onClick) {
+    return (
+      <span className={className} style={style}>
+        {children}
+      </span>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      style={style}
+      className={cn(
+        className,
+        "cursor-pointer transition-transform hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function DulekoCover({
   tier,
   skills = [],
   verifiedSkillIds = [],
   roleTitle,
   at,
+  onBadge,
+  onSkill,
   className,
   children,
 }: {
@@ -1226,6 +1290,10 @@ export function DulekoCover({
   roleTitle?: string | null;
   /** A fixed moment to show instead of the clock (for previews). */
   at?: Date;
+  /** Makes the badge pill a button (not on staff covers). */
+  onBadge?: () => void;
+  /** Makes the top skill, the ticked icons and the tools on the path buttons (not on staff covers). */
+  onSkill?: (skillId: string) => void;
   className?: string;
   children?: React.ReactNode;
 }) {
@@ -1235,11 +1303,21 @@ export function DulekoCover({
   const verified = skills.filter((s) => verifiedSkillIds.includes(s.id));
   const skill = verified[0] ?? skills[0] ?? null;
   const Icon = staff ? ShieldCheck : skill ? iconOf(skill) : null;
-  const tools = staff ? [] : [...new Set([...verified, ...skills].map(iconOf))];
+  // One tool per icon - two skills can share one.
+  const tools: Tool[] = [];
+  if (!staff) {
+    for (const s of [...verified, ...skills]) {
+      const ToolIcon = iconOf(s);
+      if (!tools.some((tool) => tool.Icon === ToolIcon)) tools.push({ Icon: ToolIcon, skillId: s.id });
+    }
+  }
   const extraVerified = Math.max(0, verified.length - MAX_VERIFIED_SHOWN);
   const clock = useMinute();
   const time = at ?? clock;
   const light = lightAt(time);
+  const badgeTap = staff ? undefined : onBadge;
+  const skillTap = staff ? undefined : onSkill;
+  const openTop = skillTap && skill ? () => skillTap(skill.id) : undefined;
 
   const pill =
     tier === "staff"
@@ -1250,40 +1328,48 @@ export function DulekoCover({
       ? t("halfVerifiedLabel")
       : t("coverNotVerified");
   const caption = staff ? roleTitle : skill ? skillName(skill, lang) : null;
+  const openLabel = caption ? t("coverOpenSkill", { skill: caption }) : undefined;
 
   return (
     <div className={cn("relative isolate overflow-hidden", className)}>
-      {staff ? <StaffLake ink={ink} light={light} /> : <HillsAtDawn ink={ink} tools={tools} light={light} />}
+      {staff ? (
+        <StaffLake ink={ink} light={light} />
+      ) : (
+        <HillsAtDawn ink={ink} tools={tools} light={light} onTool={skillTap} />
+      )}
 
       {/* Duleko's own logo and on a wide cover its line (staff covers are Duleko's already), then the time. */}
-      <div className="absolute left-2.5 top-2.5 flex flex-col items-start gap-1 @md:left-3 @md:top-3 @2xl:left-5 @2xl:top-4">
+      <div className="absolute left-2 top-2 flex flex-col items-start gap-0.5 @md:left-3 @md:top-2.5 @md:gap-1 @2xl:left-4 @2xl:top-3.5">
         {!staff && (
-          <div className="flex items-center gap-1.5 @md:gap-2">
+          <div className="flex items-center gap-1 @md:gap-1.5">
             <img
               src="/apple-touch-icon.png"
               alt=""
-              className="h-5 w-5 rounded-md bg-white shadow-md ring-1 ring-black/5 @md:h-7 @md:w-7 @md:rounded-lg @2xl:h-9 @2xl:w-9"
+              className="h-4 w-4 rounded bg-white shadow-md ring-1 ring-black/5 @md:h-5.5 @md:w-5.5 @md:rounded-md @2xl:h-7 @2xl:w-7"
             />
             <div className="text-white [text-shadow:0_1px_6px_rgb(0_0_0/0.45)]">
-              <p className="text-xs font-bold leading-none @md:text-sm @2xl:text-lg">{t("appName")}</p>
-              <p className="mt-0.5 hidden text-[11px] font-medium text-white/85 @2xl:block">{t("tagline")}</p>
+              <p className="text-[10px] font-bold leading-none @md:text-xs @2xl:text-sm">{t("appName")}</p>
+              <p className="mt-0.5 hidden text-[10px] font-medium text-white/85 @2xl:block">{t("tagline")}</p>
             </div>
           </div>
         )}
         <time
           dateTime={time.toISOString()}
-          className="pl-0.5 text-[8px] font-medium leading-none tabular-nums text-white/90 [text-shadow:0_1px_4px_rgb(0_0_0/0.7)] @md:text-[9px] @2xl:text-[10px]"
+          className="pl-px text-[7px] font-medium leading-none tabular-nums text-white/90 [text-shadow:0_1px_4px_rgb(0_0_0/0.7)] @md:text-[8px] @2xl:text-[9px]"
         >
           {formatClockTime(time.toISOString(), lang)}
         </time>
       </div>
 
       {/* The same seal as the name badge: hollow green, hollow orange, solid for staff. */}
-      <span className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-black/35 py-0.5 pl-1 pr-1.5 text-[8px] font-semibold text-white ring-1 ring-white/15 backdrop-blur @md:right-3 @md:top-3 @md:gap-1 @md:py-0.5 @md:pl-1 @md:pr-2 @md:text-[10px] @2xl:right-4 @2xl:top-4 @2xl:text-[11px]">
+      <Tap
+        onClick={badgeTap}
+        className="absolute right-2 top-2 inline-flex items-center gap-0.5 rounded-full bg-black/35 py-px pl-0.5 pr-1.5 text-[7px] font-semibold text-white ring-1 ring-white/15 backdrop-blur @md:right-3 @md:top-2.5 @md:gap-1 @md:py-0.5 @md:pl-1 @md:pr-2 @md:text-[9px] @2xl:right-4 @2xl:top-3.5 @2xl:text-[10px]"
+      >
         {tier === "none" ? (
-          <span className="mx-0.5 h-1 w-1 rounded-full bg-white/50 @md:h-1.5 @md:w-1.5" aria-hidden />
+          <span className="mx-0.5 h-1 w-1 rounded-full bg-white/50" aria-hidden />
         ) : (
-          <svg viewBox="0 0 24 24" className="h-2.5 w-2.5 @md:h-3.5 @md:w-3.5" aria-hidden>
+          <svg viewBox="0 0 24 24" className="h-2 w-2 @md:h-3 @md:w-3" aria-hidden>
             <path
               d={SEAL_PATH}
               fill={staff ? ink.line : "none"}
@@ -1302,54 +1388,70 @@ export function DulekoCover({
           </svg>
         )}
         {pill}
-      </span>
+      </Tap>
 
       {caption && (
-        <div className="absolute bottom-3 right-2.5 flex items-center gap-1.5 @md:bottom-4 @md:right-3 @md:gap-2.5 @2xl:bottom-5 @2xl:right-5">
-          <div className="max-w-28 text-right text-white [text-shadow:0_1px_6px_rgb(0_0_0/0.6)] @md:max-w-36 @2xl:max-w-48">
-            <p className="text-[8px] font-medium uppercase tracking-wider text-white/80 @md:text-[10px] @2xl:text-[11px]">
-              {staff ? t("coverRole") : t("coverTopSkill")}
-            </p>
-            <p className="truncate text-xs font-semibold leading-tight @md:text-sm @2xl:text-base">{caption}</p>
+        <div className="absolute bottom-2.5 right-2 flex items-center gap-1 @md:bottom-3 @md:right-3 @md:gap-2 @2xl:bottom-4 @2xl:right-4">
+          <div className="flex max-w-24 flex-col items-end text-right text-white [text-shadow:0_1px_6px_rgb(0_0_0/0.6)] @md:max-w-32 @2xl:max-w-40">
+            <Tap onClick={openTop} label={openLabel} className="block max-w-full rounded text-right">
+              <span className="block text-[7px] font-medium uppercase tracking-wider text-white/80 @md:text-[8px] @2xl:text-[9px]">
+                {staff ? t("coverRole") : t("coverTopSkill")}
+              </span>
+              <span className="block truncate text-[10px] font-semibold leading-tight @md:text-xs @2xl:text-sm">
+                {caption}
+              </span>
+            </Tap>
             {/* Every skill Duleko checked: one more icon for each approved certificate. */}
             {!staff && verified.length > 0 && (
               <ul
-                className="mt-0.5 flex items-center justify-end gap-0.5 @md:mt-1 @md:gap-1"
+                className="mt-0.5 flex items-center justify-end gap-0.5 @md:gap-1"
                 aria-label={`${t("coverVerifiedSkills")}: ${verified.map((s) => skillName(s, lang)).join(", ")}`}
               >
                 {verified.slice(0, MAX_VERIFIED_SHOWN).map((s) => {
                   const SkillIcon = iconOf(s);
                   return (
-                    <li
-                      key={s.id}
-                      title={skillName(s, lang)}
-                      className="relative grid h-3.5 w-3.5 place-items-center rounded-full bg-black/30 @md:h-[18px] @md:w-[18px] @2xl:h-5 @2xl:w-5"
-                    >
-                      <SkillIcon className="h-2 w-2 text-white @md:h-2.5 @md:w-2.5 @2xl:h-3 @2xl:w-3" aria-hidden />
-                      <Check
-                        className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-[#16a34a] p-px text-white @md:h-2 @md:w-2"
-                        strokeWidth={4}
-                        aria-hidden
-                      />
+                    <li key={s.id} title={skillTap ? undefined : skillName(s, lang)}>
+                      <Tap
+                        onClick={skillTap ? () => skillTap(s.id) : undefined}
+                        label={skillName(s, lang)}
+                        className="relative grid h-3 w-3 place-items-center rounded-full bg-black/30 @md:h-3.5 @md:w-3.5 @2xl:h-4 @2xl:w-4"
+                      >
+                        <SkillIcon
+                          className="h-[7px] w-[7px] text-white @md:h-2 @md:w-2 @2xl:h-2.5 @2xl:w-2.5"
+                          aria-hidden
+                        />
+                        <Check
+                          className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-[#16a34a] p-px text-white"
+                          strokeWidth={4}
+                          aria-hidden
+                        />
+                      </Tap>
                     </li>
                   );
                 })}
                 {extraVerified > 0 && (
-                  <li className="text-[8px] font-semibold text-white/90 @md:text-[10px] @2xl:text-[11px]">
-                    +{formatNumber(extraVerified, lang)}
+                  <li>
+                    <Tap
+                      onClick={openTop}
+                      className="block text-[7px] font-semibold text-white/90 @md:text-[8px] @2xl:text-[9px]"
+                    >
+                      +{formatNumber(extraVerified, lang)}
+                    </Tap>
                   </li>
                 )}
               </ul>
             )}
           </div>
-          <div
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-black/35 ring-[1.5px] backdrop-blur-sm @md:h-13 @md:w-13 @md:ring-2 @2xl:h-16 @2xl:w-16"
+          <Tap
+            onClick={openTop}
+            label={openLabel}
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-black/35 ring-[1.5px] backdrop-blur-sm @md:h-10 @md:w-10 @md:ring-2 @2xl:h-12 @2xl:w-12"
             style={{ "--tw-ring-color": ink.line } as React.CSSProperties}
           >
             {Icon && (
-              <Icon className="h-4 w-4 @md:h-6 @md:w-6 @2xl:h-7 @2xl:w-7" style={{ color: ink.soft }} aria-hidden />
+              <Icon className="h-3.5 w-3.5 @md:h-5 @md:w-5 @2xl:h-6 @2xl:w-6" style={{ color: ink.soft }} aria-hidden />
             )}
-          </div>
+          </Tap>
         </div>
       )}
       {children}
